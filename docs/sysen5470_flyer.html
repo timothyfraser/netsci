@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SYSEN 5470 – Network Science and Applications for Systems Engineering</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-bright: #39FF14;
+    --green-mid: #22C55E;
+    --green-dark: #166534;
+    --green-deep: #052e16;
+    --black: #050a05;
+    --white: #f0fdf4;
+    --grey: #a3b8a3;
+    --card-bg: rgba(5, 46, 22, 0.6);
+    --border: rgba(57, 255, 20, 0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ── ANIMATED NETWORK CANVAS ── */
+  #network-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    opacity: 0.35;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 32px 64px;
+  }
+
+  /* ── HEADER ── */
+  .banner-img {
+    width: 100%;
+    border-radius: 12px;
+    display: block;
+    margin-bottom: 36px;
+    box-shadow: 0 0 60px rgba(57,255,20,0.2);
+    border: 1px solid var(--border);
+  }
+
+  .tag-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 3px;
+    border: 1px solid var(--green-bright);
+    color: var(--green-bright);
+    background: rgba(57,255,20,0.06);
+  }
+
+  .tag.filled {
+    background: var(--green-bright);
+    color: var(--black);
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(38px, 7vw, 68px);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+
+  h1 span {
+    color: var(--green-bright);
+  }
+
+  .course-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--grey);
+    letter-spacing: 0.1em;
+    margin-bottom: 28px;
+  }
+
+  .hook {
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1.55;
+    color: #d1fae5;
+    max-width: 640px;
+    margin-bottom: 40px;
+    border-left: 3px solid var(--green-bright);
+    padding-left: 18px;
+  }
+
+  /* ── STAT PILLS ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 48px;
+  }
+
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 16px;
+    text-align: center;
+    backdrop-filter: blur(8px);
+    transition: border-color 0.25s, transform 0.2s;
+  }
+
+  .stat-card:hover {
+    border-color: var(--green-bright);
+    transform: translateY(-3px);
+  }
+
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    color: var(--green-bright);
+    line-height: 1;
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--grey);
+    margin-top: 5px;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--green-bright);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── TOPICS GRID ── */
+  .topics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+
+  .topic-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    backdrop-filter: blur(6px);
+    transition: border-color 0.2s;
+  }
+
+  .topic-item:hover { border-color: var(--green-mid); }
+
+  .topic-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .topic-text strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 3px;
+  }
+
+  .topic-text span {
+    font-size: 11.5px;
+    color: var(--grey);
+    line-height: 1.45;
+  }
+
+  /* ── CASE STUDIES ── */
+  .cases-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 48px;
+  }
+
+  .case-chip {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: 100px;
+    background: rgba(34,197,94,0.12);
+    border: 1px solid var(--green-mid);
+    color: #86efac;
+    transition: background 0.2s;
+  }
+
+  .case-chip:hover { background: rgba(34,197,94,0.25); }
+
+  /* ── FORMAT FEATURES ── */
+  .features-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+    margin-bottom: 48px;
+  }
+
+  .features-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: #d1fae5;
+  }
+
+  .features-list li::before {
+    content: '→';
+    font-family: 'Space Mono', monospace;
+    color: var(--green-bright);
+    flex-shrink: 0;
+  }
+
+  /* ── INSTRUCTOR CARD ── */
+  .instructor-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    backdrop-filter: blur(8px);
+    margin-bottom: 48px;
+  }
+
+  .instructor-photo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--green-bright);
+    flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(57,255,20,0.3);
+  }
+
+  .instructor-info h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 0.05em;
+    color: var(--white);
+    margin-bottom: 2px;
+  }
+
+  .instructor-info p {
+    font-size: 12.5px;
+    color: var(--grey);
+    line-height: 1.5;
+  }
+
+  .instructor-info a {
+    color: var(--green-bright);
+    text-decoration: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+  }
+
+  /* ── CTA ── */
+  .cta-block {
+    background: linear-gradient(135deg, rgba(57,255,20,0.08), rgba(22,101,52,0.3));
+    border: 1px solid var(--green-bright);
+    border-radius: 16px;
+    padding: 36px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-block::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(57,255,20,0.15), transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-block h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+    color: var(--green-bright);
+  }
+
+  .cta-block p {
+    font-size: 15px;
+    color: #a7f3d0;
+    margin-bottom: 22px;
+    font-weight: 300;
+  }
+
+  .cta-details {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--green-bright);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .cta-details span::before {
+    content: '◆ ';
+    opacity: 0.6;
+  }
+
+  /* ── FOOTER NOTE ── */
+  .footer-note {
+    margin-top: 32px;
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--grey);
+    font-family: 'Space Mono', monospace;
+    line-height: 1.7;
+  }
+
+  .footer-note strong { color: var(--green-mid); }
+
+  /* ── GLOW PULSE ANIMATION ── */
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 40px rgba(57,255,20,0.15); }
+    50% { box-shadow: 0 0 70px rgba(57,255,20,0.35); }
+  }
+
+  .cta-block { animation: glow-pulse 4s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<canvas id="network-canvas"></canvas>
+
+<div class="page">
+
+  <img src="https://github.com/timothyfraser/netsci/blob/f495e6960b9e917704851f820c1cfeea36ae3ea8/docs/images/banner_bottom.png?raw=true" alt="Network Science and Applications for Systems Engineering banner" class="banner-img">
+
+  <div class="tag-row">
+    <span class="tag filled">Cornell Engineering</span>
+    <span class="tag">Summer 2026</span>
+    <span class="tag">3 Credits</span>
+    <span class="tag">Graduate</span>
+    <span class="tag">Asynchronous</span>
+  </div>
+
+  <p class="course-number">SYSEN 5470</p>
+
+  <h1>Network Science<br>and <span>Applications</span><br>for Systems Engineering</h1>
+
+  <p style="height:20px"></p>
+
+  <p class="hook">
+    Supply chains collapse. Power grids fail. Logistics break down. Engineers who understand networks can see these failures coming — and design systems that survive them. Learn to think in networks in just <strong>3 weeks</strong>.
+  </p>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-num">3</span>
+      <div class="stat-label">Weeks · 3 Credits</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">8</span>
+      <div class="stat-label">Real-World Case Studies</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">0</span>
+      <div class="stat-label">Coding Experience Required</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">∞</span>
+      <div class="stat-label">Networks Around You</div>
+    </div>
+  </div>
+
+  <!-- TOPICS -->
+  <div class="section-label">What You'll Learn</div>
+  <div class="topics-grid">
+    <div class="topic-item">
+      <span class="topic-icon">🕸️</span>
+      <div class="topic-text">
+        <strong>Network Fundamentals</strong>
+        <span>Nodes, edges, direction, weighting, small-world phenomena</span>
+      </div>
+    </div>
+    <div class="topic-item">
+      <span class="topic-icon">📊</span>
+      <div class="topic-text">
+        <strong>Centrality & Criticality</strong>
+        <span>Identify bottlenecks, hubs, and vulnerabilities in any system</span>
+      </div>
+    </div>
+    <div class="topic-item">
+      <span class="topic-icon">🤖</span>
+      <div class="topic-text">
+        <strong>AI &amp; Machine Learning</strong>
+        <span>Neural networks, graph neural nets, and ML for network inference</span>
+      </div>
+    </div>
+    <div class="topic-item">
+      <span class="topic-icon">📐</span>
+      <div class="topic-text">
+        <strong>Network Statistics</strong>
+        <span>Permutation tests, bootstrap, and causal inference on networks</span>
+      </div>
+    </div>
+    <div class="topic-item">
+      <span class="topic-icon">🚦</span>
+      <div class="topic-text">
+        <strong>Routing &amp; Optimization</strong>
+        <span>Solve real flow and routing problems in logistics and transit</span>
+      </div>
+    </div>
+    <div class="topic-item">
+      <span class="topic-icon">🧩</span>
+      <div class="topic-text">
+        <strong>Clustering &amp; Communities</strong>
+        <span>Detect structure in large-scale networks automatically</span>
+      </div>
+    </div>
+    <div class="topic-item">
+      <span class="topic-icon">🗺️</span>
+      <div class="topic-text">
+        <strong>Visualization</strong>
+        <span>Communicate network insights with beautiful, interactive graphics</span>
+      </div>
+    </div>
+    <div class="topic-item">
+      <span class="topic-icon">🗄️</span>
+      <div class="topic-text">
+        <strong>Big Network Data</strong>
+        <span>Work with millions of edges using databases and smart sampling</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CASE STUDIES -->
+  <div class="section-label">Case Studies</div>
+  <div class="cases-row">
+    <span class="case-chip">🚲 Bike-Share Mobility (Boston)</span>
+    <span class="case-chip">🌀 Hurricane Evacuation Networks</span>
+    <span class="case-chip">📦 Supply Chain Risk</span>
+    <span class="case-chip">⚡ Power Grid Resilience</span>
+    <span class="case-chip">🚇 Urban Transit Systems</span>
+    <span class="case-chip">🏭 Crisis Stakeholder Networks</span>
+    <span class="case-chip">💻 Data Center Connectivity</span>
+    <span class="case-chip">🏗️ Organizational Networks &amp; DSMs</span>
+  </div>
+
+  <!-- FORMAT -->
+  <div class="section-label">How It Works</div>
+  <ul class="features-list">
+    <li>100% asynchronous classes — learn on your schedule</li>
+    <li>Assignments due at end of each weekend</li>
+    <li>Hands-on coding labs in R or Python (you choose)</li>
+    <li>Sketchpad exercises — draw networks by hand</li>
+    <li>Short videos + interactive tutorials</li>
+    <li>Real datasets from the start, Day 1</li>
+    <li>Designed for full-time working professionals</li>
+    <li>Extensions welcome for SYSEN 5940 in-person session participants!</li>
+  </ul>
+
+  <!-- INSTRUCTOR -->
+  <div class="section-label">Your Instructor</div>
+  <div class="instructor-card">
+    <img src="https://avatars.githubusercontent.com/u/50339247?s=400&u=6f542f60740f5288c64de51544255c82b010e822&v=4?raw=true" alt="Tim Fraser" class="instructor-photo">
+    <div class="instructor-info">
+      <h3>Tim Fraser, PhD</h3>
+      <p>Assistant Teaching Professor · Computational Social Scientist · Cornell University<br>
+      Research on resilience, mobility networks, and computational social science.<br>
+      <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a></p>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-block">
+    <h2>Enroll This Summer!</h2>
+    <p>No prior coding or graph theory experience required. Just bring your curiosity — and a sketchpad.</p>
+    <div class="cta-details">
+      <span>SYSEN 5470</span>
+      <span>June 22 - July 10, 2026</span>
+      <span>3 Credits</span>
+    </div>
+  </div>
+
+  <p class="footer-note">
+    Prerequisites: None. Some prior R or Python experience helpful but <u>not required</u>.<br>
+    <strong>This course is designed for graduate students at all coding levels.</strong><br>
+    Questions? Contact <strong>tmf77@cornell.edu</strong>
+  </p>
+
+</div>
+
+<script>
+// Animated network background
+const canvas = document.getElementById('network-canvas');
+const ctx = canvas.getContext('2d');
+
+let nodes = [];
+let W, H;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+function initNodes(n = 55) {
+  nodes = [];
+  for (let i = 0; i < n; i++) {
+    nodes.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      r: Math.random() * 2.5 + 1
+    });
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // edges
+  const maxDist = 160;
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x;
+      const dy = nodes[i].y - nodes[j].y;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if (d < maxDist) {
+        const alpha = (1 - d / maxDist) * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.strokeStyle = `rgba(57, 255, 20, ${alpha})`;
+        ctx.lineWidth = 0.7;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // nodes
+  nodes.forEach(n => {
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(57, 255, 20, 0.85)';
+    ctx.fill();
+  });
+
+  // move
+  nodes.forEach(n => {
+    n.x += n.vx;
+    n.y += n.vy;
+    if (n.x < 0 || n.x > W) n.vx *= -1;
+    if (n.y < 0 || n.y > H) n.vy *= -1;
+  });
+
+  requestAnimationFrame(draw);
+}
+
+resize();
+initNodes();
+draw();
+window.addEventListener('resize', () => { resize(); initNodes(); });
+</script>
+
+</body>
+</html>
