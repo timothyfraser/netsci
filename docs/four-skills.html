@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Four Professional Skills · SYSEN 5470</title>
+<link rel="stylesheet" href="assets/design.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .skills-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+  }
+  .skill-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 28px 28px 24px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column; gap: 16px;
+    transition: border-color .25s, transform .2s;
+  }
+  .skill-card:hover { border-color: var(--skill-color, var(--green-bright)); transform: translateY(-2px); }
+  .skill-card::before {
+    content: ''; position: absolute; top: 0; left: 28px; right: 28px;
+    height: 3px; border-radius: 0 0 3px 3px;
+    background: var(--skill-color, var(--green-bright));
+    box-shadow: 0 0 12px var(--skill-color, var(--green-bright));
+  }
+  .skill-card.s1 { --skill-color: var(--green-bright); }
+  .skill-card.s2 { --skill-color: var(--node-4); }   /* amber */
+  .skill-card.s3 { --skill-color: var(--node-5); }   /* magenta */
+  .skill-card.s4 { --skill-color: var(--node-3); }   /* mint/teal */
+
+  .skill-num {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--skill-color, var(--green-bright));
+  }
+  .skill-title {
+    font-family: var(--font-display); font-size: 28px;
+    line-height: 1.1; letter-spacing: 0.03em;
+    color: var(--white);
+  }
+  .skill-title em { color: var(--skill-color); font-style: normal; }
+
+  .skill-body {
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.6;
+  }
+  .skill-body strong { color: var(--white); font-weight: 500; }
+
+  .contrast-block {
+    background: rgba(5, 46, 22, 0.4);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    display: grid; grid-template-columns: auto 1fr;
+    gap: 8px 14px; align-items: center;
+    font-size: 13px;
+  }
+  .contrast-label {
+    font-family: var(--font-mono); font-size: 9.5px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--grey);
+  }
+  .contrast-naive {
+    color: var(--grey);
+    font-family: var(--font-body); font-size: 13px; line-height: 1.45;
+  }
+  .contrast-naive::before {
+    content: '✕ '; color: var(--danger); font-weight: 700;
+  }
+  .contrast-net {
+    color: var(--green-mint);
+    font-family: var(--font-body); font-size: 13px; line-height: 1.45;
+  }
+  .contrast-net::before {
+    content: '→ '; color: var(--skill-color, var(--green-bright));
+    font-weight: 700;
+  }
+
+  /* Closing card */
+  .closing {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 28px 32px;
+    backdrop-filter: blur(8px);
+    display: grid; grid-template-columns: auto 1fr;
+    gap: 24px; align-items: center;
+    margin-top: 32px;
+  }
+  .closing-mark {
+    font-family: var(--font-display); font-size: 64px;
+    color: var(--green-bright); line-height: 1;
+    text-shadow: 0 0 24px rgba(57,255,20,0.45);
+  }
+  .closing-text {
+    font-family: var(--font-body); font-size: 15px;
+    color: var(--green-mint); line-height: 1.6;
+  }
+  .closing-text strong { color: var(--white); font-weight: 500; }
+  @media (max-width: 560px) {
+    .closing { grid-template-columns: 1fr; }
+    .closing-mark { font-size: 44px; }
+  }
+</style>
+</head>
+<body data-page="skills">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="index.html"          data-page="home">Overview</a>
+      <a href="syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="four-skills.html"    data-page="skills">Four Skills</a>
+      <a href="visualizer.html"     data-page="viz">Visualizer</a>
+    </div>
+    <a href="index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Network Science for Systems Engineering</p>
+    <h1 class="hero-title">Four <span>Professional Skills</span><br>You'll Take Into Practice.</h1>
+    <p class="hook">This course doesn't survey network science — it builds <strong>four concrete, transferable analytical skills</strong> for engineers who work with interdependent systems. Each one is framed against the everyday alternative most engineers reach for first, so you know not just <em>how</em> to apply it but <em>when</em> it's the right tool.</p>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">The Four Skills</div>
+    <div class="skills-grid">
+
+      <div class="skill-card s1">
+        <div>
+          <div class="skill-num">Skill 01</div>
+          <div class="skill-title"><em>Graph framing</em> &amp; data wrangling</div>
+        </div>
+        <div class="skill-body">
+          Turn messy relational data — supplier lists, transaction logs, dependency tables — into a <strong>graph that answers a real question</strong>. Recognizing that your problem is a graph problem, then getting enterprise data into nodes and edges, is the skill most engineers are missing.
+        </div>
+        <div class="contrast-block">
+          <span class="contrast-label">Instead of</span>
+          <span class="contrast-naive">Spreadsheet lookups and joins until something breaks.</span>
+          <span class="contrast-label">You'll do</span>
+          <span class="contrast-net">Structured graph analysis with reachability and dependency queries.</span>
+        </div>
+      </div>
+
+      <div class="skill-card s2">
+        <div>
+          <div class="skill-num">Skill 02</div>
+          <div class="skill-title"><em>Network-aware</em> inference</div>
+        </div>
+        <div class="skill-body">
+          When observations are connected, the <strong>independence assumption fails silently</strong> — and your regression lies to you. Use permutation tests against the right null model to know when a pattern in relational data is real and when it's an artifact of network structure.
+        </div>
+        <div class="contrast-block">
+          <span class="contrast-label">Instead of</span>
+          <span class="contrast-naive">Vanilla regression on connected observations.</span>
+          <span class="contrast-label">You'll do</span>
+          <span class="contrast-net">Permutation tests against structurally appropriate null models.</span>
+        </div>
+      </div>
+
+      <div class="skill-card s3">
+        <div>
+          <div class="skill-num">Skill 03</div>
+          <div class="skill-title"><em>Counterfactual</em> disruption simulation</div>
+        </div>
+        <div class="skill-body">
+          Remove a node. Rewire an edge. Recompute. Repeat ten thousand times. This is how modern supply chain risk firms — Resilinc, Interos, Everstream — actually work, and it's <strong>the skill industry is hiring for right now</strong>. You'll quantify resilience, not estimate it.
+        </div>
+        <div class="contrast-block">
+          <span class="contrast-label">Instead of</span>
+          <span class="contrast-naive">Point estimates and tabletop "what if" exercises.</span>
+          <span class="contrast-label">You'll do</span>
+          <span class="contrast-net">Monte Carlo node and edge removal with quantified resilience metrics.</span>
+        </div>
+      </div>
+
+      <div class="skill-card s4">
+        <div>
+          <div class="skill-num">Skill 04</div>
+          <div class="skill-title"><em>GNN-based</em> node outcome prediction</div>
+        </div>
+        <div class="skill-body">
+          When you're predicting whether a supplier will fail, a transaction is fraud, or a part is defective, <strong>the neighborhood often carries more signal than the node itself</strong>. Build pipelines that use network structure as a feature — from Node2Vec + XGBoost through full graph neural networks.
+        </div>
+        <div class="contrast-block">
+          <span class="contrast-label">Instead of</span>
+          <span class="contrast-naive">Flat-feature XGBoost that ignores connectivity.</span>
+          <span class="contrast-label">You'll do</span>
+          <span class="contrast-net">Embedding- and GNN-based prediction with network features.</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="closing">
+      <div class="closing-mark">§</div>
+      <div class="closing-text">
+        Every lab in this course maps to one of these four skills, and opens with the <strong>naive alternative</strong> most engineers reach for first — so you see exactly where it falls short and why a network-aware approach earns its keep. You'll graduate with tools that <strong>differentiate you from peers who didn't take this course</strong>, on problems where interdependence is the problem itself.
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Try The Skills In The Live Labs</div>
+    <div class="chips">
+      <a class="chip" href="case-studies/permutation.html">📐 Infer · Bluebikes permutation</a>
+      <a class="chip" href="case-studies/supply-chain.html">📦 Measure · Supply chain</a>
+      <a class="chip" href="case-studies/gnn-xgboost.html">🤖 Predict · GNN + XGBoost</a>
+      <a class="chip" href="visualizer.html">🗺️ Identify · Bring your own data</a>
+    </div>
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Network Science and Applications for Systems Engineering</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script src="assets/network-bg.js" defer></script>
+<script src="assets/site.js" defer></script>
+</body>
+</html>

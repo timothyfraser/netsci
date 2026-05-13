@@ -1,0 +1,211 @@
+/* ============================================================
+   NETSCI — SYSEN 5470 Design System
+   Foundational color + type tokens (mirrors docs/flyer.html)
+   ============================================================ */
+
+/* ── FONTS ──
+   All three families are Google-hosted. Self-host the .woff2 in
+   /fonts for production. */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap');
+
+:root {
+  /* ── CORE COLOR PALETTE ───────────────────────────────────── */
+  /* Brand greens — the literal "node glow" of the system */
+  --green-bright:  #39FF14; /* primary accent, node glow, highlight */
+  --green-laser:   #86efac; /* hover / mid-light text in green */
+  --green-mid:     #22C55E; /* secondary accent, hover borders */
+  --green-dark:    #166534; /* deep brand green, CTA gradient stop */
+  --green-deeper:  #052e16; /* card bg base, panel fill */
+  --green-mint:    #d1fae5; /* paragraph color over dark bg */
+  --green-mint-2:  #a7f3d0; /* secondary mint, CTA copy */
+
+  /* Neutrals */
+  --black:         #050a05; /* page background — near-black w/ green cast */
+  --black-2:       #0a140a; /* secondary surface */
+  --white:         #f0fdf4; /* primary text — minty white */
+  --grey:          #a3b8a3; /* muted text, captions, labels */
+  --grey-dim:      #6b8170; /* divider text, deep captions */
+
+  /* Translucent surface tokens */
+  --card-bg:       rgba(5, 46, 22, 0.6);   /* primary card fill */
+  --card-bg-2:     rgba(5, 46, 22, 0.35);  /* lighter card fill */
+  --border:        rgba(57, 255, 20, 0.25); /* default green border */
+  --border-strong: rgba(57, 255, 20, 0.55);
+  --border-soft:   rgba(57, 255, 20, 0.12);
+
+  /* Semantic */
+  --fg:            var(--white);
+  --fg-muted:      var(--green-mint);
+  --fg-dim:        var(--grey);
+  --bg:            var(--black);
+  --bg-elevated:   var(--card-bg);
+  --accent:        var(--green-bright);
+  --accent-soft:   var(--green-mid);
+  --link:          var(--green-bright);
+  --success:       var(--green-mid);
+  --warning:       #fbbf24;
+  --danger:        #f87171;
+
+  /* ── NETWORK-VIZ PALETTE ──────────────────────────────────── */
+  /* Use for graph viz where one accent isn't enough. Hand-tuned
+     to stay readable on the near-black bg and harmonize with the
+     primary green. */
+  --node-1: #39FF14; /* primary green */
+  --node-2: #86efac; /* mint */
+  --node-3: #5eead4; /* teal */
+  --node-4: #fbbf24; /* amber — for "critical / hub" */
+  --node-5: #f472b6; /* magenta — accent contrast */
+  --node-6: #818cf8; /* indigo — community detection */
+  --node-7: #f97316; /* orange — alert / failure */
+  --node-8: #e2e8f0; /* off-white — neutral nodes */
+  --edge:        rgba(57, 255, 20, 0.6);
+  --edge-dim:    rgba(57, 255, 20, 0.25);
+  --edge-strong: rgba(57, 255, 20, 0.95);
+
+  /* ── TYPE SYSTEM ──────────────────────────────────────────── */
+  --font-display: 'Bebas Neue', 'Impact', sans-serif;   /* headlines */
+  --font-body:    'DM Sans', system-ui, sans-serif;     /* paragraph + ui */
+  --font-mono:    'Space Mono', 'JetBrains Mono', ui-monospace, monospace; /* code, labels, captions */
+
+  --fs-xs:   10px;
+  --fs-sm:   11.5px;
+  --fs-base: 13.5px;
+  --fs-md:   15px;
+  --fs-lg:   18px;
+  --fs-xl:   24px;
+  --fs-2xl:  38px;
+  --fs-3xl:  clamp(38px, 7vw, 68px);
+
+  --lh-tight:  0.95;
+  --lh-snug:   1.2;
+  --lh-normal: 1.55;
+  --lh-loose:  1.7;
+
+  --tracking-mono:  0.10em;
+  --tracking-label: 0.18em;
+  --tracking-tag:   0.12em;
+  --tracking-disp:  0.02em;
+
+  /* ── SPACING + RADII ──────────────────────────────────────── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  24px;
+  --space-6:  32px;
+  --space-7:  48px;
+  --space-8:  64px;
+
+  --radius-xs:  3px;   /* tags */
+  --radius-sm:  6px;
+  --radius-md:  8px;   /* topic items */
+  --radius-lg:  10px;  /* stat cards */
+  --radius-xl:  12px;  /* banners, instructor */
+  --radius-2xl: 16px;  /* CTA */
+  --radius-pill: 100px;
+
+  /* ── SHADOWS + GLOWS ──────────────────────────────────────── */
+  --shadow-glow-sm: 0 0 20px rgba(57, 255, 20, 0.20);
+  --shadow-glow:    0 0 40px rgba(57, 255, 20, 0.15);
+  --shadow-glow-lg: 0 0 60px rgba(57, 255, 20, 0.20);
+  --shadow-glow-xl: 0 0 70px rgba(57, 255, 20, 0.35);
+  --shadow-node:    0 0 14px rgba(57, 255, 20, 0.85);
+
+  /* ── MOTION ───────────────────────────────────────────────── */
+  --ease-out:  cubic-bezier(.22, .61, .36, 1);
+  --ease-in:   cubic-bezier(.55, .055, .675, .19);
+  --dur-fast:  0.15s;
+  --dur-base:  0.25s;
+  --dur-slow:  0.6s;
+}
+
+/* ============================================================
+   SEMANTIC TYPOGRAPHY CLASSES
+   ============================================================ */
+.t-display, .t-h1 {
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-disp);
+  color: var(--fg);
+  font-weight: 400;
+}
+
+.t-h2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  font-weight: 400;
+}
+
+.t-h3 {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  letter-spacing: 0.05em;
+  color: var(--fg);
+  font-weight: 400;
+}
+
+.t-hook {
+  font-family: var(--font-body);
+  font-size: var(--fs-lg);
+  font-weight: 300;
+  line-height: var(--lh-normal);
+  color: var(--green-mint);
+  border-left: 3px solid var(--accent);
+  padding-left: 18px;
+}
+
+.t-body {
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  font-weight: 400;
+  line-height: var(--lh-normal);
+  color: var(--fg);
+}
+
+.t-caption {
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  color: var(--fg-dim);
+  line-height: var(--lh-normal);
+}
+
+.t-label {
+  /* The signature "section header" — mono, tracked-out, neon */
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.t-tag {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-tag);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--fg-dim);
+  letter-spacing: var(--tracking-mono);
+}
+
+.t-stat {
+  font-family: var(--font-display);
+  font-size: 42px;
+  color: var(--accent);
+  line-height: 1;
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  color: var(--green-laser);
+}

@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supply Chain Resilience · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+/* ── Lab scope: re-map old palette names to design-system tokens ── */
+.lab {
+  --bg: var(--black);
+  --surface: var(--card-bg);
+  --surface2: rgba(5, 46, 22, 0.4);
+  --accent:  var(--green-bright);  /* DCs */
+  --accent2: var(--node-4);        /* hubs / shocks — amber */
+  --accent3: var(--green-laser);   /* suppliers / bridges — mint */
+  --danger:  var(--node-7);        /* retailers / disrupted — orange */
+  --text:    var(--white);
+  --text-muted: var(--grey);
+  --disabled-color: var(--grey-dim);
+}
+
+.lab-hero {
+  margin-bottom: 32px;
+}
+.lab-hero .course-number { margin-bottom: 10px; }
+.lab-hero h1 {
+  font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px);
+  line-height: 1.05; letter-spacing: 0.03em; color: var(--white);
+  margin-bottom: 14px;
+}
+.lab-hero h1 em { color: var(--green-bright); font-style: normal; }
+.lab-hero p {
+  font-family: var(--font-body); font-size: 16px; font-weight: 300;
+  line-height: 1.55; color: var(--green-mint); max-width: 720px;
+  border-left: 3px solid var(--green-bright); padding-left: 18px;
+}
+
+.lab-layout {
+  display: grid; grid-template-columns: 1fr 340px; gap: 18px;
+}
+@media (max-width: 1000px) { .lab-layout { grid-template-columns: 1fr; } }
+
+.lab-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  margin-bottom: 14px;
+}
+.lab-card h3 {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 12px;
+}
+
+#network-svg {
+  width: 100%; height: 500px;
+  background: rgba(5, 46, 22, 0.35);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md); display: block; cursor: pointer;
+}
+
+.status-bar {
+  display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--green-mint); letter-spacing: 0.06em;
+  margin-top: 10px; padding: 10px 14px;
+  background: rgba(5, 46, 22, 0.4); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+}
+.status-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  margin-right: 6px; box-shadow: 0 0 6px currentColor;
+}
+.dot-active { background: var(--green-bright); color: var(--green-bright); }
+.dot-removed { background: var(--node-7); color: var(--node-7); }
+.removed-tag {
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  color: var(--node-7); border-radius: 4px;
+  padding: 1px 7px; font-size: 10.5px;
+  font-family: var(--font-mono);
+}
+
+.metric-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid var(--border-soft);
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-label { color: var(--grey); font-size: 13px; }
+.metric-value {
+  font-family: var(--font-mono); font-size: 14px;
+  font-weight: 500; color: var(--white);
+}
+.metric-value.changed { color: var(--node-7); }
+.metric-delta {
+  font-size: 11px; margin-left: 6px; font-family: var(--font-mono);
+}
+.delta-up   { color: var(--node-7); }
+.delta-down { color: var(--green-bright); }
+
+.stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;
+}
+.stat-box {
+  background: rgba(5, 46, 22, 0.45);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 10px;
+}
+.stat-box-label {
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--grey); margin-bottom: 4px;
+}
+.stat-box-value {
+  font-family: var(--font-mono); font-size: 16px; font-weight: 500;
+  color: var(--white);
+}
+
+.node-info-name {
+  font-family: var(--font-display); font-size: 22px;
+  color: var(--white); letter-spacing: 0.03em;
+  line-height: 1.15; margin-bottom: 10px;
+}
+.node-info-empty {
+  text-align: center; color: var(--grey);
+  padding: 24px 8px; font-size: 13px;
+}
+.node-info-empty span {
+  display: block; font-size: 22px; margin-bottom: 8px;
+}
+
+.badge {
+  display: inline-block; font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 3px;
+}
+.badge-hub      { background: rgba(251,191,36,0.12); border: 1px solid var(--node-4); color: var(--node-4); }
+.badge-bridge   { background: rgba(94,234,212,0.12); border: 1px solid var(--node-3); color: var(--node-3); }
+.badge-normal   { background: rgba(57,255,20,0.08); border: 1px solid var(--green-bright); color: var(--green-bright); }
+.badge-supplier { background: rgba(94,234,212,0.12); border: 1px solid var(--node-3); color: var(--node-3); }
+.badge-retailer { background: rgba(249,115,22,0.12); border: 1px solid var(--node-7); color: var(--node-7); }
+.badge-shock    { background: rgba(251,191,36,0.15); border: 1px solid var(--node-4); color: var(--node-4); }
+
+.lab-btn {
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  padding: 8px 12px; font-family: var(--font-mono); font-size: 11px;
+  font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-danger   { background: rgba(249,115,22,0.15); border-color: rgba(249,115,22,0.45); color: var(--node-7); }
+.btn-danger:hover { background: rgba(249,115,22,0.3); }
+.btn-success  { background: rgba(57,255,20,0.12); border-color: var(--green-bright); color: var(--green-bright); }
+.btn-success:hover { background: rgba(57,255,20,0.22); }
+.btn-warning  { background: rgba(251,191,36,0.12); border-color: var(--node-4); color: var(--node-4); }
+.btn-warning:hover { background: rgba(251,191,36,0.24); }
+.btn-neutral  { background: transparent; border-color: var(--border); color: var(--grey); }
+.btn-neutral:hover { border-color: var(--green-bright); color: var(--green-bright); }
+.btn-group    { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+.legend-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 0; font-size: 12px; color: var(--green-mint);
+}
+.legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
+.legend-line { width: 24px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+
+.shock-banner {
+  background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.4);
+  border-radius: var(--radius-sm); padding: 8px 12px;
+  margin-top: 10px; font-size: 12px; color: var(--node-4); display: none;
+  font-family: var(--font-mono); letter-spacing: 0.06em;
+}
+
+/* Learning checks */
+.lc-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  margin-top: 32px;
+}
+@media (max-width: 900px) { .lc-grid { grid-template-columns: 1fr; } }
+
+.lc-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 24px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.lc-number {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); padding: 3px 8px;
+  border: 1px solid rgba(57,255,20,0.3); border-radius: 3px;
+  background: rgba(57,255,20,0.08); display: inline-block; margin-bottom: 10px;
+}
+.lc-question {
+  font-family: var(--font-display); font-size: 18px;
+  line-height: 1.3; letter-spacing: 0.02em; color: var(--white);
+}
+.lc-options { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; }
+.lc-option {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 14px; background: rgba(5,46,22,0.35);
+  border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.15s; font-size: 13px;
+  color: var(--green-mint); line-height: 1.5;
+}
+.lc-option:hover { border-color: var(--green-bright); color: var(--white); }
+.lc-option.correct {
+  border-color: var(--green-bright);
+  background: rgba(57,255,20,0.12); color: var(--white);
+}
+.lc-option.incorrect {
+  border-color: var(--node-7);
+  background: rgba(249,115,22,0.1); color: var(--white);
+}
+.lc-option.revealed-correct {
+  border-color: var(--green-bright); background: rgba(57,255,20,0.12);
+}
+.opt-label {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  color: var(--green-bright); flex-shrink: 0; margin-top: 1px;
+}
+.lc-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+.lc-feedback {
+  font-size: 13px; border-radius: var(--radius-sm);
+  padding: 12px 14px; margin-top: 8px; display: none;
+  line-height: 1.55;
+}
+.feedback-hint {
+  background: rgba(57,255,20,0.06); border: 1px solid rgba(57,255,20,0.2);
+  color: var(--green-mint);
+}
+.feedback-answer {
+  background: rgba(94,234,212,0.06); border: 1px solid rgba(94,234,212,0.25);
+  color: var(--green-mint);
+}
+.feedback-answer strong { color: var(--green-bright); }
+.feedback-answer em { color: var(--node-3); font-style: italic; }
+
+/* Data tables */
+.data-table-wrapper {
+  display: none; overflow-x: auto;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); margin-top: 10px;
+}
+.data-table-wrapper.visible { display: block; }
+table.lab-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.lab-table th {
+  background: rgba(5,46,22,0.5); color: var(--grey);
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 8px 12px; text-align: left;
+  border-bottom: 1px solid var(--border-soft);
+}
+.lab-table td {
+  padding: 7px 12px; border-bottom: 1px solid rgba(46,51,82,0.4);
+  color: var(--green-mint); font-family: var(--font-mono); font-size: 11.5px;
+}
+.lab-table tr:last-child td { border-bottom: none; }
+.lab-table tr:hover td { background: rgba(57,255,20,0.04); }
+.td-removed { color: var(--node-7); font-style: italic; }
+.disrupted-badge {
+  font-family: var(--font-mono); font-size: 9px;
+  text-transform: uppercase; padding: 2px 6px;
+  border-radius: 3px; background: rgba(251,191,36,0.15);
+  border: 1px solid var(--node-4); color: var(--node-4);
+}
+</style>
+</head>
+<body data-page="cases">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../four-skills.html"    data-page="skills">Four Skills</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page-wide lab">
+
+  <!-- ── HERO ── -->
+  <section class="lab-hero">
+    <p class="course-number">SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure</p>
+    <h1>Supply Chain Networks &amp; <em>Flow Resilience</em></h1>
+    <p>Explore how goods flow from raw-material suppliers to end customers — and discover why the busiest node in a supply chain is rarely the most critical one to protect.</p>
+  </section>
+
+  <div class="lab-layout">
+
+    <div>
+      <div class="lab-card" style="padding: 12px;">
+        <svg id="network-svg"></svg>
+        <div class="status-bar">
+          <span><span class="status-dot dot-active"></span> <strong id="active-count">—</strong> active nodes</span>
+          <span><span class="status-dot dot-removed"></span> <strong id="removed-count">0</strong> disrupted</span>
+          <span id="retailer-status"></span>
+          <span id="removed-names-display"></span>
+          <span id="shock-status" style="display:none; color: var(--node-4); font-family: var(--font-mono);"></span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="lab-card">
+        <h3>🔍 Node Inspector</h3>
+        <div id="node-info-panel">
+          <div class="node-info-empty"><span>🖱️</span>Click any node to inspect its supply chain role.</div>
+        </div>
+        <div id="node-actions" class="btn-group" style="display:none;">
+          <button class="lab-btn btn-danger"  id="btn-remove"  onclick="removeSelected()">✂️ Disrupt Node</button>
+          <button class="lab-btn btn-success" id="btn-restore" onclick="restoreSelected()" style="display:none;">↩ Restore</button>
+          <button class="lab-btn btn-warning" id="btn-shock"   onclick="toggleShock()" style="display:none;">⚡ 50% Capacity</button>
+          <button class="lab-btn btn-neutral" onclick="deselectNode()">✕ Deselect</button>
+        </div>
+      </div>
+
+      <div class="lab-card">
+        <h3>📊 Network Metrics</h3>
+        <div class="metric-row"><span class="metric-label">🏪 Retailers Supplied</span><span class="metric-value" id="m-retailers">—</span></div>
+        <div class="metric-row"><span class="metric-label">📦 Supply Coverage</span><span class="metric-value" id="m-coverage">—</span></div>
+        <div class="metric-row"><span class="metric-label">📏 Avg Path Length</span><span class="metric-value" id="m-apl">—</span></div>
+        <div class="metric-row"><span class="metric-label">🔗 Components</span><span class="metric-value" id="m-components">—</span></div>
+        <div class="metric-row"><span class="metric-label">↔️ Diameter</span><span class="metric-value" id="m-diameter">—</span></div>
+        <div class="shock-banner" id="shock-banner">⚡ Capacity shock active: <strong id="shocked-label">—</strong> at 50% output</div>
+      </div>
+
+      <div class="lab-card">
+        <h3>🎮 Controls</h3>
+        <p style="font-size:12px; color: var(--grey); margin-bottom: 10px;">Click a node on the map to select it, then use the buttons above.</p>
+        <div class="btn-group"><button class="lab-btn btn-neutral" onclick="resetAll()">🔄 Reset All</button></div>
+      </div>
+
+      <div class="lab-card">
+        <h3>🗺️ Legend</h3>
+        <div class="legend-row"><div class="legend-dot" style="background:var(--node-3);color:var(--node-3);"></div>Raw material supplier (upstream)</div>
+        <div class="legend-row"><div class="legend-dot" style="background:var(--node-4);color:var(--node-4);"></div>Hub / consolidator (midstream)</div>
+        <div class="legend-row"><div class="legend-dot" style="background:var(--green-bright);color:var(--green-bright);"></div>Distribution center</div>
+        <div class="legend-row"><div class="legend-dot" style="background:var(--node-7);color:var(--node-7);"></div>Retailer / end customer</div>
+        <div style="margin-top:8px; border-top: 1px solid var(--border-soft); padding-top: 8px;">
+          <div class="legend-row"><div class="legend-line" style="background:var(--node-4);"></div>High-volume corridor</div>
+          <div class="legend-row"><div class="legend-line" style="background:var(--green-bright); opacity: 0.7;"></div>Standard route</div>
+          <div class="legend-row" style="font-size:11px; padding-top:4px;">Node size = weighted degree</div>
+        </div>
+      </div>
+
+      <div class="lab-card">
+        <h3>📋 Data Tables</h3>
+        <div class="btn-group">
+          <button class="lab-btn btn-neutral" onclick="toggleTable('node-table-wrap')">Nodes</button>
+          <button class="lab-btn btn-neutral" onclick="toggleTable('edge-table-wrap')">Edges</button>
+        </div>
+        <div id="node-table-wrap" class="data-table-wrapper">
+          <table class="lab-table" id="node-table"><thead><tr><th>Node</th><th>Zone</th><th>Role</th><th>Degree</th><th>Betweenness</th><th>Status</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div id="edge-table-wrap" class="data-table-wrapper" style="margin-top:8px;">
+          <table class="lab-table" id="edge-table"><thead><tr><th>From</th><th>To</th><th>Type</th><th>Vol (units/wk)</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── LEARNING CHECKS ── -->
+  <div class="sec-label" style="margin-top: 36px;">Learning Checks</div>
+  <div class="lc-grid">
+
+    <div class="lc-card">
+      <span class="lc-number">LC 01</span>
+      <div class="lc-question">Which single node disruption causes the greatest loss of retailer coverage — and is it the node with the most connections?</div>
+      <div class="lc-options" id="lc1-options">
+        <div class="lc-option" onclick="selectOption(1,'A')"><span class="opt-label">A</span>Yes — the Central Hub has the most connections and removing it causes the most retailers to lose supply.</div>
+        <div class="lc-option" onclick="selectOption(1,'B')"><span class="opt-label">B</span>No — the Mesa Consolidator has fewer connections but removing it isolates more retailers than removing the Central Hub.</div>
+        <div class="lc-option" onclick="selectOption(1,'C')"><span class="opt-label">C</span>The highest-degree node is always most critical, because more connections means more downstream dependency.</div>
+      </div>
+      <div class="lc-actions">
+        <button class="lab-btn btn-neutral" onclick="showHint(1)">💡 Hint</button>
+        <button class="lab-btn btn-neutral" onclick="showAnswer(1)">🔓 Reveal Answer</button>
+      </div>
+      <div class="lc-feedback feedback-hint" id="lc1-hint">Try removing the <strong>Central Hub</strong> and record "Retailers Supplied." Then hit Reset, remove <strong>Mesa Consolidator</strong>, and compare. Which loss is worse?</div>
+      <div class="lc-feedback feedback-answer" id="lc1-answer"><strong>Correct: B.</strong> Removing Mesa Consolidator strands the entire Southwest retail cluster — a larger coverage loss than removing the Central Hub, which serves regions with redundant paths from other DCs. This is the core gap between <em>degree</em> and <em>betweenness</em>: what matters isn't how many routes touch a node, but whether those routes are the <em>only</em> paths to critical customers. High-degree nodes are often visible enough that engineers build redundancy around them. The quiet bottlenecks — low-degree, high-betweenness — are where supply chains actually break.</div>
+    </div>
+
+    <div class="lc-card">
+      <span class="lc-number">LC 02</span>
+      <div class="lc-question">Remove the Mesa Consolidator. What happens to the network's component structure — and which retailers are now completely cut off from supply?</div>
+      <div class="lc-options" id="lc2-options">
+        <div class="lc-option" onclick="selectOption(2,'A')"><span class="opt-label">A</span>The network stays connected. All retailers still receive supply through alternative routes, just with longer delivery paths.</div>
+        <div class="lc-option" onclick="selectOption(2,'B')"><span class="opt-label">B</span>The network splits into disconnected components. The Southwest retail cluster loses all supply and average path length becomes infinite.</div>
+        <div class="lc-option" onclick="selectOption(2,'C')"><span class="opt-label">C</span>The network splits, but the Central Hub immediately compensates so the Southwest cluster stays partially supplied.</div>
+      </div>
+      <div class="lc-actions">
+        <button class="lab-btn btn-neutral" onclick="showHint(2)">💡 Hint</button>
+        <button class="lab-btn btn-neutral" onclick="showAnswer(2)">🔓 Reveal Answer</button>
+      </div>
+      <div class="lc-feedback feedback-hint" id="lc2-hint">Select <strong>Mesa Consolidator</strong> and click "Disrupt Node." Watch the <strong>Components</strong> and <strong>Avg Path Length</strong> metrics change. Then look at which nodes have gone dark on the map.</div>
+      <div class="lc-feedback feedback-answer" id="lc2-answer"><strong>Correct: B.</strong> Mesa Consolidator is a <em>bridge node</em> — the sole connector between the Southwest supplier cluster and its retail cluster. Removing it creates two disconnected subgraphs, and average path length becomes ∞ because no finite path exists between those components. Networks don't need to lose many nodes to fragment — they only need to lose the <em>right</em> one. This is why bridge detection is a core task in supply chain resilience analysis, and why betweenness centrality is a better vulnerability signal than degree.</div>
+    </div>
+
+    <div class="lc-card">
+      <span class="lc-number">LC 03</span>
+      <div class="lc-question">Select the Northern Raw Supplier and apply a 50% capacity shock (⚡ button). Does cutting its output by half cut total retailer coverage by roughly half?</div>
+      <div class="lc-options" id="lc3-options">
+        <div class="lc-option" onclick="selectOption(3,'A')"><span class="opt-label">A</span>Yes — a 50% reduction in supplier output causes roughly 50% of retailers to lose supply, since they depend on that source.</div>
+        <div class="lc-option" onclick="selectOption(3,'B')"><span class="opt-label">B</span>Yes — coverage loss is actually worse than 50%, because downstream nodes have no way to compensate for upstream shortfalls.</div>
+        <div class="lc-option" onclick="selectOption(3,'C')"><span class="opt-label">C</span>No — retailer coverage stays the same (all retailers still reachable), because path connectivity is unaffected. Only throughput volume drops, not reachability.</div>
+      </div>
+      <div class="lc-actions">
+        <button class="lab-btn btn-neutral" onclick="showHint(3)">💡 Hint</button>
+        <button class="lab-btn btn-neutral" onclick="showAnswer(3)">🔓 Reveal Answer</button>
+      </div>
+      <div class="lc-feedback feedback-hint" id="lc3-hint">Select <strong>Northern Raw Supplier</strong> and click "⚡ 50% Capacity." Now check: does the <strong>Retailers Supplied</strong> metric change? Compare that to what happens when you fully disrupt the same node. What's the difference between making a link thinner vs. cutting it entirely?</div>
+      <div class="lc-feedback feedback-answer" id="lc3-answer"><strong>Correct: C.</strong> A capacity shock reduces the <em>volume</em> flowing along a node's edges, but as long as the node remains active, all downstream paths stay topologically connected. Every retailer that was reachable before is still reachable — they'll receive less product, but won't be cut off. This distinction is fundamental in supply chain risk: <strong>connectivity disruptions</strong> (node removal) and <strong>capacity disruptions</strong> (output reduction) have different structural effects and require different interventions. A fully connected but chronically undersupplied network is a different problem from a fragmented one — and fixing it requires a different playbook.</div>
+    </div>
+
+    <div class="lc-card">
+      <span class="lc-number">LC 04</span>
+      <div class="lc-question">Compare disrupting the highest-betweenness node vs. a peripheral node like Eastern Raw Supplier. Which is worse for <em>global</em> network metrics — and which can be uniquely catastrophic for a <em>specific</em> retailer cluster?</div>
+      <div class="lc-options" id="lc4-options">
+        <div class="lc-option" onclick="selectOption(4,'A')"><span class="opt-label">A</span>Removing the highest-betweenness node is always worse by every metric — both globally and for every specific cluster — because betweenness directly measures total criticality.</div>
+        <div class="lc-option" onclick="selectOption(4,'B')"><span class="opt-label">B</span>Removing the highest-betweenness node damages global metrics most, but a peripheral node that exclusively serves one cluster can be just as catastrophic for that cluster even when global metrics look fine.</div>
+        <div class="lc-option" onclick="selectOption(4,'C')"><span class="opt-label">C</span>Removing a peripheral node is always less damaging, because low betweenness means the rest of the network is unaffected.</div>
+      </div>
+      <div class="lc-actions">
+        <button class="lab-btn btn-neutral" onclick="showHint(4)">💡 Hint</button>
+        <button class="lab-btn btn-neutral" onclick="showAnswer(4)">🔓 Reveal Answer</button>
+      </div>
+      <div class="lc-feedback feedback-hint" id="lc4-hint">Remove <strong>Mesa Consolidator</strong> (highest betweenness) and note the global metrics. Reset, then remove <strong>Eastern Raw Supplier</strong>. Global metrics may look healthier the second time — but look specifically at which retailer nodes go dark. Is "the rest of the network is fine" the same as "all customers are fine"?</div>
+      <div class="lc-feedback feedback-answer" id="lc4-answer"><strong>Correct: B.</strong> This is the gap between <em>global resilience</em> and <em>local service coverage</em>. Removing a high-betweenness node maximizes damage to network-wide metrics. But removing a peripheral node that is the <em>sole upstream source</em> for a specific retail cluster can be equally catastrophic for that cluster — even while the rest of the network runs normally. A supply chain risk manager who only tracks aggregate metrics will miss this. Real resilience analysis requires both: network-level topology metrics <em>and</em> customer-level coverage audits. Neither is sufficient alone.</div>
+    </div>
+
+  </div>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Supply Chain Networks &amp; Flow Resilience</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="../case-studies.html">← All case studies</a>
+  </p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+
+<script>
+// ─── NETWORK DATA ─────────────────────────────────────────────────────────────
+
+const rawNodes = [
+  // Upstream suppliers
+  { id: "north_raw",    label: "Northern Raw\nSupplier",   zone: "upstream",     x: 130, y: 75,  type: "normal", role: "supplier" },
+  { id: "east_raw",     label: "Eastern Raw\nSupplier",    zone: "upstream",     x: 640, y: 65,  type: "normal", role: "supplier" },
+  { id: "west_raw",     label: "Western Raw\nSupplier",    zone: "upstream",     x: 75,  y: 200, type: "normal", role: "supplier" },
+  { id: "south_raw",    label: "Southern Raw\nSupplier",   zone: "upstream",     x: 200, y: 420, type: "normal", role: "supplier" },
+  { id: "gulf_raw",     label: "Gulf Raw\nSupplier",       zone: "upstream",     x: 390, y: 445, type: "normal", role: "supplier" },
+  { id: "mesa_consol",  label: "Mesa\nConsolidator",       zone: "midstream",    x: 165, y: 295, type: "bridge", role: "consolidator" },
+  { id: "central_hub",  label: "Central\nHub",             zone: "midstream",    x: 390, y: 195, type: "hub",    role: "hub" },
+  { id: "eastern_proc", label: "Eastern\nProcessing",      zone: "midstream",    x: 590, y: 200, type: "normal", role: "consolidator" },
+  { id: "dc_north",     label: "DC North",                 zone: "distribution", x: 310, y: 110, type: "normal", role: "dc" },
+  { id: "dc_south",     label: "DC South",                 zone: "distribution", x: 490, y: 310, type: "normal", role: "dc" },
+  { id: "dc_west",      label: "DC West",                  zone: "distribution", x: 250, y: 195, type: "normal", role: "dc" },
+  { id: "ret_nw1",      label: "Retailer NW-1",            zone: "downstream",   x: 75,  y: 335, type: "normal", role: "retailer" },
+  { id: "ret_nw2",      label: "Retailer NW-2",            zone: "downstream",   x: 60,  y: 420, type: "normal", role: "retailer" },
+  { id: "ret_n1",       label: "Retailer N-1",             zone: "downstream",   x: 245, y: 75,  type: "normal", role: "retailer" },
+  { id: "ret_n2",       label: "Retailer N-2",             zone: "downstream",   x: 435, y: 75,  type: "normal", role: "retailer" },
+  { id: "ret_e1",       label: "Retailer E-1",             zone: "downstream",   x: 665, y: 135, type: "normal", role: "retailer" },
+  { id: "ret_e2",       label: "Retailer E-2",             zone: "downstream",   x: 685, y: 295, type: "normal", role: "retailer" },
+  { id: "ret_se1",      label: "Retailer SE-1",            zone: "downstream",   x: 585, y: 390, type: "normal", role: "retailer" },
+  { id: "ret_se2",      label: "Retailer SE-2",            zone: "downstream",   x: 495, y: 420, type: "normal", role: "retailer" },
+  { id: "ret_s1",       label: "Retailer S-1",             zone: "downstream",   x: 335, y: 390, type: "normal", role: "retailer" },
+  { id: "ret_s2",       label: "Retailer S-2",             zone: "downstream",   x: 275, y: 460, type: "normal", role: "retailer" },
+];
+
+const rawEdges = [
+  { source: "north_raw",    target: "dc_north",     line: "standard", weight: 4200 },
+  { source: "north_raw",    target: "central_hub",  line: "standard", weight: 3800 },
+  { source: "west_raw",     target: "mesa_consol",  line: "standard", weight: 5100 },
+  { source: "west_raw",     target: "dc_west",      line: "standard", weight: 2900 },
+  { source: "south_raw",    target: "mesa_consol",  line: "standard", weight: 4400 },
+  { source: "gulf_raw",     target: "dc_south",     line: "high",     weight: 7200 },
+  { source: "gulf_raw",     target: "central_hub",  line: "high",     weight: 6100 },
+  { source: "east_raw",     target: "eastern_proc", line: "standard", weight: 5600 },
+  { source: "east_raw",     target: "dc_north",     line: "standard", weight: 2400 },
+  { source: "mesa_consol",  target: "dc_west",      line: "standard", weight: 3900 },
+  { source: "mesa_consol",  target: "ret_nw1",      line: "standard", weight: 2100 },
+  { source: "mesa_consol",  target: "ret_nw2",      line: "standard", weight: 1800 },
+  { source: "central_hub",  target: "dc_north",     line: "high",     weight: 8500 },
+  { source: "central_hub",  target: "dc_south",     line: "high",     weight: 7800 },
+  { source: "central_hub",  target: "dc_west",      line: "standard", weight: 4100 },
+  { source: "eastern_proc", target: "dc_north",     line: "standard", weight: 3300 },
+  { source: "eastern_proc", target: "ret_e1",       line: "standard", weight: 3100 },
+  { source: "eastern_proc", target: "ret_e2",       line: "standard", weight: 2800 },
+  { source: "dc_north",     target: "ret_n1",       line: "standard", weight: 3600 },
+  { source: "dc_north",     target: "ret_n2",       line: "standard", weight: 3200 },
+  { source: "dc_west",      target: "ret_nw1",      line: "standard", weight: 2200 },
+  { source: "dc_south",     target: "ret_se1",      line: "standard", weight: 3900 },
+  { source: "dc_south",     target: "ret_se2",      line: "standard", weight: 3500 },
+  { source: "dc_south",     target: "ret_s1",       line: "standard", weight: 2700 },
+  { source: "dc_south",     target: "ret_s2",       line: "standard", weight: 2400 },
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+
+let removedNodes  = new Set();
+let selectedNode  = null;
+let shockedNode   = null;
+let networkStats  = {};
+let nodeMetrics   = {};
+let baselineStats = null;
+
+const RETAILER_IDS    = rawNodes.filter(n => n.role === "retailer").map(n => n.id);
+const SUPPLIER_IDS    = rawNodes.filter(n => n.role === "supplier").map(n => n.id);
+const TOTAL_RETAILERS = RETAILER_IDS.length;
+
+// ─── ANALYTICS ────────────────────────────────────────────────────────────────
+
+function buildAdjacency(removedSet) {
+  const activeIds = rawNodes.filter(n => !removedSet.has(n.id)).map(n => n.id);
+  const activeSet = new Set(activeIds);
+  const adj = {};
+  activeIds.forEach(id => adj[id] = []);
+  rawEdges.forEach(e => {
+    if (!activeSet.has(e.source) || !activeSet.has(e.target)) return;
+    adj[e.source].push(e.target);
+    adj[e.target].push(e.source);
+  });
+  return { adj, activeIds };
+}
+
+function bfs(start, adj) {
+  const dist = { [start]: 0 };
+  const q = [start]; let qi = 0;
+  while (qi < q.length) {
+    const u = q[qi++];
+    (adj[u] || []).forEach(v => { if (dist[v] === undefined) { dist[v] = dist[u] + 1; q.push(v); } });
+  }
+  return dist;
+}
+
+function computeAllPairs(activeIds, adj) {
+  const allDists = {};
+  activeIds.forEach(id => allDists[id] = bfs(id, adj));
+  let total = 0, pairs = 0, diameter = 0, disconnected = false;
+  activeIds.forEach(a => {
+    activeIds.forEach(b => {
+      if (a >= b) return;
+      const d = allDists[a][b];
+      if (d === undefined) { disconnected = true; }
+      else { total += d; pairs++; if (d > diameter) diameter = d; }
+    });
+  });
+  const visited = new Set(); let components = 0;
+  activeIds.forEach(id => {
+    if (!visited.has(id)) {
+      components++;
+      const q = [id]; let qi = 0;
+      while (qi < q.length) { const u = q[qi++]; visited.add(u); (adj[u]||[]).forEach(v => { if (!visited.has(v)) q.push(v); }); }
+    }
+  });
+  return { allDists, avgPathLength: pairs > 0 ? total/pairs : 0, diameter: disconnected ? Infinity : diameter, components, disconnected };
+}
+
+function computeBetweenness(activeIds, adj) {
+  const betw = {}; activeIds.forEach(id => betw[id] = 0);
+  activeIds.forEach(s => {
+    const stack=[], pred={}, sigma={}, dist={};
+    activeIds.forEach(id => { pred[id]=[]; sigma[id]=0; dist[id]=-1; });
+    sigma[s]=1; dist[s]=0;
+    const q=[s]; let qi=0;
+    while (qi<q.length) {
+      const v=q[qi++]; stack.push(v);
+      (adj[v]||[]).forEach(w => {
+        if (dist[w]<0) { q.push(w); dist[w]=dist[v]+1; }
+        if (dist[w]===dist[v]+1) { sigma[w]+=sigma[v]; pred[w].push(v); }
+      });
+    }
+    const delta={}; activeIds.forEach(id => delta[id]=0);
+    while (stack.length) {
+      const w=stack.pop();
+      pred[w].forEach(v => { delta[v]+=(sigma[v]/sigma[w])*(1+delta[w]); });
+      if (w!==s) betw[w]+=delta[w];
+    }
+  });
+  const n=activeIds.length, norm=(n-1)*(n-2);
+  activeIds.forEach(id => betw[id] = norm > 0 ? betw[id]/norm : 0);
+  return betw;
+}
+
+function computeDegree(activeIds, adj) {
+  const deg = {};
+  activeIds.forEach(id => deg[id] = (adj[id]||[]).length);
+  return deg;
+}
+
+function countReachableRetailers(allDists, activeIds) {
+  const activeSet = new Set(activeIds);
+  const activeSuppliers = SUPPLIER_IDS.filter(id => activeSet.has(id));
+  let count = 0;
+  RETAILER_IDS.forEach(rid => {
+    if (!activeSet.has(rid)) return;
+    if (activeSuppliers.some(sid => allDists[sid] && allDists[sid][rid] !== undefined)) count++;
+  });
+  return count;
+}
+
+function recompute() {
+  const { adj, activeIds } = buildAdjacency(removedNodes);
+  const { allDists, avgPathLength, diameter, components, disconnected } = computeAllPairs(activeIds, adj);
+  const betweenness = computeBetweenness(activeIds, adj);
+  const degree      = computeDegree(activeIds, adj);
+  const retailersReachable = countReachableRetailers(allDists, activeIds);
+
+  networkStats = { avgPathLength, diameter, components, disconnected, retailersReachable, activeCount: activeIds.length };
+  rawNodes.forEach(n => {
+    nodeMetrics[n.id] = { degree: degree[n.id]||0, betweenness: betweenness[n.id]||0, active: !removedNodes.has(n.id) };
+  });
+}
+
+// ─── DRAWING ──────────────────────────────────────────────────────────────────
+
+const svgEl = document.getElementById("network-svg");
+const svg   = d3.select("#network-svg");
+
+function sx(x) { return (x/750)*svgEl.clientWidth;  }
+function sy(y) { return (y/500)*svgEl.clientHeight; }
+
+function nodeColor(node) {
+  if (removedNodes.has(node.id)) return "var(--disabled-color)";
+  const roleMap = { supplier:"var(--accent3)", hub:"var(--accent2)", consolidator:"var(--accent2)", dc:"var(--accent)", retailer:"var(--danger)" };
+  if (node.type==="bridge") return "var(--accent3)";
+  if (node.type==="hub")    return "var(--accent2)";
+  return roleMap[node.role] || "var(--accent)";
+}
+
+function nodeRadius(id) {
+  const deg = nodeMetrics[id]?.degree || 0;
+  const max = Math.max(1, ...rawNodes.map(n => nodeMetrics[n.id]?.degree||0));
+  return 7 + (deg/max)*13;
+}
+
+function edgeStrokeWidth(e) {
+  let w = e.weight;
+  if (shockedNode && (e.source===shockedNode || e.target===shockedNode)) w *= 0.5;
+  return Math.max(1, Math.log(w/1000)*1.6);
+}
+
+function drawNetwork() {
+  svg.selectAll("*").remove();
+  const activeSet = new Set(rawNodes.filter(n=>!removedNodes.has(n.id)).map(n=>n.id));
+
+  // edges
+  rawEdges.forEach(e => {
+    const sn = rawNodes.find(n=>n.id===e.source);
+    const tn = rawNodes.find(n=>n.id===e.target);
+    if (!sn||!tn) return;
+    const both = activeSet.has(e.source)&&activeSet.has(e.target);
+    const shocked = shockedNode && (e.source===shockedNode||e.target===shockedNode);
+    svg.append("line")
+      .attr("x1",sx(sn.x)).attr("y1",sy(sn.y))
+      .attr("x2",sx(tn.x)).attr("y2",sy(tn.y))
+      .attr("stroke", both ? (e.line==="high"?"var(--accent2)":"var(--accent)") : "#1a2a1a")
+      .attr("stroke-width", both ? edgeStrokeWidth(e) : 0.5)
+      .attr("stroke-opacity", both ? (shocked ? 0.35 : 0.55) : 0.1)
+      .attr("stroke-dasharray", shocked&&both ? "5,3" : null);
+  });
+
+  // nodes
+  rawNodes.forEach(node => {
+    const r  = nodeRadius(node.id);
+    const cx = sx(node.x), cy = sy(node.y);
+    const active   = activeSet.has(node.id);
+    const selected = selectedNode===node.id;
+    const shocked  = shockedNode===node.id;
+    const g = svg.append("g").attr("cursor","pointer").on("click",()=>handleNodeClick(node.id));
+
+    if (active && (node.type==="hub"||node.type==="bridge")) {
+      g.append("circle").attr("cx",cx).attr("cy",cy).attr("r",r+7)
+        .attr("fill", node.type==="hub"?"rgba(251,191,36,0.14)":"rgba(94,234,212,0.14)");
+    }
+    if (shocked && active) {
+      g.append("circle").attr("cx",cx).attr("cy",cy).attr("r",r+9)
+        .attr("fill","none").attr("stroke","var(--accent2)").attr("stroke-width",2)
+        .attr("stroke-dasharray","4,3").attr("opacity",0.8);
+    }
+    if (selected) {
+      g.append("circle").attr("cx",cx).attr("cy",cy).attr("r",r+6)
+        .attr("fill","none").attr("stroke", active ? nodeColor(node) : "#555")
+        .attr("stroke-width",2).attr("stroke-dasharray","4,3").attr("opacity",0.8);
+    }
+    g.append("circle").attr("cx",cx).attr("cy",cy).attr("r",r)
+      .attr("fill", active ? nodeColor(node) : "#1a2a1a")
+      .attr("stroke", active ? "rgba(255,255,255,0.18)" : "#333")
+      .attr("stroke-width",1.5).attr("opacity", active ? 1 : 0.3)
+      .style("filter", active ? "drop-shadow(0 0 6px " + nodeColor(node) + ")" : null);
+
+    const parts = node.label.split("\n");
+    const lh = 11, startY = cy + r + 10 + (parts.length-1)*lh/2;
+    parts.forEach((part,i) => {
+      g.append("text").attr("x",cx).attr("y",startY-(parts.length-1-i)*lh)
+        .attr("text-anchor","middle").attr("font-family","Space Mono, monospace")
+        .attr("font-size","9px").attr("letter-spacing","0.04em").attr("fill", active?"var(--green-mint)":"#3a4a3a")
+        .text(part);
+    });
+  });
+}
+
+// ─── UI UPDATES ───────────────────────────────────────────────────────────────
+
+function fmt(v, d=2) { return (v===Infinity||v===undefined) ? "∞" : v.toFixed(d); }
+
+function setMetric(id, val, baseVal, higherIsBad=true) {
+  const el = document.getElementById(id);
+  const changed = baseVal !== null && val !== baseVal;
+  el.className = "metric-value" + (changed ? " changed" : "");
+  if (val===Infinity) { el.textContent = "∞"; return; }
+  el.textContent = typeof val==="number" && !Number.isInteger(val) ? fmt(val) : val;
+  if (changed && isFinite(val) && isFinite(baseVal)) {
+    const delta = val - baseVal;
+    const cls = (delta>0) === higherIsBad ? "delta-up" : "delta-down";
+    const sign = delta>0?"+":"";
+    const dStr = Number.isInteger(val) ? `${sign}${delta}` : `${sign}${fmt(delta)}`;
+    el.innerHTML += ` <span class="metric-delta ${cls}">${dStr}</span>`;
+  }
+}
+
+function updateMetricsUI() {
+  const b = baselineStats;
+  const rr = networkStats.retailersReachable;
+  const pct = Math.round((rr/TOTAL_RETAILERS)*100);
+
+  setMetric("m-retailers",  rr,  b?.retailersReachable ?? null, false);
+  document.getElementById("m-coverage").textContent = pct + "%";
+  document.getElementById("m-coverage").className = "metric-value" + (b && rr!==b.retailersReachable ? " changed" : "");
+  setMetric("m-apl",        networkStats.disconnected ? Infinity : networkStats.avgPathLength, b?.avgPathLength ?? null, true);
+  setMetric("m-components", networkStats.components,   b?.components ?? null, true);
+  setMetric("m-diameter",   networkStats.diameter,     b?.diameter   ?? null, true);
+
+  document.getElementById("active-count").textContent  = networkStats.activeCount;
+  document.getElementById("removed-count").textContent = removedNodes.size;
+
+  const rs = document.getElementById("retailer-status");
+  rs.textContent = `${rr}/${TOTAL_RETAILERS} retailers supplied`;
+  rs.style.color = rr < TOTAL_RETAILERS ? "var(--node-7)" : "var(--green-bright)";
+
+  const nd = document.getElementById("removed-names-display");
+  nd.innerHTML = "";
+  removedNodes.forEach(id => {
+    const n = rawNodes.find(x=>x.id===id);
+    if (n) { const t=document.createElement("span"); t.className="removed-tag"; t.textContent=n.label.replace("\n"," "); nd.appendChild(t); }
+  });
+
+  const shockBanner = document.getElementById("shock-banner");
+  const shockStatus = document.getElementById("shock-status");
+  if (shockedNode) {
+    const n = rawNodes.find(x=>x.id===shockedNode);
+    shockBanner.style.display = "block";
+    document.getElementById("shocked-label").textContent = n?.label.replace("\n"," ") || shockedNode;
+    shockStatus.style.display = "inline";
+    shockStatus.textContent   = `⚡ Shock: ${n?.label.replace("\n"," ")}`;
+  } else {
+    shockBanner.style.display = "none";
+    shockStatus.style.display = "none";
+  }
+
+  updateNodeTable();
+}
+
+function updateNodeInfoPanel() {
+  const panel   = document.getElementById("node-info-panel");
+  const actions = document.getElementById("node-actions");
+  if (!selectedNode) {
+    panel.innerHTML = `<div class="node-info-empty"><span>🖱️</span>Click any node to inspect its supply chain role.</div>`;
+    actions.style.display = "none";
+    return;
+  }
+  const node    = rawNodes.find(n=>n.id===selectedNode);
+  const m       = nodeMetrics[selectedNode] || {};
+  const isRemoved = removedNodes.has(selectedNode);
+  const isShocked = shockedNode === selectedNode;
+  const isSupplier = node.role === "supplier";
+
+  const typeStr = node.type==="hub" ? "hub" : node.type==="bridge" ? "bridge" : node.role;
+  const badgeClass = node.type==="hub" ? "badge-hub" : node.type==="bridge" ? "badge-bridge" : node.role==="supplier" ? "badge-supplier" : node.role==="retailer" ? "badge-retailer" : "badge-normal";
+  const roleDesc = { supplier:"Produces raw materials; feeds upstream into the supply chain.", consolidator:"Aggregates inputs from multiple suppliers before onward distribution.", hub:"High-volume center connecting many upstream and downstream nodes.", dc:"Regional distribution center delivering to local retailers.", retailer:"End customer — receives finished goods from distribution centers." };
+  const nn = networkStats.activeCount;
+  const norm = (nn-1)*(nn-2)/2;
+  const rawBetw = Math.round((m.betweenness||0)*norm);
+
+  panel.innerHTML = `
+    <div class="node-info-name">${node.label.replace("\n","<br>")}</div>
+    <div style="margin-bottom: 8px;">
+      <span class="badge ${badgeClass}">${typeStr}</span>
+      ${isShocked?'<span class="badge badge-shock" style="margin-left:4px;">⚡ 50% cap</span>':''}
+    </div>
+    <div style="font-size: 12px; color: var(--grey); margin-bottom: 10px;">${roleDesc[node.role]||''}</div>
+    ${isRemoved?'<div style="color: var(--node-7); font-size: 12px; margin-bottom: 8px;">⚠️ Disrupted — removed from network.</div>':''}
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-box-label">Degree</div><div class="stat-box-value">${m.degree??'—'}</div></div>
+      <div class="stat-box"><div class="stat-box-label">Betweenness</div><div class="stat-box-value">${m.betweenness!==undefined?(m.betweenness*100).toFixed(1)+'%':'—'}</div></div>
+      <div class="stat-box"><div class="stat-box-label">Zone</div><div class="stat-box-value" style="font-size:11px;">${node.zone}</div></div>
+      <div class="stat-box"><div class="stat-box-label">Paths Through</div><div class="stat-box-value">${rawBetw}</div></div>
+    </div>`;
+
+  actions.style.display = "flex";
+  document.getElementById("btn-remove").style.display  = isRemoved ? "none" : "inline-flex";
+  document.getElementById("btn-restore").style.display = isRemoved ? "inline-flex" : "none";
+  const btnShock = document.getElementById("btn-shock");
+  if (isSupplier && !isRemoved) {
+    btnShock.style.display  = "inline-flex";
+    btnShock.textContent    = isShocked ? "↩ Full Capacity" : "⚡ 50% Capacity";
+  } else {
+    btnShock.style.display = "none";
+  }
+}
+
+function updateNodeTable() {
+  const tbody = document.querySelector("#node-table tbody");
+  tbody.innerHTML = "";
+  [...rawNodes].sort((a,b)=>(nodeMetrics[b.id]?.betweenness||0)-(nodeMetrics[a.id]?.betweenness||0)).forEach(node => {
+    const m = nodeMetrics[node.id]||{};
+    const removed = removedNodes.has(node.id);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="${removed?'td-removed':''}">${node.label.replace("\n"," ")}${removed?' ✂️':''}</td>
+      <td>${node.zone}</td><td>${node.role}</td>
+      <td>${m.degree??'—'}</td>
+      <td>${m.betweenness!==undefined?(m.betweenness*100).toFixed(1)+'%':'—'}</td>
+      <td style="color: ${removed?'var(--node-7)':'var(--green-bright)'};">${removed?'disrupted':'active'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function buildEdgeTable() {
+  const tbody = document.querySelector("#edge-table tbody");
+  tbody.innerHTML = "";
+  rawEdges.forEach(e => {
+    const sn = rawNodes.find(n=>n.id===e.source);
+    const tn = rawNodes.find(n=>n.id===e.target);
+    const shocked = shockedNode && (e.source===shockedNode||e.target===shockedNode);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${sn?.label.replace("\n"," ")||e.source}</td>
+      <td>${tn?.label.replace("\n"," ")||e.target}</td>
+      <td>${e.line}${shocked?' <span class="disrupted-badge">shocked</span>':''}</td>
+      <td>${shocked?Math.round(e.weight*0.5).toLocaleString()+' ⚡':e.weight.toLocaleString()}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ─── INTERACTIONS ─────────────────────────────────────────────────────────────
+
+function handleNodeClick(id) { selectedNode = id; updateNodeInfoPanel(); drawNetwork(); }
+
+function removeSelected() {
+  if (!selectedNode) return;
+  removedNodes.add(selectedNode);
+  if (shockedNode===selectedNode) shockedNode = null;
+  recompute(); drawNetwork(); updateMetricsUI(); updateNodeInfoPanel();
+}
+function restoreSelected() {
+  if (!selectedNode) return;
+  removedNodes.delete(selectedNode);
+  recompute(); drawNetwork(); updateMetricsUI(); updateNodeInfoPanel();
+}
+function deselectNode() { selectedNode = null; updateNodeInfoPanel(); drawNetwork(); }
+
+function toggleShock() {
+  if (!selectedNode) return;
+  shockedNode = (shockedNode===selectedNode) ? null : selectedNode;
+  drawNetwork(); updateMetricsUI(); updateNodeInfoPanel(); buildEdgeTable();
+}
+
+function resetAll() {
+  removedNodes.clear(); shockedNode = null; selectedNode = null; baselineStats = null;
+  recompute();
+  baselineStats = { avgPathLength: networkStats.avgPathLength, diameter: networkStats.diameter, components: networkStats.components, retailersReachable: networkStats.retailersReachable };
+  recompute(); drawNetwork(); updateMetricsUI(); updateNodeInfoPanel(); buildEdgeTable();
+}
+
+function toggleTable(id) { document.getElementById(id).classList.toggle("visible"); }
+
+// ─── LEARNING CHECKS ──────────────────────────────────────────────────────────
+
+const correct = { 1:"B", 2:"B", 3:"C", 4:"B" };
+
+function selectOption(lc, opt) {
+  document.querySelectorAll(`#lc${lc}-options .lc-option`).forEach((el,i) => {
+    el.classList.remove("correct","incorrect");
+    if (["A","B","C"][i]===opt) el.classList.add(opt===correct[lc]?"correct":"incorrect");
+  });
+}
+function showHint(lc) { const e=document.getElementById(`lc${lc}-hint`); e.style.display=e.style.display==="block"?"none":"block"; }
+function showAnswer(lc) {
+  const e=document.getElementById(`lc${lc}-answer`); e.style.display=e.style.display==="block"?"none":"block";
+  document.querySelectorAll(`#lc${lc}-options .lc-option`).forEach((el,i) => { if (["A","B","C"][i]===correct[lc]) el.classList.add("revealed-correct"); });
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+window.addEventListener("load", () => {
+  recompute();
+  baselineStats = { avgPathLength: networkStats.avgPathLength, diameter: networkStats.diameter, components: networkStats.components, retailersReachable: networkStats.retailersReachable };
+  recompute(); drawNetwork(); updateMetricsUI(); buildEdgeTable();
+});
+window.addEventListener("resize", () => { drawNetwork(); });
+</script>
+</body>
+</html>

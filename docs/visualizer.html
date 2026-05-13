@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Visualizer · SYSEN 5470</title>
+<link rel="stylesheet" href="assets/design.css">
+<link rel="stylesheet" href="assets/site.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+.viz-page { padding: 40px 32px 80px; max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
+.viz-hero { margin-bottom: 24px; }
+.viz-hero h1 {
+  font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px);
+  letter-spacing: 0.03em; color: var(--white); margin-bottom: 14px; line-height: 1.05;
+}
+.viz-hero h1 em { color: var(--green-bright); font-style: normal; }
+.viz-hero p {
+  font-family: var(--font-body); font-size: 16px; font-weight: 300;
+  line-height: 1.55; color: var(--green-mint); max-width: 720px;
+  border-left: 3px solid var(--green-bright); padding-left: 18px;
+}
+
+.viz-layout {
+  display: grid; grid-template-columns: 300px 1fr 320px;
+  gap: 16px; align-items: start;
+}
+@media (max-width: 1200px) {
+  .viz-layout { grid-template-columns: 1fr; }
+}
+
+.viz-panel {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  margin-bottom: 14px;
+}
+.viz-panel h3 {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.viz-panel h3::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* File inputs */
+.file-row {
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;
+}
+.file-row label {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--grey);
+}
+.file-row label .opt {
+  color: var(--grey-dim); font-size: 9px; margin-left: 4px;
+}
+.file-row input[type=file] {
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 7px 8px; background: rgba(5,46,22,0.4);
+  border: 1px dashed var(--border); border-radius: var(--radius-sm);
+  color: var(--green-mint); cursor: pointer;
+}
+.file-row input[type=file]::file-selector-button {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  background: rgba(57,255,20,0.12); color: var(--green-bright);
+  border: 1px solid var(--green-bright); border-radius: var(--radius-sm);
+  padding: 6px 10px; margin-right: 10px; cursor: pointer;
+}
+
+#viz-status {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--grey); margin: 8px 0 4px;
+  letter-spacing: 0.04em; min-height: 16px;
+}
+
+/* Mapper */
+.mapper-row {
+  display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;
+}
+.mapper-row label {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--grey);
+}
+.mapper-row .opt { color: var(--grey-dim); font-size: 9px; }
+.mapper-row select {
+  background: rgba(5,46,22,0.5);
+  color: var(--green-mint);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  font-family: var(--font-mono); font-size: 11.5px;
+  letter-spacing: 0.04em;
+}
+.mapper-row select:focus { outline: none; border-color: var(--green-bright); }
+.mapper-divider {
+  font-family: var(--font-mono); font-size: 9.5px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--green-bright); margin: 14px 0 8px;
+  padding-top: 10px; border-top: 1px solid var(--border-soft);
+}
+
+/* Action buttons */
+.viz-btn {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 9px 14px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.15s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  text-align: center;
+}
+.viz-btn-primary {
+  background: var(--green-bright); color: var(--black); border: 1px solid var(--green-bright);
+}
+.viz-btn-primary:hover { background: var(--green-laser); }
+.viz-btn-ghost {
+  background: transparent; color: var(--green-bright);
+  border: 1px solid var(--green-bright);
+}
+.viz-btn-ghost:hover { background: rgba(57,255,20,0.1); }
+.viz-btn-neutral {
+  background: rgba(5,46,22,0.4); color: var(--grey);
+  border: 1px solid var(--border);
+}
+.viz-btn-neutral:hover { color: var(--green-bright); border-color: var(--green-bright); }
+
+.btn-row {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;
+}
+
+/* Seg buttons */
+.seg-row { display: flex; gap: 6px; }
+.seg-btn {
+  flex: 1; font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 7px 10px; border-radius: var(--radius-sm);
+  background: rgba(5,46,22,0.4); color: var(--grey);
+  border: 1px solid var(--border); cursor: pointer; transition: all 0.15s;
+}
+.seg-btn:hover { color: var(--green-bright); }
+.seg-btn.active {
+  background: rgba(57,255,20,0.12); border-color: var(--green-bright);
+  color: var(--green-bright);
+}
+
+/* Slider row */
+.slider-row {
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;
+}
+.slider-row .lbl {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-mono); font-size: 10px; color: var(--grey);
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.slider-row .lbl .v { color: var(--green-bright); }
+.slider-row input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px;
+  background: var(--border-soft); border-radius: 2px; outline: none;
+}
+.slider-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--green-bright); box-shadow: 0 0 8px var(--green-bright);
+  cursor: pointer;
+}
+.slider-row input[type=range]::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--green-bright); box-shadow: 0 0 8px var(--green-bright);
+  border: none; cursor: pointer;
+}
+
+/* Toggle */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--green-mint); cursor: pointer; padding: 4px 0;
+}
+.toggle {
+  width: 32px; height: 18px; border-radius: 100px;
+  background: rgba(57,255,20,0.1); border: 1px solid var(--border);
+  position: relative; transition: all .2s;
+}
+.toggle::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--grey); transition: all .2s;
+}
+.toggle.on { background: rgba(57,255,20,0.25); border-color: var(--green-bright); }
+.toggle.on::after {
+  left: 16px; background: var(--green-bright);
+  box-shadow: 0 0 6px var(--green-bright);
+}
+
+/* Graph stage */
+.graph-stage-wrap {
+  background: var(--black); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  position: relative;
+}
+#graph-stage { width: 100%; height: 620px; position: relative; }
+#graph { width: 100%; height: 100%; display: block; cursor: default; }
+
+.stage-overlay-top {
+  position: absolute; top: 14px; left: 16px; right: 16px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  pointer-events: none;
+}
+.stage-title {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--green-bright);
+}
+.stage-actions { display: flex; gap: 6px; pointer-events: auto; }
+
+.stats-overlay {
+  position: absolute; bottom: 14px; right: 16px;
+  background: rgba(5,10,5,0.75); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 12px 16px;
+  backdrop-filter: blur(10px); display: flex; gap: 22px;
+}
+.stats-overlay .stat-box-num {
+  font-family: var(--font-display); font-size: 24px;
+  color: var(--green-bright); line-height: 1; letter-spacing: 0.02em;
+}
+.stats-overlay .stat-box-lbl {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--grey); letter-spacing: 0.14em;
+  text-transform: uppercase; margin-top: 4px;
+}
+
+.empty-state {
+  position: absolute; inset: 0;
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; pointer-events: none; color: var(--grey);
+  font-family: var(--font-mono); font-size: 12px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  text-align: center;
+}
+.empty-state strong {
+  font-family: var(--font-display); font-size: 24px;
+  color: var(--green-bright); letter-spacing: 0.04em;
+}
+.empty-state.visible { display: flex; }
+
+/* Right column */
+.node-empty {
+  color: var(--grey); font-size: 13px;
+  text-align: center; padding: 20px 8px;
+}
+.node-card { display: flex; flex-direction: column; gap: 10px; }
+.node-card h3 {
+  font-family: var(--font-display); font-size: 22px;
+  color: var(--white); letter-spacing: 0.03em; margin: 0;
+}
+.kvs { display: flex; flex-direction: column; gap: 6px; }
+.kv {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-body); font-size: 13px;
+}
+.kv .k { color: var(--grey); }
+.kv .v {
+  color: var(--white); font-family: var(--font-mono); font-size: 12px;
+}
+
+.bar-row {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--grey-dim); margin: 4px 0;
+}
+.bar-row .bn {
+  width: 70px; color: var(--green-mint);
+  letter-spacing: 0.04em; font-size: 10.5px;
+}
+.bar-row .br {
+  flex: 1; height: 4px; background: var(--border-soft);
+  border-radius: 2px; overflow: hidden;
+}
+.bar-row .bf {
+  height: 100%; background: var(--green-bright);
+  box-shadow: 0 0 6px var(--green-bright);
+}
+.bar-row .bv {
+  width: 38px; text-align: right; color: var(--white);
+}
+
+/* Time slider */
+#time-slider-wrap { display: none; }
+</style>
+</head>
+<body data-page="viz">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="index.html"          data-page="home">Overview</a>
+      <a href="syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="four-skills.html"    data-page="skills">Four Skills</a>
+      <a href="visualizer.html"     data-page="viz">Visualizer</a>
+    </div>
+    <a href="index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="viz-page">
+
+  <section class="viz-hero">
+    <p class="course-number">SYSEN 5470 · Tools</p>
+    <h1>Network <em>Visualizer</em></h1>
+    <p>Bring your own data. Drop an edgelist CSV (and an optional nodelist), pick which columns are <strong>from</strong>, <strong>to</strong>, <strong>weight</strong>, and <strong>time</strong>, and explore. Everything runs locally in your browser — your data never leaves this page.</p>
+  </section>
+
+  <div class="viz-layout">
+
+    <!-- ── LEFT COLUMN: data + controls ── -->
+    <div>
+
+      <div class="viz-panel">
+        <h3>📥 Data</h3>
+        <div class="file-row">
+          <label>Edgelist CSV <span class="opt">required</span></label>
+          <input type="file" id="edge-file" accept=".csv,text/csv">
+        </div>
+        <div class="file-row">
+          <label>Nodelist CSV <span class="opt">optional</span></label>
+          <input type="file" id="node-file" accept=".csv,text/csv">
+        </div>
+        <div id="viz-status">Drop a CSV, or load the sample graph to start.</div>
+        <div class="btn-row">
+          <button class="viz-btn viz-btn-primary" id="btn-load">⟳ Load</button>
+          <button class="viz-btn viz-btn-neutral" id="btn-sample">▶ Sample</button>
+        </div>
+      </div>
+
+      <div class="viz-panel">
+        <h3>🗂 Column Mapping</h3>
+        <div id="mapper-fields">
+          <div style="color: var(--grey); font-size: 12px;">Upload an edgelist to map columns.</div>
+        </div>
+      </div>
+
+      <div class="viz-panel">
+        <h3>⚙ Layout</h3>
+        <div class="seg-row">
+          <button class="seg-btn seg-layout active" data-layout="force">Force</button>
+          <button class="seg-btn seg-layout"        data-layout="radial">Radial</button>
+          <button class="seg-btn seg-layout"        data-layout="hierarchical">Hier.</button>
+        </div>
+      </div>
+
+      <div class="viz-panel">
+        <h3>🎚 Tunables</h3>
+        <div class="slider-row">
+          <div class="lbl"><span>Node size scale</span><span class="v" id="node-scale-val">1.0x</span></div>
+          <input type="range" min="50" max="200" value="100" id="node-scale">
+        </div>
+        <div class="slider-row">
+          <div class="lbl"><span>Edge weight threshold</span><span class="v" id="thresh-val">0.0</span></div>
+          <input type="range" min="0" max="100" value="0" id="edge-thresh">
+        </div>
+        <div id="time-slider-wrap" class="slider-row">
+          <div class="lbl"><span>Time filter (≤)</span><span class="v" id="time-slider-val">—</span></div>
+          <input type="range" id="time-slider">
+        </div>
+      </div>
+
+      <div class="viz-panel">
+        <h3>👁 Display</h3>
+        <div class="toggle-row" data-toggle="labels">Node labels<div class="toggle on"></div></div>
+        <div class="toggle-row" data-toggle="edges">Edge weight labels<div class="toggle"></div></div>
+        <div class="toggle-row" data-toggle="community">Community color<div class="toggle"></div></div>
+        <div class="toggle-row" data-toggle="drift">Live drift<div class="toggle on"></div></div>
+      </div>
+
+      <div class="viz-panel">
+        <h3>📤 Export</h3>
+        <div class="btn-row">
+          <button class="viz-btn viz-btn-ghost" id="btn-png">⤓ Export PNG</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── CENTER: graph stage ── -->
+    <div>
+      <div class="graph-stage-wrap">
+        <div id="graph-stage">
+          <svg id="graph"></svg>
+          <div class="stage-overlay-top">
+            <div>
+              <div class="stage-title">Your Network</div>
+            </div>
+          </div>
+          <div class="stats-overlay">
+            <div><div class="stat-box-num" id="stat-nodes">0</div><div class="stat-box-lbl">Nodes</div></div>
+            <div><div class="stat-box-num" id="stat-edges">0</div><div class="stat-box-lbl">Edges shown</div></div>
+            <div><div class="stat-box-num" id="stat-comps">0</div><div class="stat-box-lbl">Components</div></div>
+            <div><div class="stat-box-num" id="stat-density">—</div><div class="stat-box-lbl">Density</div></div>
+          </div>
+          <div class="empty-state" id="empty-state">
+            <strong>No network loaded</strong>
+            Upload an edgelist or hit ▶ Sample to start.
+          </div>
+        </div>
+      </div>
+
+      <div class="viz-panel" style="margin-top: 14px;">
+        <h3>📖 Quickstart</h3>
+        <ol style="color: var(--green-mint); font-size: 13px; line-height: 1.7; padding-left: 18px;">
+          <li>Drop an edgelist CSV. Expected columns: <code style="font-family: var(--font-mono); color: var(--green-bright);">from, to, weight, time</code> (any names — you'll map them).</li>
+          <li>Auto-detection guesses the four columns. Adjust the dropdowns if needed.</li>
+          <li>Click <strong>Load</strong>. The graph renders with force layout; node size encodes degree.</li>
+          <li>Switch layouts, toggle community color, slide the time filter, and export PNG.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- ── RIGHT: node inspector + rankings ── -->
+    <div>
+      <div class="viz-panel">
+        <h3>🏷 Selected Node</h3>
+        <div id="node-card-wrap">
+          <div class="node-empty">Click any node to inspect.</div>
+        </div>
+      </div>
+
+      <div class="viz-panel">
+        <h3>📊 Top Degree</h3>
+        <div id="top-degree-list">
+          <div class="node-empty">Load a network to see rankings.</div>
+        </div>
+      </div>
+
+      <div class="viz-panel">
+        <h3>🔗 Top Betweenness</h3>
+        <div id="top-betw-list">
+          <div class="node-empty">Computed when graph loads (≤600 nodes).</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Network Visualizer</strong><br>
+    Cornell Engineering · Summer 2026 · All processing happens in your browser.
+  </p>
+
+</div>
+
+<script src="assets/network-bg.js" defer></script>
+<script src="assets/site.js" defer></script>
+<script src="assets/viz.js" defer></script>
+</body>
+</html>

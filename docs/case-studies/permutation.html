@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Permutation Testing · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+.lab {
+  --group-high: var(--node-4);     /* amber */
+  --group-low:  var(--node-6);     /* indigo */
+}
+
+.lab-hero { margin-bottom: 32px; }
+.lab-hero .course-number { margin-bottom: 10px; }
+.lab-hero h1 {
+  font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px);
+  line-height: 1.05; letter-spacing: 0.03em; color: var(--white);
+  margin-bottom: 14px;
+}
+.lab-hero h1 em { color: var(--green-bright); font-style: normal; }
+.lab-hero p {
+  font-family: var(--font-body); font-size: 16px; font-weight: 300;
+  line-height: 1.55; color: var(--green-mint); max-width: 720px;
+  border-left: 3px solid var(--green-bright); padding-left: 18px;
+}
+
+.lab-layout {
+  display: grid; grid-template-columns: 1fr 340px; gap: 18px;
+}
+@media (max-width: 1000px) { .lab-layout { grid-template-columns: 1fr; } }
+
+.lab-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  margin-bottom: 14px;
+}
+.lab-card h3 {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 12px;
+}
+
+.toggle-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.toggle-btn {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 7px 14px; border-radius: 20px;
+  border: 1px solid var(--border); cursor: pointer;
+  background: rgba(5,46,22,0.4); color: var(--grey);
+  transition: all 0.15s;
+}
+.toggle-btn:hover { border-color: var(--green-bright); color: var(--green-bright); }
+.toggle-btn.active-obs   { background: rgba(251,191,36,0.18); border-color: var(--node-4); color: var(--node-4); }
+.toggle-btn.active-perm  { background: rgba(129,140,248,0.18); border-color: var(--node-6); color: var(--node-6); }
+.toggle-btn.active-block { background: rgba(94,234,212,0.18); border-color: var(--node-3); color: var(--node-3); }
+
+#network-svg {
+  width: 100%; height: 320px;
+  background: rgba(5, 46, 22, 0.35);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); display: block;
+}
+
+.btn {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  border: 1px solid transparent; cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:hover { opacity: 0.85; }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--node-6); color: var(--black); }
+.btn-blocked { background: var(--node-3); color: var(--black); }
+.btn-neutral { background: transparent; color: var(--grey); border-color: var(--border); }
+.btn-neutral:hover { color: var(--green-bright); border-color: var(--green-bright); }
+.btn-danger  { background: var(--node-7); color: var(--black); }
+.btn-sm { font-size: 10px; padding: 5px 10px; }
+
+.controls-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.legend-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+.legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 11px; color: var(--green-mint);
+  letter-spacing: 0.06em;
+}
+.legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
+.legend-line { width: 24px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.compare-panel {
+  background: rgba(5,46,22,0.4); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 10px;
+}
+.compare-panel h4 {
+  font-family: var(--font-mono); font-size: 9.5px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.compare-panel h4.obs-h   { color: var(--node-4); }
+.compare-panel h4.perm-h  { color: var(--node-6); }
+.compare-panel h4.block-h { color: var(--node-3); }
+.compare-panel svg { width: 100%; display: block; }
+
+#bar-svg { width: 100%; height: 200px; display: block; }
+
+.metric-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid var(--border-soft);
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-label { color: var(--grey); font-size: 13px; }
+.metric-value {
+  font-family: var(--font-mono); font-size: 14px;
+  color: var(--white); font-weight: 500;
+}
+.metric-value.obs-val  { color: var(--node-4); }
+.metric-value.perm-val { color: var(--node-3); }
+
+.pval-display {
+  background: rgba(5,46,22,0.4); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 10px;
+}
+.pval-label {
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--grey); margin-bottom: 4px;
+}
+.pval-val {
+  font-family: var(--font-display); font-size: 28px;
+  color: var(--green-bright); letter-spacing: 0.02em; line-height: 1;
+}
+.pval-interp { font-size: 12px; color: var(--green-mint); margin-top: 6px; }
+
+#null-svg { width: 100%; height: 180px; display: block; }
+
+.concept-box {
+  background: rgba(57,255,20,0.05); border: 1px solid rgba(57,255,20,0.2);
+  border-radius: var(--radius-sm); padding: 13px 15px;
+  font-size: 13px; line-height: 1.6; color: var(--green-mint);
+}
+.concept-box strong { color: var(--white); }
+
+.perm-counter {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--grey); letter-spacing: 0.06em;
+}
+.perm-counter span { color: var(--green-bright); font-weight: 500; }
+
+/* Learning checks */
+.lc-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px; margin-top: 32px;
+}
+.lc-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 24px;
+  backdrop-filter: blur(8px);
+}
+.lc-number {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); padding: 3px 8px;
+  border: 1px solid rgba(57,255,20,0.3); border-radius: 3px;
+  background: rgba(57,255,20,0.08); display: inline-block; margin-bottom: 10px;
+}
+.lc-question {
+  font-family: var(--font-display); font-size: 18px;
+  line-height: 1.3; letter-spacing: 0.02em; color: var(--white);
+}
+.lc-options { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; }
+.lc-option {
+  background: rgba(5,46,22,0.35); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  cursor: pointer; transition: all 0.15s;
+  font-size: 13px; line-height: 1.5; display: flex; gap: 10px; align-items: flex-start;
+  color: var(--green-mint);
+}
+.lc-option:hover { border-color: var(--green-bright); color: var(--white); }
+.lc-option.correct { border-color: var(--green-bright); background: rgba(57,255,20,0.12); color: var(--white); }
+.lc-option.incorrect { border-color: var(--node-7); background: rgba(249,115,22,0.1); color: var(--white); }
+.lc-option.revealed-correct { border-color: var(--green-bright); background: rgba(57,255,20,0.12); }
+.opt-label {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  color: var(--green-bright); flex-shrink: 0; margin-top: 1px;
+}
+.lc-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+.lc-feedback {
+  display: none; background: rgba(5,46,22,0.35);
+  border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+  padding: 12px 14px; font-size: 13px; line-height: 1.55;
+  color: var(--green-mint); margin-top: 8px;
+}
+.lc-feedback.visible { display: block; }
+.feedback-hint   { border-color: rgba(251,191,36,0.35); }
+.feedback-answer { border-color: rgba(57,255,20,0.35); }
+.feedback-answer strong { color: var(--green-bright); }
+.feedback-answer em { color: var(--node-3); font-style: italic; }
+</style>
+</head>
+<body data-page="cases">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../four-skills.html"    data-page="skills">Four Skills</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page-wide lab">
+
+  <section class="lab-hero">
+    <p class="course-number">SYSEN 5470 · Network Science · Interactive Lab · Skill: Infer</p>
+    <h1>Does Income Shape Who Rides With Whom?<br><em>Permutation Testing</em> a Mobility Network</h1>
+    <p>Boston's Bluebikes program connects neighborhoods — but does ridership flow freely across income lines, or do high-income neighborhoods mostly exchange riders with each other? Use permutation testing to find out whether the observed income pattern could arise by chance.</p>
+  </section>
+
+  <div class="lab-layout">
+    <div>
+
+      <div class="lab-card">
+        <h3>📍 Boston Bluebikes — AM Rush Hour Ridership Network</h3>
+        <div class="toggle-row">
+          <button class="toggle-btn active-obs"  id="btn-obs"     onclick="showState('observed')">👁 Observed</button>
+          <button class="toggle-btn"             id="btn-perm"    onclick="showState('unblocked')">⟳ Unblocked Permutation</button>
+          <button class="toggle-btn"             id="btn-block"   onclick="showState('blocked')">⟳ Block Permutation</button>
+          <button class="toggle-btn"             id="btn-compare" onclick="showState('compare')">⊞ Compare All Three</button>
+        </div>
+
+        <div id="single-view">
+          <svg id="network-svg"></svg>
+          <div class="legend-row">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--node-4); color:var(--node-4);"></div> High-income neighborhood</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--node-6); color:var(--node-6);"></div>  Low-income neighborhood</div>
+            <div class="legend-item"><div class="legend-line" style="background:var(--node-4);"></div> Block A (high-traffic)</div>
+            <div class="legend-item"><div class="legend-line" style="background:var(--grey-dim);"></div> Block B (low-traffic)</div>
+          </div>
+          <p style="font-size:11px; color: var(--grey); margin-top: 6px;">Node size = total ridership. Arrow thickness = ride count. <strong style="color: var(--white);">Click a node</strong> to inspect.</p>
+        </div>
+
+        <div id="compare-view" style="display:none;">
+          <div class="compare-grid">
+            <div class="compare-panel">
+              <h4 class="obs-h">● Observed</h4>
+              <svg id="cnet-obs" height="160"></svg>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--node-4); margin-top: 4px; text-align: center;" id="cidx-obs">—</div>
+            </div>
+            <div class="compare-panel">
+              <h4 class="perm-h">⟳ Unblocked Perm</h4>
+              <svg id="cnet-perm" height="160"></svg>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--node-6); margin-top: 4px; text-align: center;" id="cidx-perm">—</div>
+            </div>
+            <div class="compare-panel">
+              <h4 class="block-h">⟳ Block Perm</h4>
+              <svg id="cnet-block" height="160"></svg>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--node-3); margin-top: 4px; text-align: center;" id="cidx-block">—</div>
+            </div>
+          </div>
+          <div class="legend-row" style="margin-top: 10px;">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--node-4); color:var(--node-4);"></div> High-income</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--node-6); color:var(--node-6);"></div>  Low-income</div>
+            <div class="legend-item"><div class="legend-line" style="background:var(--node-4);"></div>   Block A</div>
+            <div class="legend-item"><div class="legend-line" style="background:var(--grey-dim);"></div> Block B</div>
+          </div>
+          <p style="font-size:11px; color: var(--grey); margin-top: 8px;">
+            Notice: <strong style="color: var(--node-3);">block-permuted</strong> networks keep thick edges thick — they preserve traffic-tier structure. <strong style="color: var(--node-6);">Unblocked</strong> permutations can place any weight anywhere.
+          </p>
+        </div>
+      </div>
+
+      <div class="lab-card">
+        <h3>🔀 Run Permutations</h3>
+        <div class="controls-row" style="margin-bottom: 10px;">
+          <button class="btn btn-primary" onclick="runPerm(false)">⟳ +1 Unblocked</button>
+          <button class="btn btn-blocked" onclick="runPerm(true)">⟳ +1 Blocked</button>
+          <button class="btn btn-neutral" onclick="runMany(false,25)">+25 Unblocked</button>
+          <button class="btn btn-neutral" onclick="runMany(true,25)">+25 Blocked</button>
+          <button class="btn btn-neutral" onclick="runMany(null,200)">+200 Both</button>
+          <button class="btn btn-danger btn-sm" onclick="resetAll()" style="margin-left: auto;">↺ Reset</button>
+        </div>
+        <div class="perm-counter" style="margin-bottom: 10px;">
+          Unblocked: <span id="n-unblocked">0</span> &nbsp;|&nbsp; Blocked: <span id="n-blocked">0</span>
+        </div>
+        <div class="concept-box">
+          <strong>Why does block permutation matter?</strong> In Boston's hub-and-spoke bike network, Block A edges carry high-volume AM commuter flows shaped by station capacity and geography — constraints Block B recreational edges don't share. A naive unblocked permutation can put a 280-ride commuter weight onto a casual weekend route, generating null networks that are physically impossible. <strong>Block permutation</strong> shuffles only within traffic tiers, so every null network remains realistic.
+        </div>
+      </div>
+
+      <div class="lab-card">
+        <h3>📊 Ridership Share by Income-Pair Type</h3>
+        <svg id="bar-svg"></svg>
+        <p style="font-size:11px; color: var(--grey); margin-top: 6px;">
+          Dashed line = 25% (expected under equal mixing). <strong style="color: var(--white);">Similarity Index</strong>: 0 = perfectly heterogeneous; 1 = fully within-group concentration.
+        </p>
+      </div>
+
+    </div>
+
+    <div>
+
+      <div class="lab-card">
+        <h3>📐 Similarity Index</h3>
+        <div class="pval-display">
+          <div class="pval-label">Current network</div>
+          <div class="pval-val" id="current-index">—</div>
+          <div class="pval-interp" id="index-interp">Click "Observed" to begin</div>
+        </div>
+        <div class="metric-row"><span class="metric-label">Observed value</span><span class="metric-value obs-val" id="obs-index">—</span></div>
+        <div class="metric-row"><span class="metric-label">Median (unblocked)</span><span class="metric-value" id="med-unblocked">—</span></div>
+        <div class="metric-row"><span class="metric-label">Median (blocked)</span><span class="metric-value" id="med-blocked">—</span></div>
+        <div class="metric-row"><span class="metric-label">p-value (unblocked)</span><span class="metric-value perm-val" id="pval-unblocked">—</span></div>
+        <div class="metric-row"><span class="metric-label">p-value (blocked)</span><span class="metric-value perm-val" id="pval-blocked">—</span></div>
+        <p style="font-size:11px; color: var(--grey); margin-top: 8px;">p-value = share of permuted networks with index ≥ observed (one-tailed).</p>
+      </div>
+
+      <div class="lab-card">
+        <h3>🏙 Node Inspector</h3>
+        <div id="node-info-empty" style="color: var(--grey); font-size: 13px; text-align: center; padding: 16px 0;">🖱️ Click any neighborhood to inspect</div>
+        <div id="node-info-loaded" style="display:none;">
+          <div style="font-family: var(--font-display); font-size: 20px; color: var(--white); letter-spacing: 0.03em; margin-bottom: 8px;" id="ni-name"></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div style="background: rgba(5,46,22,0.45); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 10px;">
+              <div style="font-family: var(--font-mono); font-size: 9px; color: var(--grey); text-transform: uppercase; letter-spacing: .1em;">Income Tier</div>
+              <div style="font-size: 13px; margin-top: 4px;" id="ni-group"></div>
+            </div>
+            <div style="background: rgba(5,46,22,0.45); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 10px;">
+              <div style="font-family: var(--font-mono); font-size: 9px; color: var(--grey); text-transform: uppercase; letter-spacing: .1em;">Total Rides</div>
+              <div style="font-family: var(--font-mono); font-size: 14px; margin-top: 4px; color: var(--white);" id="ni-rides"></div>
+            </div>
+            <div style="background: rgba(5,46,22,0.45); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 10px;">
+              <div style="font-family: var(--font-mono); font-size: 9px; color: var(--grey); text-transform: uppercase; letter-spacing: .1em;">Out-routes</div>
+              <div style="font-family: var(--font-mono); font-size: 14px; margin-top: 4px; color: var(--white);" id="ni-out"></div>
+            </div>
+            <div style="background: rgba(5,46,22,0.45); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 10px;">
+              <div style="font-family: var(--font-mono); font-size: 9px; color: var(--grey); text-transform: uppercase; letter-spacing: .1em;">In-routes</div>
+              <div style="font-family: var(--font-mono); font-size: 14px; margin-top: 4px; color: var(--white);" id="ni-in"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lab-card">
+        <h3>📈 Null Distribution</h3>
+        <svg id="null-svg"></svg>
+        <p style="font-size:11px; color: var(--grey); margin-top: 6px;">Histogram of permuted similarity indices. Dashed amber line = observed. Keep permuting to build the distribution.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── SKETCH PROMPT ── -->
+  <div class="lab-card" style="margin-top: 20px;">
+    <h3>✏️ Sketchpad Prompt</h3>
+    <p style="color: var(--green-mint); font-size: 13px; line-height: 1.65;">
+      <strong style="color: var(--white);">Before you permute:</strong> On your sketchpad, draw the 5 neighborhoods as labeled circles. Mark each as high-income (amber) or low-income (indigo) — then sketch where you expect most arrows to point and which pairs you think carry the heaviest ridership. After running 50+ permutations of each type, draw two rough null distributions from memory. Where does the observed value sit relative to each? Does income structure appear to shape ridership beyond what chance would produce?
+    </p>
+  </div>
+
+  <!-- ── LEARNING CHECKS ── -->
+  <div class="sec-label" style="margin-top: 36px;">Learning Checks</div>
+  <div class="lc-grid">
+
+    <div class="lc-card">
+      <span class="lc-number">LC 01</span>
+      <div class="lc-question">In the observed network, which income-pair type accounts for the largest share of AM rush-hour ridership?</div>
+      <div class="lc-options" id="lc1-options">
+        <div class="lc-option" onclick="selectOption(1,'A')"><span class="opt-label">A</span>Low-income → Low-income</div>
+        <div class="lc-option" onclick="selectOption(1,'B')"><span class="opt-label">B</span>High-income → High-income</div>
+        <div class="lc-option" onclick="selectOption(1,'C')"><span class="opt-label">C</span>Low-income → High-income</div>
+      </div>
+      <div class="lc-actions">
+        <button class="btn btn-neutral btn-sm" onclick="showHint(1)">💡 Hint</button>
+        <button class="btn btn-neutral btn-sm" onclick="showAnswer(1)">🔓 Answer</button>
+      </div>
+      <div class="lc-feedback feedback-hint" id="lc1-hint">Click "👁 Observed" first, then read the bar chart. Node color (amber = high-income, indigo = low-income) shows you which neighborhoods are which.</div>
+      <div class="lc-feedback feedback-answer" id="lc1-answer"><strong>B — High-income → High-income.</strong> Back Bay and Downtown Crossing are both high-income, and the heavy commuter corridor between them dominates ridership volume. This pattern is what we want to test: is it statistically unusual, or could it arise simply from random reshuffling of the same weights?</div>
+    </div>
+
+    <div class="lc-card">
+      <span class="lc-number">LC 02</span>
+      <div class="lc-question">Switch to "Compare All Three" and run a few permutations. In the block-permuted network, thick edges stay thick. Why does this matter for the validity of the test?</div>
+      <div class="lc-options" id="lc2-options">
+        <div class="lc-option" onclick="selectOption(2,'A')"><span class="opt-label">A</span>It doesn't matter — any permutation is valid as long as total edge weight is preserved.</div>
+        <div class="lc-option" onclick="selectOption(2,'B')"><span class="opt-label">B</span>High-traffic edges reflect structural constraints (hub-and-spoke routing), so swapping their weights with low-traffic edges creates null networks that couldn't actually occur.</div>
+        <div class="lc-option" onclick="selectOption(2,'C')"><span class="opt-label">C</span>Block permutation is always more conservative, so it always produces a higher p-value.</div>
+      </div>
+      <div class="lc-actions">
+        <button class="btn btn-neutral btn-sm" onclick="showHint(2)">💡 Hint</button>
+        <button class="btn btn-neutral btn-sm" onclick="showAnswer(2)">🔓 Answer</button>
+      </div>
+      <div class="lc-feedback feedback-hint" id="lc2-hint">Think about what an unblocked permutation could do: it might place a 280-ride weight on an edge that only ever sees 120 rides. Is that physically plausible in a system with fixed station locations and docking capacity?</div>
+      <div class="lc-feedback feedback-answer" id="lc2-answer"><strong>B — Block permutation preserves structural realism.</strong> In Boston's hub-and-spoke system, Block A edges carry commuter flows constrained by station geography and capacity — constraints Block B recreational edges don't share. Swapping a 280-ride commuter corridor weight onto a casual route creates an impossible null network. Unblocked permutations do this freely, making them anti-conservative for hub-and-spoke systems. Option C is wrong: which test is more conservative depends on where the observed value falls relative to each null distribution — it's not a universal rule.</div>
+    </div>
+
+    <div class="lc-card">
+      <span class="lc-number">LC 03</span>
+      <div class="lc-question">After 200+ permutations each, the unblocked test gives a lower p-value than the blocked test. A planner concludes the unblocked result is "stronger evidence" of income homophily. What's the flaw?</div>
+      <div class="lc-options" id="lc3-options">
+        <div class="lc-option" onclick="selectOption(3,'A')"><span class="opt-label">A</span>Nothing — a lower p-value always means stronger evidence.</div>
+        <div class="lc-option" onclick="selectOption(3,'B')"><span class="opt-label">B</span>The unblocked null distribution is more spread out than physically realistic, making the observed value appear rarer than it actually is.</div>
+        <div class="lc-option" onclick="selectOption(3,'C')"><span class="opt-label">C</span>The planner should choose whichever test supports their policy argument.</div>
+      </div>
+      <div class="lc-actions">
+        <button class="btn btn-neutral btn-sm" onclick="showHint(3)">💡 Hint</button>
+        <button class="btn btn-neutral btn-sm" onclick="showAnswer(3)">🔓 Answer</button>
+      </div>
+      <div class="lc-feedback feedback-hint" id="lc3-hint">Look at the null distribution. Are the unblocked and blocked histograms centered in the same place? If the unblocked null is shifted lower, what does that mean for how "extreme" the observed value looks by comparison?</div>
+      <div class="lc-feedback feedback-answer" id="lc3-answer"><strong>B — The unblocked null is artificially spread, inflating significance.</strong> Because unblocked permutations scatter any weight onto any edge (including placing commuter-volume weights on recreational routes), they generate null networks more heterogeneous than anything that could actually exist. This pulls the null median lower and widens variance, making the observed index look more extreme — and producing an artificially small p-value. The "stronger evidence" is an artifact of an unrealistic null, not a genuine signal. The blocked test, whose null networks all obey the system's structural constraints, is the more defensible choice — even if the p-value is less dramatic.</div>
+    </div>
+
+  </div>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Permutation Testing on Mobility Networks</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="../case-studies.html">← All case studies</a>
+  </p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+
+<script>
+// ============================================================
+// DATA · group: true = high-income, false = low-income
+// ============================================================
+const NODES = [
+  { id:"dtx",      label:"Downtown Crossing", short:"Dwntn", group:true,  pop:10.58, x:375, y:230 },
+  { id:"backbay",  label:"Back Bay",           short:"B.Bay", group:true,  pop:11.17, x:185, y:125 },
+  { id:"southend", label:"South End",          short:"S.End", group:false, pop:11.04, x:555, y:125 },
+  { id:"roxbury",  label:"Roxbury",            short:"Roxby", group:false, pop:15.84, x:200, y:365 },
+  { id:"fenway",   label:"Fenway",             short:"Fenwy", group:true,  pop: 7.24, x:560, y:365 },
+];
+const RAW_EDGES = [
+  { from:"dtx",      to:"southend", weight:130, block:"B" },
+  { from:"dtx",      to:"roxbury",  weight:260, block:"A" },
+  { from:"dtx",      to:"fenway",   weight:260, block:"A" },
+  { from:"backbay",  to:"dtx",      weight:250, block:"A" },
+  { from:"backbay",  to:"southend", weight:280, block:"A" },
+  { from:"backbay",  to:"fenway",   weight:230, block:"A" },
+  { from:"southend", to:"backbay",  weight:160, block:"B" },
+  { from:"southend", to:"fenway",   weight:280, block:"A" },
+  { from:"roxbury",  to:"dtx",      weight:120, block:"B" },
+  { from:"roxbury",  to:"backbay",  weight:220, block:"A" },
+  { from:"roxbury",  to:"southend", weight:180, block:"B" },
+  { from:"roxbury",  to:"fenway",   weight:290, block:"A" },
+  { from:"fenway",   to:"dtx",      weight:270, block:"A" },
+  { from:"fenway",   to:"roxbury",  weight:120, block:"B" },
+];
+
+// State
+let currentEdges  = RAW_EDGES.map(e=>({...e}));
+let currentMode   = "observed";
+let selectedNode  = null;
+let permHistory   = [];
+let observedIndex = null;
+let compareEdges  = { obs: RAW_EDGES.map(e=>({...e})), perm: null, block: null };
+
+// Group colors via design-system tokens
+const GROUP_HIGH = "var(--node-4)";
+const GROUP_LOW  = "var(--node-6)";
+
+// Metrics
+function computeMetrics(edges) {
+  const popMap = {}; NODES.forEach(n=>popMap[n.id]=n.pop);
+  let hh=0,hl=0,lh=0,ll=0;
+  edges.forEach(e=>{
+    const w=e.weight/(popMap[e.from]*popMap[e.to])*1e6;
+    const fg=NODES.find(n=>n.id===e.from).group, tg=NODES.find(n=>n.id===e.to).group;
+    if(fg&&tg) hh+=w; else if(fg) hl+=w; else if(tg) lh+=w; else ll+=w;
+  });
+  const tot=hh+hl+lh+ll||1;
+  const phh=hh/tot,phl=hl/tot,plh=lh/tot,pll=ll/tot;
+  const index=(2/3)*(Math.abs(pll-.25)+Math.abs(plh-.25)+Math.abs(phl-.25)+Math.abs(phh-.25));
+  return {hh:phh,hl:phl,lh:plh,ll:pll,index};
+}
+
+function shuffleWeights(edges,blocked) {
+  const r=edges.map(e=>({...e}));
+  if(blocked) {
+    ["A","B"].forEach(b=>{
+      const idxs=r.map((e,i)=>e.block===b?i:-1).filter(i=>i>=0);
+      const wts=idxs.map(i=>r[i].weight);
+      for(let i=wts.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [wts[i],wts[j]]=[wts[j],wts[i]]; }
+      idxs.forEach((idx,i)=>r[idx].weight=wts[i]);
+    });
+  } else {
+    const wts=r.map(e=>e.weight);
+    for(let i=wts.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [wts[i],wts[j]]=[wts[j],wts[i]]; }
+    r.forEach((e,i)=>e.weight=wts[i]);
+  }
+  return r;
+}
+
+function showState(mode) {
+  currentMode=mode;
+  ["obs","perm","block","compare"].forEach(k=>{ const el=document.getElementById("btn-"+k); if(el) el.className="toggle-btn"; });
+  const mMap={observed:"obs",unblocked:"perm",blocked:"block",compare:"compare"};
+  const cMap={observed:"active-obs",unblocked:"active-perm",blocked:"active-block",compare:"active-obs"};
+  const btn=document.getElementById("btn-"+mMap[mode]);
+  if(btn) btn.classList.add(cMap[mode]);
+  const sv=document.getElementById("single-view"), cv=document.getElementById("compare-view");
+  if(mode==="compare") { sv.style.display="none"; cv.style.display="block"; renderCompareView(); return; }
+  sv.style.display="block"; cv.style.display="none";
+  if(mode==="observed") {
+    currentEdges=RAW_EDGES.map(e=>({...e}));
+    const m=computeMetrics(currentEdges); observedIndex=m.index;
+    document.getElementById("obs-index").textContent=m.index.toFixed(3);
+    updateSidebar(m); drawBars(m);
+  } else {
+    currentEdges=shuffleWeights(RAW_EDGES,mode==="blocked");
+    if(mode==="blocked") compareEdges.block=currentEdges.map(e=>({...e}));
+    else compareEdges.perm=currentEdges.map(e=>({...e}));
+    const m=computeMetrics(currentEdges);
+    permHistory.push({type:mode==="blocked"?"blocked":"unblocked",index:m.index});
+    updateSidebar(m); drawBars(m); updatePVals(); updateNullDist(); updateCounters();
+  }
+  drawNetwork(currentEdges,d3.select("#network-svg"),750,320,true);
+}
+
+function runPerm(blocked) {
+  const edges=shuffleWeights(RAW_EDGES,blocked);
+  if(blocked) compareEdges.block=edges.map(e=>({...e})); else compareEdges.perm=edges.map(e=>({...e}));
+  currentEdges=edges; currentMode=blocked?"blocked":"unblocked";
+  const m=computeMetrics(edges);
+  permHistory.push({type:blocked?"blocked":"unblocked",index:m.index});
+  updateSidebar(m); drawBars(m); updatePVals(); updateNullDist(); updateCounters();
+  document.getElementById("single-view").style.display="block";
+  document.getElementById("compare-view").style.display="none";
+  ["obs","perm","block","compare"].forEach(k=>{ const el=document.getElementById("btn-"+k); if(el) el.className="toggle-btn"; });
+  document.getElementById(blocked?"btn-block":"btn-perm").classList.add(blocked?"active-block":"active-perm");
+  drawNetwork(currentEdges,d3.select("#network-svg"),750,320,true);
+}
+
+function runMany(blocked,n) {
+  for(let i=0;i<n;i++){
+    const b=blocked===null?i%2===0:blocked;
+    const edges=shuffleWeights(RAW_EDGES,b);
+    permHistory.push({type:b?"blocked":"unblocked",index:computeMetrics(edges).index});
+    if(b) compareEdges.block=edges.map(e=>({...e})); else compareEdges.perm=edges.map(e=>({...e}));
+  }
+  updatePVals(); updateNullDist(); updateCounters();
+}
+
+function resetAll() {
+  permHistory=[]; compareEdges.perm=null; compareEdges.block=null; selectedNode=null;
+  document.getElementById("node-info-empty").style.display="block";
+  document.getElementById("node-info-loaded").style.display="none";
+  showState("observed"); updateNullDist(); updateCounters();
+  ["med-unblocked","med-blocked","pval-unblocked","pval-blocked"].forEach(id=>document.getElementById(id).textContent="—");
+}
+
+function updateCounters() {
+  document.getElementById("n-unblocked").textContent=permHistory.filter(p=>p.type==="unblocked").length;
+  document.getElementById("n-blocked").textContent=permHistory.filter(p=>p.type==="blocked").length;
+}
+
+function updateSidebar(m) {
+  document.getElementById("current-index").textContent=m.index.toFixed(3);
+  const interp=m.index<0.08?"Very heterogeneous — strong cross-income mixing":m.index<0.2?"Moderate mixing across income groups":m.index<0.35?"Moderate income concentration":"Strong income homophily";
+  document.getElementById("index-interp").textContent=interp;
+  if(observedIndex!==null) document.getElementById("obs-index").textContent=observedIndex.toFixed(3);
+}
+
+function updatePVals() {
+  const med=arr=>arr.slice().sort((a,b)=>a-b)[Math.floor(arr.length/2)];
+  const unbl=permHistory.filter(p=>p.type==="unblocked").map(p=>p.index);
+  const blkd=permHistory.filter(p=>p.type==="blocked").map(p=>p.index);
+  if(unbl.length>0) {
+    document.getElementById("med-unblocked").textContent=med(unbl).toFixed(3);
+    if(observedIndex!==null) {
+      const pv=unbl.filter(v=>v>=observedIndex).length/unbl.length;
+      document.getElementById("pval-unblocked").textContent=pv<0.001?"< 0.001":pv.toFixed(3);
+    }
+  }
+  if(blkd.length>0) {
+    document.getElementById("med-blocked").textContent=med(blkd).toFixed(3);
+    if(observedIndex!==null) {
+      const pv=blkd.filter(v=>v>=observedIndex).length/blkd.length;
+      document.getElementById("pval-blocked").textContent=pv<0.001?"< 0.001":pv.toFixed(3);
+    }
+  }
+}
+
+// Draw network (shared between main + compare panels)
+function drawNetwork(edges,svgSel,wL,hL,interactive) {
+  const svgEl=svgSel.node(); if(!svgEl) return;
+  const W=svgEl.clientWidth||500, H=svgEl.clientHeight||320;
+  const scX=x=>(x/wL)*W, scY=y=>(y/hL)*H;
+  svgSel.selectAll("*").remove();
+  const uid=svgEl.id||"net";
+  const defs=svgSel.append("defs");
+  ["A","B"].forEach(b=>{
+    const col=b==="A"?"#e8a045":"#a3b8a3";
+    defs.append("marker").attr("id","arr-"+b+"-"+uid)
+      .attr("viewBox","0 -4 8 8").attr("refX",9).attr("refY",0)
+      .attr("markerWidth",5).attr("markerHeight",5).attr("orient","auto")
+      .append("path").attr("d","M0,-4L8,0L0,4").attr("fill",col).attr("opacity",0.8);
+  });
+  const maxW=Math.max(...edges.map(e=>e.weight));
+  edges.forEach(e=>{
+    const fn=NODES.find(n=>n.id===e.from),tn=NODES.find(n=>n.id===e.to);
+    const sx=scX(fn.x),sy=scY(fn.y),tx=scX(tn.x),ty=scY(tn.y);
+    const dx=tx-sx,dy=ty-sy,len=Math.sqrt(dx*dx+dy*dy)||1;
+    const off=4,px=-dy/len*off,py=dx/len*off;
+    svgSel.append("line")
+      .attr("x1",sx+px).attr("y1",sy+py).attr("x2",tx+px).attr("y2",ty+py)
+      .attr("stroke",e.block==="A"?"#e8a045":"#a3b8a3")
+      .attr("stroke-width",1+(e.weight/maxW)*5).attr("opacity",0.75)
+      .attr("marker-end","url(#arr-"+e.block+"-"+uid+")");
+  });
+  const maxTot=Math.max(...NODES.map(n=>edges.filter(e=>e.from===n.id||e.to===n.id).reduce((s,e)=>s+e.weight,0)));
+  NODES.forEach(n=>{
+    const tot=edges.filter(e=>e.from===n.id||e.to===n.id).reduce((s,e)=>s+e.weight,0);
+    const r=8+(tot/maxTot)*14, cx=scX(n.x),cy=scY(n.y);
+    const fill=n.group?GROUP_HIGH:GROUP_LOW;
+    const g=svgSel.append("g");
+    if(interactive) g.style("cursor","pointer").on("click",()=>handleNodeClick(n.id));
+    if(interactive&&n.id===selectedNode)
+      g.append("circle").attr("cx",cx).attr("cy",cy).attr("r",r+6)
+        .attr("fill","none").attr("stroke",fill)
+        .attr("stroke-width",2).attr("stroke-dasharray","4,3").attr("opacity",0.8);
+    g.append("circle").attr("cx",cx).attr("cy",cy).attr("r",r)
+      .attr("fill",fill)
+      .attr("fill-opacity",0.85).attr("stroke","#050a05").attr("stroke-width",2)
+      .style("filter", "drop-shadow(0 0 8px " + fill + ")");
+    g.append("text").attr("x",cx).attr("y",cy+r+13).attr("text-anchor","middle")
+      .attr("fill","#d1fae5").attr("font-size",W<300?"9px":"11px")
+      .attr("font-family","Space Mono, monospace").attr("letter-spacing","0.05em").text(n.short);
+  });
+}
+
+function handleNodeClick(nodeId) {
+  selectedNode=nodeId;
+  drawNetwork(currentEdges,d3.select("#network-svg"),750,320,true);
+  const n=NODES.find(nd=>nd.id===nodeId);
+  document.getElementById("node-info-empty").style.display="none";
+  document.getElementById("node-info-loaded").style.display="block";
+  document.getElementById("ni-name").textContent=n.label;
+  document.getElementById("ni-group").innerHTML=n.group?`<span style="color: var(--node-4);">High-income</span>`:`<span style="color: var(--node-6);">Low-income</span>`;
+  const out=currentEdges.filter(e=>e.from===nodeId).reduce((s,e)=>s+e.weight,0);
+  const inp=currentEdges.filter(e=>e.to===nodeId).reduce((s,e)=>s+e.weight,0);
+  document.getElementById("ni-rides").textContent=(out+inp).toLocaleString();
+  document.getElementById("ni-out").textContent=currentEdges.filter(e=>e.from===nodeId).length;
+  document.getElementById("ni-in").textContent=currentEdges.filter(e=>e.to===nodeId).length;
+}
+
+function renderCompareView() {
+  const cfgs=[
+    {sel:"#cnet-obs",  edges:compareEdges.obs,                                       idEl:"cidx-obs"},
+    {sel:"#cnet-perm", edges:compareEdges.perm||shuffleWeights(RAW_EDGES,false),     idEl:"cidx-perm"},
+    {sel:"#cnet-block",edges:compareEdges.block||shuffleWeights(RAW_EDGES,true),     idEl:"cidx-block"},
+  ];
+  cfgs.forEach(c=>{
+    drawNetwork(c.edges,d3.select(c.sel),750,500,false);
+    document.getElementById(c.idEl).textContent="Index: "+computeMetrics(c.edges).index.toFixed(3);
+  });
+}
+
+// Bar chart
+function drawBars(m) {
+  const bSvg=d3.select("#bar-svg"); bSvg.selectAll("*").remove();
+  const el=document.getElementById("bar-svg");
+  const W=el?el.clientWidth:500, H=el?el.clientHeight:200;
+  const mg={top:20,right:14,bottom:46,left:46};
+  const iW=W-mg.left-mg.right, iH=H-mg.top-mg.bottom;
+  const g=bSvg.append("g").attr("transform",`translate(${mg.left},${mg.top})`);
+  const data=[
+    {short:"H→H",val:m.hh,col:"#e8a045"},
+    {short:"H→L",val:m.hl,col:"#c4883a"},
+    {short:"L→H",val:m.lh,col:"#6378ce"},
+    {short:"L→L",val:m.ll,col:"#818cf8"},
+  ];
+  const x=d3.scaleBand().domain(data.map(d=>d.short)).range([0,iW]).padding(0.3);
+  const y=d3.scaleLinear().domain([0,0.75]).range([iH,0]);
+  [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7].forEach(v=>g.append("line").attr("x1",0).attr("x2",iW).attr("y1",y(v)).attr("y2",y(v)).attr("stroke","#1a2a1a").attr("stroke-width",0.5));
+  g.append("line").attr("x1",0).attr("x2",iW).attr("y1",y(0.25)).attr("y2",y(0.25)).attr("stroke","#a3b8a3").attr("stroke-width",1.5).attr("stroke-dasharray","5,3");
+  g.selectAll(".bar").data(data).enter().append("rect")
+    .attr("x",d=>x(d.short)).attr("width",x.bandwidth())
+    .attr("y",d=>y(d.val)).attr("height",d=>iH-y(d.val))
+    .attr("fill",d=>d.col).attr("opacity",0.85).attr("rx",3);
+  g.selectAll(".lbl").data(data).enter().append("text")
+    .attr("x",d=>x(d.short)+x.bandwidth()/2).attr("y",d=>Math.max(y(d.val)-4,8))
+    .attr("text-anchor","middle").attr("fill","#f0fdf4").attr("font-size","11px").attr("font-family","Space Mono, monospace")
+    .text(d=>(d.val*100).toFixed(1)+"%");
+  g.append("g").attr("transform",`translate(0,${iH})`).call(d3.axisBottom(x).tickSize(0))
+    .call(g2=>g2.select(".domain").remove()).selectAll("text").attr("fill","#a3b8a3").attr("font-size","11px").attr("font-family","Space Mono, monospace");
+  g.append("g").call(d3.axisLeft(y).ticks(4).tickFormat(d=>Math.round(d*100)+"%").tickSize(-iW))
+    .call(g2=>g2.select(".domain").remove()).call(g2=>g2.selectAll(".tick line").attr("stroke","none"))
+    .selectAll("text").attr("fill","#a3b8a3").attr("font-size","10px").attr("font-family","Space Mono, monospace");
+  g.append("text").attr("x",iW-2).attr("y",10).attr("text-anchor","end")
+    .attr("fill","#e8a045").attr("font-size","11px").attr("font-family","Space Mono, monospace")
+    .text("Similarity Index: "+m.index.toFixed(3));
+}
+
+// Null distribution
+function updateNullDist() {
+  const nSvg=d3.select("#null-svg"); nSvg.selectAll("*").remove();
+  if(!permHistory.length) return;
+  const el=document.getElementById("null-svg");
+  const W=el?el.clientWidth:320, H=el?el.clientHeight:180;
+  const mg={top:18,right:12,bottom:34,left:12};
+  const iW=W-mg.left-mg.right, iH=H-mg.top-mg.bottom;
+  const g=nSvg.append("g").attr("transform",`translate(${mg.left},${mg.top})`);
+  const allVals=permHistory.map(p=>p.index);
+  const lo=Math.max(0,Math.min(...allVals,(observedIndex||0))-.03);
+  const hi=Math.min(0.85,Math.max(...allVals,(observedIndex||0))+.03);
+  const x=d3.scaleLinear().domain([lo,hi]).range([0,iW]);
+  const nBins=Math.min(20,Math.max(8,Math.floor(permHistory.length/5)));
+  const binner=d3.bin().domain(x.domain()).thresholds(x.ticks(nBins));
+  const binsU=binner(permHistory.filter(p=>p.type==="unblocked").map(p=>p.index));
+  const binsB=binner(permHistory.filter(p=>p.type==="blocked").map(p=>p.index));
+  const maxC=Math.max(...binsU.map(b=>b.length),...binsB.map(b=>b.length),1);
+  const y=d3.scaleLinear().domain([0,maxC]).range([iH,0]);
+  binsU.forEach(b=>{ if(!b.length)return; g.append("rect").attr("x",x(b.x0)+1).attr("width",Math.max(0,x(b.x1)-x(b.x0)-2)).attr("y",y(b.length)).attr("height",iH-y(b.length)).attr("fill","#818cf8").attr("opacity",0.6).attr("rx",2); });
+  binsB.forEach(b=>{ if(!b.length)return; g.append("rect").attr("x",x(b.x0)+1).attr("width",Math.max(0,x(b.x1)-x(b.x0)-2)).attr("y",y(b.length)).attr("height",iH-y(b.length)).attr("fill","#5eead4").attr("opacity",0.6).attr("rx",2); });
+  if(observedIndex!==null) {
+    g.append("line").attr("x1",x(observedIndex)).attr("x2",x(observedIndex)).attr("y1",0).attr("y2",iH).attr("stroke","#e8a045").attr("stroke-width",2).attr("stroke-dasharray","5,3");
+    g.append("text").attr("x",x(observedIndex)+4).attr("y",10).attr("fill","#e8a045").attr("font-size","9px").attr("font-family","Space Mono, monospace").text("obs");
+  }
+  g.append("g").attr("transform",`translate(0,${iH})`).call(d3.axisBottom(x).ticks(5).tickFormat(d=>d.toFixed(2)).tickSize(3))
+    .call(g2=>g2.select(".domain").attr("stroke","#2e3352")).selectAll("text").attr("fill","#a3b8a3").attr("font-size","9px").attr("font-family","Space Mono, monospace");
+  [[0,"#818cf8","Unblocked"],[72,"#5eead4","Blocked"]].forEach(([ox,col,lbl])=>{
+    g.append("rect").attr("x",ox).attr("y",-14).attr("width",10).attr("height",7).attr("fill",col).attr("opacity",0.75).attr("rx",2);
+    g.append("text").attr("x",ox+13).attr("y",-7).attr("fill","#a3b8a3").attr("font-size","9px").attr("font-family","Space Mono, monospace").text(lbl);
+  });
+}
+
+// LC
+const correctAnswers={1:"B",2:"B",3:"B"};
+function selectOption(lc,opt){
+  document.getElementById(`lc${lc}-options`).querySelectorAll(".lc-option").forEach((el,i)=>{
+    el.classList.remove("correct","incorrect");
+    if(["A","B","C"][i]===opt) el.classList.add(["A","B","C"][i]===correctAnswers[lc]?"correct":"incorrect");
+  });
+}
+function showHint(lc){ document.getElementById(`lc${lc}-hint`).classList.toggle("visible"); }
+function showAnswer(lc){
+  document.getElementById(`lc${lc}-answer`).classList.add("visible");
+  document.getElementById(`lc${lc}-options`).querySelectorAll(".lc-option").forEach((el,i)=>{
+    if(["A","B","C"][i]===correctAnswers[lc]) el.classList.add("revealed-correct");
+  });
+}
+
+// Init
+window.addEventListener("load",()=>showState("observed"));
+window.addEventListener("resize",()=>{
+  if(currentMode==="compare") renderCompareView();
+  else drawNetwork(currentEdges,d3.select("#network-svg"),750,320,true);
+  drawBars(computeMetrics(currentEdges));
+  updateNullDist();
+});
+</script>
+</body>
+</html>

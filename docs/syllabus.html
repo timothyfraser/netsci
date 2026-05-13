@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Syllabus · SYSEN 5470</title>
+<link rel="stylesheet" href="assets/design.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .pipe-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px; margin-top: 8px;
+  }
+  .pipe-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 16px 14px;
+    backdrop-filter: blur(8px); transition: border-color .2s, transform .2s;
+  }
+  .pipe-card:hover { border-color: var(--green-bright); transform: translateY(-2px); }
+  .pipe-card .step {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--green-bright); margin-bottom: 8px;
+  }
+  .pipe-card h4 {
+    font-family: var(--font-display); font-size: 24px;
+    color: var(--white); letter-spacing: 0.03em; line-height: 1; margin-bottom: 8px;
+  }
+  .pipe-card p {
+    font-family: var(--font-body); font-size: 12px;
+    color: var(--grey); line-height: 1.5;
+  }
+  .pipe-card .pct {
+    display: inline-block; margin-top: 10px;
+    font-family: var(--font-mono); font-size: 9.5px;
+    color: var(--green-mint); letter-spacing: 0.1em;
+  }
+
+  /* Time budget bar */
+  .budget {
+    display: flex; height: 28px;
+    border-radius: var(--radius-sm); overflow: hidden;
+    border: 1px solid var(--border); margin: 18px 0 8px;
+  }
+  .budget div {
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 10px; color: var(--black);
+    letter-spacing: 0.08em; font-weight: 700;
+  }
+  .budget-key {
+    display: flex; flex-wrap: wrap; gap: 14px; margin-top: 4px;
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey);
+  }
+  .budget-key span::before {
+    content: ''; display: inline-block; width: 10px; height: 10px;
+    border-radius: 2px; margin-right: 6px; vertical-align: -1px;
+  }
+  .key-vid::before    { background: var(--node-1); }
+  .key-read::before   { background: var(--node-2); }
+  .key-sketch::before { background: var(--node-3); }
+  .key-code::before   { background: var(--node-4); }
+  .key-check::before  { background: var(--node-6); }
+
+  /* Case study list */
+  .case-list { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  .case-row {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 18px 22px;
+    backdrop-filter: blur(8px);
+    display: grid; grid-template-columns: 48px 1fr auto; gap: 16px;
+    align-items: center;
+    transition: border-color .2s, transform .2s;
+  }
+  .case-row:hover { border-color: var(--green-bright); transform: translateY(-2px); }
+  .case-row .ico { font-size: 30px; line-height: 1; text-align: center; }
+  .case-row .meta {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline;
+  }
+  .case-row .ttl {
+    font-family: var(--font-display); font-size: 22px;
+    color: var(--white); letter-spacing: 0.03em; line-height: 1.1;
+  }
+  .case-row .goal {
+    font-family: var(--font-body); font-size: 13px;
+    color: var(--green-mint); margin-top: 4px; line-height: 1.45;
+  }
+  .skill-chip {
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 3px;
+    border: 1px solid var(--green-mid); color: var(--green-laser);
+    background: rgba(34, 197, 94, 0.12);
+  }
+  .skill-identify { border-color: var(--green-bright); color: var(--green-bright); }
+  .skill-measure  { border-color: var(--node-4); color: var(--node-4); background: rgba(251,191,36,0.08); }
+  .skill-infer    { border-color: var(--node-5); color: var(--node-5); background: rgba(244,114,182,0.08); }
+  .skill-predict  { border-color: var(--node-3); color: var(--node-3); background: rgba(94,234,212,0.08); }
+  .case-row .open {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    border: 1px solid var(--green-bright); color: var(--green-bright);
+    white-space: nowrap;
+  }
+  .case-row .open:hover { background: var(--green-bright); color: var(--black); }
+  .case-row.soon .open {
+    border-color: var(--border); color: var(--grey-dim);
+    pointer-events: none;
+  }
+  @media (max-width: 720px) {
+    .case-row { grid-template-columns: 36px 1fr; }
+    .case-row .open { grid-column: 1 / -1; justify-self: start; }
+    .case-row .ico { font-size: 22px; }
+  }
+
+  /* Reading list */
+  .reading-list {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 10px;
+    margin-top: 4px;
+  }
+  .reading-list li {
+    font-family: var(--font-body); font-size: 13.5px;
+    color: var(--green-mint); line-height: 1.55;
+    padding-left: 18px; position: relative;
+  }
+  .reading-list li::before {
+    content: '◇'; color: var(--green-bright);
+    position: absolute; left: 0; top: 2px; font-size: 10px;
+  }
+  .reading-list a { color: var(--green-bright); }
+  .reading-list .ref {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--grey); letter-spacing: 0.06em;
+  }
+</style>
+</head>
+<body data-page="syllabus">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="index.html"          data-page="home">Overview</a>
+      <a href="syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="four-skills.html"    data-page="skills">Four Skills</a>
+      <a href="visualizer.html"     data-page="viz">Visualizer</a>
+    </div>
+    <a href="#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Summer 2026</p>
+    <h1 class="hero-title">Course <span>Syllabus</span></h1>
+    <p class="hook">Three weeks. Eight case studies. Four skills you'll take into your engineering practice. Every unit follows the same six-slot rhythm so you always know where you are, what's next, and why you're doing it.</p>
+  </section>
+
+  <!-- ── 6-SLOT SCHEMA ── -->
+  <section class="section">
+    <div class="sec-label">The Six-Slot Unit</div>
+    <p class="section-lede">Every case study moves through the same six slots — a tested rhythm that respects your time as a full-time working professional. Video stays under 25%. Coding is the plurality, not the whole.</p>
+    <div class="pipe-grid">
+      <div class="pipe-card"><div class="step">01 · Frame</div><h4>Stakes</h4><p>What's the engineering problem? Where does the naive approach fail?</p><span class="pct">~5–10%</span></div>
+      <div class="pipe-card"><div class="step">02 · Video</div><h4>Concept</h4><p>Asynchronous lecture covering 3–5 key ideas. Barabási-anchored.</p><span class="pct">≤ 25%</span></div>
+      <div class="pipe-card"><div class="step">03 · Read</div><h4>Anchor</h4><p>One textbook chapter plus one engineering paper that grounds it.</p><span class="pct">~10–25%</span></div>
+      <div class="pipe-card"><div class="step">04 · Sketch</div><h4>Mental Model</h4><p>Hand-drawn activity. No keyboard. Forces the concept into your head.</p><span class="pct">~15%</span></div>
+      <div class="pipe-card"><div class="step">05 · Code</div><h4>Lab</h4><p>R Markdown lab on RPubs. Diagnosis → hypothesis → counterfactual.</p><span class="pct">~40%</span></div>
+      <div class="pipe-card"><div class="step">06 · Check</div><h4>Reflect</h4><p>Embedded multiple-choice checks plus one interpretation prompt.</p><span class="pct">~5%</span></div>
+    </div>
+
+    <div class="budget" title="Time budget for one ~4-hour weekend block">
+      <div style="width:20%; background:var(--node-1);">VIDEO 20%</div>
+      <div style="width:20%; background:var(--node-2);">READ 20%</div>
+      <div style="width:15%; background:var(--node-3);">SKETCH 15%</div>
+      <div style="width:40%; background:var(--node-4);">CODE 40%</div>
+      <div style="width:5%;  background:var(--node-6); color:var(--white);">CHK</div>
+    </div>
+    <div class="budget-key">
+      <span class="key-vid">Video</span>
+      <span class="key-read">Read</span>
+      <span class="key-sketch">Sketch</span>
+      <span class="key-code">Code</span>
+      <span class="key-check">Check</span>
+    </div>
+  </section>
+
+  <!-- ── FOUR SKILLS TABLE ── -->
+  <section class="section">
+    <div class="sec-label">Four Professional Skills</div>
+    <p class="section-lede">Every case study is anchored to one of these four skills. You'll see the naive alternative most engineers reach for first, then the network-aware approach that earns its keep.</p>
+    <div class="topics">
+      <div class="topic"><span class="ico">🧭</span><div><div class="ttl">Identify · Frame as a graph</div><div class="sub"><strong style="color:var(--white)">Naive:</strong> spreadsheet joins until something breaks. <strong style="color:var(--white)">Network-aware:</strong> reachability, dependency queries.</div></div></div>
+      <div class="topic"><span class="ico">📏</span><div><div class="ttl">Measure · Quantify structure</div><div class="sub"><strong style="color:var(--white)">Naive:</strong> mean and sum. <strong style="color:var(--white)">Network-aware:</strong> degree, betweenness, eigenvector centrality.</div></div></div>
+      <div class="topic"><span class="ico">🔬</span><div><div class="ttl">Infer · Test claims</div><div class="sub"><strong style="color:var(--white)">Naive:</strong> vanilla regression on connected observations. <strong style="color:var(--white)">Network-aware:</strong> permutation tests with the right null.</div></div></div>
+      <div class="topic"><span class="ico">🔮</span><div><div class="ttl">Predict · Forecast outcomes</div><div class="sub"><strong style="color:var(--white)">Naive:</strong> flat-feature XGBoost. <strong style="color:var(--white)">Network-aware:</strong> embeddings, GNNs, neighborhood as feature.</div></div></div>
+    </div>
+  </section>
+
+  <!-- ── CASE STUDY LIST ── -->
+  <section class="section" id="cases">
+    <div class="sec-label">Case Studies · The Eight Units</div>
+    <div class="case-list">
+
+      <a class="case-row" id="fundamentals" href="case-studies.html#fundamentals">
+        <div class="ico">🕸️</div>
+        <div>
+          <div class="meta"><div class="ttl">Network Fundamentals</div><span class="skill-chip skill-identify">Identify</span></div>
+          <div class="goal">Classify nodes, edges, direction, weighting, small-world phenomena.</div>
+        </div>
+        <span class="open">Coming Soon</span>
+      </a>
+
+      <a class="case-row" id="centrality" href="case-studies.html#centrality">
+        <div class="ico">📊</div>
+        <div>
+          <div class="meta"><div class="ttl">Centrality &amp; Criticality — Disaster Stakeholders</div><span class="skill-chip skill-measure">Measure</span></div>
+          <div class="goal">Identify bottlenecks, hubs, and vulnerabilities in any system using tidygraph and bipartite networks.</div>
+        </div>
+        <span class="open">Coming Soon</span>
+      </a>
+
+      <a class="case-row" href="case-studies/permutation.html">
+        <div class="ico">📐</div>
+        <div>
+          <div class="meta"><div class="ttl">Network Statistics — Bluebikes Mobility</div><span class="skill-chip skill-infer">Infer</span></div>
+          <div class="goal">Permutation, jackknife, and bootstrap on networks. Does income shape who rides with whom?</div>
+        </div>
+        <span class="open">Open Lab →</span>
+      </a>
+
+      <a class="case-row" id="routing" href="case-studies.html#routing">
+        <div class="ico">🚦</div>
+        <div>
+          <div class="meta"><div class="ttl">Routing &amp; Optimization</div><span class="skill-chip skill-predict">Predict</span></div>
+          <div class="goal">Solve real flow and routing problems. Counterfactual graph mutation — add a node, measure metric M, resample.</div>
+        </div>
+        <span class="open">Coming Soon</span>
+      </a>
+
+      <a class="case-row" id="clusters" href="case-studies.html#clusters">
+        <div class="ico">🧩</div>
+        <div>
+          <div class="meta"><div class="ttl">Clustering &amp; Communities</div><span class="skill-chip skill-measure">Measure</span></div>
+          <div class="goal">Detect structure in large-scale networks automatically. Bipartite graphs, affiliation, matching markets.</div>
+        </div>
+        <span class="open">Coming Soon</span>
+      </a>
+
+      <a class="case-row" href="case-studies/supply-chain.html">
+        <div class="ico">📦</div>
+        <div>
+          <div class="meta"><div class="ttl">Supply Chain Resilience</div><span class="skill-chip skill-measure">Measure</span></div>
+          <div class="goal">Counterfactual node and edge removal. Why the busiest node is rarely the most critical one to protect.</div>
+        </div>
+        <span class="open">Open Lab →</span>
+      </a>
+
+      <a class="case-row" href="case-studies/gnn-xgboost.html">
+        <div class="ico">🤖</div>
+        <div>
+          <div class="meta"><div class="ttl">AI &amp; Machine Learning — Supplier Disruption</div><span class="skill-chip skill-predict">Predict</span></div>
+          <div class="goal">Graph neural networks, embeddings, and ML for network inference. Static and temporal GNNs.</div>
+        </div>
+        <span class="open">Open Lab →</span>
+      </a>
+
+      <a class="case-row" id="viz" href="case-studies.html#viz">
+        <div class="ico">🗺️</div>
+        <div>
+          <div class="meta"><div class="ttl">Visualization — Evacuation Networks</div><span class="skill-chip skill-identify">Identify</span></div>
+          <div class="goal">Communicate network insight with beautiful, interactive graphics. Bluebikes, evacuation, accessibility.</div>
+        </div>
+        <span class="open">Coming Soon</span>
+      </a>
+
+      <a class="case-row" id="big-data" href="case-studies.html#big-data">
+        <div class="ico">🗄️</div>
+        <div>
+          <div class="meta"><div class="ttl">Big Network Data</div><span class="skill-chip skill-identify">Identify</span></div>
+          <div class="goal">Wrangle edgelists and nodelists at scale. Grouping, joins, network joins, intro to SQLite.</div>
+        </div>
+        <span class="open">Coming Soon</span>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ── READINGS ── -->
+  <section class="section" id="readings">
+    <div class="sec-label">Readings · Primary Texts</div>
+    <p class="section-lede">The main textbook is Barabási — free online. Selected chapters from Easley &amp; Kleinberg, Menczer-Fortunato-Davis, and applied engineering texts round out each unit.</p>
+    <ul class="reading-list">
+      <li>Barabási, A.-L. (2016). <em>Network Science.</em> Cambridge University Press. <a href="https://networksciencebook.com/" target="_blank" rel="noopener">networksciencebook.com</a> · <span class="ref">free online</span></li>
+      <li>Easley, D., &amp; Kleinberg, J. (2010). <em>Networks, Crowds, &amp; Markets.</em> Cambridge University Press. <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book.pdf" target="_blank" rel="noopener">PDF</a> · <span class="ref">free</span></li>
+      <li>Menczer, F., Fortunato, S., &amp; Davis, C. A. (2020). <em>A First Course in Network Science.</em> Cambridge University Press. <a href="https://cambridgeuniversitypress.github.io/FirstCourseNetworkScience/" target="_blank" rel="noopener">course site</a></li>
+      <li>Bertsekas, D. P. <em>Network Optimization.</em> MIT. <a href="https://web.mit.edu/dimitrib/www/netbook_Full_Book_NEW.pdf" target="_blank" rel="noopener">PDF</a></li>
+    </ul>
+
+    <div class="sec-label" style="margin-top: 40px;">Per-Case-Study Readings</div>
+
+    <h3 style="font-family:var(--font-display); font-size:22px; color:var(--white); letter-spacing:0.03em; margin: 18px 0 8px;">🕸️ Network Fundamentals</h3>
+    <ul class="reading-list">
+      <li>Gladwell, M. (1999). Six Degrees of Lois Weinberg. <em>The New Yorker.</em></li>
+      <li>Barabási, Ch. 1 &amp; 2. <a href="https://networksciencebook.com/chapter/1" target="_blank" rel="noopener">Intro</a> · <a href="https://networksciencebook.com/chapter/2" target="_blank" rel="noopener">Graph Theory</a></li>
+      <li>Easley &amp; Kleinberg, Ch. 3: Strong and Weak Ties.</li>
+    </ul>
+
+    <h3 style="font-family:var(--font-display); font-size:22px; color:var(--white); letter-spacing:0.03em; margin: 18px 0 8px;">📊 Centrality &amp; Criticality</h3>
+    <ul class="reading-list">
+      <li>Barabási, Ch. 3 (Random Networks), Ch. 8 (Robustness), Ch. 10 (Spreading).</li>
+      <li>Easley &amp; Kleinberg, Ch. 3.6 (Betweenness), Ch. 19 (Cascading Behavior).</li>
+    </ul>
+
+    <h3 style="font-family:var(--font-display); font-size:22px; color:var(--white); letter-spacing:0.03em; margin: 18px 0 8px;">📐 Network Statistics</h3>
+    <ul class="reading-list">
+      <li>Farine, D. R. (2017). A guide to null models for animal social network analysis. <em>Methods Ecol. Evol.</em> 8: 1309–1320. <a href="https://doi.org/10.1111/2041-210X.12772" target="_blank" rel="noopener">DOI</a></li>
+    </ul>
+
+    <h3 style="font-family:var(--font-display); font-size:22px; color:var(--white); letter-spacing:0.03em; margin: 18px 0 8px;">🧩 Clustering &amp; Communities</h3>
+    <ul class="reading-list">
+      <li>Barabási, Ch. 9 (Communities), Ch. 2 (Bipartite Graphs).</li>
+      <li>Easley &amp; Kleinberg, Ch. 4.3 (Affiliation), Ch. 10 (Matching Markets).</li>
+    </ul>
+
+    <h3 style="font-family:var(--font-display); font-size:22px; color:var(--white); letter-spacing:0.03em; margin: 18px 0 8px;">🤖 AI &amp; Machine Learning</h3>
+    <ul class="reading-list">
+      <li>Khan et al. (2025). Optimizing machine learning for network inference. <em>Sci Rep</em> 15, 24472. <a href="https://doi.org/10.1038/s41598-025-02982-0" target="_blank" rel="noopener">DOI</a></li>
+      <li>Resce et al. (2022). Machine learning prediction of academic collaboration networks. <em>Sci Rep</em> 12, 21993. <a href="https://doi.org/10.1038/s41598-022-26531-1" target="_blank" rel="noopener">DOI</a></li>
+      <li>Ding (2025). A Comprehensive Survey on AI for Complex Networks. <em>arXiv.</em> <a href="https://doi.org/10.48550/arXiv.2402.16887" target="_blank" rel="noopener">DOI</a></li>
+    </ul>
+
+    <h3 style="font-family:var(--font-display); font-size:22px; color:var(--white); letter-spacing:0.03em; margin: 18px 0 8px;">🗺️ Visualization</h3>
+    <ul class="reading-list">
+      <li>Bellantuono et al. (2025). Analyzing the accessibility of Rome's healthcare services via public transportation. <em>Sci Rep</em> 15, 22880. <a href="https://doi.org/10.1038/s41598-025-05060-7" target="_blank" rel="noopener">DOI</a></li>
+    </ul>
+  </section>
+
+  <!-- ── CTA ── -->
+  <section class="cta" id="enroll">
+    <h2>Ready When You Are</h2>
+    <p>The labs are open — you can preview them now. Enrollment opens through Cornell Class Roster.</p>
+    <div class="cta-details">
+      <span>SYSEN 5470</span>
+      <span>June 22 – July 10, 2026</span>
+      <span>3 Credits</span>
+    </div>
+    <a href="case-studies.html" class="btn primary">Browse the labs <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Network Science and Applications for Systems Engineering</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script src="assets/network-bg.js" defer></script>
+<script src="assets/site.js" defer></script>
+</body>
+</html>

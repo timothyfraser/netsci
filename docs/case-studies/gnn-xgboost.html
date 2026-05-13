@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GNN + XGBoost · Supplier Disruption Risk · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+.lab {
+  --accent:  var(--green-bright);
+  --accent2: var(--node-4);
+  --accent3: var(--node-3);
+  --danger:  var(--node-7);
+  --text:    var(--white);
+  --text-muted: var(--grey);
+  --disabled-color: var(--grey-dim);
+}
+
+.lab-hero { margin-bottom: 32px; }
+.lab-hero .course-number { margin-bottom: 10px; }
+.lab-hero h1 {
+  font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px);
+  line-height: 1.05; letter-spacing: 0.03em; color: var(--white); margin-bottom: 14px;
+}
+.lab-hero h1 em { color: var(--green-bright); font-style: normal; }
+.lab-hero p {
+  font-family: var(--font-body); font-size: 16px; font-weight: 300;
+  line-height: 1.55; color: var(--green-mint); max-width: 720px;
+  border-left: 3px solid var(--green-bright); padding-left: 18px;
+}
+
+.lab-layout { display: grid; grid-template-columns: 1fr 340px; gap: 18px; }
+@media (max-width: 1000px) { .lab-layout { grid-template-columns: 1fr; } }
+
+.lab-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  margin-bottom: 14px;
+}
+.lab-card h3 {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 12px;
+}
+
+/* Pipeline */
+.pipeline {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.pipe-step {
+  background: rgba(5,46,22,0.35); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md); padding: 10px 14px;
+  font-size: 12px; font-family: var(--font-body); color: var(--green-mint);
+  text-align: center; min-width: 90px; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.pipe-step:hover { border-color: var(--green-mid); color: var(--white); }
+.pipe-step.active {
+  border-color: var(--green-bright); background: rgba(57,255,20,0.12);
+  color: var(--green-bright);
+}
+.pipe-step .pipe-label {
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--grey); display: block; margin-bottom: 3px;
+}
+.pipe-step.active .pipe-label { color: var(--green-bright); opacity: 0.7; }
+.pipe-arrow { color: var(--grey); font-size: 16px; flex-shrink: 0; }
+
+/* Explain panels */
+.explain-panel {
+  background: rgba(5,46,22,0.4); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 14px 16px;
+  font-size: 13px; color: var(--green-mint); line-height: 1.65;
+  margin-top: 14px; display: none;
+}
+.explain-panel.active { display: block; }
+.explain-panel strong { color: var(--green-bright); }
+.explain-panel em { color: var(--node-3); font-style: italic; }
+.explain-panel code {
+  font-family: var(--font-mono);
+  background: rgba(57,255,20,0.08);
+  border: 1px solid rgba(57,255,20,0.18);
+  border-radius: 3px; padding: 1px 5px; font-size: 12px;
+  color: var(--green-laser);
+}
+
+#network-svg {
+  width: 100%; height: 480px;
+  background: rgba(5, 46, 22, 0.35);
+  border-radius: var(--radius-md); display: block; cursor: default;
+}
+.status-bar {
+  background: rgba(5,46,22,0.5); border-top: 1px solid var(--border-soft);
+  padding: 10px 16px; display: flex; align-items: center; gap: 16px;
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--green-mint); flex-wrap: wrap; letter-spacing: 0.06em;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  margin-top: -1px;
+}
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; box-shadow: 0 0 6px currentColor; }
+.dot-active    { background: var(--green-bright); color: var(--green-bright); }
+.dot-disrupted { background: var(--node-7); color: var(--node-7); }
+.dot-bridge    { background: var(--node-3); color: var(--node-3); }
+
+/* Slider */
+.slider-row {
+  display: flex; align-items: center; gap: 12px; margin: 10px 0;
+}
+.slider-row input[type=range] {
+  flex: 1; -webkit-appearance: none; appearance: none;
+  height: 4px; background: var(--border-soft); border-radius: 2px;
+  outline: none;
+}
+.slider-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--green-bright); box-shadow: 0 0 8px var(--green-bright);
+  cursor: pointer;
+}
+.slider-row input[type=range]::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--green-bright); box-shadow: 0 0 8px var(--green-bright);
+  border: none; cursor: pointer;
+}
+.slider-label {
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--green-bright); min-width: 48px; text-align: right;
+}
+
+/* Metric rows */
+.metric-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid var(--border-soft); font-size: 13px;
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-label { color: var(--grey); }
+.metric-value {
+  font-family: var(--font-mono); font-size: 13px;
+  color: var(--white); font-weight: 500;
+}
+.metric-value.highlight { color: var(--green-bright); }
+.metric-value.danger    { color: var(--node-7); }
+
+/* Node info */
+.node-name-display {
+  font-family: var(--font-display); font-size: 22px;
+  color: var(--white); letter-spacing: 0.03em;
+  margin-bottom: 10px; line-height: 1.15;
+}
+.node-info-empty {
+  text-align: center; color: var(--grey);
+  padding: 24px 12px; font-size: 13px;
+}
+.node-info-empty span { display: block; font-size: 22px; margin-bottom: 8px; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+.stat-box {
+  background: rgba(5,46,22,0.45);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+}
+.stat-box-label {
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--grey); margin-bottom: 4px;
+}
+.stat-box-value {
+  font-family: var(--font-mono); font-size: 16px;
+  font-weight: 500; color: var(--white);
+}
+.stat-box-value.danger { color: var(--node-7); }
+.stat-box-value.good   { color: var(--green-bright); }
+
+/* Badges */
+.badge {
+  display: inline-block; font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 3px; margin-bottom: 10px;
+}
+.badge-disrupted { background: rgba(249,115,22,0.18); border: 1px solid var(--node-7); color: var(--node-7); }
+.badge-stable    { background: rgba(57,255,20,0.12); border: 1px solid var(--green-bright); color: var(--green-bright); }
+.badge-hub       { background: rgba(251,191,36,0.18); border: 1px solid var(--node-4); color: var(--node-4); }
+
+/* Embedding grid */
+.embed-grid {
+  display: grid; grid-template-columns: repeat(8, 1fr);
+  gap: 3px; margin: 8px 0;
+}
+.embed-cell { height: 18px; border-radius: 3px; transition: background 0.4s; }
+
+/* Buttons */
+.btn {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  border: 1px solid transparent; cursor: pointer; transition: all 0.18s;
+  display: inline-block;
+}
+.btn-neutral { background: transparent; border-color: var(--border); color: var(--grey); }
+.btn-neutral:hover { border-color: var(--green-bright); color: var(--green-bright); }
+.btn-success { background: rgba(57,255,20,0.12); border-color: var(--green-bright); color: var(--green-bright); }
+.btn-success:hover { background: rgba(57,255,20,0.22); }
+.btn-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+/* Feature table */
+.feat-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 12px; margin-top: 8px;
+}
+.feat-table th {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--grey); padding: 8px 10px; text-align: left;
+  border-bottom: 1px solid var(--border-soft);
+}
+.feat-table td {
+  padding: 7px 10px; border-bottom: 1px solid rgba(46,51,82,0.4);
+  color: var(--green-mint); font-family: var(--font-mono); font-size: 11px;
+}
+.feat-table tr.selected-row td { background: rgba(57,255,20,0.08); }
+.feat-table tr.feat-outcome td { color: var(--node-7); font-weight: 500; }
+
+/* AUC bars */
+.auc-bar-wrapper { margin: 10px 0 4px; }
+.auc-bar-label {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--grey); margin-bottom: 4px;
+}
+.auc-bar-track {
+  width: 100%; height: 10px;
+  background: rgba(5,46,22,0.45); border-radius: 5px;
+  overflow: hidden; border: 1px solid var(--border-soft);
+}
+.auc-bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s ease; box-shadow: 0 0 8px currentColor; }
+
+/* Legend */
+.legend { display: flex; flex-direction: column; gap: 7px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--green-mint); }
+.legend-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
+
+/* Learning checks */
+.lc-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 24px;
+  backdrop-filter: blur(8px); margin-bottom: 16px;
+}
+.lc-header { margin-bottom: 14px; }
+.lc-number {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); padding: 3px 8px;
+  border: 1px solid rgba(57,255,20,0.3); border-radius: 3px;
+  background: rgba(57,255,20,0.08); display: inline-block; margin-bottom: 8px;
+}
+.lc-question {
+  font-family: var(--font-display); font-size: 18px;
+  color: var(--white); letter-spacing: 0.02em; line-height: 1.3;
+}
+.lc-question em { color: var(--node-3); font-style: italic; }
+.lc-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.lc-option {
+  background: rgba(5,46,22,0.35); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  cursor: pointer; transition: all 0.18s;
+  font-size: 13px; display: flex; gap: 10px; align-items: flex-start;
+  color: var(--green-mint); line-height: 1.5;
+}
+.lc-option:hover { border-color: var(--green-bright); color: var(--white); }
+.lc-option.correct   { border-color: var(--green-bright); background: rgba(57,255,20,0.12); color: var(--white); }
+.lc-option.incorrect { border-color: var(--node-7); background: rgba(249,115,22,0.1); color: var(--white); }
+.lc-option.revealed-correct { border-color: var(--green-bright); background: rgba(57,255,20,0.12); }
+.opt-letter {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  color: var(--green-bright); flex-shrink: 0; margin-top: 1px;
+}
+.lc-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+.lc-feedback {
+  border-radius: var(--radius-sm); padding: 12px 16px;
+  font-size: 13px; line-height: 1.6; display: none; margin-top: 8px;
+}
+.lc-feedback.visible { display: block; }
+.feedback-hint   { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.3); color: var(--green-mint); }
+.feedback-answer { background: rgba(57,255,20,0.06); border: 1px solid rgba(57,255,20,0.3); color: var(--green-mint); }
+.feedback-answer strong { color: var(--green-bright); }
+.feedback-answer em { color: var(--node-3); font-style: italic; }
+</style>
+</head>
+<body data-page="cases">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../four-skills.html"    data-page="skills">Four Skills</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page-wide lab">
+
+  <section class="lab-hero">
+    <p class="course-number">SYSEN 5470 · Network Science · Case Study · Skill: Predict</p>
+    <h1>Predicting Supplier Disruption with <em>GNN + XGBoost</em></h1>
+    <p>Explore how graph neural networks encode network structure as node embeddings, and how those embeddings help XGBoost predict which suppliers will experience disruptions — controlling for position in the supply network.</p>
+  </section>
+
+  <div class="lab-layout">
+
+    <div>
+
+      <div class="lab-card">
+        <h3>Pipeline — Click a Step to Explore</h3>
+        <div class="pipeline" id="pipeline">
+          <div class="pipe-step active" onclick="setStage(0)" id="pipe-0"><span class="pipe-label">Part 1</span>Network Data</div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step" onclick="setStage(1)" id="pipe-1"><span class="pipe-label">Part 3</span>Static GNN</div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step" onclick="setStage(2)" id="pipe-2"><span class="pipe-label">Part 3</span>Embeddings → XGBoost</div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step" onclick="setStage(3)" id="pipe-3"><span class="pipe-label">Part 4</span>Temporal GNN</div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-step" onclick="setStage(4)" id="pipe-4"><span class="pipe-label">Part 4</span>Temporal XGBoost</div>
+        </div>
+
+        <div class="explain-panel active" id="exp-0">
+          <strong>Part 1 — Network Setup.</strong> This supply chain has <strong>22 supplier nodes</strong> and <strong>38 directed edges</strong> (supplier → buyer). Node size encodes degree. Node color encodes disruption status in the next quarter. Click any supplier to inspect its features.<br><br>
+          The key question: can we predict which suppliers will experience disruptions — and does knowing <em>where they sit in the network</em> help?
+        </div>
+        <div class="explain-panel" id="exp-1">
+          <strong>Part 3 — Static GNN: Message Passing.</strong> A GraphSAGE model runs <strong>2 rounds of message passing</strong> on this snapshot. In each round, every node asks its neighbors: <em>"what do your features look like?"</em> It aggregates those answers (weighted mean) and combines them with its own features to produce an updated representation.<br><br>
+          After 2 rounds, each node's vector encodes not just its own delay rate and size — but a summary of its <strong>2-hop neighborhood's structure</strong>. That's the embedding. Click nodes to see their embedding visualization.
+        </div>
+        <div class="explain-panel" id="exp-2">
+          <strong>Part 3 — Embeddings → XGBoost Feature Table.</strong> The GNN produces one <strong>32-dimensional embedding vector</strong> per node. These are appended to the node feature table as extra columns. XGBoost then trains on the combined table: raw features <em>plus</em> structural features.<br><br>
+          Compare AUC scores: raw features only vs. raw + embeddings. The gain tells you how much the network structure added beyond what firms' own attributes already captured.
+        </div>
+        <div class="explain-panel" id="exp-3">
+          <strong>Part 4 — Temporal GNN.</strong> Now we have <strong>12 monthly snapshots</strong>. For each snapshot, the GNN produces one embedding matrix. We stack these into a panel dataset: each row is <em>supplier × month</em>. We also add a <strong>lagged embedding</strong> (embed at t−1) as an additional feature — encoding how each supplier's structural position has <em>changed</em> over time.<br><br>
+          Use the slider to step through months and watch how node risk profiles shift as the network evolves.
+        </div>
+        <div class="explain-panel" id="exp-4">
+          <strong>Part 4 — Temporal XGBoost.</strong> Three models now compete: (1) raw features only, (2) raw + static embedding, (3) raw + temporal embedding with lag. Each row in the training data is a supplier-month observation.<br><br>
+          The residual autocorrelation check tells us: after the model's predictions, are the <em>errors</em> serially correlated over time? If yes, we're missing a lag structure. The correct answer here: <strong>yes</strong>, there's autocorrelation at lag 1 — meaning disruptions tend to persist into the next month, and adding a disruption-lag feature would improve the model.
+        </div>
+      </div>
+
+      <div class="lab-card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 12px 12px 0;">
+          <svg id="network-svg"></svg>
+        </div>
+        <div class="status-bar">
+          <span><span class="status-dot dot-active"></span><strong id="active-count">22</strong> suppliers</span>
+          <span><span class="status-dot dot-disrupted"></span><strong id="disrupted-count">6</strong> disrupted next quarter</span>
+          <span><span class="status-dot dot-bridge"></span> Node size = degree</span>
+          <span id="timestep-display" style="margin-left: auto; color: var(--green-bright); display: none;">Month: <strong id="t-label">T1</strong></span>
+        </div>
+      </div>
+
+      <div class="lab-card" id="slider-card" style="display: none;">
+        <h3>Temporal Snapshot</h3>
+        <div class="slider-row">
+          <span style="font-size: 12px; color: var(--grey); font-family: var(--font-mono);">T1</span>
+          <input type="range" id="t-slider" min="1" max="12" value="1" oninput="onSlider(this.value)">
+          <span style="font-size: 12px; color: var(--grey); font-family: var(--font-mono);">T12</span>
+          <span class="slider-label" id="slider-val">T1</span>
+        </div>
+        <div style="font-size: 12px; color: var(--grey); margin-top: 4px;">Drag to step through 12 monthly snapshots. Watch how disruption risk migrates through the network as upstream disruptions propagate.</div>
+      </div>
+
+      <div class="lab-card" id="auc-card" style="display: none;">
+        <h3>Model Comparison — AUC-ROC</h3>
+        <div id="auc-bars"></div>
+        <div style="font-size: 12px; color: var(--grey); margin-top: 10px;" id="auc-note"></div>
+      </div>
+
+    </div>
+
+    <div>
+
+      <div class="lab-card">
+        <h3>Supplier Info</h3>
+        <div id="node-info-panel">
+          <div class="node-info-empty">
+            <span>🏭</span>
+            Click any supplier node to inspect its features and embedding.
+          </div>
+        </div>
+      </div>
+
+      <div class="lab-card">
+        <h3>Network Metrics</h3>
+        <div class="metric-row"><span class="metric-label">Nodes</span><span class="metric-value" id="m-nodes">22</span></div>
+        <div class="metric-row"><span class="metric-label">Edges</span><span class="metric-value" id="m-edges">38</span></div>
+        <div class="metric-row"><span class="metric-label">Density</span><span class="metric-value" id="m-density">0.083</span></div>
+        <div class="metric-row"><span class="metric-label">Avg. Degree</span><span class="metric-value" id="m-deg">3.45</span></div>
+        <div class="metric-row"><span class="metric-label">Disruption Rate</span><span class="metric-value danger" id="m-disrupt">27%</span></div>
+        <div class="metric-row"><span class="metric-label">Avg. Path Length</span><span class="metric-value" id="m-apl">2.8</span></div>
+      </div>
+
+      <div class="lab-card">
+        <h3>Legend</h3>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background: var(--node-7); color: var(--node-7);"></div>Disrupted next quarter</div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--green-bright); color: var(--green-bright);"></div>Stable next quarter</div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--node-4); color: var(--node-4);"></div>Critical hub (high degree)</div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--node-3); width: 11px; height: 11px; border-radius: 2px; color: var(--node-3);"></div>Embedding vector (32-dim)</div>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: var(--grey);">
+          Node size encodes degree centrality. Edge width encodes transaction volume.
+        </div>
+      </div>
+
+      <div class="lab-card" id="feattable-card">
+        <h3>XGBoost Feature Table</h3>
+        <div style="font-size: 12px; color: var(--grey); margin-bottom: 10px;">Each row = one supplier. Columns = raw features + GNN embedding dimensions + outcome label.</div>
+        <div class="btn-row">
+          <button class="btn btn-neutral" onclick="toggleFeatTable()">📋 Show / Hide Table</button>
+        </div>
+        <div id="feat-table-wrap" style="display: none; margin-top: 12px; overflow-x: auto;">
+          <table class="feat-table" id="feat-table"></table>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="sec-label" style="margin-top: 36px;">Learning Checks</div>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 01 — Direct Observation</span>
+      <div class="lc-question">Look at the supply network in Part 1 mode. Supplier <em>Shenzhen_Fab</em> has a low historical delay rate (0.04) but is marked as disrupted next quarter. Which structural feature best explains why a node with good individual performance still carries high disruption risk?</div>
+    </div>
+    <div class="lc-options" id="lc1-options">
+      <div class="lc-option" onclick="selectOption(1,'A')"><span class="opt-letter">A</span>Shenzhen_Fab has the highest degree in the network, so it is involved in too many transactions to manage reliably.</div>
+      <div class="lc-option" onclick="selectOption(1,'B')"><span class="opt-letter">B</span>Shenzhen_Fab is downstream from two high-delay suppliers that are sole-source dependencies, so upstream risk propagates regardless of its own performance.</div>
+      <div class="lc-option" onclick="selectOption(1,'C')"><span class="opt-letter">C</span>Shenzhen_Fab's delay rate is simply mislabeled — a rate of 0.04 would prevent any disruption under standard supply chain models.</div>
+    </div>
+    <div class="lc-actions">
+      <button class="btn btn-neutral" onclick="showHint(1)">💡 Hint</button>
+      <button class="btn btn-neutral" onclick="showAnswer(1)">🔓 Reveal Answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc1-hint">Click Shenzhen_Fab in the network. Then click its upstream neighbors (the nodes with edges pointing toward it). Check their delay rates in the node info panel. What do you notice about their individual risk levels?</div>
+    <div class="lc-feedback feedback-answer" id="lc1-answer"><strong>B is correct.</strong> This is the core insight GNNs are built to capture. A node's own features (delay rate = 0.04) look fine in isolation — but the GNN's message passing aggregates information from Shenzhen_Fab's neighborhood. Both its upstream suppliers have high delay rates and sole-source flags, meaning there is no backup if either fails. The GNN embedding encodes this neighborhood risk; a flat feature table would miss it entirely. Option A is wrong — high degree helps diversify risk, not concentrate it. Option C reveals a common misconception: individual performance metrics don't account for structural exposure.</div>
+  </div>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 02 — Intervention</span>
+      <div class="lc-question">Switch to <em>Embeddings → XGBoost</em> mode and examine the AUC comparison. The model trained on raw features alone achieves AUC = 0.71. After adding GNN embeddings, AUC rises to 0.84. What does the SHAP analysis reveal about <em>why</em> embeddings help — and what does that tell you about the limits of firm-level data?</div>
+    </div>
+    <div class="lc-options" id="lc2-options">
+      <div class="lc-option" onclick="selectOption(2,'A')"><span class="opt-letter">A</span>The embeddings simply add more features, and more features always improve XGBoost regardless of their content.</div>
+      <div class="lc-option" onclick="selectOption(2,'B')"><span class="opt-letter">B</span>The top SHAP contributors include several embedding dimensions, indicating that structural position — specifically exposure to upstream risk clusters — carries predictive signal that firm-level attributes cannot capture.</div>
+      <div class="lc-option" onclick="selectOption(2,'C')"><span class="opt-letter">C</span>The AUC gain is driven entirely by country risk index, which the GNN encodes more efficiently than the raw feature.</div>
+    </div>
+    <div class="lc-actions">
+      <button class="btn btn-neutral" onclick="showHint(2)">💡 Hint</button>
+      <button class="btn btn-neutral" onclick="showAnswer(2)">🔓 Reveal Answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc2-hint">Navigate to the Embeddings → XGBoost pipeline step. Examine the AUC bars and SHAP breakdown shown there. Which feature block (raw vs. embedding) contributes more to the gain? Consider: if adding random noise columns to XGBoost also "added more features" — would that improve AUC?</div>
+    <div class="lc-feedback feedback-answer" id="lc2-answer"><strong>B is correct.</strong> SHAP shows that embedding dimensions rank among the top predictors, alongside financial health score and delay rate. The key interpretation: the embedding dimensions encode neighborhood structure — things like "this node is two hops from a known disruption cluster" or "this node's upstream suppliers are highly interconnected" — which cannot be derived from any single firm's own records. Option A is wrong: adding uninformative features doesn't improve XGBoost — it has regularization to suppress noise. Option C is wrong because country risk appears in the raw features already; the GNN doesn't add new information about it, only about structural position.</div>
+  </div>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 03 — Concept Transfer</span>
+      <div class="lc-question">In the Temporal XGBoost model (Part 4), adding a <em>lagged embedding</em> (the GNN embedding from t−1) further improves AUC over the static embedding model. A residual autocorrelation check also shows significant autocorrelation at lag 1. What does this combination of results tell you about the nature of supply chain disruptions?</div>
+    </div>
+    <div class="lc-options" id="lc3-options">
+      <div class="lc-option" onclick="selectOption(3,'A')"><span class="opt-letter">A</span>Disruptions are essentially random shocks with no memory — the autocorrelation is a statistical artifact of the small dataset and the lagged embedding adds noise.</div>
+      <div class="lc-option" onclick="selectOption(3,'B')"><span class="opt-letter">B</span>Disruptions are persistent and structurally contagious: a supplier at risk in month T is more likely to be disrupted in month T+1, and the structural exposure encoded in the lagged embedding captures the propagation pathway before the disruption fully materializes.</div>
+      <div class="lc-option" onclick="selectOption(3,'C')"><span class="opt-letter">C</span>The lagged embedding improves AUC simply because it provides more recent data about firm-level delay rates, which fluctuate seasonally.</div>
+    </div>
+    <div class="lc-actions">
+      <button class="btn btn-neutral" onclick="showHint(3)">💡 Hint</button>
+      <button class="btn btn-neutral" onclick="showAnswer(3)">🔓 Reveal Answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc3-hint">Use the temporal slider to move through snapshots T6–T9. Watch which nodes shift from stable to disrupted. Do disruptions appear suddenly and randomly, or do they seem to track along network edges — spreading from disrupted upstream nodes to their downstream neighbors over subsequent months?</div>
+    <div class="lc-feedback feedback-answer" id="lc3-answer"><strong>B is correct.</strong> The lag-1 residual autocorrelation confirms that the model at time T is systematically under-predicting disruptions that persist from T−1. This means disruptions have memory — a disrupted supplier stays disrupted, and its downstream partners become increasingly exposed over subsequent periods. The lagged embedding captures the <em>structural pathway</em> of that exposure: as upstream nodes enter distress, the neighborhood structure changes in ways the GNN can encode, providing an early warning signal before the downstream disruption shows up in firm-level metrics.</div>
+  </div>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · GNN + XGBoost · Supplier Disruption Risk</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="../case-studies.html">← All case studies</a>
+  </p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+
+<script>
+// ─── DATA ───────────────────────────────────────
+
+const rawNodes = [
+  { id: "OmegaTech_HQ",     label: "OmegaTech HQ",      zone: "focal",    x: 375, y: 250, type: "hub",    degree_raw: 0, delay: 0.02, size: "large",  country_risk: 0.1, financial: 0.92, disrupted: false },
+  { id: "Boston_Assembly",  label: "Boston Assembly",    zone: "tier1",    x: 220, y: 160, type: "hub",    degree_raw: 0, delay: 0.06, size: "large",  country_risk: 0.1, financial: 0.85, disrupted: false },
+  { id: "Dublin_Assembly",  label: "Dublin Assembly",    zone: "tier1",    x: 520, y: 140, type: "normal", degree_raw: 0, delay: 0.08, size: "medium", country_risk: 0.12, financial: 0.78, disrupted: false },
+  { id: "Seoul_Assembly",   label: "Seoul Assembly",     zone: "tier1",    x: 550, y: 330, type: "normal", degree_raw: 0, delay: 0.05, size: "large",  country_risk: 0.18, financial: 0.81, disrupted: true  },
+  { id: "Shenzhen_Fab",     label: "Shenzhen Fab",       zone: "tier2",    x: 610, y: 220, type: "hub",    degree_raw: 0, delay: 0.04, size: "large",  country_risk: 0.22, financial: 0.74, disrupted: true  },
+  { id: "Chennai_Parts",    label: "Chennai Parts",      zone: "tier2",    x: 460, y: 380, type: "normal", degree_raw: 0, delay: 0.14, size: "medium", country_risk: 0.28, financial: 0.61, disrupted: true  },
+  { id: "Munich_Precision", label: "Munich Precision",   zone: "tier2",    x: 300, y: 100, type: "normal", degree_raw: 0, delay: 0.03, size: "medium", country_risk: 0.08, financial: 0.90, disrupted: false },
+  { id: "Osaka_Mfg",        label: "Osaka Mfg",          zone: "tier2",    x: 680, y: 370, type: "normal", degree_raw: 0, delay: 0.07, size: "medium", country_risk: 0.15, financial: 0.77, disrupted: false },
+  { id: "Monterrey_Ops",    label: "Monterrey Ops",      zone: "tier2",    x: 120, y: 240, type: "normal", degree_raw: 0, delay: 0.11, size: "small",  country_risk: 0.31, financial: 0.58, disrupted: false },
+  { id: "Warsaw_Comp",      label: "Warsaw Components",  zone: "tier2",    x: 350, y: 380, type: "normal", degree_raw: 0, delay: 0.09, size: "small",  country_risk: 0.19, financial: 0.65, disrupted: false },
+  { id: "Taipei_Chips",     label: "Taipei Chips",       zone: "tier2",    x: 680, y: 160, type: "hub",    degree_raw: 0, delay: 0.05, size: "large",  country_risk: 0.35, financial: 0.72, disrupted: true  },
+  { id: "Bangalore_SW",     label: "Bangalore SW",       zone: "tier2",    x: 200, y: 330, type: "normal", degree_raw: 0, delay: 0.06, size: "medium", country_risk: 0.24, financial: 0.80, disrupted: false },
+  { id: "Rio_Minerals",     label: "Rio Minerals",       zone: "tier3",    x: 80,  y: 160, type: "normal", degree_raw: 0, delay: 0.18, size: "small",  country_risk: 0.42, financial: 0.45, disrupted: true  },
+  { id: "Lagos_Rare",       label: "Lagos Rare Earth",   zone: "tier3",    x: 480, y: 460, type: "normal", degree_raw: 0, delay: 0.22, size: "small",  country_risk: 0.55, financial: 0.38, disrupted: true  },
+  { id: "Perth_Mining",     label: "Perth Mining",       zone: "tier3",    x: 690, y: 440, type: "normal", degree_raw: 0, delay: 0.09, size: "medium", country_risk: 0.15, financial: 0.82, disrupted: false },
+  { id: "Quebec_Smelter",   label: "Quebec Smelter",     zone: "tier3",    x: 130, y: 370, type: "normal", degree_raw: 0, delay: 0.07, size: "medium", country_risk: 0.09, financial: 0.76, disrupted: false },
+  { id: "Santiago_Copper",  label: "Santiago Copper",    zone: "tier3",    x: 230, y: 440, type: "normal", degree_raw: 0, delay: 0.13, size: "small",  country_risk: 0.33, financial: 0.54, disrupted: false },
+  { id: "Hanoi_Assembly",   label: "Hanoi Assembly",     zone: "tier3",    x: 600, y: 460, type: "normal", degree_raw: 0, delay: 0.16, size: "small",  country_risk: 0.38, financial: 0.49, disrupted: false },
+  { id: "Rotterdam_Port",   label: "Rotterdam Port",     zone: "tier3",    x: 390, y: 80,  type: "bridge", degree_raw: 0, delay: 0.04, size: "large",  country_risk: 0.07, financial: 0.88, disrupted: false },
+  { id: "Memphis_3PL",      label: "Memphis 3PL",        zone: "tier3",    x: 100, y: 100, type: "normal", degree_raw: 0, delay: 0.08, size: "medium", country_risk: 0.10, financial: 0.83, disrupted: false },
+  { id: "Incheon_Logistics",label: "Incheon Logistics",  zone: "tier3",    x: 590, y: 100, type: "normal", degree_raw: 0, delay: 0.06, size: "medium", country_risk: 0.17, financial: 0.79, disrupted: false },
+  { id: "Cairo_Textiles",   label: "Cairo Textiles",     zone: "tier3",    x: 340, y: 460, type: "normal", degree_raw: 0, delay: 0.20, size: "small",  country_risk: 0.48, financial: 0.41, disrupted: false },
+];
+
+const rawEdges = [
+  { source: "Boston_Assembly",  target: "OmegaTech_HQ",    weight: 9200, sole: false },
+  { source: "Dublin_Assembly",  target: "OmegaTech_HQ",    weight: 6800, sole: false },
+  { source: "Seoul_Assembly",   target: "OmegaTech_HQ",    weight: 7500, sole: false },
+  { source: "Shenzhen_Fab",     target: "Boston_Assembly",  weight: 5500, sole: true  },
+  { source: "Munich_Precision", target: "Boston_Assembly",  weight: 4200, sole: false },
+  { source: "Monterrey_Ops",    target: "Boston_Assembly",  weight: 3100, sole: false },
+  { source: "Taipei_Chips",     target: "Dublin_Assembly",  weight: 6200, sole: true  },
+  { source: "Shenzhen_Fab",     target: "Dublin_Assembly",  weight: 3800, sole: false },
+  { source: "Warsaw_Comp",      target: "Dublin_Assembly",  weight: 2900, sole: false },
+  { source: "Osaka_Mfg",        target: "Seoul_Assembly",   weight: 4700, sole: false },
+  { source: "Chennai_Parts",    target: "Seoul_Assembly",   weight: 5300, sole: true  },
+  { source: "Bangalore_SW",     target: "Seoul_Assembly",   weight: 2100, sole: false },
+  { source: "Rio_Minerals",     target: "Shenzhen_Fab",     weight: 2800, sole: true  },
+  { source: "Lagos_Rare",       target: "Shenzhen_Fab",     weight: 3100, sole: true  },
+  { source: "Perth_Mining",     target: "Osaka_Mfg",        weight: 3600, sole: false },
+  { source: "Perth_Mining",     target: "Taipei_Chips",     weight: 2900, sole: false },
+  { source: "Quebec_Smelter",   target: "Munich_Precision", weight: 3300, sole: false },
+  { source: "Quebec_Smelter",   target: "Monterrey_Ops",    weight: 2200, sole: false },
+  { source: "Santiago_Copper",  target: "Chennai_Parts",    weight: 2600, sole: false },
+  { source: "Lagos_Rare",       target: "Chennai_Parts",    weight: 2400, sole: false },
+  { source: "Hanoi_Assembly",   target: "Osaka_Mfg",        weight: 2100, sole: false },
+  { source: "Memphis_3PL",      target: "Bangalore_SW",     weight: 1800, sole: false },
+  { source: "Memphis_3PL",      target: "Munich_Precision", weight: 2100, sole: false },
+  { source: "Cairo_Textiles",   target: "Warsaw_Comp",      weight: 1900, sole: false },
+  { source: "Cairo_Textiles",   target: "Chennai_Parts",    weight: 1600, sole: false },
+  { source: "Rotterdam_Port",   target: "Munich_Precision", weight: 4100, sole: false },
+  { source: "Rotterdam_Port",   target: "Dublin_Assembly",  weight: 3500, sole: false },
+  { source: "Rotterdam_Port",   target: "Boston_Assembly",  weight: 2900, sole: false },
+  { source: "Incheon_Logistics",target: "Taipei_Chips",     weight: 3200, sole: false },
+  { source: "Incheon_Logistics",target: "Seoul_Assembly",   weight: 2600, sole: false },
+  { source: "Rio_Minerals",     target: "Monterrey_Ops",    weight: 1500, sole: false },
+  { source: "Santiago_Copper",  target: "Warsaw_Comp",      weight: 2100, sole: false },
+  { source: "Quebec_Smelter",   target: "Bangalore_SW",     weight: 1700, sole: false },
+  { source: "Lagos_Rare",       target: "Taipei_Chips",     weight: 2800, sole: true  },
+  { source: "Perth_Mining",     target: "Chennai_Parts",    weight: 1900, sole: false },
+  { source: "Hanoi_Assembly",   target: "Seoul_Assembly",   weight: 1400, sole: false },
+  { source: "Memphis_3PL",      target: "Monterrey_Ops",    weight: 1600, sole: false },
+  { source: "Rotterdam_Port",   target: "Warsaw_Comp",      weight: 2200, sole: false },
+];
+
+const temporalDisruptions = [
+  ["Rio_Minerals", "Lagos_Rare"],
+  ["Rio_Minerals", "Lagos_Rare", "Shenzhen_Fab"],
+  ["Rio_Minerals", "Lagos_Rare", "Shenzhen_Fab", "Taipei_Chips"],
+  ["Rio_Minerals", "Lagos_Rare", "Shenzhen_Fab", "Taipei_Chips", "Chennai_Parts"],
+  ["Rio_Minerals", "Lagos_Rare", "Shenzhen_Fab", "Taipei_Chips", "Chennai_Parts", "Cairo_Textiles"],
+  ["Lagos_Rare","Shenzhen_Fab","Taipei_Chips","Chennai_Parts","Cairo_Textiles","Seoul_Assembly","Dublin_Assembly"],
+  ["Shenzhen_Fab","Taipei_Chips","Chennai_Parts","Seoul_Assembly","Dublin_Assembly"],
+  ["Shenzhen_Fab","Taipei_Chips","Seoul_Assembly"],
+  ["Taipei_Chips","Seoul_Assembly"],
+  ["Seoul_Assembly"],
+  [],
+  [],
+];
+
+// State
+let selectedNode = null;
+let currentStage = 0;
+let currentT = 1;
+
+// Mock embeddings
+function seedRng(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) { h = Math.imul(31, h) + str.charCodeAt(i) | 0; }
+  return h;
+}
+function fakeEmbed(nodeId, t) {
+  const seed = seedRng(nodeId + String(t));
+  const vals = [];
+  let s = seed;
+  for (let i = 0; i < 32; i++) {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    vals.push(((s >>> 0) / 0xffffffff) * 2 - 1);
+  }
+  const disrupted = temporalDisruptions[Math.min(t-1, 11)].includes(nodeId);
+  if (disrupted) {
+    for (let i = 0; i < 8; i++) vals[i] = vals[i] * 0.3 - 0.55;
+  }
+  return vals;
+}
+
+function computeDegrees() {
+  const deg = {};
+  rawNodes.forEach(n => deg[n.id] = 0);
+  rawEdges.forEach(e => {
+    deg[e.source] = (deg[e.source] || 0) + 1;
+    deg[e.target] = (deg[e.target] || 0) + 1;
+  });
+  return deg;
+}
+const degrees = computeDegrees();
+const maxDeg = Math.max(...Object.values(degrees));
+
+function getRadius(nodeId) {
+  return 7 + (degrees[nodeId] / maxDeg) * 13;
+}
+
+function getDisrupted(t) {
+  if (currentStage < 3) {
+    return new Set(rawNodes.filter(n => n.disrupted).map(n => n.id));
+  }
+  return new Set(temporalDisruptions[Math.min(t-1, 11)]);
+}
+
+function scaleX(x) { const svg=document.getElementById("network-svg"); return (x/750)*svg.clientWidth; }
+function scaleY(y) { const svg=document.getElementById("network-svg"); return (y/500)*svg.clientHeight; }
+
+function drawNetwork() {
+  const svgEl = document.getElementById("network-svg");
+  const svg = d3.select(svgEl);
+  svg.selectAll("*").remove();
+
+  const disrupted = getDisrupted(currentT);
+
+  const nodeColor = (n) => {
+    if (disrupted.has(n.id)) return "var(--node-7)";
+    if (n.type === "hub") return "var(--node-4)";
+    if (n.type === "bridge") return "var(--node-3)";
+    return "var(--green-bright)";
+  };
+
+  rawEdges.forEach(e => {
+    const src = rawNodes.find(n => n.id === e.source);
+    const tgt = rawNodes.find(n => n.id === e.target);
+    if (!src || !tgt) return;
+    const strokeW = Math.max(1, Math.log(e.weight / 1500) * 1.5);
+    svg.append("line")
+      .attr("x1", scaleX(src.x)).attr("y1", scaleY(src.y))
+      .attr("x2", scaleX(tgt.x)).attr("y2", scaleY(tgt.y))
+      .attr("stroke", e.sole ? "var(--node-7)" : "rgba(57,255,20,0.45)")
+      .attr("stroke-width", e.sole ? strokeW + 1 : strokeW)
+      .attr("stroke-opacity", e.sole ? 0.6 : 0.45)
+      .attr("stroke-dasharray", e.sole ? "5,3" : null);
+  });
+
+  svg.append("defs").append("marker")
+    .attr("id", "arrow")
+    .attr("viewBox", "0 -4 8 8").attr("refX", 12).attr("refY", 0)
+    .attr("markerWidth", 5).attr("markerHeight", 5).attr("orient", "auto")
+    .append("path").attr("d", "M0,-4L8,0L0,4").attr("fill", "#3a4a3a");
+
+  rawNodes.forEach(n => {
+    const r = getRadius(n.id);
+    const g = svg.append("g")
+      .style("cursor", "pointer")
+      .on("click", () => handleNodeClick(n.id));
+
+    if (disrupted.has(n.id)) {
+      g.append("circle").attr("cx", scaleX(n.x)).attr("cy", scaleY(n.y)).attr("r", r + 5)
+        .attr("fill", "rgba(249,115,22,0.16)").attr("stroke", "none");
+    }
+    if (selectedNode === n.id) {
+      g.append("circle").attr("cx", scaleX(n.x)).attr("cy", scaleY(n.y)).attr("r", r + 6)
+        .attr("fill", "none").attr("stroke", nodeColor(n))
+        .attr("stroke-width", 1.5).attr("stroke-dasharray", "4,3").attr("opacity", 0.8);
+    }
+    g.append("circle").attr("cx", scaleX(n.x)).attr("cy", scaleY(n.y)).attr("r", r)
+      .attr("fill", nodeColor(n))
+      .attr("fill-opacity", 0.9)
+      .attr("stroke", "#050a05").attr("stroke-width", 1.5)
+      .style("filter", "drop-shadow(0 0 8px " + nodeColor(n) + ")");
+
+    g.append("text")
+      .attr("x", scaleX(n.x)).attr("y", scaleY(n.y) + r + 12)
+      .attr("text-anchor", "middle")
+      .attr("fill", "var(--green-mint)")
+      .attr("font-family", "Space Mono, monospace")
+      .attr("font-size", "9px")
+      .attr("letter-spacing", "0.05em")
+      .text(n.label.split(" ").slice(0, 1).join(""));
+  });
+
+  document.getElementById("disrupted-count").textContent = disrupted.size;
+  document.getElementById("active-count").textContent = rawNodes.length;
+}
+
+function handleNodeClick(nodeId) {
+  selectedNode = selectedNode === nodeId ? null : nodeId;
+  drawNetwork();
+  updateNodePanel();
+}
+
+function updateNodePanel() {
+  const panel = document.getElementById("node-info-panel");
+  if (!selectedNode) {
+    panel.innerHTML = `<div class="node-info-empty"><span>🏭</span>Click any supplier node to inspect its features and embedding.</div>`;
+    return;
+  }
+  const n = rawNodes.find(x => x.id === selectedNode);
+  const disrupted = getDisrupted(currentT);
+  const isDisrupted = disrupted.has(n.id);
+  const deg = degrees[n.id];
+  const embed = fakeEmbed(n.id, currentT);
+  const badgeClass = isDisrupted ? "badge-disrupted" : (n.type === "hub" ? "badge-hub" : "badge-stable");
+  const badgeText = isDisrupted ? "Disrupted" : (n.type === "hub" ? "Critical Hub" : "Stable");
+
+  const upstreamSole = rawEdges.filter(e => e.target === n.id && e.sole).length;
+
+  let embedHtml = "";
+  if (currentStage >= 1) {
+    embedHtml = `
+      <div style="margin-top:10px;">
+        <div style="font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--grey); margin-bottom: 6px;">GNN Embedding (32-dim)</div>
+        <div class="embed-grid" id="embed-vis"></div>
+        <div style="font-size: 11px; color: var(--grey); margin-top: 5px;">Warm = high activation · Cool = low activation</div>
+      </div>`;
+  }
+
+  panel.innerHTML = `
+    <div class="node-name-display">${n.label}</div>
+    <span class="badge ${badgeClass}">${badgeText}</span>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-box-label">Delay Rate</div>
+        <div class="stat-box-value ${n.delay > 0.12 ? 'danger' : 'good'}">${(n.delay*100).toFixed(0)}%</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Degree</div>
+        <div class="stat-box-value">${deg}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Financial</div>
+        <div class="stat-box-value ${n.financial < 0.6 ? 'danger' : 'good'}">${(n.financial*100).toFixed(0)}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Sole-Source Deps</div>
+        <div class="stat-box-value ${upstreamSole > 0 ? 'danger' : 'good'}">${upstreamSole}</div>
+      </div>
+    </div>
+    <div style="font-size: 12px; color: var(--grey); margin-top: 6px;">
+      Country risk: <span style="color: var(--white); font-family: var(--font-mono);">${(n.country_risk*100).toFixed(0)}</span> &nbsp;|&nbsp;
+      Zone: <span style="color: var(--white); font-family: var(--font-mono);">${n.zone}</span>
+    </div>
+    ${embedHtml}
+  `;
+
+  if (currentStage >= 1) {
+    const grid = document.getElementById("embed-vis");
+    if (grid) {
+      embed.forEach(v => {
+        const cell = document.createElement("div");
+        cell.className = "embed-cell";
+        // Map -1..+1 onto a cool→warm ramp consistent with brand greens / amber
+        const norm = (v + 1) / 2;
+        let r, g, b;
+        if (norm < 0.5) {
+          // Deep green to neon green
+          const t = norm * 2;
+          r = Math.round(22 + t * 35);
+          g = Math.round(101 + t * 154);
+          b = Math.round(52 + t * -32);
+        } else {
+          // Neon green to amber
+          const t = (norm - 0.5) * 2;
+          r = Math.round(57 + t * 175);
+          g = Math.round(255 + t * -95);
+          b = Math.round(20 + t * 49);
+        }
+        cell.style.background = `rgb(${r},${g},${b})`;
+        grid.appendChild(cell);
+      });
+    }
+  }
+}
+
+// AUC bars
+const aucData = {
+  static: [
+    { label: "Raw features only",      auc: 0.71, color: "var(--grey)" },
+    { label: "Raw + GNN embedding",    auc: 0.84, color: "var(--green-bright)" },
+  ],
+  temporal: [
+    { label: "Raw features only",                auc: 0.71, color: "var(--grey)" },
+    { label: "Raw + static embedding",           auc: 0.84, color: "var(--green-bright)" },
+    { label: "Raw + temporal embed + lag",       auc: 0.91, color: "var(--node-3)" },
+  ]
+};
+
+function renderAUC(mode) {
+  const data = mode === "temporal" ? aucData.temporal : aucData.static;
+  const note = mode === "temporal"
+    ? "Adding the lagged embedding (t−1) captures disruption persistence. Residual autocorrelation at lag 1 confirms disruptions have memory — adding a disruption-lag feature would improve further."
+    : "GNN embeddings add 13 AUC points over raw features alone. SHAP analysis shows embedding dimensions rank among top-5 predictors.";
+  document.getElementById("auc-note").textContent = note;
+  const container = document.getElementById("auc-bars");
+  container.innerHTML = data.map(d => `
+    <div class="auc-bar-wrapper">
+      <div class="auc-bar-label">
+        <span>${d.label}</span>
+        <span style="color: var(--white);">AUC = ${d.auc}</span>
+      </div>
+      <div class="auc-bar-track">
+        <div class="auc-bar-fill" style="width: ${d.auc*100}%; background: ${d.color}; color: ${d.color};"></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+// Feature table
+function buildFeatTable() {
+  const tbl = document.getElementById("feat-table");
+  const showEmbed = currentStage >= 2;
+  const cols = showEmbed
+    ? ["Supplier", "Delay%", "Financial", "Country Risk", "Degree", "embed_1", "embed_2", "...", "embed_32", "disrupted_next_Q"]
+    : ["Supplier", "Delay%", "Financial", "Country Risk", "Degree", "disrupted_next_Q"];
+
+  const head = `<thead><tr>${cols.map(c => `<th>${c}</th>`).join("")}</tr></thead>`;
+  const disrupted = getDisrupted(currentT);
+
+  const rows = rawNodes.slice(0, 6).map(n => {
+    const embed = fakeEmbed(n.id, currentT);
+    const dis = disrupted.has(n.id) ? 1 : 0;
+    const isSelected = n.id === selectedNode;
+    const cells = showEmbed
+      ? [n.label, (n.delay*100).toFixed(0)+"%", n.financial.toFixed(2), n.country_risk.toFixed(2), degrees[n.id],
+         embed[0].toFixed(2), embed[1].toFixed(2), "…", embed[31].toFixed(2), dis]
+      : [n.label, (n.delay*100).toFixed(0)+"%", n.financial.toFixed(2), n.country_risk.toFixed(2), degrees[n.id], dis];
+
+    const rowClass = isSelected ? "selected-row" : (dis === 1 ? "feat-outcome" : "");
+    return `<tr class="${rowClass}">${cells.map((c,i) => {
+      const isEmbedCol = showEmbed && i >= 5 && i <= 8;
+      return `<td style="${isEmbedCol ? 'color: var(--node-3); opacity: 0.85;' : ''}">${c}</td>`;
+    }).join("")}</tr>`;
+  });
+
+  const ellipsis = `<tr><td colspan="${cols.length}" style="color: var(--grey); text-align: center; font-family: var(--font-mono); font-size: 11px;">… ${rawNodes.length - 6} more rows …</td></tr>`;
+  tbl.innerHTML = head + `<tbody>${rows.join("") + ellipsis}</tbody>`;
+}
+
+function toggleFeatTable() {
+  const wrap = document.getElementById("feat-table-wrap");
+  if (wrap.style.display === "none") {
+    buildFeatTable();
+    wrap.style.display = "block";
+  } else {
+    wrap.style.display = "none";
+  }
+}
+
+// Stage control
+function setStage(s) {
+  currentStage = s;
+  for (let i = 0; i <= 4; i++) {
+    document.getElementById(`pipe-${i}`).classList.toggle("active", i === s);
+    document.getElementById(`exp-${i}`).classList.toggle("active", i === s);
+  }
+  const showSlider = s >= 3;
+  document.getElementById("slider-card").style.display = showSlider ? "block" : "none";
+  document.getElementById("timestep-display").style.display = showSlider ? "inline" : "none";
+
+  const showAUC = s === 2 || s === 4;
+  document.getElementById("auc-card").style.display = showAUC ? "block" : "none";
+  if (s === 2) renderAUC("static");
+  if (s === 4) renderAUC("temporal");
+
+  if (s < 3) currentT = 1;
+
+  drawNetwork();
+  updateNodePanel();
+  buildFeatTable();
+}
+
+function onSlider(val) {
+  currentT = parseInt(val);
+  document.getElementById("slider-val").textContent = "T" + currentT;
+  document.getElementById("t-label").textContent = "T" + currentT;
+  drawNetwork();
+  updateNodePanel();
+  buildFeatTable();
+}
+
+// Learning checks
+const correctAnswers = { 1: "B", 2: "B", 3: "B" };
+
+function selectOption(lc, opt) {
+  const container = document.getElementById(`lc${lc}-options`);
+  const options = container.querySelectorAll(".lc-option");
+  options.forEach((el, i) => {
+    const letter = ["A","B","C"][i];
+    el.classList.remove("correct","incorrect");
+    if (letter === opt) {
+      el.classList.add(opt === correctAnswers[lc] ? "correct" : "incorrect");
+    }
+  });
+}
+function showHint(lc)   { document.getElementById(`lc${lc}-hint`).classList.toggle("visible"); }
+function showAnswer(lc) {
+  document.getElementById(`lc${lc}-answer`).classList.add("visible");
+  const container = document.getElementById(`lc${lc}-options`);
+  container.querySelectorAll(".lc-option").forEach((opt, i) => {
+    if (["A","B","C"][i] === correctAnswers[lc]) opt.classList.add("revealed-correct");
+  });
+}
+
+window.addEventListener("load", () => { setStage(0); });
+window.addEventListener("resize", () => { drawNetwork(); });
+</script>
+</body>
+</html>
