@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sketchpad Prompts · SYSEN 5470</title>
+<link rel="stylesheet" href="assets/design.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .why-sketch {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 28px 32px;
+    backdrop-filter: blur(8px); margin-bottom: 40px;
+    display: grid; grid-template-columns: 80px 1fr; gap: 24px; align-items: center;
+  }
+  .why-sketch .mark {
+    font-family: var(--font-display); font-size: 72px;
+    color: var(--green-bright); line-height: 1;
+    text-shadow: 0 0 24px rgba(57,255,20,0.5);
+  }
+  .why-sketch p {
+    font-family: var(--font-body); font-size: 15px;
+    color: var(--green-mint); line-height: 1.65;
+  }
+  .why-sketch strong { color: var(--white); font-weight: 500; }
+  @media (max-width: 560px) { .why-sketch { grid-template-columns: 1fr; text-align: center; } }
+
+  .sketch-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 20px;
+    transition: border-color .2s, transform .2s;
+  }
+  .sketch-card:hover { border-color: var(--green-bright); transform: translateY(-2px); }
+  .sketch-card .ico { font-size: 40px; line-height: 1; }
+
+  .sketch-card .head {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .sketch-card h3 {
+    font-family: var(--font-display); font-size: 26px;
+    color: var(--white); letter-spacing: 0.03em; line-height: 1.1;
+  }
+  .sketch-card .meta {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .skill-chip, .time-chip {
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 3px;
+  }
+  .skill-chip {
+    border: 1px solid var(--green-mid); color: var(--green-laser);
+    background: rgba(34, 197, 94, 0.12);
+  }
+  .skill-identify { border-color: var(--green-bright); color: var(--green-bright); background: rgba(57,255,20,0.08); }
+  .skill-measure  { border-color: var(--node-4); color: var(--node-4); background: rgba(251,191,36,0.08); }
+  .skill-infer    { border-color: var(--node-5); color: var(--node-5); background: rgba(244,114,182,0.08); }
+  .skill-predict  { border-color: var(--node-3); color: var(--node-3); background: rgba(94,234,212,0.08); }
+  .time-chip {
+    border: 1px solid var(--border); color: var(--grey);
+    background: rgba(5,46,22,0.4);
+  }
+
+  .sketch-card .prompt {
+    font-family: var(--font-body); font-size: 15px;
+    color: var(--green-mint); line-height: 1.65;
+    padding-left: 14px; border-left: 2px solid var(--green-bright);
+    margin: 8px 0 14px;
+  }
+  .sketch-card .prompt strong { color: var(--white); font-weight: 500; }
+
+  .sketch-card .purpose {
+    font-family: var(--font-body); font-size: 13.5px;
+    color: var(--grey); line-height: 1.55; margin-bottom: 6px;
+  }
+  .sketch-card .purpose .label {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--green-bright); margin-right: 8px;
+  }
+  .sketch-card .what-you-draw {
+    list-style: none; margin: 10px 0 0; padding: 0;
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .sketch-card .what-you-draw li {
+    display: flex; gap: 8px; align-items: flex-start;
+    font-family: var(--font-body); font-size: 13px;
+    color: var(--green-mint); line-height: 1.5;
+  }
+  .sketch-card .what-you-draw li::before {
+    content: '✏️'; font-size: 11px; margin-top: 2px;
+  }
+
+  .gear-card {
+    background: rgba(57,255,20,0.05);
+    border: 1px solid var(--green-bright);
+    border-radius: var(--radius-lg); padding: 22px 28px;
+    margin-bottom: 32px;
+    backdrop-filter: blur(8px);
+  }
+  .gear-card h3 {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--green-bright); margin-bottom: 12px;
+  }
+  .gear-card ul {
+    list-style: none; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+  }
+  .gear-card li {
+    display: flex; gap: 10px; align-items: center;
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint);
+  }
+  .gear-card li::before {
+    content: '→'; color: var(--green-bright); font-family: var(--font-mono);
+  }
+
+  @media (max-width: 560px) {
+    .sketch-card { grid-template-columns: 1fr; }
+    .sketch-card .ico { font-size: 32px; }
+  }
+</style>
+</head>
+<body data-page="sketch">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="index.html"          data-page="home">Overview</a>
+      <a href="syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="readings.html"       data-page="readings">Readings</a>
+      <a href="sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="about.html"          data-page="about">About</a>
+    </div>
+    <a href="index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Sketchpad</p>
+    <h1 class="hero-title">Draw It Before<br>You <span>Code It</span>.</h1>
+    <p class="hook">Every case study includes a sketchpad activity — hand-drawn, keyboard-free, deliberately slow. Drawing forces the concept into your head before syntax can hide it. <strong>Your sketchpad is a required piece of equipment for this course.</strong></p>
+  </section>
+
+  <section class="section">
+    <div class="why-sketch">
+      <div class="mark">✏️</div>
+      <p><strong>Why sketch?</strong> You can copy-paste working code without understanding it. You can run a betweenness function without knowing why one node sits between others. You cannot draw a network you don't understand. The sketch is a forced pause — a 15-to-30-minute interval where the only thing happening is comprehension. After the sketch, the code lab feels like execution instead of guessing.</p>
+    </div>
+
+    <div class="gear-card">
+      <h3>🎒 Gear list</h3>
+      <ul>
+        <li>One sketchpad or pad of plain paper</li>
+        <li>A pen you like writing with</li>
+        <li>Two colors (any two — red &amp; black is fine)</li>
+        <li>Your phone, for photographing the finished sketch</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">The Eight Prompts</div>
+
+    <!-- 01: Fundamentals -->
+    <div class="sketch-card">
+      <div class="ico">🕸️</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 01 · Map your network</h3>
+          <div class="meta">
+            <span class="skill-chip skill-identify">Identify</span>
+            <span class="time-chip">~20 min</span>
+          </div>
+        </div>
+        <div class="prompt">
+          Pick a system you know well — your team, your supply chain, your transit commute, a household. Draw <strong>five to twelve nodes</strong> with edges between them. Label each node. Label at least two edges with what flows along them (information, goods, money, trust). Use one color for directed edges, another for undirected.
+        </div>
+        <div class="purpose"><span class="label">Purpose</span>Dismantles the assumption that "real systems are too messy to model." If you can draw it, you can analyze it.</div>
+        <ul class="what-you-draw">
+          <li>Five to twelve nodes, labeled</li>
+          <li>Edges with explicit direction (arrowheads)</li>
+          <li>Two edge labels naming what flows</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 02: Centrality -->
+    <div class="sketch-card">
+      <div class="ico">📊</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 02 · Predict the bottleneck</h3>
+          <div class="meta">
+            <span class="skill-chip skill-measure">Measure</span>
+            <span class="time-chip">~25 min</span>
+          </div>
+        </div>
+        <div class="prompt">
+          Look at your Sketch 01. Circle the node you think has the <strong>highest degree</strong> (most edges). Now circle the node you think has the <strong>highest betweenness</strong> (sits on the most shortest paths). If they're the same node, your network is too simple — add edges until they diverge.
+        </div>
+        <div class="purpose"><span class="label">Purpose</span>Dismantles the "busiest = most critical" misconception before the code lab gives you the data.</div>
+        <ul class="what-you-draw">
+          <li>Two circled nodes (degree, betweenness) on Sketch 01</li>
+          <li>A one-sentence prediction: which node, if removed, breaks the most paths</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 03: Network Statistics / permutation -->
+    <div class="sketch-card">
+      <div class="ico">📐</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 03 · Two null distributions</h3>
+          <div class="meta">
+            <span class="skill-chip skill-infer">Infer</span>
+            <span class="time-chip">~20 min</span>
+          </div>
+        </div>
+        <div class="prompt">
+          Sketch the five Bluebikes neighborhoods as labeled circles. Mark each as high-income (one color) or low-income (other color). Draw the arrows you'd <em>expect</em> to be heaviest. Now sketch two histograms side by side: an "unblocked permutation" null and a "block permutation" null. Mark the observed value with a vertical line. Which test would call the observed pattern significant, and which wouldn't?
+        </div>
+        <div class="purpose"><span class="label">Purpose</span>Surfaces the gap between "random shuffle" and "structurally plausible shuffle" — the heart of network-aware inference.</div>
+        <ul class="what-you-draw">
+          <li>Five labeled nodes, color-coded by group</li>
+          <li>Expected heavy edges (arrows)</li>
+          <li>Two histograms with the observed value drawn in</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 04: Routing & optimization -->
+    <div class="sketch-card">
+      <div class="ico">🚦</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 04 · Pick where to add a road</h3>
+          <div class="meta">
+            <span class="skill-chip skill-predict">Predict</span>
+            <span class="time-chip">~25 min</span>
+          </div>
+        </div>
+        <div class="prompt">
+          Draw a transit or supply network with at least <strong>three components</strong> that are not yet connected. Pick <em>one</em> edge you could add. Predict which metric — average path length, diameter, number of components, total flow — will change most, and by roughly how much. Now pick the <em>wrong</em> edge: one that <em>looks</em> like a good addition but isn't.
+        </div>
+        <div class="purpose"><span class="label">Purpose</span>Trains your eye for counterfactual graph mutation before the code lab automates it.</div>
+        <ul class="what-you-draw">
+          <li>3+ disconnected components</li>
+          <li>Two candidate edges, with a written prediction for each</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 05: Clustering / communities -->
+    <div class="sketch-card">
+      <div class="ico">🧩</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 05 · Draw the seams</h3>
+          <div class="meta">
+            <span class="skill-chip skill-measure">Measure</span>
+            <span class="time-chip">~20 min</span>
+          </div>
+        </div>
+        <div class="prompt">
+          Take a 15-to-25 node graph (your own data, or a sketched one). Draw the <strong>boundaries</strong> you'd cut the graph along to separate it into 2–4 communities. Now find one node that sits <em>on</em> a boundary — a bridge between communities. What would happen to your cluster assignments if that node disappeared?
+        </div>
+        <div class="purpose"><span class="label">Purpose</span>Internalizes the difference between modular structure and structural holes before the algorithm finds them for you.</div>
+        <ul class="what-you-draw">
+          <li>15+ nodes</li>
+          <li>2–4 cluster boundaries (drawn as loops or dashed lines)</li>
+          <li>One identified bridge node</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 06: AI/ML -->
+    <div class="sketch-card">
+      <div class="ico">🤖</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 06 · Two-hop neighborhood</h3>
+          <div class="meta">
+            <span class="skill-chip skill-predict">Predict</span>
+            <span class="time-chip">~20 min</span>
+          </div>
+        </div>
+        <div class="prompt">
+          Pick a node in your sketched supply network. Highlight its <strong>two-hop neighborhood</strong> — every node reachable within two edges. List the features of those neighbors (size, country, delay rate, sole-source status). Now write a one-sentence prediction: based <em>only</em> on its neighborhood (not its own attributes), is this node at higher or lower risk of disruption?
+        </div>
+        <div class="purpose"><span class="label">Purpose</span>Makes the message-passing intuition visible. The GNN does the same thing, just numerically.</div>
+        <ul class="what-you-draw">
+          <li>One highlighted center node</li>
+          <li>Its two-hop neighborhood shaded</li>
+          <li>A list of 4–6 neighbor features and a one-line risk prediction</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 07: Visualization -->
+    <div class="sketch-card">
+      <div class="ico">🗺️</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 07 · One chart, three audiences</h3>
+          <div class="meta">
+            <span class="skill-chip skill-identify">Identify</span>
+            <span class="time-chip">~30 min</span>
+          </div>
+        </div>
+        <div class="prompt">
+          Pick one network insight from a previous lab (a bottleneck, a community, a risk score). Sketch the <strong>same insight three times</strong> — once for a technical peer, once for a non-technical executive, once for a public-facing dashboard. What changes? What stays? Mark in red anything you'd remove for the public version.
+        </div>
+        <div class="purpose"><span class="label">Purpose</span>Forces the recognition that "good visualization" isn't a property of a chart — it's a property of a chart-audience pair.</div>
+        <ul class="what-you-draw">
+          <li>Three versions of the same insight, in three labeled boxes</li>
+          <li>Red marks where the public version is simplified</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 08: Big data -->
+    <div class="sketch-card">
+      <div class="ico">🗄️</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 08 · Plan the join</h3>
+          <div class="meta">
+            <span class="skill-chip skill-identify">Identify</span>
+            <span class="time-chip">~25 min</span>
+          </div>
+        </div>
+        <div class="prompt">
+          You have three tables: <strong>nodes</strong> (id, label, group), <strong>edges</strong> (from, to, weight, time), and a <strong>node-attributes</strong> table (id, country, financial_score). Draw the schema as boxes with arrows. Mark the keys you'd join on. Now sketch the <em>output</em> table the GNN needs — one row per node per timestep — and trace, with arrows, where every column comes from.
+        </div>
+        <div class="purpose"><span class="label">Purpose</span>Makes the data-wrangling step concrete. Edge lists are easy. Joining node attributes back to edge-context features is where most students stall.</div>
+        <ul class="what-you-draw">
+          <li>Three table boxes with column names</li>
+          <li>Join keys marked</li>
+          <li>An output table sketch with column-provenance arrows</li>
+        </ul>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Sharing &amp; Submission</div>
+    <p style="font-family: var(--font-body); font-size: 15px; color: var(--green-mint); line-height: 1.65; max-width: 760px;">
+      Photograph your finished sketch and upload it with your weekly lab submission. We don't grade artistic quality — we grade whether the sketch shows you understood the structure before you wrote the code. A sketch that just copies the prompt back gets a redo; a sketch with a wrong prediction that you then test in the lab and refute is exactly what we're looking for.
+    </p>
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Sketchpad Prompts Library</strong><br>
+    Cornell Engineering · Summer 2026 · The whole library, including prompts for case studies not yet built, is here as a preview.
+  </p>
+
+</div>
+
+<script src="assets/network-bg.js" defer></script>
+<script src="assets/site.js" defer></script>
+</body>
+</html>

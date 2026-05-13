@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Readings · SYSEN 5470</title>
+<link rel="stylesheet" href="assets/design.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .reading-section { margin-bottom: 56px; }
+  .reading-section h2 {
+    font-family: var(--font-display); font-size: 32px;
+    color: var(--white); letter-spacing: 0.03em; margin-bottom: 6px;
+    line-height: 1.05;
+  }
+  .reading-section h2 .emoji { margin-right: 10px; }
+  .reading-section .case-skill {
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 3px;
+    border: 1px solid var(--green-mid); color: var(--green-laser);
+    background: rgba(34, 197, 94, 0.12);
+    display: inline-block; margin-left: 6px; vertical-align: 6px;
+  }
+  .reading-section .skill-identify { border-color: var(--green-bright); color: var(--green-bright); background: rgba(57,255,20,0.08); }
+  .reading-section .skill-measure  { border-color: var(--node-4); color: var(--node-4); background: rgba(251,191,36,0.08); }
+  .reading-section .skill-infer    { border-color: var(--node-5); color: var(--node-5); background: rgba(244,114,182,0.08); }
+  .reading-section .skill-predict  { border-color: var(--node-3); color: var(--node-3); background: rgba(94,234,212,0.08); }
+
+  .reading-section .case-goal {
+    font-family: var(--font-body); font-size: 14.5px;
+    color: var(--green-mint); line-height: 1.55; max-width: 760px;
+    margin: 10px 0 18px;
+  }
+
+  .reading-list { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .reading-item {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 14px 18px;
+    backdrop-filter: blur(8px);
+    display: grid; grid-template-columns: 90px 1fr auto; gap: 16px;
+    align-items: center;
+    transition: border-color .2s, transform .15s;
+  }
+  .reading-item:hover { border-color: var(--green-bright); transform: translateY(-1px); }
+  .reading-item .tag-col {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--green-bright);
+  }
+  .reading-item.t-primary  .tag-col { color: var(--green-bright); }
+  .reading-item.t-applied  .tag-col { color: var(--node-3); }
+  .reading-item.t-optional .tag-col { color: var(--grey); }
+  .reading-item .body {
+    font-family: var(--font-body); font-size: 13.5px;
+    color: var(--green-mint); line-height: 1.55;
+  }
+  .reading-item .body strong { color: var(--white); font-weight: 500; }
+  .reading-item .body em { color: var(--green-laser); font-style: italic; }
+  .reading-item a {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--green-bright); letter-spacing: 0.1em;
+    text-transform: uppercase; white-space: nowrap;
+  }
+  @media (max-width: 700px) {
+    .reading-item { grid-template-columns: 1fr; }
+    .reading-item a { justify-self: start; }
+  }
+
+  /* Anchor section header */
+  .anchor-section {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 32px;
+    backdrop-filter: blur(8px);
+  }
+  .anchor-section h2 {
+    font-family: var(--font-display); font-size: 28px;
+    color: var(--green-bright); letter-spacing: 0.04em; margin-bottom: 10px;
+  }
+  .anchor-section p {
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.55; margin-bottom: 12px;
+  }
+
+  /* Section anchor link */
+  .reading-section a.anchor {
+    color: var(--grey-dim); margin-left: 10px; text-decoration: none;
+    font-family: var(--font-mono); font-size: 14px;
+  }
+  .reading-section a.anchor:hover { color: var(--green-bright); }
+</style>
+</head>
+<body data-page="readings">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="index.html"          data-page="home">Overview</a>
+      <a href="syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="readings.html"       data-page="readings">Readings</a>
+      <a href="sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="about.html"          data-page="about">About</a>
+    </div>
+    <a href="index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Readings</p>
+    <h1 class="hero-title">Read One Thing.<br>Then <span>One More</span>.</h1>
+    <p class="hook">Every case study pairs a textbook anchor (one chapter, no more) with a single engineering application paper. The textbook makes the concept rigorous; the paper makes it real. Optional readings extend either direction.</p>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Anchor Texts</div>
+
+    <div class="anchor-section">
+      <h2>📘 Barabási, A.-L. (2016). Network Science.</h2>
+      <p>Our main textbook. Free online, chapter-by-chapter. Cited in every unit.</p>
+      <a class="btn ghost small" href="https://networksciencebook.com/" target="_blank" rel="noopener">Read at networksciencebook.com <svg viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg></a>
+    </div>
+
+    <div class="anchor-section">
+      <h2>📗 Easley &amp; Kleinberg (2010). Networks, Crowds, &amp; Markets.</h2>
+      <p>Cornell-grown. Free PDF. Used selectively for ties, betweenness, cascades, and matching markets.</p>
+      <a class="btn ghost small" href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book.pdf" target="_blank" rel="noopener">Read the PDF <svg viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg></a>
+    </div>
+
+    <div class="anchor-section">
+      <h2>📙 Menczer, Fortunato &amp; Davis (2020). A First Course in Network Science.</h2>
+      <p>Cambridge UP. A clean second-opinion textbook for students who want a different voice on the same ideas.</p>
+      <a class="btn ghost small" href="https://cambridgeuniversitypress.github.io/FirstCourseNetworkScience/" target="_blank" rel="noopener">Companion site <svg viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg></a>
+    </div>
+
+    <div class="anchor-section">
+      <h2>📕 Bertsekas. Network Optimization.</h2>
+      <p>For the routing &amp; optimization unit. Free PDF from MIT.</p>
+      <a class="btn ghost small" href="https://web.mit.edu/dimitrib/www/netbook_Full_Book_NEW.pdf" target="_blank" rel="noopener">Read the PDF <svg viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg></a>
+    </div>
+  </section>
+
+  <!-- ── PER-CASE-STUDY READINGS ── -->
+
+  <section class="section reading-section" id="fundamentals">
+    <div class="sec-label">By Case Study</div>
+    <h2><span class="emoji">🕸️</span>Network Fundamentals <span class="case-skill skill-identify">Identify</span><a class="anchor" href="#fundamentals" title="Anchor">#</a></h2>
+    <p class="case-goal">Classify nodes, edges, direction, weighting, and small-world phenomena. Recognize when your problem is a graph problem.</p>
+    <div class="reading-list">
+      <div class="reading-item t-primary">
+        <span class="tag-col">Primary</span>
+        <span class="body">Barabási, Ch. 1: <em>Introduction</em>. Why network thinking matters.</span>
+        <a href="https://networksciencebook.com/chapter/1" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-primary">
+        <span class="tag-col">Primary</span>
+        <span class="body">Barabási, Ch. 2: <em>Graph Theory</em>. Nodes, edges, direction, weighting, paths.</span>
+        <a href="https://networksciencebook.com/chapter/2" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-applied">
+        <span class="tag-col">Applied</span>
+        <span class="body">Gladwell, M. (1999). <em>Six Degrees of Lois Weinberg.</em> The New Yorker.</span>
+        <a href="https://www.newyorker.com/magazine/1999/01/11/six-degrees-of-lois-weinberg" target="_blank" rel="noopener">Open →</a>
+      </div>
+      <div class="reading-item t-primary">
+        <span class="tag-col">Primary</span>
+        <span class="body">Easley &amp; Kleinberg, Ch. 3: <em>Strong and Weak Ties.</em></span>
+        <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch03.pdf" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-optional">
+        <span class="tag-col">Optional</span>
+        <span class="body">Easley &amp; Kleinberg, Ch. 2: <em>Graphs</em>. Great visuals if you want a second pass.</span>
+        <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch02.pdf" target="_blank" rel="noopener">Read →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section reading-section" id="centrality">
+    <h2><span class="emoji">📊</span>Centrality &amp; Criticality <span class="case-skill skill-measure">Measure</span><a class="anchor" href="#centrality" title="Anchor">#</a></h2>
+    <p class="case-goal">Identify bottlenecks, hubs, and vulnerabilities in any system. Calculate centrality with tidygraph; bipartite networks; cascading failure.</p>
+    <div class="reading-list">
+      <div class="reading-item t-primary">
+        <span class="tag-col">Primary</span>
+        <span class="body">Barabási, Ch. 3: <em>Random Networks.</em></span>
+        <a href="https://networksciencebook.com/chapter/3" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-primary">
+        <span class="tag-col">Primary</span>
+        <span class="body">Barabási, Ch. 8: <em>Network Robustness.</em></span>
+        <a href="https://networksciencebook.com/chapter/8" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-primary">
+        <span class="tag-col">Primary</span>
+        <span class="body">Barabási, Ch. 10: <em>Spreading Phenomena.</em></span>
+        <a href="https://networksciencebook.com/chapter/10" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-applied">
+        <span class="tag-col">Applied</span>
+        <span class="body">Easley &amp; Kleinberg, §3.6: <em>Betweenness Measures and Graph Partitioning.</em></span>
+        <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch03.pdf" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-applied">
+        <span class="tag-col">Applied</span>
+        <span class="body">Easley &amp; Kleinberg, Ch. 19: <em>Cascading Behavior in Networks.</em></span>
+        <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch19.pdf" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-optional">
+        <span class="tag-col">Optional</span>
+        <span class="body">Easley &amp; Kleinberg, Ch. 14: <em>Link Analysis and Web Search.</em></span>
+        <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch14.pdf" target="_blank" rel="noopener">Read →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section reading-section" id="statistics">
+    <h2><span class="emoji">📐</span>Network Statistics — Bluebikes <span class="case-skill skill-infer">Infer</span><a class="anchor" href="#statistics" title="Anchor">#</a></h2>
+    <p class="case-goal">Permutation tests, jackknife, bootstrap on networks. Does income shape who rides with whom?</p>
+    <div class="reading-list">
+      <div class="reading-item t-applied">
+        <span class="tag-col">Applied</span>
+        <span class="body">Farine, D. R. (2017). <em>A guide to null models for animal social network analysis.</em> Methods Ecol. Evol. 8: 1309–1320.</span>
+        <a href="https://doi.org/10.1111/2041-210X.12772" target="_blank" rel="noopener">DOI →</a>
+      </div>
+      <div class="reading-item t-primary">
+        <span class="tag-col">Lab</span>
+        <span class="body">Companion lab: <em>Permutation Testing a Mobility Network.</em></span>
+        <a href="case-studies/permutation.html">Open lab →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section reading-section" id="routing">
+    <h2><span class="emoji">🚦</span>Routing &amp; Optimization <span class="case-skill skill-predict">Predict</span><a class="anchor" href="#routing" title="Anchor">#</a></h2>
+    <p class="case-goal">Solve real flow and routing problems in logistics and transit. Counterfactual graph mutation — add a node, measure metric M, resample.</p>
+    <div class="reading-list">
+      <div class="reading-item t-primary">
+        <span class="tag-col">Primary</span>
+        <span class="body">Bertsekas. <em>Network Optimization.</em> MIT.</span>
+        <a href="https://web.mit.edu/dimitrib/www/netbook_Full_Book_NEW.pdf" target="_blank" rel="noopener">PDF →</a>
+      </div>
+      <div class="reading-item t-applied">
+        <span class="tag-col">Applied</span>
+        <span class="body"><em>Supply Chain Network Design.</em> Resource on production-distribution graph design.</span>
+        <a href="https://share.google/Aj1SlRHiOSlH2ih1x" target="_blank" rel="noopener">Open →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section reading-section" id="clusters">
+    <h2><span class="emoji">🧩</span>Clustering &amp; Communities <span class="case-skill skill-measure">Measure</span><a class="anchor" href="#clusters" title="Anchor">#</a></h2>
+    <p class="case-goal">Detect structure in large-scale networks automatically. Bipartite graphs, affiliation, matching markets.</p>
+    <div class="reading-list">
+      <div class="reading-item t-primary">
+        <span class="tag-col">Primary</span>
+        <span class="body">Barabási, Ch. 9: <em>Communities.</em></span>
+        <a href="https://networksciencebook.com/chapter/9" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-applied">
+        <span class="tag-col">Applied</span>
+        <span class="body">Barabási, Ch. 2: §<em>Bipartite Graphs.</em></span>
+        <a href="https://networksciencebook.com/chapter/2" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-applied">
+        <span class="tag-col">Applied</span>
+        <span class="body">Easley &amp; Kleinberg, Ch. 10: <em>Matching Markets</em> (bipartite focus).</span>
+        <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch10.pdf" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-applied">
+        <span class="tag-col">Applied</span>
+        <span class="body">Easley &amp; Kleinberg, §4.3: <em>Affiliation.</em></span>
+        <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch04.pdf" target="_blank" rel="noopener">Read →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section reading-section" id="ai-ml">
+    <h2><span class="emoji">🤖</span>AI &amp; Machine Learning — Supplier Disruption <span class="case-skill skill-predict">Predict</span><a class="anchor" href="#ai-ml" title="Anchor">#</a></h2>
+    <p class="case-goal">Neural networks, graph neural nets, and ML for network inference. Static and temporal GNNs.</p>
+    <div class="reading-list">
+      <div class="reading-item t-applied">
+        <span class="tag-col">Applied</span>
+        <span class="body">Khan et al. (2025). <em>Optimizing machine learning for network inference.</em> Sci Rep 15, 24472.</span>
+        <a href="https://doi.org/10.1038/s41598-025-02982-0" target="_blank" rel="noopener">DOI →</a>
+      </div>
+      <div class="reading-item t-applied">
+        <span class="tag-col">Applied</span>
+        <span class="body">Resce et al. (2022). <em>Machine learning prediction of academic collaboration networks.</em> Sci Rep 12, 21993.</span>
+        <a href="https://doi.org/10.1038/s41598-022-26531-1" target="_blank" rel="noopener">DOI →</a>
+      </div>
+      <div class="reading-item t-optional">
+        <span class="tag-col">Optional</span>
+        <span class="body">Ding (2025). <em>A Comprehensive Survey on AI for Complex Networks.</em> arXiv.</span>
+        <a href="https://doi.org/10.48550/arXiv.2402.16887" target="_blank" rel="noopener">DOI →</a>
+      </div>
+      <div class="reading-item t-primary">
+        <span class="tag-col">Lab</span>
+        <span class="body">Companion lab: <em>GNN + XGBoost · Supplier Disruption Risk.</em></span>
+        <a href="case-studies/gnn-xgboost.html">Open lab →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section reading-section" id="viz">
+    <h2><span class="emoji">🗺️</span>Visualization — Mobility &amp; Evacuation <span class="case-skill skill-identify">Identify</span><a class="anchor" href="#viz" title="Anchor">#</a></h2>
+    <p class="case-goal">Communicate network insight with beautiful, interactive graphics. Bluebikes, hurricane evacuation, healthcare accessibility.</p>
+    <div class="reading-list">
+      <div class="reading-item t-applied">
+        <span class="tag-col">Applied</span>
+        <span class="body">Bellantuono et al. (2025). <em>Analyzing the accessibility of Rome's healthcare services via public transportation.</em> Sci Rep 15, 22880.</span>
+        <a href="https://doi.org/10.1038/s41598-025-05060-7" target="_blank" rel="noopener">DOI →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section reading-section" id="big-data">
+    <h2><span class="emoji">🗄️</span>Big Network Data <span class="case-skill skill-identify">Identify</span><a class="anchor" href="#big-data" title="Anchor">#</a></h2>
+    <p class="case-goal">Wrangling edgelists and nodelists at scale. Grouping, joins, network joins, aggregation, intro to SQLite.</p>
+    <div class="reading-list">
+      <div class="reading-item t-primary">
+        <span class="tag-col">Primary</span>
+        <span class="body">Easley &amp; Kleinberg, §2.4: <em>Network Datasets — An Overview.</em></span>
+        <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch02.pdf" target="_blank" rel="noopener">Read →</a>
+      </div>
+    </div>
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Readings Library</strong><br>
+    Cornell Engineering · Summer 2026 · Most links are free-to-read or open-access. Excerpts from non-open texts will be distributed in the course as PDFs.
+  </p>
+
+</div>
+
+<script src="assets/network-bg.js" defer></script>
+<script src="assets/site.js" defer></script>
+</body>
+</html>
