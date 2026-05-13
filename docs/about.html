@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About · SYSEN 5470</title>
+<link rel="stylesheet" href="assets/design.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .instructor-large {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: 36px;
+    display: grid; grid-template-columns: 120px 1fr; gap: 32px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  @media (max-width: 700px) { .instructor-large { grid-template-columns: 1fr; text-align: center; } }
+  .instructor-large .photo {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--green-mid), var(--green-deeper));
+    border: 2px solid var(--green-bright);
+    box-shadow: 0 0 28px rgba(57,255,20,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 48px; color: var(--black);
+  }
+  .instructor-large h2 {
+    font-family: var(--font-display); font-size: 38px;
+    color: var(--white); letter-spacing: 0.03em; margin-bottom: 6px;
+  }
+  .instructor-large .title {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--green-bright); letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 16px;
+  }
+  .instructor-large p {
+    font-family: var(--font-body); font-size: 15px;
+    color: var(--green-mint); line-height: 1.65; margin-bottom: 10px;
+  }
+  .instructor-large .contact {
+    margin-top: 16px; display: flex; flex-wrap: wrap; gap: 18px;
+    font-family: var(--font-mono); font-size: 12px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .instructor-large .contact a { color: var(--green-bright); }
+
+  .philosophy-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .philosophy-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 22px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: border-color .2s, transform .2s;
+  }
+  .philosophy-card:hover { border-color: var(--green-bright); transform: translateY(-2px); }
+  .philosophy-card .ico { font-size: 28px; margin-bottom: 8px; }
+  .philosophy-card h4 {
+    font-family: var(--font-display); font-size: 22px;
+    color: var(--white); letter-spacing: 0.03em; margin-bottom: 10px;
+  }
+  .philosophy-card p {
+    font-family: var(--font-body); font-size: 13.5px;
+    color: var(--green-mint); line-height: 1.6;
+  }
+
+  .qa { margin-bottom: 22px; }
+  .qa-q {
+    font-family: var(--font-display); font-size: 22px;
+    color: var(--white); letter-spacing: 0.03em; margin-bottom: 6px;
+  }
+  .qa-q::before { content: '◆ '; color: var(--green-bright); margin-right: 4px; }
+  .qa-a {
+    font-family: var(--font-body); font-size: 14.5px;
+    color: var(--green-mint); line-height: 1.65;
+    padding-left: 18px; border-left: 1px solid var(--border);
+  }
+</style>
+</head>
+<body data-page="about">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="index.html"          data-page="home">Overview</a>
+      <a href="syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="readings.html"       data-page="readings">Readings</a>
+      <a href="sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="about.html"          data-page="about">About</a>
+    </div>
+    <a href="index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · About</p>
+    <h1 class="hero-title">Who's <span>Teaching</span><br>And Why It Exists.</h1>
+    <p class="hook">A 3-week, 3-credit summer intensive built for working professionals and engineering grads who'd rather learn one thing well than survey eight things badly. Network science is taught the way an engineer needs it: stakes-first, with the naive alternative in plain view.</p>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Your Instructor</div>
+    <div class="instructor-large">
+      <div class="photo">TF</div>
+      <div>
+        <h2>Tim Fraser, PhD</h2>
+        <div class="title">Assistant Teaching Professor · Cornell University</div>
+        <p>Computational social scientist working at the intersection of resilience, mobility networks, and applied data science. Tim teaches systems engineering, network analysis, and statistical inference at Cornell Engineering — and builds the kinds of tools and case studies he wishes existed when he was a student.</p>
+        <p>Research focus: how interdependent systems — supply chains, transit networks, organizations, evacuation routes — fail, recover, and can be designed to do both better.</p>
+        <div class="contact">
+          <a href="mailto:tmf77@cornell.edu">→ tmf77@cornell.edu</a>
+          <a href="https://github.com/timothyfraser" target="_blank" rel="noopener">→ github.com/timothyfraser</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Course Philosophy</div>
+    <div class="philosophy-grid">
+      <div class="philosophy-card">
+        <div class="ico">🎯</div>
+        <h4>Skills, not survey</h4>
+        <p>Four transferable analytical skills you'll take into your engineering practice — not a buffet of definitions you'll forget. Every unit is anchored to one of them.</p>
+      </div>
+      <div class="philosophy-card">
+        <div class="ico">⚖️</div>
+        <h4>Naive vs. network-aware</h4>
+        <p>Every lab opens with what most engineers reach for first — and where it falls short. The contrast is the lesson.</p>
+      </div>
+      <div class="philosophy-card">
+        <div class="ico">✏️</div>
+        <h4>Sketch before code</h4>
+        <p>Hand-drawn activities force the concept into your head before syntax can hide it. Your sketchpad is a required piece of equipment.</p>
+      </div>
+      <div class="philosophy-card">
+        <div class="ico">📅</div>
+        <h4>Work-life friendly</h4>
+        <p>100% asynchronous. Assignments due Monday mornings at 9 AM. Short videos. Extensions for SYSEN 5940 in-person students.</p>
+      </div>
+      <div class="philosophy-card">
+        <div class="ico">🛠</div>
+        <h4>Real data, day one</h4>
+        <p>Supply chains, mobility networks, supplier-risk feeds — not toy graphs. The case studies are the curriculum.</p>
+      </div>
+      <div class="philosophy-card">
+        <div class="ico">🚪</div>
+        <h4>No prerequisites</h4>
+        <p>R or Python welcome but not required. Quickstart tutorials are built into the course. Bring curiosity and a sketchpad.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Common Questions</div>
+
+    <div class="qa">
+      <div class="qa-q">Who is this course for?</div>
+      <div class="qa-a">Cornell graduate students from any program, plus full-time working professionals admitted as graduate-at-large. If you work with interdependent systems — supply chains, infrastructure, organizations, transit, software, healthcare — this course is built for you.</div>
+    </div>
+
+    <div class="qa">
+      <div class="qa-q">Do I need to know R or Python?</div>
+      <div class="qa-a">No. Some prior experience helps but is not required. Quickstart tutorials are in the course, and the labs are scaffolded so a stats-naive student can hit the floor and an advanced student has room to extend.</div>
+    </div>
+
+    <div class="qa">
+      <div class="qa-q">How much work per week?</div>
+      <div class="qa-a">Roughly 8–10 hours per week. One ~4-hour weekend block per unit (video, reading, sketch, code, check) plus a short Monday-morning homework on your own data.</div>
+    </div>
+
+    <div class="qa">
+      <div class="qa-q">What's the deal with SYSEN 5940?</div>
+      <div class="qa-a">If you're taking SYSEN 5940 in-person that same week, extensions and flexibility are available so you can integrate both. Email Tim before enrolling and we'll work it out.</div>
+    </div>
+
+    <div class="qa">
+      <div class="qa-q">Where can I read more before enrolling?</div>
+      <div class="qa-a">Start with the <a href="syllabus.html" style="color: var(--green-bright);">Syllabus</a>, then poke at the live <a href="case-studies.html" style="color: var(--green-bright);">Case Studies</a>. The labs are open — you don't need to enroll to try them.</div>
+    </div>
+  </section>
+
+  <section class="cta" id="enroll">
+    <h2>Questions? Email Tim.</h2>
+    <p>The fastest way to know whether this course is right for you is to ask.</p>
+    <div class="cta-details">
+      <span>SYSEN 5470</span>
+      <span>June 22 – July 10, 2026</span>
+      <span>3 Credits</span>
+    </div>
+    <a href="mailto:tmf77@cornell.edu" class="btn primary">Email tmf77@cornell.edu <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Network Science and Applications for Systems Engineering</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script src="assets/network-bg.js" defer></script>
+<script src="assets/site.js" defer></script>
+</body>
+</html>

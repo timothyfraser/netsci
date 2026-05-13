@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Case Studies · SYSEN 5470</title>
+<link rel="stylesheet" href="assets/design.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .case-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .case-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    display: flex; flex-direction: column; gap: 14px;
+    transition: border-color .25s, transform .2s;
+    position: relative; overflow: hidden;
+  }
+  .case-card:hover { border-color: var(--green-bright); transform: translateY(-3px); }
+  .case-card .head { display: flex; align-items: center; gap: 14px; }
+  .case-card .ico { font-size: 32px; line-height: 1; }
+  .case-card h3 {
+    font-family: var(--font-display); font-size: 24px; line-height: 1.05;
+    color: var(--white); letter-spacing: 0.03em;
+  }
+  .case-card .desc {
+    font-family: var(--font-body); font-size: 13.5px;
+    color: var(--green-mint); line-height: 1.55;
+  }
+  .case-card .meta-row {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  }
+  .skill-chip {
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 3px;
+    border: 1px solid var(--green-mid); color: var(--green-laser);
+    background: rgba(34, 197, 94, 0.12);
+  }
+  .skill-identify { border-color: var(--green-bright); color: var(--green-bright); background: rgba(57,255,20,0.08); }
+  .skill-measure  { border-color: var(--node-4); color: var(--node-4); background: rgba(251,191,36,0.08); }
+  .skill-infer    { border-color: var(--node-5); color: var(--node-5); background: rgba(244,114,182,0.08); }
+  .skill-predict  { border-color: var(--node-3); color: var(--node-3); background: rgba(94,234,212,0.08); }
+  .status-tag {
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 3px;
+    background: rgba(57,255,20,0.1); border: 1px solid var(--green-bright);
+    color: var(--green-bright);
+  }
+  .status-soon { background: transparent; border-color: var(--border); color: var(--grey-dim); }
+  .case-card .footer-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: auto; padding-top: 6px;
+  }
+  .case-card .reading {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--grey); letter-spacing: 0.08em;
+  }
+  .case-card .open-btn {
+    font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 9px 14px; border-radius: var(--radius-sm);
+    background: var(--green-bright); color: var(--black);
+  }
+  .case-card.soon .open-btn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--grey-dim); cursor: not-allowed; pointer-events: none;
+  }
+</style>
+</head>
+<body data-page="cases">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="index.html"          data-page="home">Overview</a>
+      <a href="syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="readings.html"       data-page="readings">Readings</a>
+      <a href="sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="about.html"          data-page="about">About</a>
+    </div>
+    <a href="index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Case Studies</p>
+    <h1 class="hero-title">Eight Problems.<br>One <span>Network</span> Underneath.</h1>
+    <p class="hook">Every case study starts with a system that's already broken — supply chains, transit, evacuation, suppliers — and asks you to find what a traditional analysis would miss. Three labs are live. Five more coming as the course is built out.</p>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Interactive Labs</div>
+    <div class="case-grid">
+
+      <a class="case-card" href="case-studies/permutation.html" id="permutation">
+        <div class="head"><span class="ico">📐</span><h3>Network Statistics</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-infer">Infer</span>
+          <span class="status-tag">Live Lab</span>
+        </div>
+        <p class="desc">Does income shape who rides with whom on Boston's Bluebikes? Permutation-test a mobility network against the right null model — and see why an unblocked permutation lies to you when the system has structure.</p>
+        <div class="footer-row">
+          <span class="reading">Farine 2017 · Barabási Ch. 3</span>
+          <span class="open-btn">Open Lab →</span>
+        </div>
+      </a>
+
+      <a class="case-card" href="case-studies/supply-chain.html" id="supply-chain">
+        <div class="head"><span class="ico">📦</span><h3>Supply Chain Resilience</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-measure">Measure</span>
+          <span class="status-tag">Live Lab</span>
+        </div>
+        <p class="desc">Remove a node. Rewire an edge. Recompute. Find out why the busiest node in your supply chain is rarely the most critical one to protect — and how degree centrality misleads you when betweenness is the real signal.</p>
+        <div class="footer-row">
+          <span class="reading">Barabási Ch. 8 · E&amp;K Ch. 19</span>
+          <span class="open-btn">Open Lab →</span>
+        </div>
+      </a>
+
+      <a class="case-card" href="case-studies/gnn-xgboost.html" id="gnn">
+        <div class="head"><span class="ico">🤖</span><h3>GNN + XGBoost · Supplier Risk</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-predict">Predict</span>
+          <span class="status-tag">Live Lab</span>
+        </div>
+        <p class="desc">Predict which suppliers will be disrupted next quarter using neighborhood structure as a feature. Watch AUC climb from 0.71 (raw features only) to 0.91 (raw + temporal GNN embedding + lag).</p>
+        <div class="footer-row">
+          <span class="reading">Khan 2025 · Ding 2025</span>
+          <span class="open-btn">Open Lab →</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Coming As The Course Builds Out</div>
+    <div class="case-grid">
+
+      <div class="case-card soon" id="fundamentals">
+        <div class="head"><span class="ico">🕸️</span><h3>Network Fundamentals</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-identify">Identify</span>
+          <span class="status-tag status-soon">Coming Soon</span>
+        </div>
+        <p class="desc">Classify nodes, edges, direction, weighting, and the small-world phenomenon. Build your first graph from an edgelist and recognize when your problem is a graph problem.</p>
+        <div class="footer-row">
+          <span class="reading">Gladwell · Barabási Ch. 1–2</span>
+          <span class="open-btn">Coming Soon</span>
+        </div>
+      </div>
+
+      <div class="case-card soon" id="centrality">
+        <div class="head"><span class="ico">📊</span><h3>Centrality &amp; Criticality</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-measure">Measure</span>
+          <span class="status-tag status-soon">Coming Soon</span>
+        </div>
+        <p class="desc">Disaster stakeholder networks. Calculate centrality with tidygraph; bipartite networks; cascading failure modes. Find the hub that holds the whole thing together.</p>
+        <div class="footer-row">
+          <span class="reading">Barabási Ch. 8 &amp; 10</span>
+          <span class="open-btn">Coming Soon</span>
+        </div>
+      </div>
+
+      <div class="case-card soon" id="routing">
+        <div class="head"><span class="ico">🚦</span><h3>Routing &amp; Optimization</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-predict">Predict</span>
+          <span class="status-tag status-soon">Coming Soon</span>
+        </div>
+        <p class="desc">Solve real flow and routing problems in logistics and transit. Counterfactual graph mutation — add a node, measure metric M, resample edge weights, compare adjusted networks.</p>
+        <div class="footer-row">
+          <span class="reading">Bertsekas · Network Optimization</span>
+          <span class="open-btn">Coming Soon</span>
+        </div>
+      </div>
+
+      <div class="case-card soon" id="clusters">
+        <div class="head"><span class="ico">🧩</span><h3>Clustering &amp; Communities</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-measure">Measure</span>
+          <span class="status-tag status-soon">Coming Soon</span>
+        </div>
+        <p class="desc">Detect structure in large-scale networks automatically. Bipartite graphs, affiliation, matching markets. Move from modularity to meaningful clusters.</p>
+        <div class="footer-row">
+          <span class="reading">Barabási Ch. 9 · E&amp;K Ch. 4 &amp; 10</span>
+          <span class="open-btn">Coming Soon</span>
+        </div>
+      </div>
+
+      <div class="case-card soon" id="viz">
+        <div class="head"><span class="ico">🗺️</span><h3>Visualization · Evacuation</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-identify">Identify</span>
+          <span class="status-tag status-soon">Coming Soon</span>
+        </div>
+        <p class="desc">Bluebikes, hurricane evacuation, and healthcare accessibility — beautiful, interactive graphics that communicate insight without losing rigor.</p>
+        <div class="footer-row">
+          <span class="reading">Bellantuono 2025</span>
+          <span class="open-btn">Coming Soon</span>
+        </div>
+      </div>
+
+      <div class="case-card soon" id="big-data">
+        <div class="head"><span class="ico">🗄️</span><h3>Big Network Data</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-identify">Identify</span>
+          <span class="status-tag status-soon">Coming Soon</span>
+        </div>
+        <p class="desc">Work with millions of edges using databases and smart sampling. Wrangling edgelists, grouping, joins, network joins, aggregation, intro to SQLite.</p>
+        <div class="footer-row">
+          <span class="reading">E&amp;K Ch. 2.4</span>
+          <span class="open-btn">Coming Soon</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Bring Your Own Network</div>
+    <p class="section-lede">When you have your own edgelist and nodelist, the <a href="visualizer.html" style="color:var(--green-bright);">Visualizer</a> lets you upload them and explore on the spot — map your own from/to/weight/time columns, filter by time, switch layouts, and export PNG.</p>
+    <a href="visualizer.html" class="btn primary small">Open the Visualizer <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Network Science and Applications for Systems Engineering</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script src="assets/network-bg.js" defer></script>
+<script src="assets/site.js" defer></script>
+</body>
+</html>

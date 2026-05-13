@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SYSEN 5470 · Network Science for Systems Engineering</title>
+<meta name="description" content="A 3-week summer intensive at Cornell teaching engineers how to think in networks. SYSEN 5470, Summer 2026.">
+<link rel="stylesheet" href="assets/design.css">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body data-page="home">
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- ── NAV ─────────────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="index.html"          data-page="home">Overview</a>
+      <a href="syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="readings.html"       data-page="readings">Readings</a>
+      <a href="sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="about.html"          data-page="about">About</a>
+    </div>
+    <a href="#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ── HERO ── -->
+  <section class="hero" id="overview">
+    <div class="tag-row">
+      <span class="tag filled">Cornell Engineering</span>
+      <span class="tag">Summer 2026</span>
+      <span class="tag">3 Credits</span>
+      <span class="tag">Graduate</span>
+      <span class="tag">100% Asynchronous</span>
+    </div>
+    <p class="course-number">SYSEN 5470 · June 22 – July 10, 2026</p>
+    <h1 class="hero-title">Network Science<br>and <span>Applications</span><br>for Systems Engineering</h1>
+    <p class="hook">Supply chains collapse. Power grids fail. Logistics break down. Engineers who understand networks can see these failures coming — and design systems that survive them. Learn to think in networks in just <strong>3 weeks</strong>.</p>
+    <div class="hero-actions">
+      <a href="syllabus.html" class="btn primary">View Syllabus <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+      <a href="case-studies.html" class="btn ghost">Open the Labs <svg viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg></a>
+    </div>
+  </section>
+
+  <!-- ── STATS ── -->
+  <section class="stats">
+    <div class="stat"><span class="num">3</span><div class="lbl">Weeks · 3 Credits</div></div>
+    <div class="stat"><span class="num">8</span><div class="lbl">Real-World Case Studies</div></div>
+    <div class="stat"><span class="num">4</span><div class="lbl">Professional Skills</div></div>
+    <div class="stat"><span class="num">0</span><div class="lbl">Coding Experience Required</div></div>
+  </section>
+
+  <!-- ── TOPICS ── -->
+  <section class="section" id="topics">
+    <div class="sec-label">What You'll Learn</div>
+    <div class="topics">
+      <div class="topic"><span class="ico">🕸️</span><div><div class="ttl">Network Fundamentals</div><div class="sub">Nodes, edges, direction, weighting, small-world phenomena.</div></div></div>
+      <div class="topic"><span class="ico">📊</span><div><div class="ttl">Centrality &amp; Criticality</div><div class="sub">Find bottlenecks, hubs, and vulnerabilities in any system.</div></div></div>
+      <div class="topic"><span class="ico">📐</span><div><div class="ttl">Network Statistics</div><div class="sub">Permutation tests, bootstrap, causal inference on networks.</div></div></div>
+      <div class="topic"><span class="ico">🚦</span><div><div class="ttl">Routing &amp; Optimization</div><div class="sub">Solve real flow and routing problems in logistics and transit.</div></div></div>
+      <div class="topic"><span class="ico">🧩</span><div><div class="ttl">Clustering &amp; Communities</div><div class="sub">Detect structure in large-scale networks automatically.</div></div></div>
+      <div class="topic"><span class="ico">🤖</span><div><div class="ttl">AI &amp; Machine Learning</div><div class="sub">Neural networks, graph neural nets, and ML for inference.</div></div></div>
+      <div class="topic"><span class="ico">🗺️</span><div><div class="ttl">Visualization</div><div class="sub">Communicate insight with beautiful, interactive graphics.</div></div></div>
+      <div class="topic"><span class="ico">🗄️</span><div><div class="ttl">Big Network Data</div><div class="sub">Millions of edges, databases, and smart sampling.</div></div></div>
+    </div>
+  </section>
+
+  <!-- ── FOUR SKILLS ── -->
+  <section class="section">
+    <div class="sec-label">Four Professional Skills</div>
+    <p class="section-lede">This course doesn't survey network science — it builds four concrete, transferable analytical skills for engineers who work with interdependent systems. Each one is framed against the everyday alternative most engineers reach for first.</p>
+    <div class="topics">
+      <div class="topic"><span class="ico">🧭</span><div><div class="ttl">Identify</div><div class="sub">Frame messy relational data as a graph that answers a real question.</div></div></div>
+      <div class="topic"><span class="ico">📏</span><div><div class="ttl">Measure</div><div class="sub">Quantify structure — centrality, betweenness, thresholding.</div></div></div>
+      <div class="topic"><span class="ico">🔬</span><div><div class="ttl">Infer</div><div class="sub">Test claims with permutation against the right null model.</div></div></div>
+      <div class="topic"><span class="ico">🔮</span><div><div class="ttl">Predict</div><div class="sub">Forecast outcomes with embeddings and graph neural networks.</div></div></div>
+    </div>
+    <div style="margin-top: 20px;">
+      <a href="four-skills.html" class="btn ghost small">Read the flyer <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+    </div>
+  </section>
+
+  <!-- ── CASES ── -->
+  <section class="section">
+    <div class="sec-label">Case Studies</div>
+    <p class="section-lede">Eight engineering problems, each one a network underneath. Three have live interactive labs you can open right now.</p>
+    <div class="chips">
+      <a class="chip" href="case-studies.html#fundamentals">🕸️ Network Fundamentals</a>
+      <a class="chip" href="case-studies.html#centrality">📊 Centrality &amp; Criticality</a>
+      <a class="chip" href="case-studies/permutation.html">📐 Network Statistics — Bluebikes</a>
+      <a class="chip" href="case-studies/supply-chain.html">📦 Supply Chain Resilience</a>
+      <a class="chip" href="case-studies.html#routing">🚦 Routing &amp; Optimization</a>
+      <a class="chip" href="case-studies.html#clusters">🧩 Clustering &amp; Communities</a>
+      <a class="chip" href="case-studies/gnn-xgboost.html">🤖 GNN + XGBoost — Supplier Risk</a>
+      <a class="chip" href="case-studies.html#viz">🗺️ Visualization &amp; Evacuation</a>
+    </div>
+  </section>
+
+  <!-- ── SCHEDULE ── -->
+  <section class="section" id="schedule">
+    <div class="sec-label">3 Weeks · 3 Themes</div>
+    <div class="schedule">
+      <div class="week">
+        <div class="weeknum">Week 01</div>
+        <h4>Think Like a Graph</h4>
+        <div class="dates">Jun 22 – Jun 28</div>
+        <ul>
+          <li>Nodes, edges, directionality, weights</li>
+          <li>Small-world &amp; scale-free networks</li>
+          <li>Bluebikes mobility case study</li>
+          <li>R / Python quickstart labs</li>
+        </ul>
+      </div>
+      <div class="week">
+        <div class="weeknum">Week 02</div>
+        <h4>Find What Matters</h4>
+        <div class="dates">Jun 29 – Jul 5</div>
+        <ul>
+          <li>Centrality, criticality, betweenness</li>
+          <li>Permutation tests &amp; null models</li>
+          <li>Supply-chain resilience case study</li>
+          <li>Sketchpad lab — draw your own DSM</li>
+        </ul>
+      </div>
+      <div class="week">
+        <div class="weeknum">Week 03</div>
+        <h4>Move &amp; Predict</h4>
+        <div class="dates">Jul 6 – Jul 10</div>
+        <ul>
+          <li>Routing &amp; flow optimization</li>
+          <li>Graph neural networks + XGBoost</li>
+          <li>Hurricane evacuation case study</li>
+          <li>Final visualization mini-project</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FORMAT ── -->
+  <section class="section">
+    <div class="sec-label">How It Works</div>
+    <ul class="features">
+      <li>100% asynchronous — learn on your schedule</li>
+      <li>Assignments due Monday mornings at 9 AM</li>
+      <li>Hands-on labs in R (Python also welcome)</li>
+      <li>Sketchpad exercises — draw networks by hand</li>
+      <li>Short videos plus interactive tutorials</li>
+      <li>Real datasets from day one</li>
+      <li>Designed for full-time working professionals</li>
+      <li>Extensions for SYSEN 5940 in-person students</li>
+    </ul>
+  </section>
+
+  <!-- ── INSTRUCTOR ── -->
+  <section class="section" id="instructor">
+    <div class="sec-label">Your Instructor</div>
+    <div class="instructor">
+      <div class="photo">TF</div>
+      <div>
+        <h3>Tim Fraser, PhD</h3>
+        <p>Assistant Teaching Professor · Computational Social Scientist · Cornell University<br>
+        Research on resilience, mobility networks, and computational social science.<br>
+        <a href="mailto:tmf77@cornell.edu">→ tmf77@cornell.edu</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ── -->
+  <section class="cta" id="enroll">
+    <h2>Enroll This Summer!</h2>
+    <p>No prior coding or graph theory experience required. Just bring your curiosity — and a sketchpad.</p>
+    <div class="cta-details">
+      <span>SYSEN 5470</span>
+      <span>June 22 – July 10, 2026</span>
+      <span>3 Credits</span>
+      <span>Asynchronous</span>
+    </div>
+    <a href="https://classes.cornell.edu/" class="btn primary">Register at Cornell <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+  </section>
+
+  <p class="site-footer">
+    Prerequisites: None. Some prior R or Python experience helpful but not required.<br>
+    <strong>This course is designed for graduate students at all coding levels.</strong><br>
+    Questions? Contact <strong>tmf77@cornell.edu</strong> ·
+    <a href="flyer.html">Original flyer</a>
+  </p>
+
+</div>
+
+<script src="assets/network-bg.js" defer></script>
+<script src="assets/site.js" defer></script>
+</body>
+</html>
