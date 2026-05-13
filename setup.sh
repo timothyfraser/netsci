@@ -41,6 +41,7 @@ EOF
 Rscript -e '
 pkgs <- c(
   "tidyverse","here","janitor","glue","fs",
+  "network","igraph","tidygraph",
   "readxl","writexl","arrow",
   "DBI","RPostgres","RMariaDB","RSQLite",
   "tidymodels","broom","bonsai","lightgbm","xgboost",
