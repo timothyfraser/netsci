@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sampling Big Networks · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+.lab-hero { margin-bottom: 24px; }
+.lab-hero .course-number { margin-bottom: 10px; }
+.lab-hero h1 {
+  font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px);
+  line-height: 1.05; letter-spacing: 0.03em; color: var(--white); margin-bottom: 14px;
+}
+.lab-hero h1 em { color: var(--green-bright); font-style: normal; }
+.lab-hero p {
+  font-family: var(--font-body); font-size: 16px; font-weight: 300;
+  line-height: 1.55; color: var(--green-mint); max-width: 760px;
+  border-left: 3px solid var(--green-bright); padding-left: 18px;
+}
+
+.main-layout {
+  display: grid; grid-template-columns: 1fr 340px; gap: 18px;
+  margin-bottom: 24px;
+}
+@media (max-width: 1000px) { .main-layout { grid-template-columns: 1fr; } }
+
+.viz-column {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+  backdrop-filter: blur(8px);
+}
+.viz-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
+}
+.viz-header h2 {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright);
+}
+.viz-header .strategy-label {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--node-4); letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+#network-svg {
+  width: 100%; height: 480px;
+  background: rgba(5,46,22,0.35);
+  border-radius: var(--radius-sm); border: 1px solid var(--border-soft);
+  display: block;
+}
+
+.status-bar {
+  display: flex; flex-wrap: wrap; gap: 18px; align-items: center;
+  margin-top: 12px; padding: 10px 14px;
+  background: rgba(5,46,22,0.5); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--green-mint);
+}
+.status-bar strong { color: var(--white); font-weight: 500; }
+.status-dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; margin-right: 6px; vertical-align: middle;
+  box-shadow: 0 0 6px currentColor;
+}
+.dot-sampled   { background: var(--green-bright); color: var(--green-bright); }
+.dot-unsampled { background: var(--grey-dim); color: var(--grey-dim); }
+
+.controls-block {
+  margin-top: 14px; padding: 14px;
+  background: rgba(5,46,22,0.5); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+}
+.strategy-buttons {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px;
+}
+.strat-btn {
+  background: rgba(5,10,5,0.5); color: var(--grey);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+  text-align: left;
+}
+.strat-btn:hover { border-color: var(--green-bright); color: var(--white); }
+.strat-btn.active {
+  background: rgba(57,255,20,0.1); border-color: var(--green-bright); color: var(--green-bright);
+  box-shadow: 0 0 8px rgba(57,255,20,0.2);
+}
+.strat-btn .strat-sub {
+  display: block;
+  font-family: var(--font-mono); font-size: 9.5px;
+  color: var(--grey); font-weight: 400;
+  margin-top: 2px; letter-spacing: 0.08em;
+}
+.strat-btn.active .strat-sub { color: var(--green-bright); }
+
+.slider-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+}
+.slider-row label {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--grey); white-space: nowrap;
+}
+input[type=range] {
+  flex: 1; height: 6px; appearance: none;
+  background: rgba(5,46,22,0.6); border-radius: 3px; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--green-bright); cursor: pointer;
+  border: 2px solid var(--black); box-shadow: 0 0 8px var(--green-bright);
+}
+input[type=range]::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--green-bright); cursor: pointer; border: 2px solid var(--black);
+}
+.slider-value {
+  font-family: var(--font-mono); font-size: 13px;
+  color: var(--green-bright); min-width: 42px;
+  text-align: right; font-weight: 500;
+}
+
+.action-buttons { display: flex; gap: 8px; }
+.btn {
+  background: rgba(5,46,22,0.5); color: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.15s; flex: 1;
+}
+.btn:hover { border-color: var(--green-bright); color: var(--green-bright); }
+.btn-primary {
+  background: var(--green-bright); color: var(--black);
+  border-color: var(--green-bright);
+}
+.btn-primary:hover { background: var(--green-mid); border-color: var(--green-mid); color: var(--black); }
+.btn-neutral {
+  background: transparent; color: var(--grey); border-color: var(--border);
+}
+.btn-neutral:hover { color: var(--green-bright); border-color: var(--green-bright); }
+
+.sidebar { display: flex; flex-direction: column; gap: 14px; }
+.card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  backdrop-filter: blur(8px);
+}
+.card h3 {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border-soft);
+}
+
+.metric-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 8px 0; border-bottom: 1px solid var(--border-soft);
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-label { font-size: 13px; color: var(--grey); }
+.metric-value {
+  font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--white);
+}
+.metric-value.good { color: var(--green-bright); }
+.metric-value.warn { color: var(--node-4); }
+.metric-value.bad  { color: var(--node-7); }
+.metric-sub {
+  font-family: var(--font-mono); font-size: 10px; color: var(--grey);
+  display: block; text-align: right; margin-top: 2px;
+}
+
+.legend-item {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-body); font-size: 12px;
+  color: var(--green-mint); margin-bottom: 8px;
+}
+.legend-item:last-child { margin-bottom: 0; }
+.legend-swatch { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+
+.zone-coverage {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 8px;
+}
+.zone-chip {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.06em; padding: 6px 8px;
+  border-radius: var(--radius-sm); background: rgba(5,46,22,0.5);
+  border: 1px solid var(--border); color: var(--grey);
+  text-align: center;
+}
+.zone-chip.covered { border-color: var(--green-bright); color: var(--green-bright); }
+.zone-chip.missed  { border-color: var(--node-7); color: var(--node-7); }
+
+.intro-block {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 26px;
+  margin-bottom: 16px; backdrop-filter: blur(8px);
+}
+.intro-block h3 {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--node-4); margin-bottom: 12px;
+}
+.intro-block p {
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--green-mint); line-height: 1.65; margin-bottom: 10px;
+}
+.intro-block p:last-child { margin-bottom: 0; }
+.intro-block strong { color: var(--white); }
+
+.sketchpad-block {
+  background: rgba(251,191,36,0.06);
+  border: 1px dashed rgba(251,191,36,0.5);
+  border-radius: var(--radius-lg); padding: 18px 22px;
+  margin-bottom: 16px;
+}
+.sketchpad-block h3 {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--node-4); margin-bottom: 10px;
+}
+.sketchpad-block p {
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--white); line-height: 1.6;
+}
+.sketchpad-block strong { color: var(--node-4); }
+
+.lc-section-header {
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--green-bright); margin: 28px 0 14px;
+}
+
+.lc-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 26px;
+  margin-bottom: 14px; backdrop-filter: blur(8px);
+}
+.lc-header {
+  display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px;
+}
+.lc-number {
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.12em; color: var(--green-bright);
+  background: rgba(57,255,20,0.1); border: 1px solid rgba(57,255,20,0.3);
+  padding: 4px 10px; border-radius: var(--radius-sm);
+  flex-shrink: 0; margin-top: 2px;
+}
+.lc-question {
+  font-family: var(--font-display); font-size: 19px;
+  line-height: 1.35; color: var(--white); letter-spacing: 0.02em;
+  flex: 1;
+}
+.lc-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.lc-option {
+  padding: 12px 16px; background: rgba(5,46,22,0.4);
+  border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.15s;
+  font-family: var(--font-body); font-size: 13.5px;
+  color: var(--green-mint); line-height: 1.5;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.lc-option:hover { border-color: var(--green-bright); color: var(--white); }
+.lc-option-letter {
+  font-family: var(--font-mono); font-weight: 700;
+  color: var(--green-bright); flex-shrink: 0;
+}
+.lc-option.correct          { border-color: var(--green-bright); background: rgba(57,255,20,0.1); color: var(--white); }
+.lc-option.incorrect        { border-color: var(--node-7); background: rgba(249,115,22,0.08); color: var(--white); }
+.lc-option.revealed-correct { border-color: var(--green-bright); background: rgba(57,255,20,0.12); color: var(--white); }
+
+.lc-actions { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+.lc-feedback {
+  display: none; margin-top: 14px;
+  padding: 14px 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+  font-family: var(--font-body); font-size: 13px;
+  line-height: 1.6; color: var(--green-mint);
+}
+.feedback-hint { background: rgba(251,191,36,0.05); border-color: rgba(251,191,36,0.3); }
+.feedback-hint strong { color: var(--node-4); }
+.feedback-answer { background: rgba(57,255,20,0.05); border-color: rgba(57,255,20,0.3); }
+.feedback-answer strong { color: var(--green-bright); }
+.feedback-answer em { color: var(--node-3); font-style: italic; }
+</style>
+</head>
+<body data-page="cases">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../readings.html"       data-page="readings">Readings</a>
+      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="../about.html"          data-page="about">About</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page-wide">
+
+  <section class="lab-hero">
+    <p class="course-number">SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify</p>
+    <h1>Sampling Big Networks: <em>What Survives the Cut</em></h1>
+    <p>You are an analyst studying evacuation flows during a Gulf hurricane. The full network has 40 parishes and hundreds of weighted flow edges — too big to wrangle on your laptop. Pick a sampling strategy, choose a sample size, and watch which features of the network survive. Some strategies preserve geographic coverage. Some preserve triangles. None preserve everything.</p>
+  </section>
+
+  <div class="main-layout">
+    <div class="viz-column">
+      <div class="viz-header">
+        <h2>📍 Coastal Louisiana Evacuation Network</h2>
+        <span class="strategy-label" id="current-strategy-label">RANDOM NODE · 25%</span>
+      </div>
+      <svg id="network-svg"></svg>
+
+      <div class="status-bar">
+        <span><span class="status-dot dot-sampled"></span> <strong id="sampled-nodes-count">10</strong>/40 nodes sampled</span>
+        <span><span class="status-dot dot-unsampled"></span> <strong id="unsampled-nodes-count">30</strong> not in sample</span>
+        <span>📐 <strong id="sampled-edges-count">0</strong> edges retained</span>
+      </div>
+
+      <div class="controls-block">
+        <div class="strategy-buttons">
+          <button class="strat-btn active" data-strategy="random_node" onclick="setStrategy('random_node')">
+            🎲 Random Node
+            <span class="strat-sub">UNIFORM NODE DRAW · INDUCED EDGES</span>
+          </button>
+          <button class="strat-btn" data-strategy="ego" onclick="setStrategy('ego')">
+            👁 Ego-Centric (1-hop)
+            <span class="strat-sub">SEED + IMMEDIATE NEIGHBORS</span>
+          </button>
+          <button class="strat-btn" data-strategy="snowball" onclick="setStrategy('snowball')">
+            ❄ Snowball (2-hop)
+            <span class="strat-sub">SEED + 2 WAVES OUT</span>
+          </button>
+          <button class="strat-btn" data-strategy="random_edge" onclick="setStrategy('random_edge')">
+            🔗 Random Edge
+            <span class="strat-sub">EDGE DRAW · KEEP ENDPOINTS</span>
+          </button>
+        </div>
+
+        <div class="slider-row">
+          <label>Sample size</label>
+          <input type="range" id="size-slider" min="5" max="60" step="5" value="25" oninput="onSliderChange(this.value)">
+          <span class="slider-value" id="size-display">25%</span>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" onclick="resample()">🎲 Resample</button>
+          <button class="btn btn-neutral" onclick="showFullNetwork()">👁 Show Full Network</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="card">
+        <h3>📊 Sample vs. Population</h3>
+        <div class="metric-row"><span class="metric-label">Node coverage</span><span class="metric-value" id="m-node-cov">—</span></div>
+        <div class="metric-row"><span class="metric-label">Edge coverage</span><span class="metric-value" id="m-edge-cov">—</span></div>
+        <div class="metric-row"><span class="metric-label">△ Triangles</span><span class="metric-value" id="m-tri">—</span></div>
+        <div class="metric-row"><span class="metric-label">Triangle preservation</span><span class="metric-value" id="m-tri-pres">—</span></div>
+        <div class="metric-row">
+          <span class="metric-label">Mean degree (sample)</span>
+          <span class="metric-value" id="m-deg">—</span>
+          <span class="metric-sub" id="m-deg-sub">true: —</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🌎 Geographic Coverage</h3>
+        <div class="zone-coverage" id="zone-coverage">
+          <div class="zone-chip" id="zone-urban">URBAN CORE</div>
+          <div class="zone-chip" id="zone-suburban">SUBURBAN</div>
+          <div class="zone-chip" id="zone-coastal">COASTAL</div>
+          <div class="zone-chip" id="zone-corridor">CORRIDOR</div>
+          <div class="zone-chip" id="zone-inland">INLAND</div>
+          <div class="zone-chip" id="zone-eastbank">EAST BANK</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🎨 Legend</h3>
+        <div class="legend-item"><span class="legend-swatch" style="background: var(--green-bright);"></span>Sampled node (in your data)</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: var(--node-4);"></span>Seed node (ego/snowball only)</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: var(--grey-dim);"></span>Outside your sample</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: transparent; border: 2px solid var(--node-3);"></span>Triangle-forming edge</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sketchpad-block">
+    <h3>✏️ Sketchpad Moment — Before You Click</h3>
+    <p>Open your sketchpad. Without running the visualization, draw a quick map: <strong>which 5 of these 40 parishes would you measure</strong> if you could only afford 5? Mark them. <strong>Then write down what you expect to lose</strong> — geographic blind spots, missing triangles, biased degree estimates. Now resample with each strategy at 12.5% (5 nodes worth) and see whether the strategies even produce the kind of network you expected.</p>
+  </div>
+
+  <div class="intro-block">
+    <h3>🧭 Why this matters for an engineer</h3>
+    <p>You will rarely be handed the full network you care about. Sensor budgets, API rate limits, IRB constraints, or sheer N² scaling will force you to sample. The decision is not <em>whether</em> to sample but <strong>which features you are willing to lose</strong>. A supply-chain analyst studying disruption cascades needs triangles preserved. A logistics planner needs geographic coverage. A surveyor estimating average ties per actor needs unbiased degree. Each strategy below is optimal for a different question — and disastrous for the others.</p>
+    <p><strong>The four strategies in this lab</strong>: (1) <em>Random node</em> — pick nodes uniformly, keep only edges between sampled nodes. (2) <em>Ego-centric</em> — pick seed nodes, snowball one step out to all neighbors. (3) <em>Snowball-2</em> — extend that two hops. (4) <em>Random edge</em> — pick edges uniformly, keep their endpoints. Resample multiple times under each strategy to see how much sampling variability matters.</p>
+  </div>
+
+  <h3 class="lc-section-header">📝 Learning Checks</h3>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 01</span>
+      <div class="lc-question">Set the sample size to <strong>30%</strong>. Cycle through all four strategies (resample a few times each). Which strategy reliably captures the most <em>nodes</em> in your final sample?</div>
+    </div>
+    <div class="lc-options" id="lc1-options">
+      <div class="lc-option" onclick="selectOption(1, 'A')"><span class="lc-option-letter">A</span><span>Random node — because you're directly drawing 30% of nodes</span></div>
+      <div class="lc-option" onclick="selectOption(1, 'B')"><span class="lc-option-letter">B</span><span>Snowball-2 — because each seed pulls in neighbors and their neighbors</span></div>
+      <div class="lc-option" onclick="selectOption(1, 'C')"><span class="lc-option-letter">C</span><span>Random edge — because you usually pick more than 30% of edges</span></div>
+    </div>
+    <div class="lc-actions">
+      <button class="btn btn-neutral" onclick="showHint(1)">💡 Hint</button>
+      <button class="btn btn-neutral" onclick="showAnswer(1)">🔓 Reveal Answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc1-hint">
+      <strong>Hint:</strong> Watch the "Node coverage" metric in the top right as you cycle strategies at the same 30% setting. The 30% slider means different things under different strategies — for ego/snowball, it controls how many <em>seeds</em> you draw, not how many total nodes end up in the sample.
+    </div>
+    <div class="lc-feedback feedback-answer" id="lc1-answer">
+      <strong>Answer: B.</strong> Snowball-2 typically pushes node coverage past 80% even when only 30% of nodes are seeds, because the second hop pulls in friends-of-friends across the entire connected component. Ego-centric is similar but smaller. Random node is exactly the slider value (~30%) because there is no neighborhood expansion. Random edge varies — it tends to recruit ~40–55% of nodes since each edge brings in two endpoints, but with replacement collisions. The trap in this question: A is "right" in a literal accounting sense but loses to B in actual coverage.
+    </div>
+  </div>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 02</span>
+      <div class="lc-question">Set the strategy to <strong>Random Edge</strong> at <strong>30%</strong>. Resample five times. Compare the <em>Triangle preservation</em> and <em>Mean degree</em> metrics to the values you get from <strong>Random Node</strong> at the same 30%. What pattern do you observe?</div>
+    </div>
+    <div class="lc-options" id="lc2-options">
+      <div class="lc-option" onclick="selectOption(2, 'A')"><span class="lc-option-letter">A</span><span>Random edge preserves triangles better, because more edges = more triangles</span></div>
+      <div class="lc-option" onclick="selectOption(2, 'B')"><span class="lc-option-letter">B</span><span>Random edge destroys triangles disproportionately, because closing a triangle requires keeping all three of its edges — a small chance under independent edge sampling</span></div>
+      <div class="lc-option" onclick="selectOption(2, 'C')"><span class="lc-option-letter">C</span><span>Both strategies preserve triangles equally well at 30%</span></div>
+    </div>
+    <div class="lc-actions">
+      <button class="btn btn-neutral" onclick="showHint(2)">💡 Hint</button>
+      <button class="btn btn-neutral" onclick="showAnswer(2)">🔓 Reveal Answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc2-hint">
+      <strong>Hint:</strong> Think probabilistically. If you sample each edge independently with probability p, what's the probability that all three edges of a specific triangle survive? Compare that to keeping a triangle under random <em>node</em> sampling, where keeping the three nodes suffices.
+    </div>
+    <div class="lc-feedback feedback-answer" id="lc2-answer">
+      <strong>Answer: B.</strong> Under independent edge sampling at rate p, a triangle survives only if all three of its edges are kept — probability p³. At p = 0.30 that's just 2.7%. Under random node sampling at rate p, a triangle survives if all three nodes are kept — probability p³ as well (still 2.7%), <em>but the induced edges are automatically retained</em>, so triangle preservation aligns with node-triple preservation. In practice random edge sampling shows much more variance in triangle counts because triangles share edges, breaking independence. This is one of the canonical reasons sociologists prefer node-based designs when clustering is the quantity of interest.
+    </div>
+  </div>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 03</span>
+      <div class="lc-question">Run <strong>Ego-Centric</strong> sampling several times at 15% seeds. Notice the "Mean degree (sample)" metric versus the "true" mean degree shown below it. Why does ego-centric sampling produce a <em>biased</em> estimate of mean degree even when it captures most of the network?</div>
+    </div>
+    <div class="lc-options" id="lc3-options">
+      <div class="lc-option" onclick="selectOption(3, 'A')"><span class="lc-option-letter">A</span><span>Because the seeds were drawn randomly, the sample is unbiased — any discrepancy is just sampling variation</span></div>
+      <div class="lc-option" onclick="selectOption(3, 'B')"><span class="lc-option-letter">B</span><span>High-degree nodes are more likely to be a neighbor of <em>some</em> seed (because they have many neighbors), so they enter the sample at a higher rate than their share of the population — the friendship paradox baked into the design</span></div>
+      <div class="lc-option" onclick="selectOption(3, 'C')"><span class="lc-option-letter">C</span><span>Ego-centric sampling under-counts edges between non-seed nodes, which deflates degree</span></div>
+    </div>
+    <div class="lc-actions">
+      <button class="btn btn-neutral" onclick="showHint(3)">💡 Hint</button>
+      <button class="btn btn-neutral" onclick="showAnswer(3)">🔓 Reveal Answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc3-hint">
+      <strong>Hint:</strong> Think about who is <em>more likely</em> to be a neighbor of a randomly picked seed. If you pick one random person and look at their friends, are those friends a random sample of the population — or are they systematically the kinds of people who have many friends?
+    </div>
+    <div class="lc-feedback feedback-answer" id="lc3-answer">
+      <strong>Answer: B.</strong> This is the <em>friendship paradox</em> embedded in ego-centric sampling. A node with degree d gets sampled (as a neighbor of a seed) with probability proportional to d — so high-degree nodes are over-represented relative to their population share. The mean degree in your sample is thus inflated. C is partially true but secondary; the dominant effect is the inclusion bias. This is why epidemiologists and survey methodologists distinguish "ego-centric" from "respondent-driven" designs with weighting corrections — and why naive snowball samples systematically overestimate degree, density, and clustering.
+    </div>
+  </div>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Big Network Data · Sampling Strategies Lab</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script>
+// =============================================
+// COASTAL LOUISIANA EVACUATION NETWORK
+// =============================================
+const rawNodes = [
+  { id: "nola_cbd",       label: "NOLA CBD",         zone: "urban",    x: 380, y: 360 },
+  { id: "nola_uptown",    label: "Uptown",           zone: "urban",    x: 340, y: 380 },
+  { id: "nola_midcity",   label: "Mid-City",         zone: "urban",    x: 360, y: 330 },
+  { id: "nola_garden",    label: "Garden District",  zone: "urban",    x: 355, y: 370 },
+  { id: "nola_marigny",   label: "Marigny",          zone: "urban",    x: 410, y: 355 },
+  { id: "nola_lakeview",  label: "Lakeview",         zone: "urban",    x: 365, y: 295 },
+  { id: "nola_treme",     label: "Tremé",            zone: "urban",    x: 385, y: 340 },
+  { id: "metairie",       label: "Metairie",         zone: "suburban", x: 295, y: 340 },
+  { id: "kenner",         label: "Kenner",           zone: "suburban", x: 240, y: 320 },
+  { id: "harahan",        label: "Harahan",          zone: "suburban", x: 270, y: 365 },
+  { id: "gretna",         label: "Gretna",           zone: "suburban", x: 350, y: 410 },
+  { id: "marrero",        label: "Marrero",          zone: "suburban", x: 310, y: 415 },
+  { id: "grand_isle",     label: "Grand Isle",       zone: "coastal",  x: 280, y: 475 },
+  { id: "lafitte",        label: "Lafitte",          zone: "coastal",  x: 330, y: 460 },
+  { id: "port_sulphur",   label: "Port Sulphur",     zone: "coastal",  x: 450, y: 460 },
+  { id: "buras",          label: "Buras",            zone: "coastal",  x: 510, y: 475 },
+  { id: "delacroix",      label: "Delacroix",        zone: "coastal",  x: 480, y: 425 },
+  { id: "venice",         label: "Venice",           zone: "coastal",  x: 550, y: 480 },
+  { id: "chalmette",      label: "Chalmette",        zone: "eastbank", x: 460, y: 380 },
+  { id: "arabi",          label: "Arabi",            zone: "eastbank", x: 430, y: 370 },
+  { id: "slidell",        label: "Slidell",          zone: "eastbank", x: 540, y: 290 },
+  { id: "pearl_river",    label: "Pearl River",      zone: "eastbank", x: 590, y: 250 },
+  { id: "lacombe",        label: "Lacombe",          zone: "eastbank", x: 495, y: 280 },
+  { id: "laplace",        label: "LaPlace",          zone: "corridor", x: 180, y: 280 },
+  { id: "kentwood",       label: "Kentwood",         zone: "corridor", x: 320, y: 110 },
+  { id: "hammond",        label: "Hammond",          zone: "corridor", x: 365, y: 175 },
+  { id: "ponchatoula",    label: "Ponchatoula",      zone: "corridor", x: 380, y: 215 },
+  { id: "covington",      label: "Covington",        zone: "corridor", x: 450, y: 230 },
+  { id: "mandeville",     label: "Mandeville",       zone: "corridor", x: 460, y: 260 },
+  { id: "albany",         label: "Albany",           zone: "corridor", x: 310, y: 200 },
+  { id: "baton_rouge",    label: "Baton Rouge",      zone: "inland",   x: 180, y: 165 },
+  { id: "gonzales",       label: "Gonzales",         zone: "inland",   x: 220, y: 220 },
+  { id: "donaldsonville", label: "Donaldsonville",   zone: "inland",   x: 175, y: 265 },
+  { id: "thibodaux",      label: "Thibodaux",        zone: "inland",   x: 195, y: 380 },
+  { id: "houma",          label: "Houma",            zone: "inland",   x: 200, y: 430 },
+  { id: "morgan_city",    label: "Morgan City",      zone: "inland",   x:  95, y: 380 },
+  { id: "raceland",       label: "Raceland",         zone: "inland",   x: 245, y: 405 },
+  { id: "denham_springs", label: "Denham Springs",   zone: "inland",   x: 225, y: 140 },
+  { id: "walker",         label: "Walker",           zone: "inland",   x: 265, y: 155 },
+  { id: "amite",          label: "Amite",            zone: "inland",   x: 340, y: 150 },
+];
+
+const rawEdges = [
+  { source: "nola_cbd", target: "nola_uptown", weight: 8200 },
+  { source: "nola_cbd", target: "nola_midcity", weight: 7100 },
+  { source: "nola_cbd", target: "nola_marigny", weight: 6800 },
+  { source: "nola_cbd", target: "nola_treme", weight: 6200 },
+  { source: "nola_uptown", target: "nola_garden", weight: 5400 },
+  { source: "nola_uptown", target: "nola_midcity", weight: 4800 },
+  { source: "nola_midcity", target: "nola_treme", weight: 5100 },
+  { source: "nola_midcity", target: "nola_lakeview", weight: 4300 },
+  { source: "nola_garden", target: "nola_uptown", weight: 4900 },
+  { source: "nola_garden", target: "nola_cbd", weight: 5800 },
+  { source: "nola_marigny", target: "nola_treme", weight: 4600 },
+  { source: "nola_lakeview", target: "nola_treme", weight: 3800 },
+  { source: "nola_treme", target: "nola_garden", weight: 3500 },
+  { source: "nola_cbd", target: "metairie", weight: 7200 },
+  { source: "metairie", target: "kenner", weight: 6100 },
+  { source: "metairie", target: "harahan", weight: 4800 },
+  { source: "metairie", target: "nola_lakeview", weight: 4400 },
+  { source: "kenner", target: "harahan", weight: 3200 },
+  { source: "harahan", target: "nola_uptown", weight: 3500 },
+  { source: "nola_uptown", target: "gretna", weight: 3900 },
+  { source: "gretna", target: "marrero", weight: 4200 },
+  { source: "marrero", target: "harahan", weight: 2800 },
+  { source: "gretna", target: "nola_garden", weight: 3100 },
+  { source: "nola_marigny", target: "arabi", weight: 5200 },
+  { source: "arabi", target: "chalmette", weight: 6400 },
+  { source: "chalmette", target: "nola_cbd", weight: 4100 },
+  { source: "chalmette", target: "delacroix", weight: 2900 },
+  { source: "slidell", target: "lacombe", weight: 4400 },
+  { source: "slidell", target: "pearl_river", weight: 3600 },
+  { source: "lacombe", target: "mandeville", weight: 3900 },
+  { source: "mandeville", target: "covington", weight: 5100 },
+  { source: "covington", target: "lacombe", weight: 3400 },
+  { source: "slidell", target: "mandeville", weight: 4200 },
+  { source: "lafitte", target: "marrero", weight: 2100 },
+  { source: "lafitte", target: "grand_isle", weight: 1800 },
+  { source: "grand_isle", target: "raceland", weight: 1500 },
+  { source: "port_sulphur", target: "buras", weight: 2400 },
+  { source: "buras", target: "venice", weight: 2100 },
+  { source: "port_sulphur", target: "chalmette", weight: 2800 },
+  { source: "delacroix", target: "port_sulphur", weight: 1900 },
+  { source: "nola_cbd", target: "laplace", weight: 8600 },
+  { source: "laplace", target: "ponchatoula", weight: 6900 },
+  { source: "ponchatoula", target: "hammond", weight: 7400 },
+  { source: "hammond", target: "albany", weight: 4200 },
+  { source: "hammond", target: "covington", weight: 5300 },
+  { source: "hammond", target: "amite", weight: 3800 },
+  { source: "amite", target: "kentwood", weight: 3100 },
+  { source: "albany", target: "ponchatoula", weight: 2900 },
+  { source: "mandeville", target: "covington", weight: 4400 },
+  { source: "laplace", target: "gonzales", weight: 4800 },
+  { source: "gonzales", target: "baton_rouge", weight: 6700 },
+  { source: "gonzales", target: "donaldsonville", weight: 3400 },
+  { source: "donaldsonville", target: "baton_rouge", weight: 4100 },
+  { source: "baton_rouge", target: "denham_springs", weight: 5900 },
+  { source: "denham_springs", target: "walker", weight: 3700 },
+  { source: "walker", target: "hammond", weight: 3300 },
+  { source: "denham_springs", target: "baton_rouge", weight: 4800 },
+  { source: "thibodaux", target: "houma", weight: 4200 },
+  { source: "houma", target: "raceland", weight: 3100 },
+  { source: "thibodaux", target: "raceland", weight: 2700 },
+  { source: "houma", target: "morgan_city", weight: 3400 },
+  { source: "thibodaux", target: "donaldsonville", weight: 2200 },
+  { source: "raceland", target: "lafitte", weight: 1900 },
+  { source: "morgan_city", target: "thibodaux", weight: 2400 },
+];
+
+const edgeKey = (a, b) => a < b ? `${a}|${b}` : `${b}|${a}`;
+const edgeMap = new Map();
+rawEdges.forEach(e => {
+  const k = edgeKey(e.source, e.target);
+  if (!edgeMap.has(k)) edgeMap.set(k, e);
+});
+const edges = Array.from(edgeMap.values());
+
+let currentStrategy = "random_node";
+let currentSize = 25;
+let sampledNodes = new Set();
+let seedNodes = new Set();
+let sampledEdges = new Set();
+let trueStats = null;
+
+function buildAdjacency(nodeSet, edgeSet) {
+  const adj = {};
+  Array.from(nodeSet).forEach(id => { adj[id] = []; });
+  edges.forEach(e => {
+    const k = edgeKey(e.source, e.target);
+    if (!edgeSet || edgeSet.has(k)) {
+      if (nodeSet.has(e.source) && nodeSet.has(e.target)) {
+        adj[e.source].push(e.target);
+        adj[e.target].push(e.source);
+      }
+    }
+  });
+  return adj;
+}
+
+function countTriangles(nodeSet, edgeSet) {
+  const adj = buildAdjacency(nodeSet, edgeSet);
+  const ids = Array.from(nodeSet).sort();
+  const idx = {};
+  ids.forEach((id, i) => idx[id] = i);
+  let count = 0;
+  const neighborSets = {};
+  ids.forEach(id => neighborSets[id] = new Set(adj[id]));
+  for (let i = 0; i < ids.length; i++) {
+    const u = ids[i];
+    for (const v of adj[u]) {
+      if (idx[v] <= idx[u]) continue;
+      for (const w of adj[v]) {
+        if (idx[w] <= idx[v]) continue;
+        if (neighborSets[u].has(w)) count++;
+      }
+    }
+  }
+  return count;
+}
+
+function meanDegree(nodeSet, edgeSet) {
+  if (nodeSet.size === 0) return 0;
+  const adj = buildAdjacency(nodeSet, edgeSet);
+  let sum = 0;
+  nodeSet.forEach(id => sum += adj[id].length);
+  return sum / nodeSet.size;
+}
+
+function computeTrueStats() {
+  const allNodes = new Set(rawNodes.map(n => n.id));
+  const allEdgeKeys = new Set(edges.map(e => edgeKey(e.source, e.target)));
+  return {
+    nNodes: rawNodes.length,
+    nEdges: edges.length,
+    triangles: countTriangles(allNodes, allEdgeKeys),
+    meanDegree: meanDegree(allNodes, allEdgeKeys),
+  };
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function sampleRandomNode(pct) {
+  const k = Math.max(1, Math.round(rawNodes.length * pct / 100));
+  const picked = shuffle(rawNodes).slice(0, k).map(n => n.id);
+  const nodeSet = new Set(picked);
+  const edgeSet = new Set();
+  edges.forEach(e => {
+    if (nodeSet.has(e.source) && nodeSet.has(e.target)) {
+      edgeSet.add(edgeKey(e.source, e.target));
+    }
+  });
+  return { nodes: nodeSet, edges: edgeSet, seeds: new Set() };
+}
+
+function sampleEgo(pct, hops) {
+  const k = Math.max(1, Math.round(rawNodes.length * pct / 100));
+  const seeds = shuffle(rawNodes).slice(0, k).map(n => n.id);
+  const seedSet = new Set(seeds);
+  const nodeSet = new Set(seeds);
+  const fullAdj = {};
+  rawNodes.forEach(n => fullAdj[n.id] = []);
+  edges.forEach(e => {
+    fullAdj[e.source].push(e.target);
+    fullAdj[e.target].push(e.source);
+  });
+  let frontier = new Set(seeds);
+  for (let h = 0; h < hops; h++) {
+    const nextFrontier = new Set();
+    frontier.forEach(id => {
+      fullAdj[id].forEach(nb => {
+        if (!nodeSet.has(nb)) { nodeSet.add(nb); nextFrontier.add(nb); }
+      });
+    });
+    frontier = nextFrontier;
+  }
+  const edgeSet = new Set();
+  edges.forEach(e => {
+    const k = edgeKey(e.source, e.target);
+    if (hops === 1) {
+      if (seedSet.has(e.source) || seedSet.has(e.target)) edgeSet.add(k);
+    } else {
+      if (nodeSet.has(e.source) && nodeSet.has(e.target)) edgeSet.add(k);
+    }
+  });
+  return { nodes: nodeSet, edges: edgeSet, seeds: seedSet };
+}
+
+function sampleRandomEdge(pct) {
+  const k = Math.max(1, Math.round(edges.length * pct / 100));
+  const picked = shuffle(edges).slice(0, k);
+  const nodeSet = new Set();
+  const edgeSet = new Set();
+  picked.forEach(e => {
+    nodeSet.add(e.source);
+    nodeSet.add(e.target);
+    edgeSet.add(edgeKey(e.source, e.target));
+  });
+  return { nodes: nodeSet, edges: edgeSet, seeds: new Set() };
+}
+
+function runSampling() {
+  let result;
+  if (currentStrategy === "random_node") result = sampleRandomNode(currentSize);
+  else if (currentStrategy === "ego") result = sampleEgo(currentSize, 1);
+  else if (currentStrategy === "snowball") result = sampleEgo(currentSize, 2);
+  else if (currentStrategy === "random_edge") result = sampleRandomEdge(currentSize);
+  sampledNodes = result.nodes;
+  sampledEdges = result.edges;
+  seedNodes = result.seeds;
+}
+
+const svgEl = document.getElementById("network-svg");
+const svg = d3.select(svgEl);
+
+function scaleX(x) { return (x / 750) * svgEl.clientWidth; }
+function scaleY(y) { return (y / 500) * svgEl.clientHeight; }
+
+function computeTriangleEdges() {
+  const triEdges = new Set();
+  const adj = buildAdjacency(sampledNodes, sampledEdges);
+  const neighborSets = {};
+  Array.from(sampledNodes).forEach(id => neighborSets[id] = new Set(adj[id]));
+  edges.forEach(e => {
+    const k = edgeKey(e.source, e.target);
+    if (!sampledEdges.has(k)) return;
+    if (!sampledNodes.has(e.source) || !sampledNodes.has(e.target)) return;
+    const s = neighborSets[e.source];
+    const t = neighborSets[e.target];
+    for (const nb of s) {
+      if (t.has(nb)) { triEdges.add(k); break; }
+    }
+  });
+  return triEdges;
+}
+
+function drawNetwork() {
+  svg.selectAll("*").remove();
+  const w = svgEl.clientWidth;
+  const h = svgEl.clientHeight;
+
+  const defs = svg.append("defs");
+  const grad = defs.append("linearGradient").attr("id", "water-grad").attr("x1","0").attr("y1","1").attr("x2","0").attr("y2","0");
+  grad.append("stop").attr("offset","0%").attr("stop-color","#0a140a").attr("stop-opacity",0.5);
+  grad.append("stop").attr("offset","100%").attr("stop-color","#050a05").attr("stop-opacity",0);
+  svg.append("rect").attr("x",0).attr("y",scaleY(440)).attr("width",w).attr("height",h-scaleY(440)).attr("fill","url(#water-grad)");
+  svg.append("text").attr("x", scaleX(560)).attr("y", scaleY(495))
+    .attr("fill", "#6b8170").attr("font-family", "Space Mono, monospace").attr("font-size", 10)
+    .attr("letter-spacing", "0.2em").text("GULF");
+
+  const triEdges = computeTriangleEdges();
+
+  edges.forEach(e => {
+    const k = edgeKey(e.source, e.target);
+    const inSample = sampledEdges.has(k);
+    const sourceNode = rawNodes.find(n => n.id === e.source);
+    const targetNode = rawNodes.find(n => n.id === e.target);
+    const isTri = triEdges.has(k);
+    svg.append("line")
+      .attr("x1", scaleX(sourceNode.x)).attr("y1", scaleY(sourceNode.y))
+      .attr("x2", scaleX(targetNode.x)).attr("y2", scaleY(targetNode.y))
+      .attr("stroke", inSample ? (isTri ? "#5eead4" : "#39FF14") : "#1f3d28")
+      .attr("stroke-width", inSample ? Math.max(1.2, Math.log(e.weight / 1000) * 1.3) : 0.6)
+      .attr("stroke-opacity", inSample ? (isTri ? 0.9 : 0.6) : 0.2);
+  });
+
+  rawNodes.forEach(n => {
+    const cx = scaleX(n.x);
+    const cy = scaleY(n.y);
+    const inSample = sampledNodes.has(n.id);
+    const isSeed = seedNodes.has(n.id);
+    const radius = inSample ? (isSeed ? 8 : 6) : 4;
+    const fill = inSample ? (isSeed ? "#fbbf24" : "#39FF14") : "#1f3d28";
+    const stroke = inSample ? (isSeed ? "#fbbf24" : "#39FF14") : "#6b8170";
+    const opacity = inSample ? 1 : 0.5;
+
+    if (isSeed) {
+      svg.append("circle")
+        .attr("cx", cx).attr("cy", cy).attr("r", 14)
+        .attr("fill", "#fbbf24").attr("opacity", 0.22);
+    }
+    svg.append("circle")
+      .attr("cx", cx).attr("cy", cy).attr("r", radius)
+      .attr("fill", fill).attr("stroke", stroke).attr("stroke-width", 1.5)
+      .attr("opacity", opacity);
+
+    if (inSample) {
+      svg.append("text")
+        .attr("x", cx).attr("y", cy + radius + 11)
+        .attr("text-anchor", "middle")
+        .attr("font-family", "DM Sans, sans-serif")
+        .attr("font-size", 9.5).attr("fill", "#f0fdf4").attr("opacity", 0.9)
+        .text(n.label);
+    }
+  });
+}
+
+function updateMetricsUI() {
+  const nodeCovPct = 100 * sampledNodes.size / trueStats.nNodes;
+  const edgeCovPct = 100 * sampledEdges.size / trueStats.nEdges;
+  const triCount = countTriangles(sampledNodes, sampledEdges);
+  const triPres = trueStats.triangles === 0 ? 0 : 100 * triCount / trueStats.triangles;
+  const md = meanDegree(sampledNodes, sampledEdges);
+
+  document.getElementById("m-node-cov").textContent = `${sampledNodes.size}/${trueStats.nNodes} · ${nodeCovPct.toFixed(0)}%`;
+  document.getElementById("m-edge-cov").textContent = `${sampledEdges.size}/${trueStats.nEdges} · ${edgeCovPct.toFixed(0)}%`;
+  document.getElementById("m-tri").textContent = `${triCount} / ${trueStats.triangles}`;
+  const triPresEl = document.getElementById("m-tri-pres");
+  triPresEl.textContent = `${triPres.toFixed(0)}%`;
+  triPresEl.classList.remove("good", "warn", "bad");
+  if (triPres >= 70) triPresEl.classList.add("good");
+  else if (triPres >= 30) triPresEl.classList.add("warn");
+  else triPresEl.classList.add("bad");
+
+  document.getElementById("m-deg").textContent = md.toFixed(2);
+  document.getElementById("m-deg-sub").textContent = `true: ${trueStats.meanDegree.toFixed(2)}`;
+  const mdEl = document.getElementById("m-deg");
+  mdEl.classList.remove("good", "warn", "bad");
+  const ratio = md / trueStats.meanDegree;
+  if (ratio > 1.4 || ratio < 0.6) mdEl.classList.add("bad");
+  else if (ratio > 1.15 || ratio < 0.85) mdEl.classList.add("warn");
+  else mdEl.classList.add("good");
+
+  document.getElementById("sampled-nodes-count").textContent = sampledNodes.size;
+  document.getElementById("unsampled-nodes-count").textContent = trueStats.nNodes - sampledNodes.size;
+  document.getElementById("sampled-edges-count").textContent = sampledEdges.size;
+
+  const zonesPresent = new Set();
+  sampledNodes.forEach(id => {
+    const n = rawNodes.find(nn => nn.id === id);
+    if (n) zonesPresent.add(n.zone);
+  });
+  ["urban", "suburban", "coastal", "corridor", "inland", "eastbank"].forEach(z => {
+    const chip = document.getElementById(`zone-${z}`);
+    chip.classList.remove("covered", "missed");
+    if (zonesPresent.has(z)) chip.classList.add("covered");
+    else chip.classList.add("missed");
+  });
+
+  const stratLabelMap = {
+    random_node: "RANDOM NODE",
+    ego: "EGO-CENTRIC",
+    snowball: "SNOWBALL-2",
+    random_edge: "RANDOM EDGE",
+  };
+  document.getElementById("current-strategy-label").textContent =
+    `${stratLabelMap[currentStrategy]} · ${currentSize}%`;
+}
+
+function setStrategy(strat) {
+  currentStrategy = strat;
+  document.querySelectorAll(".strat-btn").forEach(b => b.classList.remove("active"));
+  document.querySelector(`.strat-btn[data-strategy="${strat}"]`).classList.add("active");
+  runSampling();
+  drawNetwork();
+  updateMetricsUI();
+}
+
+function onSliderChange(val) {
+  currentSize = parseInt(val);
+  document.getElementById("size-display").textContent = `${val}%`;
+  runSampling();
+  drawNetwork();
+  updateMetricsUI();
+}
+
+function resample() {
+  runSampling();
+  drawNetwork();
+  updateMetricsUI();
+}
+
+function showFullNetwork() {
+  sampledNodes = new Set(rawNodes.map(n => n.id));
+  sampledEdges = new Set(edges.map(e => edgeKey(e.source, e.target)));
+  seedNodes = new Set();
+  drawNetwork();
+  updateMetricsUI();
+  document.getElementById("current-strategy-label").textContent = "FULL POPULATION (REFERENCE)";
+}
+
+const CORRECT_ANSWERS = { 1: "B", 2: "B", 3: "B" };
+
+function selectOption(lc, opt) {
+  const container = document.getElementById(`lc${lc}-options`);
+  const options = container.querySelectorAll(".lc-option");
+  options.forEach(o => o.classList.remove("correct", "incorrect"));
+  const idx = { A: 0, B: 1, C: 2 }[opt];
+  if (opt === CORRECT_ANSWERS[lc]) options[idx].classList.add("correct");
+  else options[idx].classList.add("incorrect");
+}
+
+function showHint(lc) {
+  const el = document.getElementById(`lc${lc}-hint`);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+function showAnswer(lc) {
+  const el = document.getElementById(`lc${lc}-answer`);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+  const container = document.getElementById(`lc${lc}-options`);
+  const options = container.querySelectorAll(".lc-option");
+  const idx = { A: 0, B: 1, C: 2 }[CORRECT_ANSWERS[lc]];
+  if (el.style.display === "block") options[idx].classList.add("revealed-correct");
+}
+
+window.addEventListener("load", () => {
+  trueStats = computeTrueStats();
+  runSampling();
+  drawNetwork();
+  updateMetricsUI();
+});
+
+window.addEventListener("resize", () => { drawNetwork(); });
+</script>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
