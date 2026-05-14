@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DSM Clustering &amp; Dependency Propagation · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.lab-hero { margin-bottom: 24px; }
+.lab-hero .course-number { margin-bottom: 10px; }
+.lab-hero h1 {
+  font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px);
+  line-height: 1.05; letter-spacing: 0.03em; color: var(--white); margin-bottom: 14px;
+}
+.lab-hero h1 em { color: var(--green-bright); font-style: normal; }
+.lab-hero p {
+  font-family: var(--font-body); font-size: 16px; font-weight: 300;
+  line-height: 1.55; color: var(--green-mint); max-width: 760px;
+  border-left: 3px solid var(--green-bright); padding-left: 18px;
+}
+
+.sketchpad-card {
+  background: rgba(251,191,36,0.06);
+  border: 1px solid rgba(251,191,36,0.3);
+  border-left: 4px solid var(--node-4);
+  border-radius: var(--radius-lg); padding: 20px 24px;
+  margin-bottom: 24px; backdrop-filter: blur(8px);
+}
+.sketchpad-card h3 {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--node-4); margin-bottom: 8px;
+}
+.sketchpad-card .sketch-title {
+  font-family: var(--font-display); font-size: 24px;
+  color: var(--white); letter-spacing: 0.03em; margin-bottom: 8px;
+}
+.sketchpad-card p {
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--green-mint); line-height: 1.6; margin: 6px 0;
+}
+.sketchpad-card ol {
+  margin: 8px 0 0 0; padding-left: 22px;
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--green-mint); line-height: 1.75;
+}
+.sketchpad-card ol li strong { color: var(--white); }
+
+.main-layout {
+  display: grid; grid-template-columns: 1fr 360px; gap: 18px;
+  margin-bottom: 24px;
+}
+@media (max-width: 1000px) { .main-layout { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+  margin-bottom: 14px; backdrop-filter: blur(8px);
+}
+.card h3 {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 14px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border-soft);
+}
+
+/* System selector */
+.system-selector { display: flex; gap: 8px; margin-bottom: 14px; }
+.system-btn {
+  flex: 1;
+  background: rgba(5,46,22,0.5); color: var(--grey);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 12px 10px;
+  font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.system-btn:hover { color: var(--white); border-color: var(--green-bright); }
+.system-btn.active {
+  background: var(--green-bright); color: var(--black); border-color: var(--green-bright);
+  box-shadow: 0 0 12px rgba(57,255,20,0.3);
+}
+.system-btn .system-icon { display: block; font-size: 20px; margin-bottom: 4px; }
+
+/* Matrix container */
+.matrix-container {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  overflow: auto; backdrop-filter: blur(8px);
+}
+.matrix-title {
+  font-family: var(--font-display); font-size: 26px;
+  color: var(--white); letter-spacing: 0.03em; margin-bottom: 6px;
+}
+.matrix-subtitle {
+  font-family: var(--font-body); font-size: 13.5px;
+  color: var(--green-mint); margin-bottom: 16px; line-height: 1.55;
+}
+.matrix-subtitle strong { color: var(--white); }
+#dsm-svg {
+  display: block; width: 100%; height: auto;
+  font-family: var(--font-mono);
+}
+
+.matrix-controls {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 16px;
+}
+.btn {
+  background: rgba(5,46,22,0.5); color: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn:hover { border-color: var(--green-bright); color: var(--green-bright); }
+.btn-primary {
+  background: var(--green-bright); border-color: var(--green-bright); color: var(--black);
+}
+.btn-primary:hover { background: var(--green-mid); border-color: var(--green-mid); color: var(--black); }
+.btn-neutral { background: transparent; color: var(--grey); }
+.btn-neutral:hover { color: var(--green-bright); }
+
+.status-bar {
+  display: flex; flex-wrap: wrap; gap: 18px;
+  padding: 12px 16px; margin-top: 14px;
+  background: rgba(5,46,22,0.45);
+  border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--green-mint); letter-spacing: 0.04em;
+}
+.status-bar strong { color: var(--white); font-weight: 500; }
+.status-dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; margin-right: 5px; vertical-align: middle;
+  box-shadow: 0 0 6px currentColor;
+}
+.dot-active  { background: var(--green-bright); color: var(--green-bright); }
+.dot-removed { background: var(--node-4); color: var(--node-4); }
+.dot-cascade { background: var(--node-7); color: var(--node-7); }
+
+/* Sidebar */
+.metric-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px dashed var(--border-soft); font-size: 13.5px;
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-label { color: var(--grey); }
+.metric-value {
+  font-family: var(--font-mono); font-weight: 500; color: var(--white);
+}
+.metric-value.changed { color: var(--node-3); }
+.metric-value.warn { color: var(--node-4); }
+
+.component-info-empty {
+  text-align: center; color: var(--grey);
+  padding: 24px 12px;
+  font-family: var(--font-body); font-size: 13.5px; line-height: 1.5;
+}
+.component-info-empty span { display: block; font-size: 26px; margin-bottom: 8px; }
+.component-name {
+  font-family: var(--font-display); font-size: 24px;
+  color: var(--white); letter-spacing: 0.03em; line-height: 1.1; margin-bottom: 4px;
+}
+.component-zone {
+  font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--green-bright); text-transform: uppercase; letter-spacing: 0.12em;
+  margin-bottom: 12px;
+}
+
+.stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0;
+}
+.stat-box {
+  background: rgba(5,46,22,0.5);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+}
+.stat-box-label {
+  font-family: var(--font-mono); font-size: 9.5px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--grey); margin-bottom: 4px;
+}
+.stat-box-value {
+  font-family: var(--font-mono); font-size: 20px; font-weight: 500;
+  color: var(--white);
+}
+.stat-box-value.danger { color: var(--node-7); }
+
+.legend-item {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-body); font-size: 12.5px;
+  color: var(--green-mint); padding: 4px 0;
+}
+.legend-swatch {
+  width: 16px; height: 16px; border-radius: 3px;
+  border: 1px solid var(--border-soft);
+}
+
+/* Learning checks */
+.lc-section { margin-top: 32px; }
+.lc-section-header {
+  font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.16em;
+  color: var(--green-bright); margin-bottom: 16px;
+  padding-bottom: 10px; border-bottom: 1px solid var(--border);
+}
+.lc-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 24px;
+  margin-bottom: 14px; backdrop-filter: blur(8px);
+}
+.lc-number {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--green-bright); letter-spacing: 0.16em; margin-bottom: 8px;
+}
+.lc-question {
+  font-family: var(--font-display); font-size: 20px;
+  color: var(--white); letter-spacing: 0.02em; line-height: 1.3;
+  margin-bottom: 6px;
+}
+.lc-prompt {
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--green-mint); line-height: 1.6; margin-bottom: 16px;
+}
+.lc-prompt strong { color: var(--white); }
+.lc-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.lc-option {
+  background: rgba(5,46,22,0.4); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 12px 16px;
+  cursor: pointer; transition: all 0.15s;
+  font-family: var(--font-body); font-size: 13.5px;
+  color: var(--green-mint); line-height: 1.5;
+}
+.lc-option:hover { border-color: var(--green-bright); color: var(--white); }
+.lc-option .opt-letter {
+  font-family: var(--font-mono); font-weight: 700;
+  color: var(--green-bright); margin-right: 10px;
+}
+.lc-option.correct          { border-color: var(--green-bright); background: rgba(57,255,20,0.1); color: var(--white); }
+.lc-option.incorrect        { border-color: var(--node-7); background: rgba(249,115,22,0.08); color: var(--white); }
+.lc-option.revealed-correct { border-color: var(--green-bright); background: rgba(57,255,20,0.1); }
+.lc-actions { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.lc-actions .btn { font-size: 11px; padding: 7px 12px; }
+.lc-feedback {
+  display: none; padding: 14px 16px; border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 13px;
+  line-height: 1.6; margin-top: 10px;
+  background: rgba(5,46,22,0.4);
+  border: 1px solid var(--border-soft);
+}
+.lc-hint { border-left: 3px solid var(--node-4); background: rgba(251,191,36,0.05); border-color: rgba(251,191,36,0.3); }
+.lc-hint strong { color: var(--node-4); }
+.lc-answer { border-left: 3px solid var(--green-bright); background: rgba(57,255,20,0.05); border-color: rgba(57,255,20,0.3); }
+.lc-answer strong { color: var(--green-bright); }
+.lc-answer em { color: var(--node-3); font-style: italic; }
+
+/* Matrix cells */
+.dsm-cell { stroke: var(--black); stroke-width: 1; cursor: pointer; }
+.dsm-cell-empty { fill: rgba(5,46,22,0.5); }
+.dsm-cell-filled { fill: var(--green-bright); }
+.dsm-cell-diagonal { fill: var(--grey-dim); }
+.dsm-cell-cascade { fill: var(--node-7) !important; }
+.dsm-cell-cascade-source { fill: var(--node-4) !important; stroke: var(--white); stroke-width: 2; }
+.dsm-row-label, .dsm-col-label {
+  font-size: 11px; fill: var(--grey);
+  font-family: var(--font-mono); cursor: grab; user-select: none;
+}
+.dsm-row-label:hover, .dsm-col-label:hover { fill: var(--node-4); }
+.dsm-row-label.dragging, .dsm-col-label.dragging { fill: var(--node-4); cursor: grabbing; }
+.dsm-row-label.cascade, .dsm-col-label.cascade { fill: var(--node-7); font-weight: 500; }
+.dsm-row-label.source, .dsm-col-label.source { fill: var(--node-4); font-weight: 500; }
+.dsm-block-overlay {
+  fill: none; stroke: var(--node-3);
+  stroke-width: 2; stroke-dasharray: 4 2;
+  pointer-events: none;
+}
+</style>
+</head>
+<body data-page="cases">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../readings.html"       data-page="readings">Readings</a>
+      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="../about.html"          data-page="about">About</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page-wide">
+
+  <section class="lab-hero">
+    <p class="course-number">SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure</p>
+    <h1>Design Structure Matrices: <em>Dependency &amp; Clustering</em></h1>
+    <p>A DSM is the adjacency matrix of a directed dependency graph. Trace cascading failures, then try to reorder the matrix into modular blocks by hand — and discover why clustering algorithms exist.</p>
+  </section>
+
+  <div class="sketchpad-card">
+    <h3>✏️ Sketchpad — do this before you touch the matrix</h3>
+    <div class="sketch-title">Draw the system you don't see</div>
+    <ol>
+      <li><strong>Pick one of the three systems below</strong> (rocket, drone, software). Without looking at the matrix, sketch the system as a node-link diagram on your sketchpad: list 8–15 components and draw arrows for what depends on what.</li>
+      <li><strong>Now draw a blank 8×8 grid</strong> with your components as both row and column labels. Fill in cells for dependencies you think exist. This is your <em>predicted DSM</em>.</li>
+      <li><strong>Load the actual DSM</strong> and compare. Count: how many real dependencies did you miss? How many did you imagine that aren't there?</li>
+      <li><strong>Reflect:</strong> Node-link diagrams hide coupling. Matrices expose it. Which view would you use to convince a program manager that the system is over-coupled?</li>
+    </ol>
+  </div>
+
+  <div class="main-layout">
+    <div>
+      <div class="system-selector">
+        <button class="system-btn active" data-system="rocket" onclick="switchSystem('rocket')">
+          <span class="system-icon">🚀</span>Rocket
+        </button>
+        <button class="system-btn" data-system="drone" onclick="switchSystem('drone')">
+          <span class="system-icon">🛩️</span>Drone Remote Sensing
+        </button>
+        <button class="system-btn" data-system="software" onclick="switchSystem('software')">
+          <span class="system-icon">💻</span>Software Architecture
+        </button>
+      </div>
+
+      <div class="matrix-container">
+        <h2 class="matrix-title" id="matrix-title">Rocket Launch Vehicle</h2>
+        <p class="matrix-subtitle" id="matrix-subtitle">A tightly-coupled hardware system. Cell (i,j) filled means <strong>row i depends on column j</strong>. Drag row or column labels to reorder. Click any cell or label to inspect that component's failure cascade.</p>
+        <svg id="dsm-svg"></svg>
+
+        <div class="matrix-controls">
+          <button class="btn btn-primary" onclick="autoCluster()">⚡ Cluster Automatically (Louvain)</button>
+          <button class="btn btn-neutral" onclick="toggleBlocks()" id="blocks-btn">Show Block Boundaries</button>
+          <button class="btn btn-neutral" onclick="resetOrder()">Reset to Original Order</button>
+          <button class="btn btn-neutral" onclick="clearCascade()">Clear Cascade</button>
+        </div>
+
+        <div class="status-bar">
+          <span><span class="status-dot dot-active"></span> <strong id="status-components">—</strong> components</span>
+          <span><span class="status-dot dot-removed"></span> <strong id="status-deps">—</strong> dependencies</span>
+          <span><span class="status-dot dot-cascade"></span> <strong id="status-cascade">0</strong> in current cascade</span>
+          <span id="status-msg" style="color: var(--grey);"></span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h3>Selected Component</h3>
+        <div id="component-info">
+          <div class="component-info-empty">
+            <span>🎯</span>
+            Click any row label, column label, or cell to inspect a component and trace its failure cascade.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Live Metrics</h3>
+        <div class="metric-row"><span class="metric-label">📦 Components</span><span class="metric-value" id="m-n">—</span></div>
+        <div class="metric-row"><span class="metric-label">🔗 Dependencies</span><span class="metric-value" id="m-deps">—</span></div>
+        <div class="metric-row"><span class="metric-label">📊 Coupling Density</span><span class="metric-value" id="m-density">—</span></div>
+        <div class="metric-row"><span class="metric-label">🧩 Clusters Found</span><span class="metric-value" id="m-clusters">—</span></div>
+        <div class="metric-row"><span class="metric-label">⚠️ Off-Block Marks</span><span class="metric-value" id="m-offblock">—</span></div>
+        <div class="metric-row"><span class="metric-label">💥 Largest Cascade</span><span class="metric-value" id="m-cascade">—</span></div>
+      </div>
+
+      <div class="card">
+        <h3>Legend</h3>
+        <div class="legend-item"><span class="legend-swatch" style="background: var(--green-bright);"></span> Dependency exists (row depends on column)</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: rgba(5,46,22,0.5);"></span> No dependency</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: var(--grey-dim);"></span> Diagonal (self)</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: var(--node-4);"></span> Cascade source (selected)</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: var(--node-7);"></span> Affected by cascade</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: transparent; border: 2px dashed var(--node-3);"></span> Cluster boundary</div>
+      </div>
+
+      <div class="card">
+        <h3>How to Read This</h3>
+        <p style="font-family: var(--font-body); font-size: 12.5px; color: var(--green-mint); line-height: 1.65; margin: 0;">
+          <strong style="color: var(--white);">Rows = dependents.</strong> If row <em>i</em> has a mark in column <em>j</em>, component <em>i</em> needs <em>j</em> to function.
+          <br><br>
+          <strong style="color: var(--white);">Marks near the diagonal</strong> = within-module coupling (good). <strong style="color: var(--white);">Marks far from the diagonal</strong> = cross-module coupling (the things clustering tries to minimize).
+          <br><br>
+          <strong style="color: var(--white);">Symmetric permutation:</strong> when you drag a row, the matching column moves with it. This preserves the meaning of the matrix.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="lc-section">
+    <h2 class="lc-section-header">Learning Checks — answer all three before moving on</h2>
+
+    <div class="lc-card">
+      <div class="lc-number">LC 01 · DIRECT OBSERVATION</div>
+      <h3 class="lc-question">Failure cascades depend on the column, not the row.</h3>
+      <p class="lc-prompt">Switch to the <strong>rocket</strong> system. Click on the <strong>Electrical Power System</strong> row or column label to highlight its forward failure cascade (everything that would be affected if power failed). How many components are in the cascade (not counting the power system itself)?</p>
+      <div class="lc-options" id="lc1-options">
+        <div class="lc-option" onclick="selectOption(1, 'A', this)"><span class="opt-letter">A.</span>3–5 components — a localized failure</div>
+        <div class="lc-option" onclick="selectOption(1, 'B', this)"><span class="opt-letter">B.</span>6–9 components — a partial cascade affecting one subsystem</div>
+        <div class="lc-option" onclick="selectOption(1, 'C', this)"><span class="opt-letter">C.</span>10 or more — a system-wide cascade because power is cross-cutting</div>
+      </div>
+      <div class="lc-actions">
+        <button class="btn btn-neutral" onclick="toggleHint(1)">💡 Hint</button>
+        <button class="btn btn-neutral" onclick="showAnswer(1)">✓ Reveal Answer</button>
+      </div>
+      <div class="lc-feedback lc-hint" id="lc1-hint">
+        <strong>Hint:</strong> Click the row label "Electrical Power" on the rocket DSM. The matrix will highlight the source in amber and every transitively dependent component in orange. Read the "in current cascade" count from the status bar.
+      </div>
+      <div class="lc-feedback lc-answer" id="lc1-answer">
+        <strong>Answer: C.</strong> Electrical power feeds avionics, GNC, comms, thermal control, payload electronics, and ignition systems — and each of those feeds further components. The cascade typically exceeds 10 components on the rocket DSM. This is the engineering meaning of a <em>cross-cutting concern</em>: power isn't a module, it's an axis. Option A reflects the common intuition that "a subsystem failure stays in its subsystem" — DSMs exist precisely because that intuition is wrong on tightly coupled hardware.
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-number">LC 02 · INTERVENTION</div>
+      <h3 class="lc-question">Manual reordering vs. the algorithm.</h3>
+      <p class="lc-prompt">Switch to the <strong>drone remote sensing</strong> system. Spend 3–5 minutes manually dragging rows and columns to push marks toward the diagonal — try to minimize the "Off-Block Marks" metric in the sidebar. Then click <strong>Cluster Automatically</strong>. What did you find?</p>
+      <div class="lc-options" id="lc2-options">
+        <div class="lc-option" onclick="selectOption(2, 'A', this)"><span class="opt-letter">A.</span>My manual ordering was about as good as the algorithm — the structure was visually obvious.</div>
+        <div class="lc-option" onclick="selectOption(2, 'B', this)"><span class="opt-letter">B.</span>The algorithm found roughly the same modules I did, but converged faster and with fewer off-block marks.</div>
+        <div class="lc-option" onclick="selectOption(2, 'C', this)"><span class="opt-letter">C.</span>Even on ~18 components, manual reordering is genuinely hard — and the algorithm found block structure I missed entirely.</div>
+      </div>
+      <div class="lc-actions">
+        <button class="btn btn-neutral" onclick="toggleHint(2)">💡 Hint</button>
+        <button class="btn btn-neutral" onclick="showAnswer(2)">✓ Reveal Answer</button>
+      </div>
+      <div class="lc-feedback lc-hint" id="lc2-hint">
+        <strong>Hint:</strong> Watch the "Off-Block Marks" and "Clusters Found" metrics as you drag. Compare your best score to the algorithm's score after clicking Cluster Automatically. Also: did you discover the same three modules (flight stack / payload / ground stack), or something different?
+      </div>
+      <div class="lc-feedback lc-answer" id="lc2-answer">
+        <strong>Answer: C (most students).</strong> The drone DSM has roughly three modules — flight control, sensor/payload, ground/mission — but several bridging components (the gimbal and telemetry radio) belong to two modules at once. Manual reordering quickly becomes a local-minimum problem: every swap that improves one pair of modules makes a different pair worse. Louvain optimizes modularity globally and routinely finds groupings humans miss. If you answered B, your manual reordering was unusually good — but you almost certainly didn't beat the algorithm's off-block count. <em>This is the lab's main point: clustering algorithms exist because the search space is combinatorially huge even for small N.</em>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-number">LC 03 · CONCEPT TRANSFER</div>
+      <h3 class="lc-question">Why doesn't clustering fix every system?</h3>
+      <p class="lc-prompt">Run <strong>Cluster Automatically</strong> on all three systems and compare the proportion of off-block marks (off-block ÷ total dependencies) in each. Which system has the <strong>highest residual off-block fraction</strong> even after optimal clustering, and what does that tell you?</p>
+      <div class="lc-options" id="lc3-options">
+        <div class="lc-option" onclick="selectOption(3, 'A', this)"><span class="opt-letter">A.</span>The rocket — tight physical coupling between propulsion, thermal, and structures creates feedback loops that no permutation can untangle.</div>
+        <div class="lc-option" onclick="selectOption(3, 'B', this)"><span class="opt-letter">B.</span>The drone — mixing hardware and software means the modules don't decompose cleanly.</div>
+        <div class="lc-option" onclick="selectOption(3, 'C', this)"><span class="opt-letter">C.</span>The software architecture — even though it's cleanly layered, its cross-cutting services (auth, logging, monitoring) touch every module by design and cannot be assigned to a single block.</div>
+      </div>
+      <div class="lc-actions">
+        <button class="btn btn-neutral" onclick="toggleHint(3)">💡 Hint</button>
+        <button class="btn btn-neutral" onclick="showAnswer(3)">✓ Reveal Answer</button>
+      </div>
+      <div class="lc-feedback lc-hint" id="lc3-hint">
+        <strong>Hint:</strong> After auto-clustering each system, divide "Off-Block Marks" by "Dependencies" to get the off-block fraction. Then look at <em>which</em> components in the worst system have dependencies crossing cluster boundaries. Do they share something in common?
+      </div>
+      <div class="lc-feedback lc-answer" id="lc3-answer">
+        <strong>Answer: C.</strong> After clustering, the rocket retains roughly 43% of marks off-block, the drone about 25%, and the software architecture about 56% — the highest of the three. The reason is instructive: the rocket's coupling is dense but <em>regional</em> (propulsion talks to propulsion, electrical to electrical), so Louvain finds tight blocks. The software DSM is cleanly layered, but components like <strong>auth, logging, monitoring, and secrets</strong> are <em>cross-cutting concerns</em> — by design, every service depends on them. No reordering can fix this, because the dependencies are real and intentional. <em>This is the systems-engineering punchline:</em> high residual off-block marks aren't always a sign that the system is badly designed. Sometimes the network is telling you that certain components are <strong>structurally cross-cutting</strong> — the matrix equivalent of a "bridge" node — and you need a different architectural pattern (aspect-oriented programming, service mesh, sidecars) rather than more clustering. Option A is the intuitive answer but underestimates how well Louvain handles regional coupling. Option B confuses domain heterogeneity with structural coupling — mixing hardware and software doesn't itself prevent decomposition.
+      </div>
+    </div>
+  </div>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Clustering &amp; Communities · DSM Lab</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script>
+// =====================================================================
+// SYSTEM DATASETS
+// =====================================================================
+const SYSTEMS = {
+  rocket: {
+    title: "Rocket Launch Vehicle",
+    subtitle: "A tightly-coupled hardware system. Cell (i,j) filled means <strong>row i depends on column j</strong>. Drag row or column labels to reorder. Click any cell or label to inspect that component's failure cascade.",
+    components: [
+      { id: "struct",   label: "Airframe / Structures", zone: "Mechanical" },
+      { id: "prop",     label: "Propulsion (Engines)",   zone: "Propulsion" },
+      { id: "tanks",    label: "Propellant Tanks",      zone: "Propulsion" },
+      { id: "feed",     label: "Propellant Feed Lines",  zone: "Propulsion" },
+      { id: "tvc",      label: "Thrust Vector Control",  zone: "Propulsion" },
+      { id: "thermal",  label: "Thermal Protection",     zone: "Mechanical" },
+      { id: "power",    label: "Electrical Power",       zone: "Electrical" },
+      { id: "avionics", label: "Avionics Computer",      zone: "Electrical" },
+      { id: "gnc",      label: "Guidance / Nav / Ctrl",  zone: "Electrical" },
+      { id: "imu",      label: "Inertial Measurement",   zone: "Electrical" },
+      { id: "comms",    label: "Telemetry / Comms",      zone: "Electrical" },
+      { id: "fts",      label: "Flight Termination",     zone: "Safety" },
+      { id: "payload",  label: "Payload Bay",            zone: "Payload" },
+      { id: "fairing",  label: "Payload Fairing",        zone: "Payload" },
+      { id: "stage_sep",label: "Stage Separation",       zone: "Mechanical" },
+      { id: "ignite",   label: "Ignition System",        zone: "Propulsion" },
+      { id: "ground",   label: "Ground Support",         zone: "Operations" },
+      { id: "lox",      label: "LOX Pressurization",     zone: "Propulsion" }
+    ],
+    dependencies: [
+      ["prop","feed"],["prop","tanks"],["prop","tvc"],["prop","ignite"],["prop","thermal"],["prop","power"],
+      ["feed","tanks"],["feed","lox"],["feed","power"],["feed","thermal"],
+      ["tanks","lox"],["tanks","struct"],["tanks","thermal"],
+      ["tvc","power"],["tvc","gnc"],["tvc","struct"],["tvc","avionics"],
+      ["ignite","power"],["ignite","avionics"],["ignite","ground"],
+      ["lox","power"],["lox","thermal"],["lox","ground"],
+      ["thermal","struct"],["thermal","power"],
+      ["avionics","power"],["avionics","imu"],["avionics","gnc"],
+      ["gnc","avionics"],["gnc","imu"],["gnc","power"],["gnc","tvc"],
+      ["imu","power"],["imu","struct"],
+      ["comms","power"],["comms","avionics"],["comms","ground"],
+      ["fts","power"],["fts","avionics"],["fts","comms"],
+      ["struct","thermal"],
+      ["payload","struct"],["payload","power"],["payload","thermal"],["payload","comms"],
+      ["fairing","struct"],["fairing","payload"],
+      ["stage_sep","struct"],["stage_sep","avionics"],["stage_sep","power"],["stage_sep","prop"],
+      ["ground","power"],["ground","comms"]
+    ]
+  },
+
+  drone: {
+    title: "Drone Remote Sensing System",
+    subtitle: "A modular UAV with three loose subsystems (flight, payload, ground). Cell (i,j) filled means <strong>row i depends on column j</strong>. Drag labels to reorder; the algorithm should find roughly three clusters.",
+    components: [
+      { id: "airframe", label: "Airframe",              zone: "Flight" },
+      { id: "motors",   label: "Motors",                zone: "Flight" },
+      { id: "esc",      label: "ESC (Speed Ctrl)",      zone: "Flight" },
+      { id: "battery",  label: "Battery",               zone: "Flight" },
+      { id: "fc",       label: "Flight Controller",     zone: "Flight" },
+      { id: "imu",      label: "IMU",                   zone: "Flight" },
+      { id: "gps",      label: "GPS",                   zone: "Flight" },
+      { id: "gimbal",   label: "Gimbal",                zone: "Payload" },
+      { id: "camera",   label: "RGB Camera",            zone: "Payload" },
+      { id: "lidar",    label: "LIDAR Sensor",          zone: "Payload" },
+      { id: "storage",  label: "Onboard Storage",       zone: "Payload" },
+      { id: "payload_pwr", label: "Payload Power",      zone: "Payload" },
+      { id: "telemetry",label: "Telemetry Radio",       zone: "Ground" },
+      { id: "groundstn",label: "Ground Station",        zone: "Ground" },
+      { id: "mission",  label: "Mission Planner",       zone: "Ground" },
+      { id: "pipeline", label: "Data Pipeline",         zone: "Ground" },
+      { id: "operator", label: "Operator Console",      zone: "Ground" }
+    ],
+    dependencies: [
+      ["motors","esc"],["motors","battery"],["motors","airframe"],
+      ["esc","battery"],["esc","fc"],
+      ["fc","imu"],["fc","gps"],["fc","battery"],["fc","esc"],
+      ["imu","battery"],
+      ["gps","battery"],
+      ["airframe","motors"],
+      ["gimbal","payload_pwr"],["gimbal","airframe"],["gimbal","fc"],
+      ["camera","gimbal"],["camera","payload_pwr"],["camera","storage"],
+      ["lidar","payload_pwr"],["lidar","storage"],["lidar","gimbal"],
+      ["storage","payload_pwr"],
+      ["payload_pwr","battery"],
+      ["telemetry","fc"],["telemetry","battery"],
+      ["groundstn","telemetry"],
+      ["mission","groundstn"],["mission","operator"],
+      ["pipeline","storage"],["pipeline","telemetry"],
+      ["operator","groundstn"],["operator","mission"]
+    ]
+  },
+
+  software: {
+    title: "Software Architecture (Web Service)",
+    subtitle: "A layered service-oriented architecture. Cell (i,j) filled means <strong>row i depends on column j</strong>. Drag labels to reorder; clustering should reveal clean layers plus cross-cutting concerns (auth, logging).",
+    components: [
+      { id: "browser",  label: "Browser Client",        zone: "Frontend" },
+      { id: "cdn",      label: "CDN",                   zone: "Frontend" },
+      { id: "frontend", label: "Frontend SPA",          zone: "Frontend" },
+      { id: "gateway",  label: "API Gateway",           zone: "API" },
+      { id: "lb",       label: "Load Balancer",         zone: "API" },
+      { id: "auth",     label: "Auth Service",          zone: "Service" },
+      { id: "user",     label: "User Service",          zone: "Service" },
+      { id: "payment",  label: "Payment Service",       zone: "Service" },
+      { id: "notify",   label: "Notification Service",  zone: "Service" },
+      { id: "search",   label: "Search Service",        zone: "Service" },
+      { id: "db_main",  label: "Primary Database",      zone: "Data" },
+      { id: "db_rep",   label: "Read Replica",          zone: "Data" },
+      { id: "cache",    label: "Redis Cache",           zone: "Data" },
+      { id: "queue",    label: "Message Queue",         zone: "Data" },
+      { id: "blob",     label: "Object Storage",        zone: "Data" },
+      { id: "logger",   label: "Logging Service",       zone: "CrossCut" },
+      { id: "monitor",  label: "Monitoring",            zone: "CrossCut" },
+      { id: "secrets",  label: "Secrets Manager",       zone: "CrossCut" }
+    ],
+    dependencies: [
+      ["browser","cdn"],["browser","frontend"],
+      ["frontend","gateway"],["frontend","cdn"],
+      ["gateway","lb"],["gateway","auth"],
+      ["lb","user"],["lb","payment"],["lb","notify"],["lb","search"],
+      ["user","db_main"],["user","cache"],["user","auth"],
+      ["payment","db_main"],["payment","queue"],["payment","auth"],
+      ["notify","queue"],["notify","auth"],
+      ["search","db_rep"],["search","cache"],
+      ["db_rep","db_main"],
+      ["auth","db_main"],["auth","cache"],["auth","secrets"],
+      ["logger","queue"],
+      ["monitor","logger"],
+      ["user","logger"],["payment","logger"],["notify","logger"],["search","logger"],["gateway","logger"],
+      ["user","monitor"],["payment","monitor"],["notify","monitor"],["search","monitor"],
+      ["payment","secrets"],["notify","secrets"],
+      ["payment","blob"],["user","blob"]
+    ]
+  }
+};
+
+// =====================================================================
+// STATE
+// =====================================================================
+let currentSystem = "rocket";
+let order = [];
+let clusters = [];
+let showBlocks = false;
+let cascadeSource = null;
+let cascadeSet = new Set();
+let selectedComponent = null;
+
+// =====================================================================
+// MATRIX BUILDING
+// =====================================================================
+function buildAdjacency(system) {
+  const n = system.components.length;
+  const idx = {};
+  system.components.forEach((c, i) => { idx[c.id] = i; });
+  const adj = Array.from({length: n}, () => new Array(n).fill(0));
+  system.dependencies.forEach(([from, to]) => {
+    if (idx[from] !== undefined && idx[to] !== undefined) adj[idx[from]][idx[to]] = 1;
+  });
+  return adj;
+}
+
+function ensureAdjacency(systemKey) {
+  const sys = SYSTEMS[systemKey];
+  if (!sys.adj) sys.adj = buildAdjacency(sys);
+  return sys.adj;
+}
+
+// =====================================================================
+// CASCADE
+// =====================================================================
+function computeCascade(sourceIdx) {
+  const adj = ensureAdjacency(currentSystem);
+  const n = adj.length;
+  const affected = new Set();
+  const queue = [sourceIdx];
+  while (queue.length > 0) {
+    const cur = queue.shift();
+    for (let i = 0; i < n; i++) {
+      if (i !== cur && adj[i][cur] === 1 && !affected.has(i)) {
+        affected.add(i);
+        queue.push(i);
+      }
+    }
+  }
+  return affected;
+}
+
+function largestCascadeSize() {
+  const adj = ensureAdjacency(currentSystem);
+  const n = adj.length;
+  let maxSize = 0;
+  for (let i = 0; i < n; i++) {
+    const c = computeCascade(i);
+    if (c.size > maxSize) maxSize = c.size;
+  }
+  return maxSize;
+}
+
+// =====================================================================
+// LOUVAIN
+// =====================================================================
+function symmetrize(adj) {
+  const n = adj.length;
+  const sym = Array.from({length: n}, () => new Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      if (i !== j && (adj[i][j] || adj[j][i])) sym[i][j] = 1;
+    }
+  }
+  return sym;
+}
+
+function modularity(adj, communities) {
+  const n = adj.length;
+  let m = 0;
+  const deg = new Array(n).fill(0);
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      if (adj[i][j]) { m += 1; deg[i] += 1; }
+    }
+  }
+  m = m / 2;
+  if (m === 0) return 0;
+  let Q = 0;
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      if (communities[i] === communities[j]) Q += (adj[i][j] - (deg[i] * deg[j]) / (2 * m));
+    }
+  }
+  return Q / (2 * m);
+}
+
+function louvain(adj) {
+  const n = adj.length;
+  let communities = [];
+  for (let i = 0; i < n; i++) communities.push(i);
+  let improved = true;
+  let iterations = 0;
+  const maxIter = 50;
+
+  while (improved && iterations < maxIter) {
+    improved = false;
+    iterations++;
+    for (let i = 0; i < n; i++) {
+      const origC = communities[i];
+      let bestC = origC;
+      let bestQ = modularity(adj, communities);
+      const tried = new Set([origC]);
+      for (let j = 0; j < n; j++) {
+        if (adj[i][j] && !tried.has(communities[j])) {
+          tried.add(communities[j]);
+          const newC = communities[j];
+          communities[i] = newC;
+          const q = modularity(adj, communities);
+          if (q > bestQ + 1e-9) { bestQ = q; bestC = newC; }
+          communities[i] = origC;
+        }
+      }
+      if (bestC !== origC) { communities[i] = bestC; improved = true; }
+    }
+  }
+  const remap = {};
+  let next = 0;
+  return communities.map(c => {
+    if (!(c in remap)) remap[c] = next++;
+    return remap[c];
+  });
+}
+
+function orderByCommunities(communities) {
+  const n = communities.length;
+  const indices = Array.from({length: n}, (_, i) => i);
+  indices.sort((a, b) => {
+    if (communities[a] !== communities[b]) return communities[a] - communities[b];
+    return a - b;
+  });
+  return indices;
+}
+
+// =====================================================================
+// METRICS
+// =====================================================================
+function computeMetrics() {
+  const adj = ensureAdjacency(currentSystem);
+  const n = adj.length;
+  let deps = 0;
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j < n; j++)
+      if (adj[i][j]) deps++;
+  const density = deps / (n * (n - 1));
+
+  let offBlock = 0;
+  if (clusters.length === n) {
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        if (adj[i][j] && clusters[i] !== clusters[j]) offBlock++;
+      }
+    }
+  } else {
+    offBlock = deps;
+  }
+  const numClusters = clusters.length === n ? new Set(clusters).size : 1;
+  const largestCascade = largestCascadeSize();
+  return { n, deps, density, offBlock, numClusters, largestCascade };
+}
+
+// =====================================================================
+// RENDERING
+// =====================================================================
+const SVG = document.getElementById("dsm-svg");
+
+function drawMatrix() {
+  const sys = SYSTEMS[currentSystem];
+  const adj = ensureAdjacency(currentSystem);
+  const n = adj.length;
+
+  const labelW = 160;
+  const labelH = 130;
+  const cellSize = Math.max(18, Math.min(28, Math.floor((760 - labelW) / n)));
+  const matrixSize = cellSize * n;
+  const totalW = labelW + matrixSize + 20;
+  const totalH = labelH + matrixSize + 20;
+
+  SVG.setAttribute("viewBox", `0 0 ${totalW} ${totalH}`);
+  SVG.innerHTML = "";
+
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      const i = order[r];
+      const j = order[c];
+      const x = labelW + c * cellSize;
+      const y = labelH + r * cellSize;
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", x);
+      rect.setAttribute("y", y);
+      rect.setAttribute("width", cellSize - 1);
+      rect.setAttribute("height", cellSize - 1);
+      rect.classList.add("dsm-cell");
+      if (i === j) {
+        rect.classList.add("dsm-cell-diagonal");
+      } else if (adj[i][j]) {
+        rect.classList.add("dsm-cell-filled");
+        if (cascadeSource !== null) {
+          if (i === cascadeSource && j === cascadeSource) {
+            // skip
+          } else if (cascadeSet.has(i) && j === cascadeSource) {
+            rect.classList.add("dsm-cell-cascade");
+          } else if (cascadeSet.has(i) && cascadeSet.has(j)) {
+            rect.classList.add("dsm-cell-cascade");
+          }
+        }
+      } else {
+        rect.classList.add("dsm-cell-empty");
+      }
+      rect.dataset.row = i;
+      rect.dataset.col = j;
+      rect.addEventListener("mouseenter", () => onCellHover(r, c, i, j));
+      rect.addEventListener("mouseleave", clearHover);
+      rect.addEventListener("click", () => selectComponent(j));
+      SVG.appendChild(rect);
+    }
+  }
+
+  if (cascadeSource !== null) {
+    const pos = order.indexOf(cascadeSource);
+    if (pos >= 0) {
+      const x = labelW + pos * cellSize;
+      const y = labelH + pos * cellSize;
+      const srcRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      srcRect.setAttribute("x", x);
+      srcRect.setAttribute("y", y);
+      srcRect.setAttribute("width", cellSize - 1);
+      srcRect.setAttribute("height", cellSize - 1);
+      srcRect.classList.add("dsm-cell-cascade-source");
+      SVG.appendChild(srcRect);
+    }
+  }
+
+  if (showBlocks && clusters.length === n) {
+    let start = 0;
+    while (start < n) {
+      let end = start;
+      while (end + 1 < n && clusters[order[end + 1]] === clusters[order[start]]) end++;
+      const x = labelW + start * cellSize;
+      const y = labelH + start * cellSize;
+      const w = (end - start + 1) * cellSize - 1;
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", x);
+      rect.setAttribute("y", y);
+      rect.setAttribute("width", w);
+      rect.setAttribute("height", w);
+      rect.classList.add("dsm-block-overlay");
+      SVG.appendChild(rect);
+      start = end + 1;
+    }
+  }
+
+  for (let c = 0; c < n; c++) {
+    const i = order[c];
+    const comp = sys.components[i];
+    const x = labelW + c * cellSize + cellSize / 2;
+    const y = labelH - 6;
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text.setAttribute("x", x);
+    text.setAttribute("y", y);
+    text.setAttribute("transform", `rotate(-55 ${x} ${y})`);
+    text.setAttribute("text-anchor", "start");
+    text.textContent = comp.label;
+    text.classList.add("dsm-col-label");
+    text.dataset.idx = i;
+    text.dataset.pos = c;
+    text.dataset.axis = "col";
+    if (cascadeSource === i) text.classList.add("source");
+    else if (cascadeSet.has(i)) text.classList.add("cascade");
+    attachDragHandler(text, c, "col");
+    text.addEventListener("click", () => {
+      if (!text.dataset.didDrag) selectComponent(i);
+      text.dataset.didDrag = "";
+    });
+    SVG.appendChild(text);
+  }
+
+  for (let r = 0; r < n; r++) {
+    const i = order[r];
+    const comp = sys.components[i];
+    const x = labelW - 8;
+    const y = labelH + r * cellSize + cellSize / 2 + 4;
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text.setAttribute("x", x);
+    text.setAttribute("y", y);
+    text.setAttribute("text-anchor", "end");
+    text.textContent = comp.label;
+    text.classList.add("dsm-row-label");
+    text.dataset.idx = i;
+    text.dataset.pos = r;
+    text.dataset.axis = "row";
+    if (cascadeSource === i) text.classList.add("source");
+    else if (cascadeSet.has(i)) text.classList.add("cascade");
+    attachDragHandler(text, r, "row");
+    text.addEventListener("click", () => {
+      if (!text.dataset.didDrag) selectComponent(i);
+      text.dataset.didDrag = "";
+    });
+    SVG.appendChild(text);
+  }
+}
+
+// =====================================================================
+// HOVER
+// =====================================================================
+function onCellHover(r, c, i, j) {
+  const sys = SYSTEMS[currentSystem];
+  const adj = ensureAdjacency(currentSystem);
+  const compI = sys.components[i];
+  const compJ = sys.components[j];
+  let msg = "";
+  if (i === j) msg = `${compI.label} (diagonal — self)`;
+  else if (adj[i][j]) msg = `${compI.label} depends on ${compJ.label}`;
+  else msg = `${compI.label} does NOT depend on ${compJ.label}`;
+  document.getElementById("status-msg").textContent = msg;
+}
+function clearHover() { document.getElementById("status-msg").textContent = ""; }
+
+// =====================================================================
+// DRAG-TO-PERMUTE
+// =====================================================================
+function attachDragHandler(textEl, startPos, axis) {
+  let isDragging = false;
+  let startY = 0, startX = 0;
+  let currentPos = startPos;
+
+  textEl.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    isDragging = true;
+    textEl.classList.add("dragging");
+    startY = e.clientY;
+    startX = e.clientX;
+    textEl.dataset.didDrag = "";
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    const dy = e.clientY - startY;
+    const dx = e.clientX - startX;
+    if (Math.abs(dy) > 6 || Math.abs(dx) > 6) textEl.dataset.didDrag = "1";
+
+    const svgRect = SVG.getBoundingClientRect();
+    const sys = SYSTEMS[currentSystem];
+    const n = sys.components.length;
+    const cellSize = (svgRect.height - 150) / n;
+    let newPos;
+    if (axis === "row") newPos = Math.round(startPos + dy / cellSize);
+    else newPos = Math.round(startPos + dx / cellSize);
+    newPos = Math.max(0, Math.min(n - 1, newPos));
+    if (newPos !== currentPos) {
+      const compIdx = parseInt(textEl.dataset.idx);
+      const oldIdx = order.indexOf(compIdx);
+      order.splice(oldIdx, 1);
+      order.splice(newPos, 0, compIdx);
+      currentPos = newPos;
+      drawMatrix();
+      updateMetricsUI();
+    }
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (isDragging) {
+      isDragging = false;
+      textEl.classList.remove("dragging");
+    }
+  });
+}
+
+// =====================================================================
+// SELECTION
+// =====================================================================
+function selectComponent(idx) {
+  selectedComponent = idx;
+  cascadeSource = idx;
+  cascadeSet = computeCascade(idx);
+  drawMatrix();
+  updateMetricsUI();
+  updateComponentInfo();
+}
+
+function clearCascade() {
+  cascadeSource = null;
+  cascadeSet = new Set();
+  selectedComponent = null;
+  drawMatrix();
+  updateMetricsUI();
+  updateComponentInfo();
+}
+
+function updateComponentInfo() {
+  const panel = document.getElementById("component-info");
+  if (selectedComponent === null) {
+    panel.innerHTML = `<div class="component-info-empty"><span>🎯</span>Click any row label, column label, or cell to inspect a component and trace its failure cascade.</div>`;
+    return;
+  }
+  const sys = SYSTEMS[currentSystem];
+  const comp = sys.components[selectedComponent];
+  const adj = ensureAdjacency(currentSystem);
+  const n = adj.length;
+
+  let outDeg = 0, inDeg = 0;
+  for (let j = 0; j < n; j++) {
+    if (adj[selectedComponent][j]) outDeg++;
+    if (adj[j][selectedComponent]) inDeg++;
+  }
+  const cascadeCount = cascadeSet.size;
+
+  panel.innerHTML = `
+    <div class="component-name">${comp.label}</div>
+    <div class="component-zone">${comp.zone}</div>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-box-label">Depends on</div>
+        <div class="stat-box-value">${outDeg}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Depended on by</div>
+        <div class="stat-box-value">${inDeg}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Cascade if it fails</div>
+        <div class="stat-box-value ${cascadeCount >= 8 ? 'danger' : ''}">${cascadeCount}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">% of system</div>
+        <div class="stat-box-value ${cascadeCount >= 8 ? 'danger' : ''}">${Math.round(100 * cascadeCount / (n - 1))}%</div>
+      </div>
+    </div>
+  `;
+}
+
+function updateMetricsUI() {
+  const m = computeMetrics();
+  document.getElementById("m-n").textContent = m.n;
+  document.getElementById("m-deps").textContent = m.deps;
+  document.getElementById("m-density").textContent = (m.density * 100).toFixed(1) + "%";
+  document.getElementById("m-clusters").textContent = m.numClusters === 1 && clusters.length === 0 ? "—" : m.numClusters;
+  const offBlockEl = document.getElementById("m-offblock");
+  offBlockEl.textContent = m.offBlock;
+  offBlockEl.className = "metric-value";
+  if (clusters.length > 0 && m.offBlock < m.deps * 0.4) offBlockEl.classList.add("changed");
+  else if (clusters.length > 0 && m.offBlock > m.deps * 0.6) offBlockEl.classList.add("warn");
+  document.getElementById("m-cascade").textContent = m.largestCascade;
+  document.getElementById("status-components").textContent = m.n;
+  document.getElementById("status-deps").textContent = m.deps;
+  document.getElementById("status-cascade").textContent = cascadeSet.size;
+}
+
+function switchSystem(key) {
+  currentSystem = key;
+  document.querySelectorAll(".system-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.system === key);
+  });
+  const sys = SYSTEMS[key];
+  document.getElementById("matrix-title").textContent = sys.title;
+  document.getElementById("matrix-subtitle").innerHTML = sys.subtitle;
+  resetOrder();
+  cascadeSource = null;
+  cascadeSet = new Set();
+  selectedComponent = null;
+  clusters = [];
+  showBlocks = false;
+  document.getElementById("blocks-btn").textContent = "Show Block Boundaries";
+  drawMatrix();
+  updateMetricsUI();
+  updateComponentInfo();
+}
+
+function resetOrder() {
+  const sys = SYSTEMS[currentSystem];
+  order = sys.components.map((_, i) => i);
+  drawMatrix();
+  updateMetricsUI();
+}
+
+function autoCluster() {
+  const adj = ensureAdjacency(currentSystem);
+  const sym = symmetrize(adj);
+  clusters = louvain(sym);
+  order = orderByCommunities(clusters);
+  showBlocks = true;
+  document.getElementById("blocks-btn").textContent = "Hide Block Boundaries";
+  drawMatrix();
+  updateMetricsUI();
+}
+
+function toggleBlocks() {
+  if (clusters.length === 0) { autoCluster(); return; }
+  showBlocks = !showBlocks;
+  document.getElementById("blocks-btn").textContent = showBlocks ? "Hide Block Boundaries" : "Show Block Boundaries";
+  drawMatrix();
+}
+
+// LEARNING CHECKS
+const CORRECT_ANSWERS = { 1: "C", 2: "C", 3: "C" };
+
+function selectOption(lc, opt, el) {
+  const optsContainer = document.getElementById(`lc${lc}-options`);
+  optsContainer.querySelectorAll(".lc-option").forEach(o => o.classList.remove("correct", "incorrect"));
+  if (opt === CORRECT_ANSWERS[lc]) el.classList.add("correct");
+  else el.classList.add("incorrect");
+}
+
+function toggleHint(lc) {
+  const hint = document.getElementById(`lc${lc}-hint`);
+  hint.style.display = hint.style.display === "block" ? "none" : "block";
+}
+
+function showAnswer(lc) {
+  const ans = document.getElementById(`lc${lc}-answer`);
+  ans.style.display = "block";
+  const optsContainer = document.getElementById(`lc${lc}-options`);
+  optsContainer.querySelectorAll(".lc-option").forEach((o, i) => {
+    const letter = ["A","B","C"][i];
+    if (letter === CORRECT_ANSWERS[lc]) o.classList.add("revealed-correct");
+  });
+}
+
+window.addEventListener("load", () => { switchSystem("rocket"); });
+window.addEventListener("resize", () => { drawMatrix(); });
+</script>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

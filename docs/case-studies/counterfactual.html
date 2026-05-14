@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Counterfactual Monte Carlo · Lakeside Bikeshare · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+.lab-hero { margin-bottom: 28px; }
+.lab-hero .course-number { margin-bottom: 10px; }
+.lab-hero h1 {
+  font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px);
+  line-height: 1.05; letter-spacing: 0.03em; color: var(--white); margin-bottom: 14px;
+}
+.lab-hero h1 em { color: var(--green-bright); font-style: normal; }
+.lab-hero p {
+  font-family: var(--font-body); font-size: 16px; font-weight: 300;
+  line-height: 1.55; color: var(--green-mint); max-width: 760px;
+  border-left: 3px solid var(--green-bright); padding-left: 18px;
+}
+
+.explainer { margin-bottom: 28px; }
+.explainer .card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 26px 30px;
+  backdrop-filter: blur(8px);
+}
+.explainer h2 {
+  font-family: var(--font-display); font-size: 26px;
+  color: var(--white); letter-spacing: 0.03em; margin-bottom: 10px;
+}
+.explainer h2 em { color: var(--green-bright); font-style: normal; }
+.explainer p {
+  font-family: var(--font-body); font-size: 14.5px;
+  color: var(--green-mint); line-height: 1.65; margin-bottom: 10px;
+}
+.explainer p strong { color: var(--white); }
+.explainer ol, .explainer ul {
+  margin: 8px 0 14px 22px;
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--green-mint); line-height: 1.7;
+}
+.sketchpad-inline {
+  background: rgba(251,191,36,0.06);
+  border: 1px solid rgba(251,191,36,0.3);
+  border-left: 3px solid var(--node-4);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin: 16px 0 4px;
+  font-family: var(--font-body); font-size: 13.5px;
+  color: var(--green-mint); line-height: 1.6;
+}
+.sketchpad-inline strong.label {
+  display: block; margin-bottom: 6px;
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--node-4);
+}
+
+.lab-layout {
+  display: grid; grid-template-columns: 1fr 360px; gap: 18px;
+  margin-bottom: 24px;
+}
+@media (max-width: 1000px) { .lab-layout { grid-template-columns: 1fr; } }
+
+.lab-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  backdrop-filter: blur(8px); margin-bottom: 14px;
+}
+.lab-card h3 {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 14px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border-soft);
+}
+
+#network-svg-wrap {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  margin-bottom: 14px; backdrop-filter: blur(8px);
+}
+#network-svg {
+  width: 100%; height: 480px; display: block;
+  background: rgba(5, 46, 22, 0.35);
+}
+.status-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 18px; flex-wrap: wrap; gap: 14px;
+  background: rgba(5,46,22,0.45); border-top: 1px solid var(--border-soft);
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--green-mint); letter-spacing: 0.04em;
+}
+.status-bar strong { color: var(--white); font-weight: 500; }
+.status-dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; margin-right: 5px; vertical-align: middle;
+  box-shadow: 0 0 6px currentColor;
+}
+.dot-active  { background: var(--green-bright); color: var(--green-bright); }
+.dot-treated { background: var(--node-4); color: var(--node-4); }
+.dot-removed { background: var(--node-7); color: var(--node-7); }
+
+.control-group { margin-bottom: 14px; }
+.control-group:last-child { margin-bottom: 0; }
+.control-label {
+  display: block; margin-bottom: 6px;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey);
+}
+select, input[type="range"] {
+  width: 100%;
+  background: rgba(5,46,22,0.5); color: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 8px 10px; font-family: var(--font-body); font-size: 13px;
+}
+select:focus { outline: none; border-color: var(--green-bright); }
+input[type="range"] {
+  padding: 0; height: 6px; appearance: none;
+  background: rgba(5,46,22,0.6);
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--green-bright); cursor: pointer;
+  border: 2px solid var(--black); box-shadow: 0 0 8px var(--green-bright);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--green-bright); cursor: pointer; border: 2px solid var(--black);
+}
+.slider-display {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 4px; font-family: var(--font-mono); font-size: 11px;
+  color: var(--grey);
+}
+.slider-display strong { color: var(--green-bright); font-size: 13px; }
+
+.btn {
+  display: inline-block; padding: 9px 14px;
+  background: rgba(5,46,22,0.5); color: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.btn:hover:not(:disabled) { border-color: var(--green-bright); color: var(--green-bright); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary {
+  width: 100%;
+  background: var(--green-bright); border-color: var(--green-bright); color: var(--black);
+}
+.btn-primary:hover:not(:disabled) { background: var(--green-mid); border-color: var(--green-mid); color: var(--black); }
+.btn-block { width: 100%; display: block; }
+.btn-neutral { background: transparent; color: var(--grey); }
+.btn-neutral:hover:not(:disabled) { color: var(--green-bright); border-color: var(--green-bright); }
+
+.metric-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 8px 0; border-bottom: 1px solid var(--border-soft); font-size: 13px;
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-label { color: var(--grey); }
+.metric-value {
+  font-family: var(--font-mono); font-weight: 500; color: var(--white);
+}
+.metric-value.highlight { color: var(--node-4); }
+
+.results-grid {
+  display: grid; grid-template-columns: 1fr 320px; gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 1000px) { .results-grid { grid-template-columns: 1fr; } }
+
+.histogram-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+  backdrop-filter: blur(8px);
+}
+.histogram-card h3 {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border-soft);
+}
+#histogram-svg { width: 100%; height: 320px; display: block; }
+
+.result-big {
+  font-family: var(--font-mono); font-size: 28px; font-weight: 500;
+  line-height: 1.1; margin-bottom: 4px;
+}
+.result-big.up      { color: var(--green-bright); }
+.result-big.down    { color: var(--node-7); }
+.result-big.neutral { color: var(--grey); }
+.result-sub {
+  font-family: var(--font-body); font-size: 12px; color: var(--grey);
+  line-height: 1.5;
+}
+
+.empty-state {
+  text-align: center; padding: 40px 20px;
+  font-family: var(--font-body); font-size: 13px; color: var(--grey);
+}
+.empty-state .big-icon { font-size: 32px; display: block; margin-bottom: 12px; }
+.empty-state strong { color: var(--green-bright); }
+
+.legend-row {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-body); font-size: 12.5px;
+  color: var(--green-mint); padding: 4px 0;
+}
+.legend-swatch {
+  width: 14px; height: 14px; border-radius: 3px; display: inline-block;
+  border: 1px solid var(--border-soft);
+}
+
+.progress-track {
+  width: 100%; height: 3px;
+  background: rgba(5,46,22,0.6); border-radius: 2px;
+  overflow: hidden; margin-top: 8px; display: none;
+}
+.progress-track.active { display: block; }
+.progress-fill {
+  height: 100%; background: var(--green-bright);
+  width: 0%; transition: width 0.1s linear;
+  box-shadow: 0 0 8px var(--green-bright);
+}
+
+.section-title {
+  font-family: var(--font-display); font-size: 28px;
+  color: var(--white); letter-spacing: 0.03em;
+  margin: 28px 0 16px;
+}
+
+/* Learning checks */
+.lc-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 26px;
+  margin-bottom: 14px; backdrop-filter: blur(8px);
+}
+.lc-header {
+  margin-bottom: 14px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.lc-number {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--green-bright);
+}
+.lc-question {
+  font-family: var(--font-display); font-size: 20px;
+  margin-top: 8px; line-height: 1.3; color: var(--white);
+  letter-spacing: 0.02em;
+}
+.lc-question em { color: var(--node-3); font-style: italic; }
+.lc-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.lc-option {
+  background: rgba(5,46,22,0.4); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  cursor: pointer; transition: all 0.15s;
+  font-family: var(--font-body); font-size: 13.5px;
+  color: var(--green-mint); line-height: 1.5;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.lc-option:hover { border-color: var(--green-bright); color: var(--white); }
+.lc-option .opt-letter {
+  font-family: var(--font-mono); font-weight: 700;
+  color: var(--green-bright); font-size: 11px;
+  padding-top: 1px; flex-shrink: 0;
+}
+.lc-option.correct          { border-color: var(--green-bright); background: rgba(57,255,20,0.1); color: var(--white); }
+.lc-option.incorrect        { border-color: var(--node-7); background: rgba(249,115,22,0.08); color: var(--white); }
+.lc-option.revealed-correct { border-color: var(--green-bright); background: rgba(57,255,20,0.1); color: var(--white); }
+.lc-actions { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.lc-feedback {
+  display: none; padding: 12px 14px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border-soft);
+  background: rgba(5,46,22,0.4);
+  font-family: var(--font-body); font-size: 13px; line-height: 1.6;
+  color: var(--green-mint); margin-top: 6px;
+}
+.lc-feedback.visible { display: block; }
+.feedback-hint { border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.05); }
+.feedback-hint strong { color: var(--node-4); }
+.feedback-answer { border-color: rgba(57,255,20,0.3); background: rgba(57,255,20,0.05); }
+.feedback-answer strong { color: var(--green-bright); }
+.feedback-answer em { color: var(--node-3); font-style: italic; }
+</style>
+</head>
+<body data-page="cases">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../readings.html"       data-page="readings">Readings</a>
+      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="../about.html"          data-page="about">About</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page-wide">
+
+  <section class="lab-hero">
+    <p class="course-number">SYSEN 5470 · Network Science · Interactive Lab · Skill: Predict</p>
+    <h1>Counterfactual <em>Monte Carlo</em> Simulator</h1>
+    <p>Lakeside is a fictional city of 15 bikeshare stations. Planners are debating a network change. Use Monte Carlo simulation to test whether one proposed intervention <em>significantly</em> improves the network — or just happens to look good on one noisy dataset.</p>
+  </section>
+
+  <div class="explainer">
+    <div class="card">
+      <h2>The problem an engineer is solving</h2>
+      <p>You are an analyst at the Lakeside Department of Transportation. The current bikeshare network has known weaknesses — some stations are barely connected, some corridors are overloaded. A planner proposes a change: add a station, build a connector, or boost capacity on a route.</p>
+      <p>Before millions of dollars are committed, the obvious question is: <strong>does this change actually help?</strong> And the harder follow-up: <strong>how confident are we?</strong></p>
+      <p>The ridership counts on each edge are <em>observed</em>, but they're noisy. A pair of stations that saw 47 trips last quarter might see 30 or 65 next quarter just from normal variation. A point estimate of network improvement could just be noise.</p>
+
+      <h2 style="margin-top: 24px;">The Monte Carlo logic</h2>
+      <p>The simulator below runs the following procedure:</p>
+      <ol>
+        <li>For each of N replicates, resample every edge weight from a Poisson distribution whose mean is the original observed weight.</li>
+        <li>On each replicate, compute the chosen metric — both for the <strong>baseline</strong> network and for the <strong>treated</strong> network (after applying the proposed change).</li>
+        <li>Stack all N baseline values into one distribution, and all N treated values into another.</li>
+        <li>Compute the mean and 95% confidence interval of the <em>difference</em> between treated and baseline.</li>
+        <li>Decide: does the confidence interval clearly exclude zero? If yes, the change has a statistically meaningful effect at this sample size.</li>
+      </ol>
+
+      <div class="sketchpad-inline">
+        <strong class="label">✏️ Sketchpad — before you click anything</strong>
+        Look at the Lakeside map below. By eye, predict which of the three proposed treatments will produce the largest improvement in average path length. Draw the treatment on paper, mark which nodes you think will benefit, and note your prediction. We will return to it.
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-layout">
+    <div>
+      <div id="network-svg-wrap">
+        <svg id="network-svg"></svg>
+        <div class="status-bar">
+          <span><span class="status-dot dot-active"></span> <strong id="station-count">15</strong> stations</span>
+          <span><span class="status-dot dot-treated"></span> Treatment: <strong id="treatment-label">none</strong></span>
+          <span id="zone-display">Zones: downtown · campus · waterfront</span>
+        </div>
+      </div>
+
+      <div class="lab-card">
+        <h3>Network Legend</h3>
+        <div class="legend-row"><span class="legend-swatch" style="background: var(--node-4);"></span> Hub stations (high traffic, high degree)</div>
+        <div class="legend-row"><span class="legend-swatch" style="background: var(--node-3);"></span> Bridge stations (sparse but structurally critical)</div>
+        <div class="legend-row"><span class="legend-swatch" style="background: var(--green-bright);"></span> Normal stations</div>
+        <div class="legend-row"><span class="legend-swatch" style="background: var(--node-7); opacity: 0.85;"></span> Proposed new station / edge (when treatment selected)</div>
+        <div class="legend-row" style="margin-top: 6px;">
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--grey);">Edge thickness = ridership (log scale of observed weight)</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="lab-card">
+        <h3>Simulation Controls</h3>
+
+        <div class="control-group">
+          <label class="control-label">Metric of interest</label>
+          <select id="metric-select">
+            <optgroup label="Network-wide">
+              <option value="apl">Avg path length (weighted)</option>
+              <option value="worst_apl">Worst-served node distance</option>
+              <option value="diameter">Network diameter</option>
+              <option value="edge_flow">Bottleneck flow (campus_n ↔ riverwalk)</option>
+            </optgroup>
+            <optgroup label="Hub: Market Square (downtown)">
+              <option value="apl_market_sq">Avg distance from Market Sq</option>
+              <option value="wdeg_market_sq">Weighted degree of Market Sq</option>
+            </optgroup>
+            <optgroup label="Hub: Campus North">
+              <option value="apl_campus_n">Avg distance from Campus N</option>
+              <option value="wdeg_campus_n">Weighted degree of Campus N</option>
+            </optgroup>
+            <optgroup label="Hub: Boardwalk (waterfront)">
+              <option value="apl_boardwalk">Avg distance from Boardwalk</option>
+              <option value="wdeg_boardwalk">Weighted degree of Boardwalk</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Proposed treatment</label>
+          <select id="treatment-select">
+            <option value="none">None — baseline only</option>
+            <option value="add_lakebridge">Add station: Lake Bridge (links waterfront ↔ campus)</option>
+            <option value="add_eastgap">Add station: East Gap (links downtown ↔ campus east)</option>
+            <option value="add_northpark">Add station: North Park (north of downtown)</option>
+            <option value="new_edge">Build connector: market_sq ↔ harbor_view</option>
+            <option value="boost_corridor">Boost capacity: campus_n ↔ riverwalk (3× weight)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Monte Carlo replicates (N)</label>
+          <input type="range" id="n-slider" min="50" max="2000" value="500" step="50">
+          <div class="slider-display">
+            <span>50</span><span><strong id="n-display">500</strong></span><span>2000</span>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <button class="btn btn-primary" id="run-btn" onclick="runSimulation()">Run Monte Carlo simulation</button>
+          <div class="progress-track" id="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <button class="btn btn-block btn-neutral" onclick="resetResults()">Clear results</button>
+        </div>
+      </div>
+
+      <div class="lab-card">
+        <h3>Observed Network (Point Estimate)</h3>
+        <div class="metric-row">
+          <span class="metric-label">Stations</span>
+          <span class="metric-value" id="obs-n">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Edges</span>
+          <span class="metric-value" id="obs-m">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Total observed trips</span>
+          <span class="metric-value" id="obs-trips">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label" id="obs-metric-label">Avg path length</span>
+          <span class="metric-value highlight" id="obs-metric">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-grid">
+    <div class="histogram-card">
+      <h3>Monte Carlo Distribution</h3>
+      <svg id="histogram-svg"></svg>
+      <div id="histogram-empty" class="empty-state">
+        <span class="big-icon">📊</span>
+        Configure a treatment and click <strong>Run Monte Carlo simulation</strong> to see the distribution.
+      </div>
+    </div>
+
+    <div>
+      <div class="lab-card">
+        <h3>Effect Size</h3>
+        <div class="result-big neutral" id="effect-size">—</div>
+        <div class="result-sub" id="effect-units">awaiting simulation</div>
+      </div>
+      <div class="lab-card">
+        <h3>95% Confidence Interval</h3>
+        <div class="result-big neutral" id="ci-display" style="font-size: 18px;">—</div>
+        <div class="result-sub" id="ci-interpretation">awaiting simulation</div>
+      </div>
+      <div class="lab-card">
+        <h3>Statistical Verdict</h3>
+        <div class="result-big neutral" id="verdict" style="font-size: 16px;">—</div>
+        <div class="result-sub" id="verdict-detail">awaiting simulation</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Learning Checks</h2>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 01</span>
+      <div class="lc-question">Run the baseline (treatment = none) with N = 500 and the metric "Avg path length (weighted)." Then change the metric to "Worst-served node distance" and run again. Why does the <em>spread</em> (width of the histogram) of the worst-served metric tend to be larger?</div>
+    </div>
+    <div class="lc-options" id="lc1-options">
+      <div class="lc-option" onclick="selectOption(1, 'A')"><span class="opt-letter">A</span><span>Because worst-served distance is computed on more edges, so any noise compounds more.</span></div>
+      <div class="lc-option" onclick="selectOption(1, 'B')"><span class="opt-letter">B</span><span>Because it depends on a single node's longest path — a metric driven by extremes is more sensitive to edge-weight noise than an average over all node pairs.</span></div>
+      <div class="lc-option" onclick="selectOption(1, 'C')"><span class="opt-letter">C</span><span>Because Poisson noise grows linearly with edge weight, so heavy edges dominate the worst-served metric.</span></div>
+    </div>
+    <div class="lc-actions">
+      <button class="btn btn-neutral" onclick="showHint(1)">💡 Hint</button>
+      <button class="btn btn-neutral" onclick="showAnswer(1)">🔓 Reveal answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc1-hint">
+      <strong>Hint:</strong> Think about how each metric is constructed. Average path length pools information across many pairs, so noise averages out. The worst-served metric reports a single value — the most extreme one. What happens to extremes when you add random noise to inputs?
+    </div>
+    <div class="lc-feedback feedback-answer" id="lc1-answer">
+      <strong>Correct: B.</strong> Averages are stable because random fluctuations cancel out across many pairs. Maximums (or near-maximums, like the worst-served station) are unstable because a single noisy edge can change which node is "worst." This is the same reason min/max values in any sample are more variable than the mean — and it has real engineering consequences: equity-focused metrics inherently demand more data to detect effects with confidence. <br><br>
+      <strong>Why not A:</strong> The worst-served metric uses the same edges as the average; the issue is the function applied to those edges, not the number of edges. <br>
+      <strong>Why not C:</strong> Poisson <em>variance</em> grows linearly with the mean (variance = mean), but <em>standard deviation</em> grows with the square root, so heavy edges are relatively more stable, not less.
+    </div>
+  </div>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 02</span>
+      <div class="lc-question">Set the metric to "Avg path length (weighted)" and compare two treatments by running them separately: "Add station: Lake Bridge" and "Add station: North Park." Which treatment is the better recommendation, and what's the most defensible reason?</div>
+    </div>
+    <div class="lc-options" id="lc2-options">
+      <div class="lc-option" onclick="selectOption(2, 'A')"><span class="opt-letter">A</span><span>North Park, because adding a station in a populated area is generally a good policy.</span></div>
+      <div class="lc-option" onclick="selectOption(2, 'B')"><span class="opt-letter">B</span><span>Lake Bridge, because the point-estimate effect size is larger.</span></div>
+      <div class="lc-option" onclick="selectOption(2, 'C')"><span class="opt-letter">C</span><span>Lake Bridge, because its 95% CI clearly excludes zero while North Park's CI does not — the effect is statistically distinguishable from a noisy null.</span></div>
+    </div>
+    <div class="lc-actions">
+      <button class="btn btn-neutral" onclick="showHint(2)">💡 Hint</button>
+      <button class="btn btn-neutral" onclick="showAnswer(2)">🔓 Reveal answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc2-hint">
+      <strong>Hint:</strong> Don't just compare the means — look at the confidence intervals. A larger mean improvement only matters if you can distinguish it from zero. Which treatment gives you a CI that clearly doesn't cross zero?
+    </div>
+    <div class="lc-feedback feedback-answer" id="lc2-answer">
+      <strong>Correct: C.</strong> Lake Bridge connects two zones (campus and waterfront) that were previously linked only through the downtown bottleneck — the structural improvement is large and consistent across the Monte Carlo samples. North Park sits adjacent to the already well-connected downtown core, so its additional edges shave little off the average path length, and the small improvement is within noise.<br><br>
+      <strong>Why not A:</strong> Policy intuition is fine for hypothesis generation, but it doesn't tell a planner whether the change is statistically defensible. That's the whole point of running the simulation.<br>
+      <strong>Why not B:</strong> Point estimates without uncertainty are misleading. A larger mean with a wide CI can be statistically indistinguishable from a smaller mean with a tight CI.
+    </div>
+  </div>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 03</span>
+      <div class="lc-question">Suppose you ran the same simulation at N = 50 instead of N = 500. The treatment effect looks "non-significant" at N = 50 but "significant" at N = 500. What is the right interpretation?</div>
+    </div>
+    <div class="lc-options" id="lc3-options">
+      <div class="lc-option" onclick="selectOption(3, 'A')"><span class="opt-letter">A</span><span>The treatment is more effective when applied to a larger sample of replicates.</span></div>
+      <div class="lc-option" onclick="selectOption(3, 'B')"><span class="opt-letter">B</span><span>The effect size doesn't change with N, but the precision of our estimate does — more replicates narrow the confidence interval, so a small real effect becomes detectable.</span></div>
+      <div class="lc-option" onclick="selectOption(3, 'C')"><span class="opt-letter">C</span><span>N = 50 is unreliable; the result at N = 500 is the truth.</span></div>
+    </div>
+    <div class="lc-actions">
+      <button class="btn btn-neutral" onclick="showHint(3)">💡 Hint</button>
+      <button class="btn btn-neutral" onclick="showAnswer(3)">🔓 Reveal answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc3-hint">
+      <strong>Hint:</strong> Try it. Run the same treatment at N = 50 a few times, then at N = 500 a few times. Does the <em>mean</em> change much, or just the width of the CI? What does that imply about what increasing N actually does?
+    </div>
+    <div class="lc-feedback feedback-answer" id="lc3-answer">
+      <strong>Correct: B.</strong> The true effect size of a treatment is a property of the network and the noise model — N doesn't change it. What N changes is your <em>estimate's precision</em>. At small N, sampling noise inflates the CI; at large N, the CI shrinks (proportional to 1/√N). A real, small effect can fail to be detected at low N simply because the CI is too wide. This is the engineering version of statistical power — it tells you how much simulation effort you need to detect effects of a given size.<br><br>
+      <strong>Why not A:</strong> The treatment isn't doing more work with more replicates — you're just looking at it through a sharper lens.<br>
+      <strong>Why not C:</strong> Neither N is "the truth." Both estimate the same underlying effect; N = 500 just estimates it with less uncertainty.
+    </div>
+  </div>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Routing &amp; Optimization · Counterfactual Monte Carlo Lab</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script>
+/* ============================================================
+   LAKESIDE BIKESHARE NETWORK — fictional toy dataset
+   ============================================================ */
+const rawNodes = [
+  { id: "market_sq",   label: "Market Square",   zone: "downtown",   x: 360, y: 250, type: "hub" },
+  { id: "central_stn", label: "Central Station", zone: "downtown",   x: 280, y: 230, type: "hub" },
+  { id: "city_hall",   label: "City Hall",       zone: "downtown",   x: 320, y: 180, type: "normal" },
+  { id: "midtown",     label: "Midtown",         zone: "downtown",   x: 420, y: 200, type: "normal" },
+  { id: "campus_w",    label: "Campus West",     zone: "campus",     x: 520, y: 140, type: "normal" },
+  { id: "campus_n",    label: "Campus North",    zone: "campus",     x: 580, y:  90, type: "hub" },
+  { id: "campus_e",    label: "Campus East",     zone: "campus",     x: 640, y: 150, type: "normal" },
+  { id: "riverwalk",   label: "Riverwalk",       zone: "campus",     x: 600, y: 230, type: "bridge" },
+  { id: "harbor_view", label: "Harbor View",     zone: "waterfront", x: 250, y: 380, type: "normal" },
+  { id: "pier_seven",  label: "Pier 7",          zone: "waterfront", x: 340, y: 410, type: "normal" },
+  { id: "boardwalk",   label: "Boardwalk",       zone: "waterfront", x: 420, y: 400, type: "hub" },
+  { id: "marina",      label: "Marina",          zone: "waterfront", x: 510, y: 380, type: "normal" },
+  { id: "westend",     label: "West End",        zone: "downtown",   x: 170, y: 280, type: "normal" },
+  { id: "north_hill",  label: "North Hill",      zone: "downtown",   x: 270, y: 110, type: "normal" },
+  { id: "east_meadow", label: "East Meadow",     zone: "campus",     x: 690, y: 280, type: "normal" },
+];
+
+const rawEdges = [
+  { source: "market_sq",   target: "central_stn", weight: 4200 },
+  { source: "market_sq",   target: "city_hall",   weight: 3100 },
+  { source: "market_sq",   target: "midtown",     weight: 2800 },
+  { source: "central_stn", target: "city_hall",   weight: 2600 },
+  { source: "central_stn", target: "westend",     weight: 1400 },
+  { source: "city_hall",   target: "north_hill",  weight:  900 },
+  { source: "midtown",     target: "market_sq",   weight: 1800 },
+  { source: "midtown",     target: "campus_w",    weight: 1100 },
+  { source: "campus_w",    target: "campus_n",    weight: 2400 },
+  { source: "campus_n",    target: "campus_e",    weight: 2900 },
+  { source: "campus_e",    target: "east_meadow", weight:  850 },
+  { source: "campus_n",    target: "riverwalk",   weight: 1700 },
+  { source: "riverwalk",   target: "marina",      weight: 1200 },
+  { source: "riverwalk",   target: "boardwalk",   weight: 1500 },
+  { source: "harbor_view", target: "pier_seven",  weight: 2200 },
+  { source: "pier_seven",  target: "boardwalk",   weight: 3300 },
+  { source: "boardwalk",   target: "marina",      weight: 2700 },
+  { source: "harbor_view", target: "central_stn", weight: 1300 },
+  { source: "boardwalk",   target: "market_sq",   weight: 1800 },
+];
+
+const treatments = {
+  none: { label: "None", apply: (nodes, edges) => ({ nodes: [...nodes], edges: [...edges], newNodes: [], newEdges: [] }) },
+
+  add_lakebridge: {
+    label: "Lake Bridge",
+    apply: (nodes, edges) => {
+      const newNode = { id: "lake_bridge", label: "Lake Bridge", zone: "new", x: 520, y: 300, type: "normal", isNew: true };
+      const newEdges = [
+        { source: "lake_bridge", target: "riverwalk",  weight: 1800, isNew: true },
+        { source: "lake_bridge", target: "marina",     weight: 1500, isNew: true },
+        { source: "lake_bridge", target: "boardwalk",  weight: 1400, isNew: true },
+        { source: "lake_bridge", target: "midtown",    weight: 1200, isNew: true },
+      ];
+      return { nodes: [...nodes, newNode], edges: [...edges, ...newEdges], newNodes: [newNode], newEdges };
+    }
+  },
+
+  add_eastgap: {
+    label: "East Gap",
+    apply: (nodes, edges) => {
+      const newNode = { id: "east_gap", label: "East Gap", zone: "new", x: 580, y: 280, type: "normal", isNew: true };
+      const newEdges = [
+        { source: "east_gap", target: "riverwalk",   weight: 1000, isNew: true },
+        { source: "east_gap", target: "east_meadow", weight:  800, isNew: true },
+        { source: "east_gap", target: "campus_e",    weight: 1100, isNew: true },
+      ];
+      return { nodes: [...nodes, newNode], edges: [...edges, ...newEdges], newNodes: [newNode], newEdges };
+    }
+  },
+
+  add_northpark: {
+    label: "North Park",
+    apply: (nodes, edges) => {
+      const newNode = { id: "north_park", label: "North Park", zone: "new", x: 230, y: 140, type: "normal", isNew: true };
+      const newEdges = [
+        { source: "north_park", target: "north_hill",  weight: 600, isNew: true },
+        { source: "north_park", target: "central_stn", weight: 900, isNew: true },
+        { source: "north_park", target: "city_hall",   weight: 750, isNew: true },
+      ];
+      return { nodes: [...nodes, newNode], edges: [...edges, ...newEdges], newNodes: [newNode], newEdges };
+    }
+  },
+
+  new_edge: {
+    label: "Market↔Harbor connector",
+    apply: (nodes, edges) => {
+      const newEdges = [{ source: "market_sq", target: "harbor_view", weight: 2000, isNew: true }];
+      return { nodes: [...nodes], edges: [...edges, ...newEdges], newNodes: [], newEdges };
+    }
+  },
+
+  boost_corridor: {
+    label: "Campus↔Riverwalk 3×",
+    apply: (nodes, edges) => {
+      const newEdges = edges.map(e => {
+        if ((e.source === "campus_n" && e.target === "riverwalk") ||
+            (e.source === "riverwalk" && e.target === "campus_n")) {
+          return { ...e, weight: e.weight * 3, isBoosted: true };
+        }
+        return e;
+      });
+      const boostedEdge = newEdges.find(e => e.isBoosted);
+      return { nodes: [...nodes], edges: newEdges, newNodes: [], newEdges: boostedEdge ? [boostedEdge] : [] };
+    }
+  },
+};
+
+const metrics = {
+  apl:            { label: "Avg path length (weighted)",               units: "weighted hops",              goodDirection: "down" },
+  worst_apl:      { label: "Worst-served node distance",                units: "weighted hops",              goodDirection: "down" },
+  diameter:       { label: "Network diameter",                          units: "weighted hops",              goodDirection: "down" },
+  edge_flow:      { label: "Bottleneck flow (campus_n↔riverwalk)",      units: "ridership-weighted paths",   goodDirection: "down" },
+  apl_market_sq:  { label: "Avg distance from Market Sq",               units: "weighted hops",              goodDirection: "down" },
+  wdeg_market_sq: { label: "Weighted degree of Market Sq",              units: "incident ridership",         goodDirection: "up"   },
+  apl_campus_n:   { label: "Avg distance from Campus N",                units: "weighted hops",              goodDirection: "down" },
+  wdeg_campus_n:  { label: "Weighted degree of Campus N",               units: "incident ridership",         goodDirection: "up"   },
+  apl_boardwalk:  { label: "Avg distance from Boardwalk",               units: "weighted hops",              goodDirection: "down" },
+  wdeg_boardwalk: { label: "Weighted degree of Boardwalk",              units: "incident ridership",         goodDirection: "up"   },
+};
+
+/* ============================================================
+   ANALYTICS ENGINE
+   ============================================================ */
+function buildWeightedAdjacency(nodes, edges) {
+  const adj = {};
+  nodes.forEach(n => { adj[n.id] = []; });
+  edges.forEach(e => {
+    const cost = 1000 / Math.max(e.weight, 1);
+    if (adj[e.source] && adj[e.target]) {
+      adj[e.source].push({ to: e.target, cost });
+      adj[e.target].push({ to: e.source, cost });
+    }
+  });
+  return adj;
+}
+
+function dijkstra(start, adj) {
+  const dist = {};
+  Object.keys(adj).forEach(id => { dist[id] = Infinity; });
+  dist[start] = 0;
+  const queue = [{ id: start, d: 0 }];
+  const visited = new Set();
+  while (queue.length > 0) {
+    queue.sort((a, b) => a.d - b.d);
+    const { id, d } = queue.shift();
+    if (visited.has(id)) continue;
+    visited.add(id);
+    for (const { to, cost } of adj[id]) {
+      const newDist = d + cost;
+      if (newDist < dist[to]) {
+        dist[to] = newDist;
+        queue.push({ id: to, d: newDist });
+      }
+    }
+  }
+  return dist;
+}
+
+function computeAllPairs(nodes, adj) {
+  const ids = nodes.map(n => n.id);
+  const allDists = {};
+  ids.forEach(id => { allDists[id] = dijkstra(id, adj); });
+
+  let sum = 0, count = 0, max = 0;
+  ids.forEach(i => {
+    ids.forEach(j => {
+      if (i !== j) {
+        const d = allDists[i][j];
+        if (isFinite(d)) {
+          sum += d; count++; if (d > max) max = d;
+        }
+      }
+    });
+  });
+  const apl = count > 0 ? sum / count : Infinity;
+  const diameter = max;
+
+  let worstApl = 0;
+  ids.forEach(id => {
+    let nodeSum = 0, nodeCount = 0;
+    ids.forEach(j => {
+      if (id !== j && isFinite(allDists[id][j])) {
+        nodeSum += allDists[id][j]; nodeCount++;
+      }
+    });
+    const nodeApl = nodeCount > 0 ? nodeSum / nodeCount : Infinity;
+    if (nodeApl > worstApl) worstApl = nodeApl;
+  });
+  return { allDists, apl, diameter, worstApl };
+}
+
+function computeEdgeFlow(nodes, edges, adj, edgeA, edgeB) {
+  const ids = nodes.map(n => n.id);
+  let totalFlow = 0;
+  ids.forEach(start => {
+    const dist = {}; const prev = {};
+    ids.forEach(id => { dist[id] = Infinity; prev[id] = null; });
+    dist[start] = 0;
+    const queue = [{ id: start, d: 0 }];
+    const visited = new Set();
+    while (queue.length > 0) {
+      queue.sort((a, b) => a.d - b.d);
+      const { id, d } = queue.shift();
+      if (visited.has(id)) continue;
+      visited.add(id);
+      for (const { to, cost } of adj[id]) {
+        const newDist = d + cost;
+        if (newDist < dist[to]) {
+          dist[to] = newDist; prev[to] = id; queue.push({ id: to, d: newDist });
+        }
+      }
+    }
+    ids.forEach(end => {
+      if (end === start || !isFinite(dist[end])) return;
+      let cur = end, pathLen = 0, usesTarget = false;
+      while (prev[cur] !== null) {
+        pathLen++;
+        const u = prev[cur], v = cur;
+        if ((u === edgeA && v === edgeB) || (u === edgeB && v === edgeA)) usesTarget = true;
+        cur = u;
+      }
+      if (usesTarget) totalFlow += pathLen;
+    });
+  });
+  return totalFlow;
+}
+
+function computeNodeAvgDist(nodes, adj, nodeId) {
+  const dists = dijkstra(nodeId, adj);
+  let sum = 0, count = 0;
+  Object.entries(dists).forEach(([id, d]) => {
+    if (id !== nodeId && isFinite(d)) { sum += d; count++; }
+  });
+  return count > 0 ? sum / count : Infinity;
+}
+
+function computeWeightedDegree(edges, nodeId) {
+  return edges.reduce((s, e) => (e.source === nodeId || e.target === nodeId) ? s + e.weight : s, 0);
+}
+
+function computeMetric(nodes, edges, metricKey) {
+  const adj = buildWeightedAdjacency(nodes, edges);
+  if (metricKey === "edge_flow") return computeEdgeFlow(nodes, edges, adj, "campus_n", "riverwalk");
+  if (metricKey === "apl" || metricKey === "worst_apl" || metricKey === "diameter") {
+    const s = computeAllPairs(nodes, adj);
+    if (metricKey === "apl") return s.apl;
+    if (metricKey === "worst_apl") return s.worstApl;
+    if (metricKey === "diameter") return s.diameter;
+  }
+  if (metricKey === "apl_market_sq") return computeNodeAvgDist(nodes, adj, "market_sq");
+  if (metricKey === "apl_campus_n")  return computeNodeAvgDist(nodes, adj, "campus_n");
+  if (metricKey === "apl_boardwalk") return computeNodeAvgDist(nodes, adj, "boardwalk");
+  if (metricKey === "wdeg_market_sq") return computeWeightedDegree(edges, "market_sq");
+  if (metricKey === "wdeg_campus_n")  return computeWeightedDegree(edges, "campus_n");
+  if (metricKey === "wdeg_boardwalk") return computeWeightedDegree(edges, "boardwalk");
+  return 0;
+}
+
+/* ============================================================
+   MONTE CARLO ENGINE
+   ============================================================ */
+function poissonSample(lambda) {
+  if (lambda < 30) {
+    const L = Math.exp(-lambda);
+    let k = 0, p = 1;
+    do { k++; p *= Math.random(); } while (p > L);
+    return k - 1;
+  } else {
+    let u1, u2;
+    do { u1 = Math.random(); } while (u1 === 0);
+    u2 = Math.random();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * z));
+  }
+}
+
+function resampleEdges(edges) {
+  return edges.map(e => ({ ...e, weight: Math.max(1, poissonSample(e.weight)) }));
+}
+
+/* ============================================================
+   STATE + RENDERING
+   ============================================================ */
+let currentTreatment = "none";
+let currentMetric = "apl";
+let lastResults = null;
+
+const svgEl = document.getElementById("network-svg");
+const histEl = document.getElementById("histogram-svg");
+
+function scaleX(x) { return (x / 750) * svgEl.clientWidth; }
+function scaleY(y) { return (y / 500) * svgEl.clientHeight; }
+
+function drawNetwork() {
+  const svg = d3.select("#network-svg");
+  svg.selectAll("*").remove();
+
+  const tree = treatments[currentTreatment].apply(rawNodes, rawEdges);
+  const nodes = tree.nodes;
+  const edges = tree.edges;
+
+  const deg = {};
+  nodes.forEach(n => deg[n.id] = 0);
+  edges.forEach(e => { deg[e.source] = (deg[e.source]||0) + 1; deg[e.target] = (deg[e.target]||0) + 1; });
+  const maxDeg = Math.max(...Object.values(deg));
+
+  edges.forEach(e => {
+    const src = nodes.find(n => n.id === e.source);
+    const tgt = nodes.find(n => n.id === e.target);
+    if (!src || !tgt) return;
+    const isNew = e.isNew, isBoosted = e.isBoosted;
+    const stroke = isNew ? "#f97316" : (isBoosted ? "#fbbf24" : "#1f3d28");
+    const opacity = isNew ? 0.9 : (isBoosted ? 0.9 : 0.65);
+    const width = Math.max(1.2, Math.log(e.weight / 200) * 1.4);
+    svg.append("line")
+      .attr("x1", scaleX(src.x)).attr("y1", scaleY(src.y))
+      .attr("x2", scaleX(tgt.x)).attr("y2", scaleY(tgt.y))
+      .attr("stroke", stroke).attr("stroke-width", width)
+      .attr("stroke-opacity", opacity)
+      .attr("stroke-dasharray", isNew ? "5,3" : null);
+  });
+
+  nodes.forEach(n => {
+    const r = 7 + (deg[n.id] / Math.max(maxDeg, 1)) * 12;
+    const colorMap = { hub: "#fbbf24", bridge: "#5eead4", normal: "#39FF14" };
+    const fill = n.isNew ? "#f97316" : colorMap[n.type];
+
+    const g = svg.append("g").attr("transform", `translate(${scaleX(n.x)}, ${scaleY(n.y)})`);
+    if (n.type === "hub" || n.type === "bridge" || n.isNew) {
+      g.append("circle").attr("r", r + 8).attr("fill", fill).attr("opacity", 0.2);
+    }
+    g.append("circle")
+      .attr("r", r).attr("fill", fill)
+      .attr("stroke", "#050a05").attr("stroke-width", 2);
+    g.append("text")
+      .attr("y", r + 14).attr("text-anchor", "middle")
+      .attr("font-family", "DM Sans, sans-serif")
+      .attr("font-size", "11px")
+      .attr("font-weight", n.isNew ? "500" : "400")
+      .attr("fill", n.isNew ? "#f97316" : "#f0fdf4")
+      .text(n.label);
+  });
+}
+
+function updateObservedMetrics() {
+  const tree = treatments[currentTreatment].apply(rawNodes, rawEdges);
+  const val = computeMetric(tree.nodes, tree.edges, currentMetric);
+  document.getElementById("obs-n").textContent = tree.nodes.length;
+  document.getElementById("obs-m").textContent = tree.edges.length;
+  const totalTrips = tree.edges.reduce((s, e) => s + e.weight, 0);
+  document.getElementById("obs-trips").textContent = totalTrips.toLocaleString();
+  document.getElementById("obs-metric-label").textContent = metrics[currentMetric].label;
+  document.getElementById("obs-metric").textContent = formatMetric(val, currentMetric);
+  document.getElementById("treatment-label").textContent = treatments[currentTreatment].label;
+}
+
+function formatMetric(val, key) {
+  if (!isFinite(val)) return "∞";
+  if (key === "edge_flow") return val.toFixed(1);
+  if (key.startsWith("wdeg_")) return Math.round(val).toLocaleString();
+  return val.toFixed(2);
+}
+
+/* ============================================================
+   SIMULATION RUNNER
+   ============================================================ */
+function runSimulation() {
+  const N = parseInt(document.getElementById("n-slider").value);
+  const runBtn = document.getElementById("run-btn");
+  const progressTrack = document.getElementById("progress-track");
+  const progressFill = document.getElementById("progress-fill");
+
+  runBtn.disabled = true;
+  runBtn.textContent = "Running...";
+  progressTrack.classList.add("active");
+
+  const baselineSamples = [];
+  const treatedSamples = [];
+  const treatmentFn = treatments[currentTreatment];
+
+  let i = 0;
+  const batchSize = 25;
+
+  function runBatch() {
+    const end = Math.min(i + batchSize, N);
+    for (; i < end; i++) {
+      const sampledEdges = resampleEdges(rawEdges);
+      const baseVal = computeMetric(rawNodes, sampledEdges, currentMetric);
+      baselineSamples.push(baseVal);
+
+      const treated = treatmentFn.apply(rawNodes, sampledEdges);
+      const treatedEdges = treated.edges.map(e => {
+        if (e.isNew || e.isBoosted) return { ...e, weight: Math.max(1, poissonSample(e.weight)) };
+        return e;
+      });
+      const treatedVal = computeMetric(treated.nodes, treatedEdges, currentMetric);
+      treatedSamples.push(treatedVal);
+    }
+
+    progressFill.style.width = `${(i / N) * 100}%`;
+    if (i < N) setTimeout(runBatch, 0);
+    else {
+      lastResults = analyzeResults(baselineSamples, treatedSamples);
+      renderHistogram(baselineSamples, treatedSamples, lastResults);
+      renderSummary(lastResults);
+      runBtn.disabled = false;
+      runBtn.textContent = "Run Monte Carlo simulation";
+      setTimeout(() => progressTrack.classList.remove("active"), 600);
+    }
+  }
+  runBatch();
+}
+
+function analyzeResults(baseline, treated) {
+  const baseMean = mean(baseline);
+  const treatedMean = mean(treated);
+  const baseSd = sd(baseline);
+  const treatedSd = sd(treated);
+  const N = baseline.length;
+  const baseSE = baseSd / Math.sqrt(N);
+  const treatedSE = treatedSd / Math.sqrt(N);
+  const diffMean = treatedMean - baseMean;
+  const seDiff = Math.sqrt(baseSE * baseSE + treatedSE * treatedSE);
+  const ci95Low = diffMean - 1.96 * seDiff;
+  const ci95High = diffMean + 1.96 * seDiff;
+  const diffs = baseline.map((b, i) => treated[i] - b);
+  const significant = (ci95Low > 0) || (ci95High < 0);
+  const goodDir = metrics[currentMetric].goodDirection;
+  const improved = goodDir === "down" ? diffMean < 0 : diffMean > 0;
+
+  return {
+    baseline, treated, diffs,
+    baseMean, treatedMean, baseSd, treatedSd, baseSE, treatedSE,
+    diffMean, seDiff, ci95Low, ci95High,
+    significant, improved, metric: currentMetric, treatment: currentTreatment, N
+  };
+}
+
+function mean(arr) { return arr.reduce((a,b) => a+b, 0) / arr.length; }
+function sd(arr) {
+  const m = mean(arr);
+  const v = arr.reduce((s,x) => s + (x-m)*(x-m), 0) / (arr.length - 1);
+  return Math.sqrt(v);
+}
+
+/* ============================================================
+   HISTOGRAM RENDERING
+   ============================================================ */
+function renderHistogram(baseline, treated, results) {
+  document.getElementById("histogram-empty").style.display = "none";
+  histEl.style.display = "block";
+
+  const svg = d3.select("#histogram-svg");
+  svg.selectAll("*").remove();
+
+  const W = histEl.clientWidth;
+  const H = histEl.clientHeight;
+  const margin = { top: 24, right: 20, bottom: 40, left: 50 };
+  const innerW = W - margin.left - margin.right;
+  const innerH = H - margin.top - margin.bottom;
+
+  const all = baseline.concat(treated);
+  const xMin = d3.min(all), xMax = d3.max(all);
+  const padding = (xMax - xMin) * 0.05;
+
+  const x = d3.scaleLinear().domain([xMin - padding, xMax + padding]).range([0, innerW]);
+
+  const nBins = 24;
+  const binGen = d3.bin().domain(x.domain()).thresholds(nBins);
+  const baseBins = binGen(baseline);
+  const treatedBins = binGen(treated);
+
+  const maxFreq = Math.max(
+    d3.max(baseBins, b => b.length),
+    treatments[currentTreatment].label === "None" ? 0 : d3.max(treatedBins, b => b.length)
+  );
+
+  const y = d3.scaleLinear().domain([0, maxFreq]).range([innerH, 0]);
+  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+  g.selectAll(".bar-base")
+    .data(baseBins).join("rect")
+    .attr("x", d => x(d.x0) + 1)
+    .attr("y", d => y(d.length))
+    .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 2))
+    .attr("height", d => innerH - y(d.length))
+    .attr("fill", "#39FF14").attr("opacity", 0.55);
+
+  if (currentTreatment !== "none") {
+    g.selectAll(".bar-treated")
+      .data(treatedBins).join("rect")
+      .attr("x", d => x(d.x0) + 1)
+      .attr("y", d => y(d.length))
+      .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 2))
+      .attr("height", d => innerH - y(d.length))
+      .attr("fill", "#fbbf24").attr("opacity", 0.55);
+  }
+
+  const baseCI = 1.96 * results.baseSE;
+  g.append("rect")
+    .attr("x", x(results.baseMean - baseCI)).attr("y", 0)
+    .attr("width", Math.max(0, x(results.baseMean + baseCI) - x(results.baseMean - baseCI)))
+    .attr("height", innerH).attr("fill", "#39FF14").attr("opacity", 0.12);
+  g.append("line")
+    .attr("x1", x(results.baseMean)).attr("x2", x(results.baseMean))
+    .attr("y1", 0).attr("y2", innerH)
+    .attr("stroke", "#39FF14").attr("stroke-width", 2).attr("stroke-dasharray", "4,3");
+
+  if (currentTreatment !== "none") {
+    const treatedCI = 1.96 * results.treatedSE;
+    g.append("rect")
+      .attr("x", x(results.treatedMean - treatedCI)).attr("y", 0)
+      .attr("width", Math.max(0, x(results.treatedMean + treatedCI) - x(results.treatedMean - treatedCI)))
+      .attr("height", innerH).attr("fill", "#fbbf24").attr("opacity", 0.12);
+    g.append("line")
+      .attr("x1", x(results.treatedMean)).attr("x2", x(results.treatedMean))
+      .attr("y1", 0).attr("y2", innerH)
+      .attr("stroke", "#fbbf24").attr("stroke-width", 2).attr("stroke-dasharray", "4,3");
+  }
+
+  g.append("g")
+    .attr("transform", `translate(0, ${innerH})`)
+    .call(d3.axisBottom(x).ticks(6).tickFormat(d => {
+      if (currentMetric === "edge_flow") return d.toFixed(0);
+      if (currentMetric.startsWith("wdeg_")) return d3.format(",.0f")(d);
+      return d.toFixed(2);
+    }))
+    .selectAll("text")
+    .attr("fill", "#a3b8a3")
+    .attr("font-family", "Space Mono, monospace")
+    .attr("font-size", "10px");
+  g.selectAll(".domain, .tick line").attr("stroke", "rgba(57,255,20,0.25)");
+
+  g.append("g")
+    .call(d3.axisLeft(y).ticks(5))
+    .selectAll("text")
+    .attr("fill", "#a3b8a3")
+    .attr("font-family", "Space Mono, monospace")
+    .attr("font-size", "10px");
+  g.selectAll(".domain, .tick line").attr("stroke", "rgba(57,255,20,0.25)");
+
+  g.append("text")
+    .attr("x", innerW / 2).attr("y", innerH + 32)
+    .attr("text-anchor", "middle")
+    .attr("fill", "#a3b8a3").attr("font-family", "Space Mono, monospace")
+    .attr("font-size", "10px").attr("letter-spacing", "0.1em")
+    .text(metrics[currentMetric].label.toUpperCase());
+
+  g.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -innerH / 2).attr("y", -36)
+    .attr("text-anchor", "middle")
+    .attr("fill", "#a3b8a3").attr("font-family", "Space Mono, monospace")
+    .attr("font-size", "10px").attr("letter-spacing", "0.1em")
+    .text("FREQUENCY");
+
+  const legend = svg.append("g").attr("transform", `translate(${margin.left + 8}, ${margin.top - 8})`);
+  legend.append("rect").attr("width", 12).attr("height", 12).attr("fill", "#39FF14").attr("opacity", 0.55);
+  legend.append("text").attr("x", 18).attr("y", 10).attr("fill", "#f0fdf4")
+    .attr("font-family", "DM Sans, sans-serif").attr("font-size", "11px")
+    .text(`Baseline (n=${results.N})`);
+
+  if (currentTreatment !== "none") {
+    legend.append("rect").attr("x", 140).attr("width", 12).attr("height", 12).attr("fill", "#fbbf24").attr("opacity", 0.55);
+    legend.append("text").attr("x", 158).attr("y", 10).attr("fill", "#f0fdf4")
+      .attr("font-family", "DM Sans, sans-serif").attr("font-size", "11px")
+      .text(`Treated (${treatments[currentTreatment].label})`);
+  }
+}
+
+function renderSummary(r) {
+  const effectEl = document.getElementById("effect-size");
+  const effectUnits = document.getElementById("effect-units");
+  const ciEl = document.getElementById("ci-display");
+  const ciInterp = document.getElementById("ci-interpretation");
+  const verdictEl = document.getElementById("verdict");
+  const verdictDetail = document.getElementById("verdict-detail");
+
+  if (currentTreatment === "none") {
+    effectEl.textContent = formatMetric(r.baseMean, currentMetric);
+    effectEl.className = "result-big neutral";
+    effectUnits.textContent = `Baseline mean (${metrics[currentMetric].units})`;
+    const ciB = 1.96 * r.baseSE;
+    ciEl.textContent = `[${formatMetric(r.baseMean - ciB, currentMetric)}, ${formatMetric(r.baseMean + ciB, currentMetric)}]`;
+    ciEl.className = "result-big neutral";
+    ciEl.style.fontSize = "18px";
+    ciInterp.textContent = `95% CI on the baseline mean (SD = ${r.baseSd.toFixed(3)}, SE = ${r.baseSE.toFixed(4)}, N = ${r.N})`;
+    verdictEl.textContent = "—";
+    verdictEl.className = "result-big neutral";
+    verdictEl.style.fontSize = "16px";
+    verdictDetail.textContent = "Select a treatment to test an intervention";
+    return;
+  }
+
+  const diff = r.diffMean;
+  const arrow = diff < 0 ? "↓" : "↑";
+  effectEl.textContent = `${arrow} ${Math.abs(diff).toFixed(3)}`;
+  effectEl.className = "result-big " + (r.improved ? "up" : "down");
+  effectUnits.textContent = `Mean change vs. baseline (${metrics[currentMetric].units})`;
+
+  ciEl.textContent = `[${r.ci95Low.toFixed(3)}, ${r.ci95High.toFixed(3)}]`;
+  ciEl.className = "result-big " + (r.significant ? (r.improved ? "up" : "down") : "neutral");
+  ciEl.style.fontSize = "18px";
+  ciInterp.textContent = r.significant
+    ? "Excludes zero → treatment effect is statistically distinguishable from noise"
+    : "Includes zero → cannot rule out that effect is noise alone";
+
+  if (r.significant && r.improved) {
+    verdictEl.textContent = "Improvement detected";
+    verdictEl.className = "result-big up";
+  } else if (r.significant && !r.improved) {
+    verdictEl.textContent = "Significant degradation";
+    verdictEl.className = "result-big down";
+  } else {
+    verdictEl.textContent = "Inconclusive";
+    verdictEl.className = "result-big neutral";
+  }
+  verdictEl.style.fontSize = "16px";
+  verdictDetail.textContent = `Based on N = ${r.N} Monte Carlo replicates. Try increasing N to tighten the CI.`;
+}
+
+function resetResults() {
+  lastResults = null;
+  d3.select("#histogram-svg").selectAll("*").remove();
+  document.getElementById("histogram-empty").style.display = "block";
+  document.getElementById("effect-size").textContent = "—";
+  document.getElementById("effect-size").className = "result-big neutral";
+  document.getElementById("effect-units").textContent = "awaiting simulation";
+  document.getElementById("ci-display").textContent = "—";
+  document.getElementById("ci-display").className = "result-big neutral";
+  document.getElementById("ci-display").style.fontSize = "18px";
+  document.getElementById("ci-interpretation").textContent = "awaiting simulation";
+  document.getElementById("verdict").textContent = "—";
+  document.getElementById("verdict").className = "result-big neutral";
+  document.getElementById("verdict").style.fontSize = "16px";
+  document.getElementById("verdict-detail").textContent = "awaiting simulation";
+}
+
+const correctAnswers = { 1: "B", 2: "C", 3: "B" };
+function selectOption(lc, opt) {
+  const optionsEl = document.getElementById(`lc${lc}-options`);
+  const options = optionsEl.querySelectorAll(".lc-option");
+  options.forEach(o => o.classList.remove("correct", "incorrect"));
+  const idx = opt.charCodeAt(0) - 65;
+  if (opt === correctAnswers[lc]) options[idx].classList.add("correct");
+  else options[idx].classList.add("incorrect");
+}
+function showHint(lc) { document.getElementById(`lc${lc}-hint`).classList.toggle("visible"); }
+function showAnswer(lc) {
+  document.getElementById(`lc${lc}-answer`).classList.toggle("visible");
+  const optionsEl = document.getElementById(`lc${lc}-options`);
+  const options = optionsEl.querySelectorAll(".lc-option");
+  const idx = correctAnswers[lc].charCodeAt(0) - 65;
+  options[idx].classList.add("revealed-correct");
+}
+
+document.getElementById("metric-select").addEventListener("change", (e) => {
+  currentMetric = e.target.value;
+  updateObservedMetrics();
+  resetResults();
+});
+
+document.getElementById("treatment-select").addEventListener("change", (e) => {
+  currentTreatment = e.target.value;
+  drawNetwork();
+  updateObservedMetrics();
+  resetResults();
+});
+
+document.getElementById("n-slider").addEventListener("input", (e) => {
+  document.getElementById("n-display").textContent = e.target.value;
+});
+
+window.addEventListener("load", () => {
+  drawNetwork();
+  updateObservedMetrics();
+});
+
+window.addEventListener("resize", () => {
+  drawNetwork();
+  if (lastResults) renderHistogram(lastResults.baseline, lastResults.treated, lastResults);
+});
+</script>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
