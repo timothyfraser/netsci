@@ -175,7 +175,7 @@
   </section>
 
   <section class="section">
-    <div class="sec-label">The Eight Prompts</div>
+    <div class="sec-label">The Nine Prompts</div>
 
     <!-- 01: Fundamentals -->
     <div class="sketch-card">
@@ -354,6 +354,29 @@
           <li>Three table boxes with column names</li>
           <li>Join keys marked</li>
           <li>An output table sketch with column-provenance arrows</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 09: GNN by Hand -->
+    <div class="sketch-card">
+      <div class="ico">🧠</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 09 · Trace a forward pass</h3>
+          <div class="meta">
+            <span class="skill-chip skill-predict">Predict</span>
+            <span class="time-chip">~25 min</span>
+          </div>
+        </div>
+        <div class="prompt">
+          Draw a five-node directed graph of your own. Label each node with a feature <strong>x ∈ [0, 1]</strong> and a ground-truth label <strong>y ∈ {0, 1}</strong>. By hand, compute the first GNN aggregation step: <strong>x̃ᵢ = xᵢ + mean(neighbors' x)</strong>. Then pick small weights (w₁ = 0.5, w₂ = 0.4, b = 0.1), push x̃ through ReLU and Sigmoid, and write the final ŷᵢ for each node. Where in the math does the graph structure actually show up?
+        </div>
+        <div class="purpose"><span class="label">Purpose</span>Demystifies the GNN. The neighborhood aggregation step is the only thing that distinguishes a GNN forward pass from a plain-NN forward pass — and you'll feel it the moment you do the arithmetic.</div>
+        <ul class="what-you-draw">
+          <li>Five nodes, each labeled with x and y</li>
+          <li>x̃ value circled at each node after one aggregation step</li>
+          <li>Final ŷ written next to each node</li>
         </ul>
       </div>
     </div>

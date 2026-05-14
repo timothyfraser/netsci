@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centrality &amp; Criticality · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+.lab {
+  --hub-color:    var(--node-4);   /* amber */
+  --bridge-color: var(--node-3);   /* teal */
+  --normal-color: var(--green-bright);
+  --removed:      var(--node-7);   /* orange */
+}
+
+.lab-hero { margin-bottom: 32px; }
+.lab-hero .course-number { margin-bottom: 10px; }
+.lab-hero h1 {
+  font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px);
+  line-height: 1.05; letter-spacing: 0.03em; color: var(--white);
+  margin-bottom: 14px;
+}
+.lab-hero h1 em { color: var(--green-bright); font-style: normal; }
+.lab-hero p {
+  font-family: var(--font-body); font-size: 16px; font-weight: 300;
+  line-height: 1.55; color: var(--green-mint); max-width: 720px;
+  border-left: 3px solid var(--green-bright); padding-left: 18px;
+}
+
+.lab-layout {
+  display: grid; grid-template-columns: 1fr 340px; gap: 18px;
+}
+@media (max-width: 1000px) { .lab-layout { grid-template-columns: 1fr; } }
+
+.lab-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  margin-bottom: 14px;
+}
+.lab-card h3 {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 12px;
+}
+
+#network-svg {
+  width: 100%; height: 480px;
+  background: rgba(5, 46, 22, 0.35);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); display: block; cursor: default;
+}
+
+/* Status bar */
+.status-bar {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin-top: 12px; padding: 10px 14px;
+  background: rgba(5,46,22,0.4); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 11px; color: var(--green-mint);
+  letter-spacing: 0.06em;
+}
+.status-bar span { display: flex; align-items: center; gap: 6px; }
+.status-bar strong { color: var(--white); font-weight: 500; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px currentColor; }
+.dot-active  { background: var(--green-bright); color: var(--green-bright); }
+.dot-removed { background: var(--node-7);       color: var(--node-7); }
+.removed-tag {
+  display: inline-block;
+  background: rgba(249,115,22,0.18);
+  color: var(--node-7);
+  border: 1px solid rgba(249,115,22,0.4);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 1px 7px;
+  margin: 1px;
+  letter-spacing: 0.08em;
+}
+
+/* Metrics */
+.metric-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--border-soft);
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-label {
+  font-size: 13px; color: var(--grey);
+  display: flex; align-items: center; gap: 6px;
+}
+.metric-value {
+  font-family: var(--font-mono); font-size: 15px;
+  color: var(--white); font-weight: 500;
+  transition: color 0.3s;
+}
+.metric-value.changed { color: var(--node-7); }
+.metric-delta {
+  font-family: var(--font-mono); font-size: 10.5px;
+  margin-left: 6px; padding: 1px 6px; border-radius: 3px;
+  letter-spacing: 0.06em;
+}
+.delta-up   { background: rgba(249,115,22,0.18); color: var(--node-7); }
+.delta-down { background: rgba(94,234,212,0.18); color: var(--node-3); }
+
+/* Node info */
+#node-info {
+  min-height: 120px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.node-info-empty {
+  text-align: center; color: var(--grey);
+  font-size: 13px; padding: 18px 0;
+}
+.node-info-empty span { display: block; font-size: 24px; margin-bottom: 8px; }
+.node-name {
+  font-family: var(--font-display); font-size: 22px;
+  color: var(--white); letter-spacing: 0.03em;
+  margin-bottom: 10px; line-height: 1.15;
+}
+.node-badge {
+  display: inline-block;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 2px 9px; border-radius: 3px;
+  margin-bottom: 12px;
+}
+.badge-hub    { background: rgba(251,191,36,0.18); border: 1px solid var(--node-4); color: var(--node-4); }
+.badge-bridge { background: rgba(94,234,212,0.18); border: 1px solid var(--node-3); color: var(--node-3); }
+.badge-normal { background: rgba(57,255,20,0.12); border: 1px solid var(--green-bright); color: var(--green-bright); }
+
+.stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0;
+}
+.stat-box {
+  background: rgba(5,46,22,0.45);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+  text-align: center;
+}
+.stat-box-label {
+  font-family: var(--font-mono); font-size: 9.5px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--grey); margin-bottom: 4px;
+}
+.stat-box-value {
+  font-family: var(--font-mono); font-size: 17px;
+  color: var(--white); font-weight: 500;
+}
+
+/* Buttons */
+.btn {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  border: 1px solid transparent; cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, background 0.15s, color 0.15s;
+}
+.btn:hover { opacity: 0.85; }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-danger  { background: rgba(249,115,22,0.18); border-color: var(--node-7); color: var(--node-7); }
+.btn-danger:hover  { background: rgba(249,115,22,0.3); opacity: 1; }
+.btn-success { background: rgba(57,255,20,0.14); border-color: var(--green-bright); color: var(--green-bright); }
+.btn-success:hover { background: rgba(57,255,20,0.24); opacity: 1; }
+.btn-neutral { background: transparent; color: var(--grey); border-color: var(--border); }
+.btn-neutral:hover { color: var(--green-bright); border-color: var(--green-bright); opacity: 1; }
+.btn-group   { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Legend */
+.legend-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  font-family: var(--font-mono); font-size: 11px; color: var(--green-mint);
+  letter-spacing: 0.04em;
+}
+.legend-row strong { font-family: var(--font-body); }
+.legend-dot { border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
+
+/* Bottom learning checks */
+.lc-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px; margin-top: 32px;
+}
+.lc-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 24px;
+  backdrop-filter: blur(8px);
+}
+.lc-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+}
+.lc-number {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); padding: 3px 8px;
+  border: 1px solid rgba(57,255,20,0.3); border-radius: 3px;
+  background: rgba(57,255,20,0.08);
+  flex-shrink: 0;
+}
+.lc-question {
+  font-family: var(--font-display); font-size: 18px;
+  line-height: 1.3; letter-spacing: 0.02em; color: var(--white);
+}
+.lc-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.lc-option {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: rgba(5,46,22,0.35); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  cursor: pointer; transition: all 0.15s;
+  font-size: 13px; line-height: 1.5; color: var(--green-mint);
+  user-select: none;
+}
+.lc-option:hover { border-color: var(--green-bright); color: var(--white); }
+.lc-option.correct          { border-color: var(--green-bright); background: rgba(57,255,20,0.12); color: var(--white); }
+.lc-option.incorrect        { border-color: var(--node-7);       background: rgba(249,115,22,0.1); color: var(--white); }
+.lc-option.revealed-correct { border-color: var(--green-bright); background: rgba(57,255,20,0.12); }
+.option-letter {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  color: var(--green-bright); min-width: 18px; margin-top: 1px; flex-shrink: 0;
+}
+.lc-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.lc-feedback {
+  display: none; font-size: 13px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  line-height: 1.55; margin-top: 4px;
+}
+.feedback-hint   { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.3); color: var(--green-mint); }
+.feedback-answer { background: rgba(57,255,20,0.06); border: 1px solid rgba(57,255,20,0.3); color: var(--green-mint); }
+.feedback-answer strong { color: var(--green-bright); }
+.feedback-answer em     { color: var(--node-3); font-style: italic; }
+.feedback-hint strong   { color: var(--node-4); }
+
+/* Tables */
+.table-container {
+  overflow-x: auto; margin-top: 12px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border-soft);
+  display: none;
+}
+.table-container.visible { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  background: rgba(5,46,22,0.5);
+  color: var(--grey); font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 9px 14px; text-align: left;
+  border-bottom: 1px solid var(--border-soft);
+}
+td {
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(57,255,20,0.06);
+  color: var(--grey); font-family: var(--font-body);
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(57,255,20,0.04); }
+td.highlight { color: var(--white); font-weight: 500; }
+.status-active  { color: var(--green-bright); }
+.status-removed { color: var(--node-7); }
+
+/* SVG node + edge styles */
+.node-circle { cursor: pointer; transition: opacity 0.2s; }
+.node-circle:hover { filter: brightness(1.2); }
+.node-label {
+  font-family: var(--font-body); font-size: 10px;
+  fill: var(--green-mint); pointer-events: none; user-select: none;
+}
+.edge-line { transition: opacity 0.3s; }
+.node-removed { opacity: 0.25; }
+.edge-removed { opacity: 0.05; }
+</style>
+</head>
+<body data-page="cases">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../readings.html"       data-page="readings">Readings</a>
+      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="../about.html"          data-page="about">About</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page-wide lab">
+
+  <section class="lab-hero">
+    <p class="course-number">SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure</p>
+    <h1>Why Does <em>Betweenness</em> Matter?</h1>
+    <p>Explore how removing a single transit station reshapes the entire network — and why the most dangerous node isn't always the biggest one. Click any station to inspect; remove it and watch the metrics shift.</p>
+  </section>
+
+  <section class="lab-layout">
+
+    <!-- LEFT: NETWORK CANVAS -->
+    <div>
+      <div class="lab-card">
+        <h3>🚇 Riverdale Metro &amp; Bus Network</h3>
+        <svg id="network-svg"></svg>
+        <div class="status-bar" id="status-bar">
+          <span><span class="status-dot dot-active"></span> <strong id="active-count">18</strong> active</span>
+          <span><span class="status-dot dot-removed"></span> <strong id="removed-count">0</strong> removed</span>
+          <span id="removed-names-display"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: SIDEBAR -->
+    <div>
+
+      <div class="lab-card">
+        <h3>🔍 Selected Node</h3>
+        <div id="node-info">
+          <div class="node-info-empty">
+            <span>🖱️</span>
+            Click any station to inspect its centrality metrics
+          </div>
+        </div>
+        <div class="btn-group" id="node-action-btns" style="margin-top: 12px; display: none;">
+          <button class="btn btn-danger" id="btn-toggle-node">➖ Remove Station</button>
+          <button class="btn btn-neutral" id="btn-deselect">✕ Deselect</button>
+        </div>
+      </div>
+
+      <div class="lab-card">
+        <h3>📊 Network Metrics</h3>
+        <div class="metric-row">
+          <span class="metric-label">🔗 Active Nodes</span>
+          <span class="metric-value" id="m-nodes">18</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">↗️ Avg Path Length</span>
+          <span class="metric-value" id="m-apl">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">📏 Network Diameter</span>
+          <span class="metric-value" id="m-diam">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">🧩 Components</span>
+          <span class="metric-value" id="m-comp">—</span>
+        </div>
+        <div style="margin-top: 12px;">
+          <button class="btn btn-neutral" id="btn-reset" style="width: 100%; text-align: center;">🔄 Restore All Stations</button>
+        </div>
+      </div>
+
+      <div class="lab-card">
+        <h3>🗺️ Legend</h3>
+        <div class="legend-row"><div class="legend-dot" style="background: var(--node-4); width: 18px; height: 18px; color: var(--node-4);"></div> <strong style="color: var(--node-4)">Major Hub</strong> — high degree &amp; betweenness</div>
+        <div class="legend-row"><div class="legend-dot" style="background: var(--node-3); width: 14px; height: 14px; color: var(--node-3);"></div> <strong style="color: var(--node-3)">Bridge</strong> — low degree, high betweenness</div>
+        <div class="legend-row"><div class="legend-dot" style="background: var(--green-bright); width: 10px; height: 10px; color: var(--green-bright);"></div> Regular station</div>
+        <div class="legend-row"><div class="legend-dot" style="background: var(--node-7); width: 10px; height: 10px; opacity: 0.6; color: var(--node-7);"></div> <span style="opacity: 0.6">Removed station</span></div>
+        <hr style="border: none; border-top: 1px solid var(--border-soft); margin: 10px 0;">
+        <div style="font-family: var(--font-body); font-size: 12px; color: var(--grey); line-height: 1.55;">
+          Node size = <strong style="color: var(--white)">degree centrality</strong><br>
+          Node color = <strong style="color: var(--white)">betweenness rank</strong>
+        </div>
+      </div>
+
+      <div class="lab-card">
+        <h3>📋 Raw Data</h3>
+        <div class="btn-group">
+          <button class="btn btn-neutral" onclick="toggleTable('node-table')">Node List</button>
+          <button class="btn btn-neutral" onclick="toggleTable('edge-table')">Edge List</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Tables -->
+  <div id="node-table" class="table-container" style="margin-top: 16px;">
+    <table id="node-table-body">
+      <thead><tr><th>Station</th><th>Zone</th><th>Degree</th><th>Betweenness</th><th>Type</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="edge-table" class="table-container" style="margin-top: 16px;">
+    <table>
+      <thead><tr><th>From</th><th>To</th><th>Line</th><th>Weight (riders)</th></tr></thead>
+      <tbody id="edge-table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- LEARNING CHECKS -->
+  <div class="lc-grid">
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-number">LC 01</span>
+        <div class="lc-question">Union Terminal has the highest degree in this network — the most direct connections. Does it also have the highest betweenness centrality?</div>
+      </div>
+      <div class="lc-options" id="lc1-options">
+        <div class="lc-option" onclick="selectOption(1, 'A')"><span class="option-letter">A</span> Yes — highest degree always means highest betweenness, since more connections mean more shortest paths go through you.</div>
+        <div class="lc-option" onclick="selectOption(1, 'B')"><span class="option-letter">B</span> Yes in this case — Union Terminal is both the biggest hub and the highest betweenness node, but that's not always true in other networks.</div>
+        <div class="lc-option" onclick="selectOption(1, 'C')"><span class="option-letter">C</span> No — Ironworks has higher betweenness than Union Terminal, despite having fewer direct connections, because it sits between two clusters that would otherwise be disconnected.</div>
+      </div>
+      <div class="lc-actions">
+        <button class="btn btn-neutral" onclick="showHint(1)">💡 Hint</button>
+        <button class="btn btn-neutral" onclick="showAnswer(1)">🔓 Reveal Answer</button>
+      </div>
+      <div class="lc-feedback feedback-hint" id="lc1-hint">
+        <strong>Hint:</strong> Look at the color-coding. Which node is teal (bridge color)? Now check: how many direct neighbors does it have vs. Union Terminal? Then try removing <em>each one</em> and watch what happens to the number of connected components.
+      </div>
+      <div class="lc-feedback feedback-answer" id="lc1-answer">
+        ✅ <strong>Answer: C.</strong> Ironworks sits on the narrow corridor connecting the downtown cluster to the northern suburbs. Even though Union Terminal has more direct connections (higher degree), Ironworks has higher betweenness because nearly every shortest path between downtown and the suburbs must pass through it. Degree counts neighbors; betweenness counts how many <em>other pairs</em> depend on you.
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-number">LC 02</span>
+        <div class="lc-question">Try removing <strong style="color: var(--node-4)">Union Terminal</strong> from the network. Then restore it and remove <strong style="color: var(--node-3)">Ironworks</strong> instead. Which removal causes the number of <em>connected components</em> to increase?</div>
+      </div>
+      <div class="lc-options" id="lc2-options">
+        <div class="lc-option" onclick="selectOption(2, 'A')"><span class="option-letter">A</span> Removing Union Terminal breaks the network into more components, because it has the most connections.</div>
+        <div class="lc-option" onclick="selectOption(2, 'B')"><span class="option-letter">B</span> Removing Ironworks breaks the network into more components, because it's the only path connecting two otherwise separate clusters.</div>
+        <div class="lc-option" onclick="selectOption(2, 'C')"><span class="option-letter">C</span> Both removals break the network into the same number of components, since both are important nodes.</div>
+      </div>
+      <div class="lc-actions">
+        <button class="btn btn-neutral" onclick="showHint(2)">💡 Hint</button>
+        <button class="btn btn-neutral" onclick="showAnswer(2)">🔓 Reveal Answer</button>
+      </div>
+      <div class="lc-feedback feedback-hint" id="lc2-hint">
+        <strong>Hint:</strong> Actually try it. Click Union Terminal → Remove → check Components. Then reset, click Ironworks → Remove → check again. Pay attention to whether 🧩 Components goes from 1 to 2 (or higher).
+      </div>
+      <div class="lc-feedback feedback-answer" id="lc2-answer">
+        ✅ <strong>Answer: B.</strong> Removing Ironworks disconnects the northern suburbs from the rest of the network — the Components metric jumps from 1 to 2. Removing Union Terminal increases average path length and raises the diameter significantly, but the network stays connected because the remaining stations can still reach each other via alternate routes. The core insight: <em>a high-betweenness bridge node can be structurally more critical than a high-degree hub.</em>
+      </div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-number">LC 03</span>
+        <div class="lc-question">After removing Ironworks (and the network splits into 2 components), what happens to the <em>average path length</em> metric?</div>
+      </div>
+      <div class="lc-options" id="lc3-options">
+        <div class="lc-option" onclick="selectOption(3, 'A')"><span class="option-letter">A</span> Average path length increases by a small amount, since a few paths are now longer.</div>
+        <div class="lc-option" onclick="selectOption(3, 'B')"><span class="option-letter">B</span> Average path length becomes undefined / infinite, because some node pairs can no longer reach each other at all.</div>
+        <div class="lc-option" onclick="selectOption(3, 'C')"><span class="option-letter">C</span> Average path length decreases, because the two smaller components are individually more compact than the full network.</div>
+      </div>
+      <div class="lc-actions">
+        <button class="btn btn-neutral" onclick="showHint(3)">💡 Hint</button>
+        <button class="btn btn-neutral" onclick="showAnswer(3)">🔓 Reveal Answer</button>
+      </div>
+      <div class="lc-feedback feedback-hint" id="lc3-hint">
+        <strong>Hint:</strong> Think about what "average path length" means: the average shortest path between <em>all pairs</em> of nodes. If two nodes are in disconnected components, what is the "distance" between them? How does that affect the average? Check the metric display.
+      </div>
+      <div class="lc-feedback feedback-answer" id="lc3-answer">
+        ✅ <strong>Answer: B.</strong> When the network disconnects, the shortest path between a node in Component 1 and a node in Component 2 is theoretically infinite (there is no path). The tool displays this as "∞ (disconnected)". This is why <em>network efficiency</em> (1 / average path length) collapses to zero when even one bridge node is removed — a common measure in infrastructure resilience analysis. In a supply chain or power grid, this means goods or power can no longer reach certain destinations at all.
+      </div>
+    </div>
+
+  </div>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Centrality &amp; Criticality · Interactive Lab</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script>
+// =============================================
+// NETWORK DATA — Riverdale Metro
+// =============================================
+const rawNodes = [
+  { id: "union_terminal",   label: "Union Terminal",   zone: "downtown",  x: 480, y: 280, type: "hub"    },
+  { id: "central_commons",  label: "Central Commons",  zone: "downtown",  x: 380, y: 240, type: "normal" },
+  { id: "depot_north",      label: "Depot North",      zone: "downtown",  x: 560, y: 220, type: "normal" },
+  { id: "civic_plaza",      label: "Civic Plaza",      zone: "downtown",  x: 430, y: 330, type: "normal" },
+  { id: "harbor_view",      label: "Harbor View",      zone: "downtown",  x: 540, y: 360, type: "normal" },
+  { id: "market_street",    label: "Market Street",    zone: "downtown",  x: 320, y: 300, type: "normal" },
+  { id: "ironworks",        label: "Ironworks",        zone: "midtown",   x: 290, y: 200, type: "bridge" },
+  { id: "elmhurst",         label: "Elmhurst",         zone: "midtown",   x: 250, y: 320, type: "normal" },
+  { id: "riverside_park",   label: "Riverside Park",   zone: "midtown",   x: 200, y: 240, type: "normal" },
+  { id: "airside",          label: "Airside",          zone: "midtown",   x: 170, y: 320, type: "normal" },
+  { id: "greenway",         label: "Greenway",         zone: "midtown",   x: 220, y: 160, type: "normal" },
+  { id: "northgate",        label: "Northgate",        zone: "suburb",    x: 120, y: 120, type: "normal" },
+  { id: "fernwood",         label: "Fernwood",         zone: "suburb",    x:  80, y: 200, type: "normal" },
+  { id: "oldbury",          label: "Oldbury",          zone: "suburb",    x: 150, y:  60, type: "normal" },
+  { id: "eastfield",        label: "Eastfield",        zone: "suburb",    x: 640, y: 200, type: "normal" },
+  { id: "westbridge",       label: "Westbridge",       zone: "suburb",    x: 660, y: 320, type: "normal" },
+  { id: "lakeshore",        label: "Lakeshore",        zone: "suburb",    x: 620, y: 420, type: "normal" },
+  { id: "millhaven",        label: "Millhaven",        zone: "suburb",    x: 370, y: 410, type: "normal" },
+];
+
+const rawEdges = [
+  { source: "union_terminal",  target: "central_commons", line: "red",    weight: 8200 },
+  { source: "union_terminal",  target: "depot_north",     line: "blue",   weight: 7400 },
+  { source: "union_terminal",  target: "civic_plaza",     line: "red",    weight: 5600 },
+  { source: "union_terminal",  target: "harbor_view",     line: "green",  weight: 6100 },
+  { source: "central_commons", target: "market_street",   line: "red",    weight: 4200 },
+  { source: "civic_plaza",     target: "harbor_view",     line: "green",  weight: 3100 },
+  { source: "civic_plaza",     target: "millhaven",       line: "bus",    weight: 2400 },
+  { source: "harbor_view",     target: "lakeshore",       line: "green",  weight: 2900 },
+  { source: "depot_north",     target: "eastfield",       line: "blue",   weight: 4100 },
+  { source: "eastfield",       target: "westbridge",      line: "blue",   weight: 3300 },
+  { source: "westbridge",      target: "lakeshore",       line: "bus",    weight: 2100 },
+  { source: "ironworks",       target: "central_commons", line: "yellow", weight: 3800 },
+  { source: "ironworks",       target: "riverside_park",  line: "yellow", weight: 3600 },
+  { source: "ironworks",       target: "greenway",        line: "yellow", weight: 2700 },
+  { source: "riverside_park",  target: "elmhurst",        line: "bus",    weight: 2200 },
+  { source: "riverside_park",  target: "airside",         line: "bus",    weight: 1900 },
+  { source: "elmhurst",        target: "market_street",   line: "bus",    weight: 2600 },
+  { source: "airside",         target: "fernwood",        line: "bus",    weight: 1600 },
+  { source: "greenway",        target: "northgate",       line: "yellow", weight: 2100 },
+  { source: "northgate",       target: "oldbury",         line: "bus",    weight: 1400 },
+  { source: "northgate",       target: "fernwood",        line: "bus",    weight: 1700 },
+];
+
+// Edge / line color palette (netsci design tokens, literal hex since SVG attrs need it)
+const lineColors = {
+  red:    "#f472b6",  // magenta (node-5)
+  blue:   "#39FF14",  // neon green (green-bright)
+  green:  "#5eead4",  // teal (node-3)
+  yellow: "#fbbf24",  // amber (node-4)
+  bus:    "#a3b8a3"   // grey
+};
+
+// =============================================
+// GRAPH ANALYTICS
+// =============================================
+function buildAdjacency(nodes, edges, removedSet) {
+  const activeIds = nodes.filter(n => !removedSet.has(n.id)).map(n => n.id);
+  const adj = {};
+  activeIds.forEach(id => adj[id] = []);
+  edges.forEach(e => {
+    if (!removedSet.has(e.source) && !removedSet.has(e.target)) {
+      if (adj[e.source]) adj[e.source].push(e.target);
+      if (adj[e.target]) adj[e.target].push(e.source);
+    }
+  });
+  return { adj, activeIds };
+}
+
+function bfs(start, adj) {
+  const dist = { [start]: 0 };
+  const queue = [start];
+  while (queue.length) {
+    const cur = queue.shift();
+    for (const nb of (adj[cur] || [])) {
+      if (!(nb in dist)) {
+        dist[nb] = dist[cur] + 1;
+        queue.push(nb);
+      }
+    }
+  }
+  return dist;
+}
+
+function computeAllPairsBFS(activeIds, adj) {
+  const allDists = {};
+  activeIds.forEach(id => { allDists[id] = bfs(id, adj); });
+
+  let totalDist = 0, pairs = 0, maxDist = 0;
+  let disconnected = false;
+
+  for (let i = 0; i < activeIds.length; i++) {
+    for (let j = i + 1; j < activeIds.length; j++) {
+      const a = activeIds[i], b = activeIds[j];
+      const d = allDists[a][b];
+      if (d === undefined) { disconnected = true; }
+      else { totalDist += d; maxDist = Math.max(maxDist, d); }
+      pairs++;
+    }
+  }
+
+  const avgPathLength = disconnected ? Infinity : (pairs > 0 ? totalDist / pairs : 0);
+  const diameter = disconnected ? Infinity : maxDist;
+
+  const visited = new Set();
+  let components = 0;
+  for (const id of activeIds) {
+    if (!visited.has(id)) {
+      components++;
+      const q = [id];
+      while (q.length) {
+        const cur = q.shift();
+        if (visited.has(cur)) continue;
+        visited.add(cur);
+        for (const nb of (adj[cur] || [])) q.push(nb);
+      }
+    }
+  }
+  return { allDists, avgPathLength, diameter, components, disconnected };
+}
+
+function computeBetweenness(activeIds, adj) {
+  const betw = {};
+  activeIds.forEach(id => betw[id] = 0);
+  for (const s of activeIds) {
+    const stack = [];
+    const pred = {};
+    activeIds.forEach(id => pred[id] = []);
+    const sigma = {};
+    activeIds.forEach(id => sigma[id] = 0);
+    sigma[s] = 1;
+    const dist = {};
+    activeIds.forEach(id => dist[id] = -1);
+    dist[s] = 0;
+    const queue = [s];
+    while (queue.length) {
+      const v = queue.shift();
+      stack.push(v);
+      for (const w of (adj[v] || [])) {
+        if (dist[w] < 0) { queue.push(w); dist[w] = dist[v] + 1; }
+        if (dist[w] === dist[v] + 1) { sigma[w] += sigma[v]; pred[w].push(v); }
+      }
+    }
+    const delta = {};
+    activeIds.forEach(id => delta[id] = 0);
+    while (stack.length) {
+      const w = stack.pop();
+      for (const v of pred[w]) delta[v] += (sigma[v] / sigma[w]) * (1 + delta[w]);
+      if (w !== s) betw[w] += delta[w];
+    }
+  }
+  const n = activeIds.length;
+  if (n > 2) {
+    const norm = (n - 1) * (n - 2) / 2;
+    activeIds.forEach(id => betw[id] = betw[id] / norm);
+  }
+  return betw;
+}
+
+function computeDegree(activeIds, adj) {
+  const deg = {};
+  activeIds.forEach(id => deg[id] = (adj[id] || []).length);
+  return deg;
+}
+
+// =============================================
+// STATE
+// =============================================
+let removedNodes = new Set();
+let selectedNode = null;
+let networkStats = {};
+let nodeMetrics = {};
+let baselineStats = null;
+
+function recompute() {
+  const { adj, activeIds } = buildAdjacency(rawNodes, rawEdges, removedNodes);
+  const { avgPathLength, diameter, components, disconnected } = computeAllPairsBFS(activeIds, adj);
+  const betw = computeBetweenness(activeIds, adj);
+  const deg  = computeDegree(activeIds, adj);
+
+  networkStats = { avgPathLength, diameter, components, disconnected, activeCount: activeIds.length };
+  nodeMetrics = {};
+  rawNodes.forEach(n => {
+    nodeMetrics[n.id] = {
+      degree: deg[n.id] || 0,
+      betweenness: betw[n.id] || 0,
+      active: !removedNodes.has(n.id)
+    };
+  });
+  if (!baselineStats) baselineStats = { avgPathLength, diameter, components };
+}
+
+// =============================================
+// D3 VISUALIZATION
+// =============================================
+const svg   = d3.select("#network-svg");
+const svgEl = document.getElementById("network-svg");
+const W = () => svgEl.clientWidth;
+const H = () => svgEl.clientHeight;
+const scaleX = x => (x / 750) * W();
+const scaleY = y => (y / 500) * H();
+
+function getNodeColor(node) {
+  if (removedNodes.has(node.id)) return "#6b8170"; // grey-dim
+  if (node.type === "hub")    return "#fbbf24";    // amber (node-4)
+  if (node.type === "bridge") return "#5eead4";    // teal (node-3)
+  return "#39FF14";                                 // green-bright
+}
+
+function getNodeRadius(nodeId) {
+  const deg = nodeMetrics[nodeId]?.degree || 0;
+  const maxDeg = Math.max(...rawNodes.map(n => nodeMetrics[n.id]?.degree || 0));
+  return 7 + (deg / Math.max(maxDeg, 1)) * 14;
+}
+
+function drawNetwork() {
+  svg.selectAll("*").remove();
+
+  rawEdges.forEach(e => {
+    const src = rawNodes.find(n => n.id === e.source);
+    const tgt = rawNodes.find(n => n.id === e.target);
+    if (!src || !tgt) return;
+    const removed = removedNodes.has(e.source) || removedNodes.has(e.target);
+
+    svg.append("line")
+      .attr("class", "edge-line " + (removed ? "edge-removed" : ""))
+      .attr("x1", scaleX(src.x)).attr("y1", scaleY(src.y))
+      .attr("x2", scaleX(tgt.x)).attr("y2", scaleY(tgt.y))
+      .attr("stroke", removed ? "#1f3d28" : (lineColors[e.line] || "#a3b8a3"))
+      .attr("stroke-width", removed ? 1 : Math.max(1, Math.log(e.weight / 1000) * 1.5))
+      .attr("stroke-opacity", removed ? 0.1 : 0.6);
+  });
+
+  rawNodes.forEach(node => {
+    const nx = scaleX(node.x), ny = scaleY(node.y);
+    const r = getNodeRadius(node.id);
+    const removed = removedNodes.has(node.id);
+    const isSelected = selectedNode === node.id;
+    const color = getNodeColor(node);
+
+    const g = svg.append("g")
+      .attr("class", "node-group" + (removed ? " node-removed" : ""))
+      .attr("transform", `translate(${nx},${ny})`)
+      .style("cursor", "pointer")
+      .on("click", () => handleNodeClick(node.id));
+
+    if (isSelected) {
+      g.append("circle")
+        .attr("r", r + 6).attr("fill", "none")
+        .attr("stroke", color).attr("stroke-width", 2)
+        .attr("stroke-dasharray", "4,3").attr("opacity", 0.85);
+    }
+
+    if (!removed && (node.type === "hub" || node.type === "bridge")) {
+      g.append("circle").attr("r", r + 4).attr("fill", color).attr("opacity", 0.18);
+    }
+
+    g.append("circle")
+      .attr("class", "node-circle")
+      .attr("r", r)
+      .attr("fill", removed ? "#1e2c1f" : color)
+      .attr("stroke", removed ? "#333" : "rgba(255,255,255,0.18)")
+      .attr("stroke-width", 1.5)
+      .attr("opacity", removed ? 0.35 : 1);
+
+    const words = node.label.split(" ");
+    words.forEach((word, i) => {
+      g.append("text")
+        .attr("class", "node-label")
+        .attr("y", r + 10 + i * 10)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "9.5px")
+        .attr("fill", removed ? "#555" : "#a7f3d0")
+        .text(word);
+    });
+  });
+}
+
+function updateMetricsUI() {
+  const n = networkStats;
+  document.getElementById("m-nodes").textContent = n.activeCount;
+  document.getElementById("active-count").textContent = n.activeCount;
+  document.getElementById("removed-count").textContent = removedNodes.size;
+
+  const aplEl = document.getElementById("m-apl");
+  if (n.disconnected) {
+    aplEl.innerHTML = '∞ <span class="metric-delta delta-up">disconnected</span>';
+    aplEl.className = "metric-value changed";
+  } else {
+    const apl = n.avgPathLength.toFixed(2);
+    const base = baselineStats?.avgPathLength || n.avgPathLength;
+    const delta = n.avgPathLength - base;
+    if (Math.abs(delta) > 0.01) {
+      aplEl.className = "metric-value changed";
+      aplEl.innerHTML = `${apl} <span class="metric-delta ${delta > 0 ? 'delta-up' : 'delta-down'}">${delta > 0 ? '+' : ''}${delta.toFixed(2)}</span>`;
+    } else {
+      aplEl.className = "metric-value";
+      aplEl.textContent = apl;
+    }
+  }
+
+  const diamEl = document.getElementById("m-diam");
+  if (n.disconnected) {
+    diamEl.textContent = "∞";
+    diamEl.className = "metric-value changed";
+  } else {
+    const base = baselineStats?.diameter || n.diameter;
+    const delta = n.diameter - base;
+    diamEl.className = delta > 0 ? "metric-value changed" : "metric-value";
+    diamEl.innerHTML = delta > 0
+      ? `${n.diameter} <span class="metric-delta delta-up">+${delta}</span>`
+      : `${n.diameter}`;
+  }
+
+  const compEl = document.getElementById("m-comp");
+  compEl.textContent = n.components;
+  compEl.className = n.components > 1 ? "metric-value changed" : "metric-value";
+
+  const display = document.getElementById("removed-names-display");
+  if (removedNodes.size > 0) {
+    display.innerHTML = [...removedNodes].map(id => {
+      const node = rawNodes.find(x => x.id === id);
+      return `<span class="removed-tag">✕ ${node?.label || id}</span>`;
+    }).join(" ");
+  } else {
+    display.innerHTML = "";
+  }
+
+  updateNodeTable();
+}
+
+function updateNodeTable() {
+  const tbody = document.querySelector("#node-table-body tbody");
+  tbody.innerHTML = "";
+  const sorted = [...rawNodes].sort((a, b) => (nodeMetrics[b.id]?.betweenness || 0) - (nodeMetrics[a.id]?.betweenness || 0));
+  sorted.forEach(n => {
+    const m = nodeMetrics[n.id] || {};
+    const removed = removedNodes.has(n.id);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="highlight">${n.label}</td>
+      <td>${n.zone}</td>
+      <td>${m.degree ?? "—"}</td>
+      <td>${m.betweenness != null ? (m.betweenness * 100).toFixed(1) + "%" : "—"}</td>
+      <td>${n.type}</td>
+      <td class="${removed ? 'status-removed' : 'status-active'}">${removed ? "✕ removed" : "● active"}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function handleNodeClick(nodeId) {
+  selectedNode = nodeId;
+  updateNodeInfoPanel();
+  drawNetwork();
+}
+
+function updateNodeInfoPanel() {
+  const panel = document.getElementById("node-info");
+  const btns  = document.getElementById("node-action-btns");
+
+  if (!selectedNode) {
+    panel.innerHTML = `<div class="node-info-empty"><span>🖱️</span>Click any station to inspect its centrality metrics</div>`;
+    btns.style.display = "none";
+    return;
+  }
+
+  const node = rawNodes.find(n => n.id === selectedNode);
+  const m = nodeMetrics[selectedNode] || {};
+  const removed = removedNodes.has(selectedNode);
+  const n = networkStats.activeCount;
+  const norm = (n - 1) * (n - 2) / 2;
+  const rawBetw = Math.round((m.betweenness || 0) * norm);
+
+  const badgeClass = { hub: "badge-hub", bridge: "badge-bridge", normal: "badge-normal" }[node.type] || "badge-normal";
+  const typeLabel  = { hub: "🟠 Major Hub", bridge: "🟢 Bridge Node", normal: "🟢 Regular Station" }[node.type] || "Regular";
+
+  panel.innerHTML = `
+    <div class="node-name">${node.label}</div>
+    <span class="node-badge ${badgeClass}">${typeLabel}</span>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-box-label">Degree</div>
+        <div class="stat-box-value">${removed ? "—" : m.degree}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Betweenness</div>
+        <div class="stat-box-value">${removed ? "—" : (m.betweenness * 100).toFixed(1) + "%"}</div>
+      </div>
+      <div class="stat-box" style="grid-column: 1 / -1;">
+        <div class="stat-box-label">Shortest Paths Through This Node</div>
+        <div class="stat-box-value">${removed ? "—" : rawBetw}</div>
+      </div>
+    </div>
+    ${removed ? '<div style="margin-top: 10px; color: var(--node-7); font-size: 12px;">⚠️ This station has been removed.</div>' : ''}
+  `;
+
+  btns.style.display = "flex";
+  const toggleBtn = document.getElementById("btn-toggle-node");
+  if (removed) {
+    toggleBtn.textContent = "➕ Restore Station";
+    toggleBtn.className = "btn btn-success";
+  } else {
+    toggleBtn.textContent = "➖ Remove Station";
+    toggleBtn.className = "btn btn-danger";
+  }
+}
+
+document.getElementById("btn-toggle-node").onclick = () => {
+  if (!selectedNode) return;
+  if (removedNodes.has(selectedNode)) removedNodes.delete(selectedNode);
+  else removedNodes.add(selectedNode);
+  recompute(); drawNetwork(); updateMetricsUI(); updateNodeInfoPanel();
+};
+document.getElementById("btn-deselect").onclick = () => {
+  selectedNode = null; updateNodeInfoPanel(); drawNetwork();
+};
+document.getElementById("btn-reset").onclick = () => {
+  removedNodes.clear(); selectedNode = null;
+  recompute(); drawNetwork(); updateMetricsUI(); updateNodeInfoPanel();
+};
+
+function toggleTable(id) { document.getElementById(id).classList.toggle("visible"); }
+
+function selectOption(lc, opt) {
+  const opts = document.querySelectorAll(`#lc${lc}-options .lc-option`);
+  const correct = { 1: "C", 2: "B", 3: "B" };
+  opts.forEach((el, i) => {
+    el.classList.remove("correct", "incorrect");
+    const letter = String.fromCharCode(65 + i);
+    if (letter === opt) el.classList.add(letter === correct[lc] ? "correct" : "incorrect");
+  });
+}
+function showHint(lc) {
+  const el = document.getElementById(`lc${lc}-hint`);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+function showAnswer(lc) {
+  const el = document.getElementById(`lc${lc}-answer`);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+  const opts = document.querySelectorAll(`#lc${lc}-options .lc-option`);
+  const correct = { 1: "C", 2: "B", 3: "B" };
+  opts.forEach((el, i) => {
+    const letter = String.fromCharCode(65 + i);
+    if (letter === correct[lc]) el.classList.add("revealed-correct");
+  });
+}
+
+function buildEdgeTable() {
+  const tbody = document.getElementById("edge-table-body");
+  rawEdges.forEach(e => {
+    const src = rawNodes.find(n => n.id === e.source);
+    const tgt = rawNodes.find(n => n.id === e.target);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="highlight">${src?.label || e.source}</td>
+      <td class="highlight">${tgt?.label || e.target}</td>
+      <td style="color: ${lineColors[e.line] || '#a3b8a3'}">${e.line}</td>
+      <td>${e.weight.toLocaleString()}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.addEventListener("load", () => {
+  recompute();
+  baselineStats = { ...networkStats };
+  recompute();
+  baselineStats = { avgPathLength: networkStats.avgPathLength, diameter: networkStats.diameter, components: networkStats.components };
+  drawNetwork(); updateMetricsUI(); buildEdgeTable();
+});
+window.addEventListener("resize", () => drawNetwork());
+</script>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

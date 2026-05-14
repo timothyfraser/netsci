@@ -161,7 +161,7 @@
   <section class="hero">
     <p class="course-number">SYSEN 5470 · Summer 2026</p>
     <h1 class="hero-title">Course <span>Syllabus</span></h1>
-    <p class="hook">Three weeks. Eight case studies. Four skills you'll take into your engineering practice. Every unit follows the same six-slot rhythm so you always know where you are, what's next, and why you're doing it.</p>
+    <p class="hook">Three weeks. Nine case studies. Four skills you'll take into your engineering practice. Every unit follows the same six-slot rhythm so you always know where you are, what's next, and why you're doing it.</p>
   </section>
 
   <!-- ── 6-SLOT SCHEMA ── -->
@@ -170,19 +170,19 @@
     <p class="section-lede">Every case study moves through the same six slots — a tested rhythm that respects your time as a full-time working professional. Video stays under 25%. Coding is the plurality, not the whole.</p>
     <div class="pipe-grid">
       <div class="pipe-card"><div class="step">01 · Frame</div><h4>Stakes</h4><p>What's the engineering problem? Where does the naive approach fail?</p><span class="pct">~5–10%</span></div>
-      <div class="pipe-card"><div class="step">02 · Video</div><h4>Concept</h4><p>Asynchronous lecture covering 3–5 key ideas. Barabási-anchored.</p><span class="pct">≤ 25%</span></div>
-      <div class="pipe-card"><div class="step">03 · Read</div><h4>Anchor</h4><p>One textbook chapter plus one engineering paper that grounds it.</p><span class="pct">~10–25%</span></div>
-      <div class="pipe-card"><div class="step">04 · Sketch</div><h4>Mental Model</h4><p>Hand-drawn activity. No keyboard. Forces the concept into your head.</p><span class="pct">~15%</span></div>
-      <div class="pipe-card"><div class="step">05 · Code</div><h4>Lab</h4><p>R Markdown lab on RPubs. Diagnosis → hypothesis → counterfactual.</p><span class="pct">~40%</span></div>
-      <div class="pipe-card"><div class="step">06 · Check</div><h4>Reflect</h4><p>Embedded multiple-choice checks plus one interpretation prompt.</p><span class="pct">~5%</span></div>
+      <div class="pipe-card"><div class="step">02 · Video</div><h4>Concept</h4><p>Asynchronous lecture covering 3–5 key ideas. Barabási-anchored.</p><span class="pct">~20%</span></div>
+      <div class="pipe-card"><div class="step">03 · Read</div><h4>Anchor</h4><p>One textbook chapter plus one engineering paper that grounds it.</p><span class="pct">~20%</span></div>
+      <div class="pipe-card"><div class="step">04 · Sketch</div><h4>Mental Model</h4><p>Hand-drawn activity. No keyboard. Forces the concept into your head.</p><span class="pct">~20%</span></div>
+      <div class="pipe-card"><div class="step">05 · Code</div><h4>Lab</h4><p>R or Python lab — student picks the language. Diagnosis → hypothesis → counterfactual.</p><span class="pct">~30%</span></div>
+      <div class="pipe-card"><div class="step">06 · Check</div><h4>Reflect</h4><p>Embedded multiple-choice checks plus one interpretation prompt.</p><span class="pct">~10%</span></div>
     </div>
 
     <div class="budget" title="Time budget for one ~4-hour weekend block">
       <div style="width:20%; background:var(--node-1);">VIDEO 20%</div>
       <div style="width:20%; background:var(--node-2);">READ 20%</div>
-      <div style="width:15%; background:var(--node-3);">SKETCH 15%</div>
-      <div style="width:40%; background:var(--node-4);">CODE 40%</div>
-      <div style="width:5%;  background:var(--node-6); color:var(--white);">CHK</div>
+      <div style="width:20%; background:var(--node-3);">SKETCH 20%</div>
+      <div style="width:30%; background:var(--node-4);">CODE 30%</div>
+      <div style="width:10%; background:var(--node-6); color:var(--white);">CHK 10%</div>
     </div>
     <div class="budget-key">
       <span class="key-vid">Video</span>
@@ -207,7 +207,7 @@
 
   <!-- ── CASE STUDY LIST ── -->
   <section class="section" id="cases">
-    <div class="sec-label">Case Studies · The Eight Units</div>
+    <div class="sec-label">Case Studies · The Nine Units</div>
     <div class="case-list">
 
       <a class="case-row" id="fundamentals" href="case-studies.html#fundamentals">
@@ -219,13 +219,13 @@
         <span class="open">Coming Soon</span>
       </a>
 
-      <a class="case-row" id="centrality" href="case-studies.html#centrality">
+      <a class="case-row" id="centrality" href="case-studies/centrality.html">
         <div class="ico">📊</div>
         <div>
-          <div class="meta"><div class="ttl">Centrality &amp; Criticality — Disaster Stakeholders</div><span class="skill-chip skill-measure">Measure</span></div>
-          <div class="goal">Identify bottlenecks, hubs, and vulnerabilities in any system using tidygraph and bipartite networks.</div>
+          <div class="meta"><div class="ttl">Centrality &amp; Criticality — Riverdale Metro</div><span class="skill-chip skill-measure">Measure</span></div>
+          <div class="goal">Identify bottlenecks, hubs, and vulnerabilities. Remove a station, watch the network reshape — see why a bridge node (low degree, high betweenness) can be more critical than the busiest hub.</div>
         </div>
-        <span class="open">Coming Soon</span>
+        <span class="open">Open Lab →</span>
       </a>
 
       <a class="case-row" href="case-studies/permutation.html">
@@ -264,11 +264,20 @@
         <span class="open">Open Lab →</span>
       </a>
 
+      <a class="case-row" href="case-studies/gnn-by-hand.html">
+        <div class="ico">🧠</div>
+        <div>
+          <div class="meta"><div class="ttl">AI &amp; ML · GNN Forward Pass by Hand</div><span class="skill-chip skill-predict">Predict</span></div>
+          <div class="goal">Hand-arithmetic walkthrough of a forward pass — plain NN first, then GNN — on a four-factory supply chain. See exactly where graph structure enters the math.</div>
+        </div>
+        <span class="open">Open Lab →</span>
+      </a>
+
       <a class="case-row" href="case-studies/gnn-xgboost.html">
         <div class="ico">🤖</div>
         <div>
-          <div class="meta"><div class="ttl">AI &amp; Machine Learning — Supplier Disruption</div><span class="skill-chip skill-predict">Predict</span></div>
-          <div class="goal">Graph neural networks, embeddings, and ML for network inference. Static and temporal GNNs.</div>
+          <div class="meta"><div class="ttl">AI &amp; ML · Supplier Disruption Risk</div><span class="skill-chip skill-predict">Predict</span></div>
+          <div class="goal">Graph neural networks, embeddings, and ML for network inference. Static and temporal GNNs. Watch AUC climb as you add neighborhood-aware features.</div>
         </div>
         <span class="open">Open Lab →</span>
       </a>
