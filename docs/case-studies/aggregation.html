@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aggregation as Visualization · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+.lab-hero { margin-bottom: 24px; }
+.lab-hero .course-number { margin-bottom: 10px; }
+.lab-hero h1 {
+  font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px);
+  line-height: 1.05; letter-spacing: 0.03em; color: var(--white); margin-bottom: 14px;
+}
+.lab-hero h1 em { color: var(--green-bright); font-style: normal; }
+.lab-hero p {
+  font-family: var(--font-body); font-size: 16px; font-weight: 300;
+  line-height: 1.55; color: var(--green-mint); max-width: 760px;
+  border-left: 3px solid var(--green-bright); padding-left: 18px;
+}
+.synthetic-flag {
+  display: inline-block; margin-top: 14px; padding: 4px 10px;
+  background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.4);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--node-4); letter-spacing: 0.12em; text-transform: uppercase;
+}
+
+.main-layout {
+  display: grid; grid-template-columns: 1fr 340px; gap: 18px;
+  margin-bottom: 24px;
+}
+@media (max-width: 1000px) { .main-layout { grid-template-columns: 1fr; } }
+
+.viz-panel {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  backdrop-filter: blur(8px);
+}
+
+.view-switcher {
+  display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+  padding: 4px; background: rgba(5,46,22,0.5); border-radius: var(--radius-md);
+}
+.view-btn {
+  flex: 1; min-width: 110px; padding: 10px 12px;
+  background: transparent; border: 1px solid transparent;
+  border-radius: var(--radius-sm); color: var(--grey);
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.15s;
+}
+.view-btn:hover { color: var(--white); background: rgba(57,255,20,0.08); }
+.view-btn.active {
+  background: var(--green-bright); color: var(--black); border-color: var(--green-bright);
+  box-shadow: 0 0 12px rgba(57,255,20,0.3);
+}
+
+.viz-title {
+  font-family: var(--font-display); font-size: 18px;
+  color: var(--white); letter-spacing: 0.03em; margin-bottom: 4px;
+}
+
+.view-description {
+  background: rgba(5,46,22,0.5);
+  border-left: 3px solid var(--green-bright);
+  padding: 12px 16px; margin-bottom: 14px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-family: var(--font-body); font-size: 13.5px;
+  line-height: 1.55; color: var(--green-mint);
+}
+.view-description strong { color: var(--white); }
+
+#network-svg {
+  width: 100%; height: 480px;
+  background: rgba(5,46,22,0.35);
+  border-radius: var(--radius-sm); display: block;
+}
+
+.status-bar {
+  margin-top: 12px; padding: 10px 14px;
+  background: rgba(5,46,22,0.5); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 11px; color: var(--green-mint);
+  display: flex; gap: 18px; flex-wrap: wrap;
+}
+.status-bar strong { color: var(--white); }
+
+.card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  backdrop-filter: blur(8px);
+}
+.card h3 {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border-soft);
+}
+
+.sidebar { display: flex; flex-direction: column; gap: 14px; }
+
+.metric-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--border-soft);
+  font-size: 13.5px;
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-label { color: var(--grey); }
+.metric-value {
+  font-family: var(--font-mono); font-weight: 500; color: var(--white); font-size: 14px;
+}
+
+.legend-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 0;
+  font-family: var(--font-body); font-size: 12px; color: var(--green-mint);
+}
+.legend-swatch { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.legend-line { width: 18px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+
+.btn {
+  display: inline-block; padding: 9px 14px;
+  background: rgba(5,46,22,0.5); color: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn:hover { border-color: var(--green-bright); color: var(--green-bright); }
+.btn-neutral { background: transparent; color: var(--grey); }
+
+.tooltip {
+  position: absolute; pointer-events: none;
+  background: var(--black-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 8px 12px;
+  font-family: var(--font-mono); font-size: 11.5px;
+  color: var(--white); z-index: 100;
+  opacity: 0; transition: opacity 0.12s; max-width: 240px;
+  line-height: 1.5; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+.sketchpad-card {
+  background: rgba(251,191,36,0.06);
+  border: 1px dashed rgba(251,191,36,0.5);
+  border-radius: var(--radius-lg); padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.sketchpad-card h3 {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--node-4); margin-bottom: 10px;
+}
+.sketchpad-card p {
+  font-family: var(--font-display); font-size: 17px;
+  line-height: 1.5; color: var(--white);
+}
+.sketchpad-card .sketchpad-icon { font-size: 22px; margin-right: 8px; }
+
+.table-card { padding: 0; overflow: hidden; }
+.table-toggle {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px; cursor: pointer;
+  background: var(--card-bg); border-bottom: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+.table-toggle:hover { background: rgba(5,46,22,0.6); }
+.table-toggle h3 { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.table-toggle .toggle-arrow {
+  color: var(--grey); font-family: var(--font-mono);
+  font-size: 11px; transition: transform 0.2s;
+}
+.table-card.open .table-toggle { border-bottom-color: var(--border-soft); }
+.table-card.open .toggle-arrow { transform: rotate(90deg); }
+.table-content { max-height: 0; overflow: hidden; transition: max-height 0.25s; }
+.table-card.open .table-content { max-height: 420px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th, td {
+  padding: 10px 16px; text-align: left;
+  border-bottom: 1px solid var(--border-soft);
+}
+th {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--grey); background: rgba(5,46,22,0.6);
+  font-weight: 500; position: sticky; top: 0;
+}
+td { color: var(--green-mint); font-family: var(--font-mono); }
+tbody tr:hover { background: rgba(57,255,20,0.04); }
+
+.lc-section { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.lc-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 26px;
+  backdrop-filter: blur(8px);
+}
+.lc-header { margin-bottom: 16px; }
+.lc-number {
+  display: inline-block;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; color: var(--green-bright);
+  background: rgba(57,255,20,0.1); border: 1px solid rgba(57,255,20,0.3);
+  padding: 4px 10px; border-radius: 4px; margin-bottom: 10px;
+}
+.lc-question {
+  font-family: var(--font-display); font-size: 19px;
+  line-height: 1.4; color: var(--white); letter-spacing: 0.02em;
+}
+.lc-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.lc-option {
+  padding: 12px 16px; border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); background: rgba(5,46,22,0.4);
+  cursor: pointer; transition: all 0.15s;
+  font-family: var(--font-body); font-size: 13.5px;
+  line-height: 1.5; color: var(--green-mint);
+  display: flex; gap: 12px;
+}
+.lc-option:hover { border-color: var(--green-bright); color: var(--white); }
+.lc-option .lc-letter {
+  font-family: var(--font-mono); font-weight: 700;
+  color: var(--green-bright); flex-shrink: 0;
+}
+.lc-option.correct          { border-color: var(--green-bright); background: rgba(57,255,20,0.1); color: var(--white); }
+.lc-option.incorrect        { border-color: var(--node-7); background: rgba(249,115,22,0.08); color: var(--white); }
+.lc-option.revealed-correct { border-color: var(--green-bright); background: rgba(57,255,20,0.12); color: var(--white); }
+.lc-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.lc-feedback {
+  margin-top: 12px; padding: 14px 16px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border-soft);
+  font-family: var(--font-body); font-size: 13px; line-height: 1.6;
+  display: none; color: var(--green-mint);
+}
+.feedback-hint { background: rgba(251,191,36,0.07); border-color: rgba(251,191,36,0.3); }
+.feedback-hint strong { color: var(--node-4); }
+.feedback-answer { background: rgba(57,255,20,0.05); border-color: rgba(57,255,20,0.3); }
+.feedback-answer strong { color: var(--green-bright); }
+.feedback-answer em { color: var(--node-3); font-style: italic; }
+
+#matrix-container, #chord-container {
+  display: none; width: 100%; height: 480px;
+}
+#matrix-container.active, #chord-container.active { display: block; }
+#network-svg.hidden { display: none; }
+
+.matrix-controls {
+  display: flex; gap: 8px; margin-top: 12px; justify-content: center;
+}
+.matrix-mode-btn {
+  padding: 8px 16px;
+  background: rgba(5,46,22,0.5); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--grey);
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.15s;
+}
+.matrix-mode-btn.active {
+  background: var(--green-bright); color: var(--black); border-color: var(--green-bright);
+}
+
+.section-title {
+  font-family: var(--font-display); font-size: 28px;
+  color: var(--white); letter-spacing: 0.03em; margin: 28px 0 16px;
+}
+</style>
+</head>
+<body data-page="cases">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../readings.html"       data-page="readings">Readings</a>
+      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="../about.html"          data-page="about">About</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div id="tooltip" class="tooltip"></div>
+
+<div class="page-wide">
+
+  <section class="lab-hero">
+    <p class="course-number">SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify</p>
+    <h1>When the Network is <em>Gobbledygook</em>: Aggregation as a Visualization Strategy</h1>
+    <p>A raw bike-share network with 40 stations and hundreds of edges hides more than it reveals. Aggregate up to neighborhoods, then to income quintiles, and watch a clear socioeconomic flow pattern emerge. The lesson: <strong>losing detail can increase insight.</strong></p>
+    <div class="synthetic-flag">⚠ Synthetic data — Boston-flavored but not real Bluebikes records</div>
+  </section>
+
+  <div class="main-layout">
+    <div class="viz-panel">
+      <div class="view-switcher" role="tablist">
+        <button class="view-btn active" data-view="raw">Raw stations</button>
+        <button class="view-btn" data-view="neighborhood">Neighborhoods</button>
+        <button class="view-btn" data-view="quintile">Income quintiles</button>
+        <button class="view-btn" data-view="matrix">Matrix view</button>
+      </div>
+
+      <div id="view-info" class="view-description"></div>
+
+      <svg id="network-svg"></svg>
+      <div id="matrix-container"></div>
+      <div id="chord-container"></div>
+
+      <div class="matrix-controls" id="matrix-controls" style="display:none;">
+        <button class="matrix-mode-btn active" data-mode="heatmap">Heatmap</button>
+        <button class="matrix-mode-btn" data-mode="chord">Chord diagram</button>
+      </div>
+
+      <div class="status-bar">
+        <span>📍 <strong id="stat-nodes">—</strong> nodes</span>
+        <span>🔗 <strong id="stat-edges">—</strong> edges</span>
+        <span>🚲 <strong id="stat-rides">—</strong> rides</span>
+        <span>🔍 <strong id="stat-density">—</strong> density</span>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="card">
+        <h3>📊 Aggregation level</h3>
+        <div class="metric-row"><span class="metric-label">Current view</span><span class="metric-value" id="m-level">Stations</span></div>
+        <div class="metric-row"><span class="metric-label">Nodes</span><span class="metric-value" id="m-nodes">—</span></div>
+        <div class="metric-row"><span class="metric-label">Edges</span><span class="metric-value" id="m-edges">—</span></div>
+        <div class="metric-row"><span class="metric-label">Avg edges / node</span><span class="metric-value" id="m-avgdeg">—</span></div>
+        <div class="metric-row"><span class="metric-label">Visual clarity</span><span class="metric-value" id="m-clarity">—</span></div>
+      </div>
+
+      <div class="card">
+        <h3>🎨 Legend</h3>
+        <div id="legend-content"></div>
+      </div>
+
+      <div class="card">
+        <h3>💡 What am I looking at?</h3>
+        <p id="sidebar-explainer" style="font-family: var(--font-body); font-size: 13px; line-height: 1.6; color: var(--green-mint);"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sketchpad-card">
+    <h3><span class="sketchpad-icon">✏️</span>Sketchpad Moment</h3>
+    <p>Before switching to the <strong>Income quintiles</strong> view, pause and sketch on your physical sketchpad: what pattern do you <em>expect</em> to see in a 5×5 origin-destination matrix between income quintiles during a morning commute? Where do you think the heaviest flows will go? Draw a 5×5 grid with arrows for the dominant flows you predict. Then check the matrix view and see what the data actually shows.</p>
+  </div>
+
+  <div class="card table-card" id="table-card-rides" style="margin-bottom: 14px;">
+    <div class="table-toggle" onclick="toggleTable('table-card-rides')">
+      <h3>🚲 Top rides (current view)</h3>
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="table-content">
+      <table id="rides-table">
+        <thead><tr><th>From</th><th>To</th><th>Rides</th><th>Origin attr.</th><th>Destination attr.</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card table-card" id="table-card-nodes" style="margin-bottom: 14px;">
+    <div class="table-toggle" onclick="toggleTable('table-card-nodes')">
+      <h3>📍 Nodes (current view)</h3>
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="table-content">
+      <table id="nodes-table">
+        <thead><tr><th>Node</th><th>Attribute</th><th>Rides out</th><th>Rides in</th><th>Net flow</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2 class="section-title">Learning Checks</h2>
+
+  <div class="lc-section">
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-number">LC 01</span>
+        <div class="lc-question">Switch to the <strong>Raw stations</strong> view. Try to answer this just by looking: which neighborhood receives the most morning rides?</div>
+      </div>
+      <div class="lc-options" id="lc1-options">
+        <div class="lc-option" onclick="selectOption(1, 'A')"><span class="lc-letter">A</span><span>The Back Bay / Downtown cluster — it has the most stations and the densest connections, so it must receive the most rides.</span></div>
+        <div class="lc-option" onclick="selectOption(1, 'B')"><span class="lc-letter">B</span><span>I can't actually tell from this view alone — there are too many overlapping edges to count or compare flows reliably.</span></div>
+        <div class="lc-option" onclick="selectOption(1, 'C')"><span class="lc-letter">C</span><span>Cambridge / Kendall — the stations there are largest, so they must be drawing the most riders.</span></div>
+      </div>
+      <div class="lc-actions">
+        <button class="btn btn-neutral" onclick="showHint(1)">💡 Hint</button>
+        <button class="btn btn-neutral" onclick="showAnswer(1)">🔓 Reveal Answer</button>
+      </div>
+      <div class="lc-feedback feedback-hint" id="lc1-hint"><strong>Hint:</strong> Don't try to count edges in the raw view — instead, ask yourself <em>whether you can</em>. Hover over a few of the heaviest edges and try to mentally aggregate flows by destination. Notice how your eyes have to do work that the visualization isn't doing for you.</div>
+      <div class="lc-feedback feedback-answer" id="lc1-answer"><strong>Answer: B.</strong> This is the whole point of the raw view — it's <em>hairball</em>. The node sizes encode total activity at that station, but you can't reliably read directional flow at the neighborhood level from a tangle of station-to-station edges. A and C both fall for the same trap: assuming visual prominence (cluster size, node size) equals the answer to a directional question it can't answer. The raw view is honest about the data but useless for the question being asked. <strong>The fix is aggregation, not a fancier raw visualization.</strong></div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-number">LC 02</span>
+        <div class="lc-question">Switch to the <strong>Matrix view</strong> and select the <strong>Heatmap</strong>. Look at row totals (rides originating from each quintile) vs. column totals (rides terminating). Which quintile is the largest <em>net importer</em> of morning rides?</div>
+      </div>
+      <div class="lc-options" id="lc2-options">
+        <div class="lc-option" onclick="selectOption(2, 'A')"><span class="lc-letter">A</span><span>Q1 (lowest income) — they receive the most service jobs commuting in from the suburbs.</span></div>
+        <div class="lc-option" onclick="selectOption(2, 'B')"><span class="lc-letter">B</span><span>Q5 (highest income) — high-income neighborhoods host the office districts that draw morning commuters from lower-income origin neighborhoods.</span></div>
+        <div class="lc-option" onclick="selectOption(2, 'C')"><span class="lc-letter">C</span><span>Q3 (middle income) — middle-density mixed-use areas tend to be the largest flow attractors.</span></div>
+      </div>
+      <div class="lc-actions">
+        <button class="btn btn-neutral" onclick="showHint(2)">💡 Hint</button>
+        <button class="btn btn-neutral" onclick="showAnswer(2)">🔓 Reveal Answer</button>
+      </div>
+      <div class="lc-feedback feedback-hint" id="lc2-hint"><strong>Hint:</strong> For each quintile <em>i</em>, compute (sum of column <em>i</em>) − (sum of row <em>i</em>). That's net rides arriving minus rides departing. The largest <em>positive</em> value identifies the net importer. The chord diagram makes the same comparison if you look at where the thick ribbons terminate.</div>
+      <div class="lc-feedback feedback-answer" id="lc2-answer"><strong>Answer: B.</strong> Q5 is the largest net importer — in this synthetic dataset, morning rides flow from lower-income origin neighborhoods (Q1–Q3) into the high-income downtown/Back Bay employment cluster (Q5). This pattern was completely invisible at the station level: 40 stations × 40 destinations = 1,600 possible flows, almost all of them drawn as faint overlapping lines. Aggregating to 5 quintiles collapses 1,600 edges into a 5×5 matrix that fits on screen and has interpretable totals. <strong>This is the central trade-off of aggregation: you lose station-level granularity, but gain the ability to see the demographic story.</strong></div>
+    </div>
+
+    <div class="lc-card">
+      <div class="lc-header">
+        <span class="lc-number">LC 03</span>
+        <div class="lc-question">An engineer at the transit agency asks: "Should we always show stakeholders the aggregated views and skip the raw station map?" Which response is the strongest?</div>
+      </div>
+      <div class="lc-options" id="lc3-options">
+        <div class="lc-option" onclick="selectOption(3, 'A')"><span class="lc-letter">A</span><span>Yes — the raw view is gobbledygook and confuses non-technical stakeholders. Aggregated views are always more honest.</span></div>
+        <div class="lc-option" onclick="selectOption(3, 'B')"><span class="lc-letter">B</span><span>It depends on the decision. Each aggregation throws away information and bakes in a worldview (which neighborhood definitions? which quintile cutoffs?). Match the aggregation to the decision: station-level for capital planning at specific docks, neighborhood for service-area decisions, quintile for equity analysis.</span></div>
+        <div class="lc-option" onclick="selectOption(3, 'C')"><span class="lc-letter">C</span><span>No — only the raw view shows real data. Aggregated views are derived summaries and shouldn't be the primary deliverable.</span></div>
+      </div>
+      <div class="lc-actions">
+        <button class="btn btn-neutral" onclick="showHint(3)">💡 Hint</button>
+        <button class="btn btn-neutral" onclick="showAnswer(3)">🔓 Reveal Answer</button>
+      </div>
+      <div class="lc-feedback feedback-hint" id="lc3-hint"><strong>Hint:</strong> Think about who is asking what question. Would a planner deciding where to add a single new dock care about quintile-level flows? Would an equity analyst care which two specific stations had the highest pair flow? Aggregation is a <em>match</em>, not a <em>universal upgrade</em>.</div>
+      <div class="lc-feedback feedback-answer" id="lc3-answer"><strong>Answer: B.</strong> Aggregation is a deliberate analytic choice, not a presentation upgrade. Every aggregation embeds assumptions — neighborhood boundaries are political, quintile cutoffs depend on the reference population, and chord diagrams emphasize flows over magnitudes. A is wrong because it treats aggregation as universally clearer when it actually <em>hides</em> the information needed for station-level decisions. C is wrong because raw data isn't automatically more truthful — at the station level, the data is real but the <em>question being asked</em> (where do morning commuters go?) can't be answered from it without aggregation. The engineering instinct should be: <strong>name the decision first, then choose the aggregation that supports it.</strong></div>
+    </div>
+
+  </div>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Visualization · Aggregation as a Visualization Strategy</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script>
+// =========================================================================
+// SYNTHETIC DATA — Boston-flavored bike share, morning rides (7-10am)
+// 40 stations across 8 neighborhoods, mapped to 5 income quintiles
+// =========================================================================
+// Color gradient for income (design-system mapped):
+//   Q5 high = #39FF14 (green-bright), Q4 = #86efac, Q3 = #fbbf24,
+//   Q2 = #f97316 (orange), Q1 low = #f472b6 (magenta)
+
+const neighborhoods = [
+  { id: "back_bay",    label: "Back Bay",        quintile: 5, x: 380, y: 250, color: "#39FF14" },
+  { id: "downtown",    label: "Downtown",        quintile: 5, x: 470, y: 280, color: "#39FF14" },
+  { id: "kendall",     label: "Kendall/MIT",     quintile: 4, x: 410, y: 160, color: "#86efac" },
+  { id: "cambridge",   label: "Cambridge",       quintile: 4, x: 280, y: 130, color: "#86efac" },
+  { id: "south_end",   label: "South End",       quintile: 3, x: 440, y: 360, color: "#fbbf24" },
+  { id: "jamaica",     label: "Jamaica Plain",   quintile: 2, x: 320, y: 430, color: "#f97316" },
+  { id: "roxbury",     label: "Roxbury",         quintile: 1, x: 540, y: 410, color: "#f472b6" },
+  { id: "dorchester",  label: "Dorchester",      quintile: 1, x: 620, y: 360, color: "#f472b6" }
+];
+
+function buildStations() {
+  const stations = [];
+  const names = {
+    back_bay:    ["Copley Sq", "Hynes", "Prudential", "Arlington", "Boylston"],
+    downtown:    ["Park St", "State St", "Aquarium", "South Station", "Govt Ctr"],
+    kendall:     ["Kendall Sq", "MIT Main", "Tech Sq", "Vassar St", "Broadway"],
+    cambridge:   ["Harvard Sq", "Porter", "Davis", "Central Sq", "Inman"],
+    south_end:   ["SE Library", "Washington", "Tremont", "Mass Ave", "Berkeley"],
+    jamaica:     ["JP Center", "Forest Hills", "Stony Brook", "Green St", "Hyde Sq"],
+    roxbury:     ["Dudley Sq", "Grove Hall", "Egleston", "Roxbury Cross", "Warren St"],
+    dorchester:  ["Fields Cor", "Ashmont", "Savin Hill", "Codman", "Uphams Corner"]
+  };
+
+  neighborhoods.forEach(n => {
+    const sNames = names[n.id];
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * 2 * Math.PI + (n.id.charCodeAt(0) * 0.7);
+      const r = 32 + (i % 2) * 12;
+      stations.push({
+        id: `${n.id}_s${i}`,
+        label: sNames[i],
+        neighborhood: n.id,
+        quintile: n.quintile,
+        x: n.x + r * Math.cos(angle),
+        y: n.y + r * Math.sin(angle)
+      });
+    }
+  });
+  return stations;
+}
+
+const stations = buildStations();
+
+function buildStationRides() {
+  const rides = [];
+  let seed = 42;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+
+  stations.forEach(o => {
+    stations.forEach(d => {
+      if (o.id === d.id) return;
+      let flow = rand() * 3;
+      if (o.neighborhood === d.neighborhood) flow += 8 + rand() * 12;
+      const qDiff = d.quintile - o.quintile;
+      if (qDiff > 0) flow += qDiff * (12 + rand() * 18);
+      if (qDiff < 0) flow += Math.abs(qDiff) * (2 + rand() * 3);
+      const dist = Math.sqrt((o.x - d.x) ** 2 + (o.y - d.y) ** 2);
+      const distPenalty = Math.exp(-dist / 300);
+      flow *= (0.3 + 0.7 * distPenalty);
+      flow = Math.round(flow);
+      if (flow >= 2) rides.push({ source: o.id, target: d.id, weight: flow });
+    });
+  });
+  return rides;
+}
+
+const stationRides = buildStationRides();
+
+function aggregateBy(rides, stationMap, attrFn) {
+  const agg = new Map();
+  rides.forEach(r => {
+    const oa = attrFn(stationMap.get(r.source));
+    const da = attrFn(stationMap.get(r.target));
+    if (oa === da) return;
+    const key = `${oa}|${da}`;
+    agg.set(key, (agg.get(key) || 0) + r.weight);
+  });
+  const out = [];
+  agg.forEach((v, k) => {
+    const [s, t] = k.split("|");
+    out.push({ source: s, target: t, weight: v });
+  });
+  return out;
+}
+
+function aggregateSelfLoops(rides, stationMap, attrFn) {
+  const loops = new Map();
+  rides.forEach(r => {
+    const oa = attrFn(stationMap.get(r.source));
+    const da = attrFn(stationMap.get(r.target));
+    if (oa !== da) return;
+    loops.set(oa, (loops.get(oa) || 0) + r.weight);
+  });
+  return loops;
+}
+
+const stationMap = new Map(stations.map(s => [s.id, s]));
+const neighborhoodMap = new Map(neighborhoods.map(n => [n.id, n]));
+
+const neighborhoodRides = aggregateBy(stationRides, stationMap, s => s.neighborhood);
+const neighborhoodSelfLoops = aggregateSelfLoops(stationRides, stationMap, s => s.neighborhood);
+
+const quintiles = [
+  { id: "Q1", label: "Q1 (Lowest)",  x: 150, y: 250, color: "#f472b6" },
+  { id: "Q2", label: "Q2",           x: 290, y: 250, color: "#f97316" },
+  { id: "Q3", label: "Q3",           x: 430, y: 250, color: "#fbbf24" },
+  { id: "Q4", label: "Q4",           x: 570, y: 250, color: "#86efac" },
+  { id: "Q5", label: "Q5 (Highest)", x: 710, y: 250, color: "#39FF14" }
+];
+const quintileMap = new Map(quintiles.map(q => [q.id, q]));
+
+const quintileRides = aggregateBy(stationRides, stationMap, s => `Q${s.quintile}`);
+const quintileSelfLoops = aggregateSelfLoops(stationRides, stationMap, s => `Q${s.quintile}`);
+
+let currentView = "raw";
+let matrixMode = "heatmap";
+const svg = d3.select("#network-svg");
+const svgEl = document.getElementById("network-svg");
+const tooltip = document.getElementById("tooltip");
+
+function scaleX(x) { return (x / 800) * svgEl.clientWidth; }
+function scaleY(y) { return (y / 500) * svgEl.clientHeight; }
+
+function drawRawView() {
+  svg.selectAll("*").remove();
+  const maxW = d3.max(stationRides, d => d.weight);
+  const wScale = d3.scaleLinear().domain([2, maxW]).range([0.3, 3.5]);
+
+  const edgeG = svg.append("g");
+  edgeG.selectAll("line")
+    .data(stationRides).enter().append("line")
+    .attr("x1", d => scaleX(stationMap.get(d.source).x))
+    .attr("y1", d => scaleY(stationMap.get(d.source).y))
+    .attr("x2", d => scaleX(stationMap.get(d.target).x))
+    .attr("y2", d => scaleY(stationMap.get(d.target).y))
+    .attr("stroke", d => {
+      const oQ = stationMap.get(d.source).quintile;
+      const dQ = stationMap.get(d.target).quintile;
+      return oQ < dQ ? "#39FF14" : oQ > dQ ? "#f472b6" : "#6b8170";
+    })
+    .attr("stroke-width", d => wScale(d.weight))
+    .attr("stroke-opacity", 0.3)
+    .on("mouseover", function(e, d) {
+      d3.select(this).attr("stroke-opacity", 0.95);
+      const o = stationMap.get(d.source);
+      const t = stationMap.get(d.target);
+      showTip(e, `<strong>${o.label}</strong> → <strong>${t.label}</strong><br/>${d.weight} rides<br/>${neighborhoodMap.get(o.neighborhood).label} → ${neighborhoodMap.get(t.neighborhood).label}`);
+    })
+    .on("mouseout", function() { d3.select(this).attr("stroke-opacity", 0.3); hideTip(); });
+
+  const stationFlow = new Map();
+  stationRides.forEach(r => {
+    stationFlow.set(r.source, (stationFlow.get(r.source) || 0) + r.weight);
+    stationFlow.set(r.target, (stationFlow.get(r.target) || 0) + r.weight);
+  });
+  const maxFlow = Math.max(...stationFlow.values());
+
+  const nodeG = svg.append("g");
+  const groups = nodeG.selectAll("g")
+    .data(stations).enter().append("g")
+    .attr("transform", d => `translate(${scaleX(d.x)},${scaleY(d.y)})`);
+
+  groups.append("circle")
+    .attr("r", d => 3 + (stationFlow.get(d.id) || 0) / maxFlow * 6)
+    .attr("fill", d => neighborhoodMap.get(d.neighborhood).color)
+    .attr("stroke", "#050a05").attr("stroke-width", 1.2).attr("opacity", 0.9)
+    .on("mouseover", function(e, d) {
+      d3.select(this).attr("stroke", "#f0fdf4").attr("stroke-width", 2);
+      const n = neighborhoodMap.get(d.neighborhood);
+      const f = stationFlow.get(d.id) || 0;
+      showTip(e, `<strong>${d.label}</strong><br/>${n.label} · Q${d.quintile}<br/>${f} total rides`);
+    })
+    .on("mouseout", function() { d3.select(this).attr("stroke", "#050a05").attr("stroke-width", 1.2); hideTip(); });
+}
+
+function drawNeighborhoodView() {
+  svg.selectAll("*").remove();
+  const maxW = d3.max(neighborhoodRides, d => d.weight);
+  const wScale = d3.scaleLinear().domain([0, maxW]).range([0.5, 7]);
+
+  const edgeG = svg.append("g");
+  edgeG.selectAll("path")
+    .data(neighborhoodRides).enter().append("path")
+    .attr("d", d => {
+      const o = neighborhoodMap.get(d.source);
+      const t = neighborhoodMap.get(d.target);
+      const x1 = scaleX(o.x), y1 = scaleY(o.y);
+      const x2 = scaleX(t.x), y2 = scaleY(t.y);
+      const dx = x2 - x1, dy = y2 - y1;
+      const norm = Math.sqrt(dx * dx + dy * dy);
+      const ox = -dy / norm * 18, oy = dx / norm * 18;
+      const mx = (x1 + x2) / 2 + ox, my = (y1 + y2) / 2 + oy;
+      return `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`;
+    })
+    .attr("fill", "none")
+    .attr("stroke", d => {
+      const oQ = neighborhoodMap.get(d.source).quintile;
+      const dQ = neighborhoodMap.get(d.target).quintile;
+      return oQ < dQ ? "#39FF14" : oQ > dQ ? "#f472b6" : "#6b8170";
+    })
+    .attr("stroke-width", d => wScale(d.weight))
+    .attr("stroke-opacity", 0.6)
+    .attr("marker-end", "url(#arrow-nbhd)")
+    .on("mouseover", function(e, d) {
+      d3.select(this).attr("stroke-opacity", 1);
+      const o = neighborhoodMap.get(d.source);
+      const t = neighborhoodMap.get(d.target);
+      showTip(e, `<strong>${o.label}</strong> → <strong>${t.label}</strong><br/>${d.weight} rides<br/>Q${o.quintile} → Q${t.quintile}`);
+    })
+    .on("mouseout", function() { d3.select(this).attr("stroke-opacity", 0.6); hideTip(); });
+
+  svg.append("defs").append("marker")
+    .attr("id", "arrow-nbhd").attr("viewBox", "0 -5 10 10")
+    .attr("refX", 14).attr("refY", 0)
+    .attr("markerWidth", 6).attr("markerHeight", 6).attr("orient", "auto")
+    .append("path").attr("d", "M0,-5L10,0L0,5").attr("fill", "#a3b8a3");
+
+  const flow = new Map();
+  neighborhoodRides.forEach(r => {
+    flow.set(r.source, (flow.get(r.source) || 0) + r.weight);
+    flow.set(r.target, (flow.get(r.target) || 0) + r.weight);
+  });
+  neighborhoodSelfLoops.forEach((v, k) => flow.set(k, (flow.get(k) || 0) + v));
+  const maxFlow = Math.max(...flow.values());
+
+  const nodeG = svg.append("g");
+  const groups = nodeG.selectAll("g")
+    .data(neighborhoods).enter().append("g")
+    .attr("transform", d => `translate(${scaleX(d.x)},${scaleY(d.y)})`);
+
+  groups.append("circle")
+    .attr("r", d => 14 + (flow.get(d.id) || 0) / maxFlow * 18)
+    .attr("fill", d => d.color)
+    .attr("stroke", "#050a05").attr("stroke-width", 2).attr("opacity", 0.95)
+    .on("mouseover", function(e, d) {
+      d3.select(this).attr("stroke", "#f0fdf4").attr("stroke-width", 3);
+      const f = flow.get(d.id) || 0;
+      const internal = neighborhoodSelfLoops.get(d.id) || 0;
+      showTip(e, `<strong>${d.label}</strong><br/>Quintile ${d.quintile}<br/>${f} rides touching this neighborhood<br/>${internal} internal rides`);
+    })
+    .on("mouseout", function() { d3.select(this).attr("stroke", "#050a05").attr("stroke-width", 2); hideTip(); });
+
+  groups.append("text")
+    .attr("y", d => -18 - (flow.get(d.id) || 0) / maxFlow * 18)
+    .attr("text-anchor", "middle").attr("fill", "#f0fdf4")
+    .attr("font-family", "DM Sans").attr("font-size", 12).attr("font-weight", 600)
+    .text(d => d.label);
+
+  groups.append("text")
+    .attr("y", 4).attr("text-anchor", "middle").attr("fill", "#050a05")
+    .attr("font-family", "Space Mono").attr("font-size", 11).attr("font-weight", 700)
+    .text(d => `Q${d.quintile}`);
+}
+
+function drawQuintileView() {
+  svg.selectAll("*").remove();
+  const maxW = d3.max(quintileRides, d => d.weight);
+  const wScale = d3.scaleLinear().domain([0, maxW]).range([1, 14]);
+
+  svg.append("defs").append("marker")
+    .attr("id", "arrow-q").attr("viewBox", "0 -5 10 10")
+    .attr("refX", 14).attr("refY", 0)
+    .attr("markerWidth", 6).attr("markerHeight", 6).attr("orient", "auto")
+    .append("path").attr("d", "M0,-5L10,0L0,5").attr("fill", "#a3b8a3");
+
+  const edgeG = svg.append("g");
+  edgeG.selectAll("path")
+    .data(quintileRides).enter().append("path")
+    .attr("d", d => {
+      const o = quintileMap.get(d.source);
+      const t = quintileMap.get(d.target);
+      const x1 = scaleX(o.x), y1 = scaleY(o.y);
+      const x2 = scaleX(t.x), y2 = scaleY(t.y);
+      const sIdx = parseInt(d.source.slice(1));
+      const tIdx = parseInt(d.target.slice(1));
+      const steps = Math.abs(tIdx - sIdx);
+      const direction = tIdx > sIdx ? -1 : 1;
+      const arcHeight = 35 * steps * direction;
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2 + arcHeight;
+      return `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`;
+    })
+    .attr("fill", "none")
+    .attr("stroke", d => {
+      const sIdx = parseInt(d.source.slice(1));
+      const tIdx = parseInt(d.target.slice(1));
+      return tIdx > sIdx ? "#39FF14" : tIdx < sIdx ? "#f472b6" : "#6b8170";
+    })
+    .attr("stroke-width", d => wScale(d.weight))
+    .attr("stroke-opacity", 0.75)
+    .attr("marker-end", "url(#arrow-q)")
+    .on("mouseover", function(e, d) {
+      d3.select(this).attr("stroke-opacity", 1);
+      showTip(e, `<strong>${d.source}</strong> → <strong>${d.target}</strong><br/>${d.weight} rides`);
+    })
+    .on("mouseout", function() { d3.select(this).attr("stroke-opacity", 0.75); hideTip(); });
+
+  const inFlow = new Map(), outFlow = new Map();
+  quintileRides.forEach(r => {
+    outFlow.set(r.source, (outFlow.get(r.source) || 0) + r.weight);
+    inFlow.set(r.target, (inFlow.get(r.target) || 0) + r.weight);
+  });
+  const totalFlow = new Map();
+  quintiles.forEach(q => totalFlow.set(q.id, (inFlow.get(q.id) || 0) + (outFlow.get(q.id) || 0)));
+  const maxTotal = Math.max(...totalFlow.values());
+
+  const nodeG = svg.append("g");
+  const groups = nodeG.selectAll("g")
+    .data(quintiles).enter().append("g")
+    .attr("transform", d => `translate(${scaleX(d.x)},${scaleY(d.y)})`);
+
+  groups.append("circle")
+    .attr("r", d => 22 + (totalFlow.get(d.id) || 0) / maxTotal * 22)
+    .attr("fill", d => d.color)
+    .attr("stroke", "#050a05").attr("stroke-width", 2.5).attr("opacity", 0.95)
+    .on("mouseover", function(e, d) {
+      d3.select(this).attr("stroke", "#f0fdf4").attr("stroke-width", 3.5);
+      const inF = inFlow.get(d.id) || 0;
+      const outF = outFlow.get(d.id) || 0;
+      const internal = quintileSelfLoops.get(d.id) || 0;
+      showTip(e, `<strong>${d.label}</strong><br/>Rides in: ${inF}<br/>Rides out: ${outF}<br/>Net: ${inF - outF > 0 ? '+' : ''}${inF - outF}<br/>Internal: ${internal}`);
+    })
+    .on("mouseout", function() { d3.select(this).attr("stroke", "#050a05").attr("stroke-width", 2.5); hideTip(); });
+
+  groups.append("text")
+    .attr("y", 4).attr("text-anchor", "middle").attr("fill", "#050a05")
+    .attr("font-family", "Bebas Neue").attr("font-size", 20).attr("font-weight", 700)
+    .text(d => d.id);
+
+  groups.append("text")
+    .attr("y", d => 22 + (totalFlow.get(d.id) || 0) / maxTotal * 22 + 18)
+    .attr("text-anchor", "middle").attr("fill", "#f0fdf4")
+    .attr("font-family", "DM Sans").attr("font-size", 12)
+    .text(d => d.label.replace(/^Q\d /, "").replace(/[()]/g, ""));
+}
+
+function drawHeatmap() {
+  const container = d3.select("#matrix-container");
+  container.selectAll("*").remove();
+  container.classed("active", true);
+
+  const W = container.node().clientWidth;
+  const H = 480;
+  const margin = { top: 60, right: 100, bottom: 60, left: 110 };
+  const innerW = W - margin.left - margin.right;
+  const innerH = H - margin.top - margin.bottom;
+  const cellSize = Math.min(innerW, innerH) / 5;
+  const gridW = cellSize * 5;
+  const gridH = cellSize * 5;
+
+  const svgM = container.append("svg").attr("width", W).attr("height", H);
+
+  const matrix = {};
+  quintiles.forEach(q => { matrix[q.id] = {}; quintiles.forEach(q2 => matrix[q.id][q2.id] = 0); });
+  quintileRides.forEach(r => { matrix[r.source][r.target] = r.weight; });
+  quintileSelfLoops.forEach((v, k) => { matrix[k][k] = v; });
+
+  let maxVal = 0;
+  quintiles.forEach(q => quintiles.forEach(q2 => { if (matrix[q.id][q2.id] > maxVal) maxVal = matrix[q.id][q2.id]; }));
+
+  const colorScale = d3.scaleSequential()
+    .domain([0, maxVal])
+    .interpolator(d3.interpolate("#0a140a", "#fbbf24"));
+
+  const g = svgM.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+  quintiles.forEach((qSrc, i) => {
+    quintiles.forEach((qDst, j) => {
+      const v = matrix[qSrc.id][qDst.id];
+      g.append("rect")
+        .attr("x", j * cellSize).attr("y", i * cellSize)
+        .attr("width", cellSize - 2).attr("height", cellSize - 2)
+        .attr("fill", colorScale(v))
+        .attr("stroke", "#050a05").attr("stroke-width", 2)
+        .on("mouseover", function(e) {
+          d3.select(this).attr("stroke", "#f0fdf4").attr("stroke-width", 3);
+          showTip(e, `<strong>${qSrc.id} → ${qDst.id}</strong><br/>${v} rides<br/>${qSrc.label}<br/>→ ${qDst.label}`);
+        })
+        .on("mouseout", function() { d3.select(this).attr("stroke", "#050a05").attr("stroke-width", 2); hideTip(); });
+
+      g.append("text")
+        .attr("x", j * cellSize + cellSize / 2)
+        .attr("y", i * cellSize + cellSize / 2 + 4)
+        .attr("text-anchor", "middle")
+        .attr("fill", v > maxVal * 0.5 ? "#050a05" : "#f0fdf4")
+        .attr("font-family", "Space Mono").attr("font-size", 12).attr("font-weight", 500)
+        .attr("pointer-events", "none")
+        .text(v);
+    });
+  });
+
+  quintiles.forEach((q, i) => {
+    g.append("text")
+      .attr("x", -10).attr("y", i * cellSize + cellSize / 2 + 4)
+      .attr("text-anchor", "end").attr("fill", "#f0fdf4")
+      .attr("font-family", "Space Mono").attr("font-size", 12)
+      .text(q.id);
+  });
+
+  quintiles.forEach((q, j) => {
+    g.append("text")
+      .attr("x", j * cellSize + cellSize / 2).attr("y", -10)
+      .attr("text-anchor", "middle").attr("fill", "#f0fdf4")
+      .attr("font-family", "Space Mono").attr("font-size", 12)
+      .text(q.id);
+  });
+
+  svgM.append("text")
+    .attr("transform", `translate(20, ${margin.top + gridH / 2}) rotate(-90)`)
+    .attr("text-anchor", "middle").attr("fill", "#a3b8a3")
+    .attr("font-family", "Space Mono").attr("font-size", 11).attr("letter-spacing", "0.14em")
+    .text("ORIGIN QUINTILE");
+
+  svgM.append("text")
+    .attr("x", margin.left + gridW / 2).attr("y", 28)
+    .attr("text-anchor", "middle").attr("fill", "#a3b8a3")
+    .attr("font-family", "Space Mono").attr("font-size", 11).attr("letter-spacing", "0.14em")
+    .text("DESTINATION QUINTILE");
+
+  quintiles.forEach((q, i) => {
+    const rowTotal = quintiles.reduce((s, q2) => s + matrix[q.id][q2.id], 0);
+    g.append("text")
+      .attr("x", gridW + 12).attr("y", i * cellSize + cellSize / 2 + 4)
+      .attr("fill", "#a3b8a3").attr("font-family", "Space Mono").attr("font-size", 11)
+      .text(`Σ ${rowTotal}`);
+  });
+
+  quintiles.forEach((q, j) => {
+    const colTotal = quintiles.reduce((s, q2) => s + matrix[q2.id][q.id], 0);
+    g.append("text")
+      .attr("x", j * cellSize + cellSize / 2).attr("y", gridH + 22)
+      .attr("text-anchor", "middle").attr("fill", "#a3b8a3")
+      .attr("font-family", "Space Mono").attr("font-size", 11)
+      .text(`Σ ${colTotal}`);
+  });
+
+  const legendG = svgM.append("g").attr("transform", `translate(${margin.left + gridW + 50}, ${margin.top + 20})`);
+  const legHeight = 200;
+  const legGrad = svgM.append("defs").append("linearGradient")
+    .attr("id", "heat-grad")
+    .attr("x1", "0%").attr("y1", "100%")
+    .attr("x2", "0%").attr("y2", "0%");
+  legGrad.append("stop").attr("offset", "0%").attr("stop-color", colorScale(0));
+  legGrad.append("stop").attr("offset", "100%").attr("stop-color", colorScale(maxVal));
+
+  legendG.append("rect").attr("width", 18).attr("height", legHeight)
+    .attr("fill", "url(#heat-grad)").attr("stroke", "rgba(57,255,20,0.25)");
+
+  legendG.append("text").attr("x", 24).attr("y", 4).attr("fill", "#f0fdf4").attr("font-family", "Space Mono").attr("font-size", 10).text(maxVal);
+  legendG.append("text").attr("x", 24).attr("y", legHeight).attr("fill", "#f0fdf4").attr("font-family", "Space Mono").attr("font-size", 10).text("0");
+  legendG.append("text").attr("x", 0).attr("y", legHeight + 18).attr("fill", "#a3b8a3").attr("font-family", "Space Mono").attr("font-size", 9).text("RIDES");
+}
+
+function drawChord() {
+  const container = d3.select("#chord-container");
+  container.selectAll("*").remove();
+  container.classed("active", true);
+
+  const W = container.node().clientWidth;
+  const H = 480;
+  const radius = Math.min(W, H) / 2 - 60;
+
+  const svgC = container.append("svg")
+    .attr("width", W).attr("height", H)
+    .append("g")
+    .attr("transform", `translate(${W / 2},${H / 2})`);
+
+  const ids = quintiles.map(q => q.id);
+  const matrix = ids.map(s => ids.map(t => {
+    if (s === t) return quintileSelfLoops.get(s) || 0;
+    const r = quintileRides.find(x => x.source === s && x.target === t);
+    return r ? r.weight : 0;
+  }));
+
+  const chord = d3.chordDirected().padAngle(0.04).sortSubgroups(d3.descending);
+  const chords = chord(matrix);
+  const arc = d3.arc().innerRadius(radius - 22).outerRadius(radius);
+  const ribbon = d3.ribbonArrow().radius(radius - 24).padAngle(0.005);
+
+  const group = svgC.append("g").selectAll("g").data(chords.groups).enter().append("g");
+  group.append("path")
+    .attr("d", arc).attr("fill", d => quintiles[d.index].color)
+    .attr("stroke", "#050a05").attr("stroke-width", 1.5)
+    .on("mouseover", function(e, d) {
+      const q = quintiles[d.index];
+      const total = matrix[d.index].reduce((a, b) => a + b, 0);
+      const incoming = matrix.reduce((s, row) => s + row[d.index], 0);
+      showTip(e, `<strong>${q.label}</strong><br/>Out: ${total}<br/>In: ${incoming}<br/>Net: ${incoming - total > 0 ? '+' : ''}${incoming - total}`);
+    })
+    .on("mouseout", hideTip);
+
+  group.append("text")
+    .each(d => { d.angle = (d.startAngle + d.endAngle) / 2; })
+    .attr("dy", "0.35em")
+    .attr("transform", d => `rotate(${(d.angle * 180 / Math.PI - 90)}) translate(${radius + 14}) ${d.angle > Math.PI ? "rotate(180)" : ""}`)
+    .attr("text-anchor", d => d.angle > Math.PI ? "end" : null)
+    .attr("fill", "#f0fdf4").attr("font-family", "Space Mono").attr("font-size", 12).attr("font-weight", 500)
+    .text(d => quintiles[d.index].id);
+
+  svgC.append("g").attr("fill-opacity", 0.7)
+    .selectAll("path").data(chords).enter().append("path")
+    .attr("d", ribbon)
+    .attr("fill", d => quintiles[d.target.index].color)
+    .attr("stroke", "#050a05").attr("stroke-width", 0.5)
+    .on("mouseover", function(e, d) {
+      d3.select(this).attr("fill-opacity", 1);
+      const o = quintiles[d.source.index];
+      const t = quintiles[d.target.index];
+      showTip(e, `<strong>${o.id} → ${t.id}</strong><br/>${d.source.value} rides`);
+    })
+    .on("mouseout", function() { d3.select(this).attr("fill-opacity", 0.7); hideTip(); });
+
+  svgC.append("text")
+    .attr("x", 0).attr("y", -radius - 30).attr("text-anchor", "middle")
+    .attr("fill", "#a3b8a3").attr("font-family", "Space Mono")
+    .attr("font-size", 11).attr("letter-spacing", "0.14em")
+    .text("RIDE FLOWS BETWEEN INCOME QUINTILES");
+}
+
+function showTip(event, html) {
+  tooltip.innerHTML = html;
+  tooltip.style.opacity = "1";
+  tooltip.style.left = (event.pageX + 12) + "px";
+  tooltip.style.top = (event.pageY + 12) + "px";
+}
+function hideTip() { tooltip.style.opacity = "0"; }
+
+function updateForView() {
+  const sb = document.getElementById("sidebar-explainer");
+  const lvl = document.getElementById("m-level");
+  const nNodes = document.getElementById("m-nodes");
+  const nEdges = document.getElementById("m-edges");
+  const avgDeg = document.getElementById("m-avgdeg");
+  const clarity = document.getElementById("m-clarity");
+  const sNodes = document.getElementById("stat-nodes");
+  const sEdges = document.getElementById("stat-edges");
+  const sRides = document.getElementById("stat-rides");
+  const sDens = document.getElementById("stat-density");
+  const viewInfo = document.getElementById("view-info");
+  const legend = document.getElementById("legend-content");
+  const matrixControls = document.getElementById("matrix-controls");
+
+  document.getElementById("network-svg").classList.remove("hidden");
+  document.getElementById("matrix-container").classList.remove("active");
+  document.getElementById("chord-container").classList.remove("active");
+  matrixControls.style.display = "none";
+
+  let totalRides;
+
+  if (currentView === "raw") {
+    drawRawView();
+    totalRides = stationRides.reduce((s, r) => s + r.weight, 0);
+    const n = stations.length, e = stationRides.length;
+    const possible = n * (n - 1);
+    lvl.textContent = "Stations (raw)";
+    nNodes.textContent = n;
+    nEdges.textContent = e;
+    avgDeg.textContent = (e / n).toFixed(1);
+    clarity.textContent = "Low (hairball)";
+    clarity.style.color = "var(--node-7)";
+    sNodes.textContent = n;
+    sEdges.textContent = e;
+    sRides.textContent = totalRides.toLocaleString();
+    sDens.textContent = (e / possible).toFixed(3);
+    viewInfo.innerHTML = `<strong>Raw station-level network.</strong> Every dot is one of 40 bike-share stations; every line is a station-to-station flow during morning hours. There's no aggregation — this is the data as collected. With 40 × 39 = 1,560 possible directed edges, the result is a hairball. Hover any edge or station to inspect, but notice how hard it is to read a clear pattern.`;
+    sb.innerHTML = `You're looking at <strong>1,560 possible station-pair flows</strong> (40 stations × 39 destinations), of which ${e} exceed our minimum threshold of 2 rides. Edges are colored green when flowing toward a higher-income quintile, magenta when flowing toward a lower-income one, grey within the same quintile. The pattern is in there — but your eye can't extract it from this density.`;
+    legend.innerHTML = `
+      <div class="legend-item"><span class="legend-swatch" style="background:#39FF14"></span>Q5 / Q4 station (high income)</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#fbbf24"></span>Q3 station (middle)</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#f472b6"></span>Q1 / Q2 station (low income)</div>
+      <div class="legend-item"><span class="legend-line" style="background:#39FF14"></span>Up-quintile flow</div>
+      <div class="legend-item"><span class="legend-line" style="background:#f472b6"></span>Down-quintile flow</div>
+      <div class="legend-item"><span class="legend-line" style="background:#6b8170"></span>Same-quintile flow</div>
+    `;
+  } else if (currentView === "neighborhood") {
+    drawNeighborhoodView();
+    totalRides = neighborhoodRides.reduce((s, r) => s + r.weight, 0) + [...neighborhoodSelfLoops.values()].reduce((a, b) => a + b, 0);
+    const n = neighborhoods.length, e = neighborhoodRides.length;
+    lvl.textContent = "Neighborhoods";
+    nNodes.textContent = n;
+    nEdges.textContent = e;
+    avgDeg.textContent = (e / n).toFixed(1);
+    clarity.textContent = "Medium";
+    clarity.style.color = "var(--node-4)";
+    sNodes.textContent = n;
+    sEdges.textContent = e;
+    sRides.textContent = totalRides.toLocaleString();
+    sDens.textContent = (e / (n * (n - 1))).toFixed(3);
+    viewInfo.innerHTML = `<strong>Neighborhood-level aggregation.</strong> 40 stations collapse into 8 neighborhoods. Every edge here is the sum of all rides between any station in neighborhood A and any station in neighborhood B. Internal (within-neighborhood) rides are stored separately and shown in tooltips. The hairball is gone, but you still need local Boston knowledge to read the demographic story.`;
+    sb.innerHTML = `Eight neighborhoods, each labeled with its income quintile. Node size scales with total rides touching that neighborhood. The clearest pattern is that <strong>Back Bay and Downtown</strong> dominate — but to know what that <em>means</em> demographically, you need to know that those are the wealthiest neighborhoods. That's why the next aggregation step matters.`;
+    legend.innerHTML = `
+      <div class="legend-item"><span class="legend-swatch" style="background:#39FF14"></span>Q5 neighborhood</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#86efac"></span>Q4 neighborhood</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#fbbf24"></span>Q3 neighborhood</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#f97316"></span>Q2 neighborhood</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#f472b6"></span>Q1 neighborhood</div>
+      <div class="legend-item"><span class="legend-line" style="background:#39FF14"></span>Up-quintile flow</div>
+      <div class="legend-item"><span class="legend-line" style="background:#f472b6"></span>Down-quintile flow</div>
+    `;
+  } else if (currentView === "quintile") {
+    drawQuintileView();
+    totalRides = quintileRides.reduce((s, r) => s + r.weight, 0) + [...quintileSelfLoops.values()].reduce((a, b) => a + b, 0);
+    const n = quintiles.length, e = quintileRides.length;
+    lvl.textContent = "Income quintiles";
+    nNodes.textContent = n;
+    nEdges.textContent = e;
+    avgDeg.textContent = (e / n).toFixed(1);
+    clarity.textContent = "High";
+    clarity.style.color = "var(--green-bright)";
+    sNodes.textContent = n;
+    sEdges.textContent = e;
+    sRides.textContent = totalRides.toLocaleString();
+    sDens.textContent = (e / (n * (n - 1))).toFixed(3);
+    viewInfo.innerHTML = `<strong>Income quintile aggregation.</strong> 40 stations and 8 neighborhoods further collapse into 5 income quintiles (Q1 = lowest, Q5 = highest). Now the demographic story is the <em>geometry of the graph</em>: green arcs (up-quintile flows) are visibly thicker than magenta arcs (down-quintile flows). Aggregation has done the demographic interpretation for you — but you've thrown away all spatial information.`;
+    sb.innerHTML = `Five nodes, one per income quintile. Up-quintile arcs are drawn above the axis, down-quintile arcs below. The visual asymmetry of green (up) vs magenta (down) arcs <strong>is</strong> the demographic finding: morning commute rides flow disproportionately from lower-income origins toward higher-income destinations. Click the matrix view to see the exact numbers.`;
+    legend.innerHTML = `
+      <div class="legend-item"><span class="legend-swatch" style="background:#39FF14"></span>Q5 (highest income)</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#86efac"></span>Q4</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#fbbf24"></span>Q3</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#f97316"></span>Q2</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#f472b6"></span>Q1 (lowest income)</div>
+      <div class="legend-item"><span class="legend-line" style="background:#39FF14"></span>Up-quintile flow (above axis)</div>
+      <div class="legend-item"><span class="legend-line" style="background:#f472b6"></span>Down-quintile flow (below axis)</div>
+    `;
+  } else if (currentView === "matrix") {
+    document.getElementById("network-svg").classList.add("hidden");
+    matrixControls.style.display = "flex";
+    if (matrixMode === "heatmap") drawHeatmap();
+    else drawChord();
+    totalRides = quintileRides.reduce((s, r) => s + r.weight, 0) + [...quintileSelfLoops.values()].reduce((a, b) => a + b, 0);
+    lvl.textContent = "Matrix (Q×Q)";
+    nNodes.textContent = 5;
+    nEdges.textContent = "25 cells";
+    avgDeg.textContent = "—";
+    clarity.textContent = "Quantitative";
+    clarity.style.color = "var(--green-bright)";
+    sNodes.textContent = 5;
+    sEdges.textContent = "25";
+    sRides.textContent = totalRides.toLocaleString();
+    sDens.textContent = "1.000";
+    viewInfo.innerHTML = `<strong>Origin-destination matrix.</strong> The same 5-quintile data, now as a fully readable table. Toggle between <em>heatmap</em> (exact numbers per cell, row/column totals) and <em>chord diagram</em> (flow-as-ribbon, instant comparison of bidirectional magnitudes). Heatmaps are better for precise reading; chord diagrams are better for "tell me the story at a glance."`;
+    if (matrixMode === "heatmap") {
+      sb.innerHTML = `Read the diagonal first — those are within-quintile rides. Then compare each row total (rides originating from this quintile) to its column total (rides arriving at this quintile). The cells <strong>off the diagonal in the upper-right and lower-left quadrants</strong> are the cross-quintile flows. Notice how cells get warmer (more amber) as you move from low-to-high vs. high-to-low.`;
+    } else {
+      sb.innerHTML = `Each arc on the outer circle is a quintile, sized by its total flow. Ribbons between arcs are colored by their <em>destination</em>. The thickness of a green (Q5-colored) ribbon arriving from Q1 tells you, at a glance, how many low→high commute rides happen. Compare this to a station-level chord diagram with 40 arcs — it would be unreadable.`;
+    }
+    legend.innerHTML = matrixMode === "heatmap" ? `
+      <div class="legend-item"><span class="legend-swatch" style="background:#0a140a"></span>Few rides</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#fbbf24"></span>Many rides</div>
+      <div class="legend-item" style="margin-top:8px;color:var(--white)"><strong>Σ row</strong>&nbsp;= rides originating from that quintile</div>
+      <div class="legend-item" style="color:var(--white)"><strong>Σ col</strong>&nbsp;= rides arriving at that quintile</div>
+    ` : `
+      <div class="legend-item"><span class="legend-swatch" style="background:#39FF14"></span>Q5</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#86efac"></span>Q4</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#fbbf24"></span>Q3</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#f97316"></span>Q2</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#f472b6"></span>Q1</div>
+      <div class="legend-item" style="margin-top:8px;color:var(--white)">Ribbon color = destination</div>
+    `;
+  }
+
+  updateTables();
+}
+
+function updateTables() {
+  const ridesBody = document.querySelector("#rides-table tbody");
+  const nodesBody = document.querySelector("#nodes-table tbody");
+  ridesBody.innerHTML = "";
+  nodesBody.innerHTML = "";
+
+  if (currentView === "raw") {
+    const rides = [...stationRides].sort((a, b) => b.weight - a.weight).slice(0, 15);
+    rides.forEach(r => {
+      const o = stationMap.get(r.source), t = stationMap.get(r.target);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${o.label}</td><td>${t.label}</td><td>${r.weight}</td><td>${neighborhoodMap.get(o.neighborhood).label} (Q${o.quintile})</td><td>${neighborhoodMap.get(t.neighborhood).label} (Q${t.quintile})</td>`;
+      ridesBody.appendChild(tr);
+    });
+    const inF = new Map(), outF = new Map();
+    stationRides.forEach(r => {
+      outF.set(r.source, (outF.get(r.source) || 0) + r.weight);
+      inF.set(r.target, (inF.get(r.target) || 0) + r.weight);
+    });
+    [...stations].sort((a, b) => ((inF.get(b.id) || 0) + (outF.get(b.id) || 0)) - ((inF.get(a.id) || 0) + (outF.get(a.id) || 0))).slice(0, 20).forEach(n => {
+      const oF = outF.get(n.id) || 0, iF = inF.get(n.id) || 0;
+      const tr = document.createElement("tr");
+      const net = iF - oF;
+      tr.innerHTML = `<td>${n.label}</td><td>${neighborhoodMap.get(n.neighborhood).label} (Q${n.quintile})</td><td>${oF}</td><td>${iF}</td><td style="color:${net >= 0 ? 'var(--green-bright)' : 'var(--node-7)'}">${net >= 0 ? '+' : ''}${net}</td>`;
+      nodesBody.appendChild(tr);
+    });
+  } else if (currentView === "neighborhood") {
+    const rides = [...neighborhoodRides].sort((a, b) => b.weight - a.weight).slice(0, 15);
+    rides.forEach(r => {
+      const o = neighborhoodMap.get(r.source), t = neighborhoodMap.get(r.target);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${o.label}</td><td>${t.label}</td><td>${r.weight}</td><td>Q${o.quintile}</td><td>Q${t.quintile}</td>`;
+      ridesBody.appendChild(tr);
+    });
+    const inF = new Map(), outF = new Map();
+    neighborhoodRides.forEach(r => {
+      outF.set(r.source, (outF.get(r.source) || 0) + r.weight);
+      inF.set(r.target, (inF.get(r.target) || 0) + r.weight);
+    });
+    [...neighborhoods].sort((a, b) => ((inF.get(b.id) || 0) + (outF.get(b.id) || 0)) - ((inF.get(a.id) || 0) + (outF.get(a.id) || 0))).forEach(n => {
+      const oF = outF.get(n.id) || 0, iF = inF.get(n.id) || 0;
+      const net = iF - oF;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${n.label}</td><td>Q${n.quintile}</td><td>${oF}</td><td>${iF}</td><td style="color:${net >= 0 ? 'var(--green-bright)' : 'var(--node-7)'}">${net >= 0 ? '+' : ''}${net}</td>`;
+      nodesBody.appendChild(tr);
+    });
+  } else {
+    const rides = [...quintileRides].sort((a, b) => b.weight - a.weight);
+    rides.forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${r.source}</td><td>${r.target}</td><td>${r.weight}</td><td>${quintileMap.get(r.source).label}</td><td>${quintileMap.get(r.target).label}</td>`;
+      ridesBody.appendChild(tr);
+    });
+    const inF = new Map(), outF = new Map();
+    quintileRides.forEach(r => {
+      outF.set(r.source, (outF.get(r.source) || 0) + r.weight);
+      inF.set(r.target, (inF.get(r.target) || 0) + r.weight);
+    });
+    quintiles.forEach(q => {
+      const oF = outF.get(q.id) || 0, iF = inF.get(q.id) || 0;
+      const net = iF - oF;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${q.id}</td><td>${q.label}</td><td>${oF}</td><td>${iF}</td><td style="color:${net >= 0 ? 'var(--green-bright)' : 'var(--node-7)'}">${net >= 0 ? '+' : ''}${net}</td>`;
+      nodesBody.appendChild(tr);
+    });
+  }
+}
+
+function toggleTable(id) { document.getElementById(id).classList.toggle("open"); }
+
+const lcAnswers = { 1: "B", 2: "B", 3: "B" };
+
+function selectOption(lc, opt) {
+  const options = document.querySelectorAll(`#lc${lc}-options .lc-option`);
+  options.forEach((el, i) => {
+    el.classList.remove("correct", "incorrect");
+    const letter = String.fromCharCode(65 + i);
+    if (letter === opt) el.classList.add(letter === lcAnswers[lc] ? "correct" : "incorrect");
+  });
+}
+function showHint(lc) {
+  const el = document.getElementById(`lc${lc}-hint`);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+function showAnswer(lc) {
+  const el = document.getElementById(`lc${lc}-answer`);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+  if (el.style.display === "block") {
+    const options = document.querySelectorAll(`#lc${lc}-options .lc-option`);
+    options.forEach((opt, i) => {
+      const letter = String.fromCharCode(65 + i);
+      if (letter === lcAnswers[lc]) opt.classList.add("revealed-correct");
+    });
+  }
+}
+
+document.querySelectorAll(".view-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".view-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentView = btn.dataset.view;
+    updateForView();
+  });
+});
+
+document.querySelectorAll(".matrix-mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".matrix-mode-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    matrixMode = btn.dataset.mode;
+    updateForView();
+  });
+});
+
+window.addEventListener("load", () => { updateForView(); });
+window.addEventListener("resize", () => { updateForView(); });
+</script>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

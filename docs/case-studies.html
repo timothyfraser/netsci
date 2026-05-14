@@ -97,7 +97,7 @@
   <section class="hero">
     <p class="course-number">SYSEN 5470 · Case Studies</p>
     <h1 class="hero-title">Nine Problems.<br>One <span>Network</span> Underneath.</h1>
-    <p class="hook">Every case study starts with a system that's already broken — supply chains, transit, evacuation, suppliers — and asks you to find what a traditional analysis would miss. Five labs are live. Four more coming as the course is built out.</p>
+    <p class="hook">Every case study starts with a system that's already broken — supply chains, transit, evacuation, suppliers — and asks you to find what a traditional analysis would miss. Nine labs are live. (Network Fundamentals is on deck.)</p>
   </section>
 
   <section class="section">
@@ -169,6 +169,58 @@
         </div>
       </a>
 
+      <a class="case-card" href="case-studies/counterfactual.html" id="routing">
+        <div class="head"><span class="ico">🚦</span><h3>Routing &amp; Optimization</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-predict">Predict</span>
+          <span class="status-tag">Live Lab</span>
+        </div>
+        <p class="desc">Lakeside Bikeshare. Predict which proposed intervention — new station, new connector, boosted corridor — actually improves the network. Monte Carlo simulator with Poisson edge-weight resampling and a 95% CI tells you whether the effect is real or just noise.</p>
+        <div class="footer-row">
+          <span class="reading">Bertsekas · Network Optimization</span>
+          <span class="open-btn">Open Lab →</span>
+        </div>
+      </a>
+
+      <a class="case-card" href="case-studies/dsm-clustering.html" id="clusters">
+        <div class="head"><span class="ico">🧩</span><h3>Clustering &amp; Communities</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-measure">Measure</span>
+          <span class="status-tag">Live Lab</span>
+        </div>
+        <p class="desc">Three engineered systems as Design Structure Matrices — rocket, drone, software. Drag rows and columns to chase modular blocks by hand, then watch Louvain do it better. Then ask what the residual off-block marks are trying to tell you.</p>
+        <div class="footer-row">
+          <span class="reading">Barabási Ch. 9 · E&amp;K Ch. 4 &amp; 10</span>
+          <span class="open-btn">Open Lab →</span>
+        </div>
+      </a>
+
+      <a class="case-card" href="case-studies/aggregation.html" id="viz">
+        <div class="head"><span class="ico">🗺️</span><h3>Visualization · Aggregation</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-identify">Identify</span>
+          <span class="status-tag">Live Lab</span>
+        </div>
+        <p class="desc">Bluebikes morning-commute flows at three zoom levels — raw stations, neighborhoods, income quintiles — plus matrix and chord views. Watch a clean socioeconomic story emerge as the hairball collapses into a 5×5 grid. The point isn't pretty graphs; it's <em>losing detail to gain insight</em>.</p>
+        <div class="footer-row">
+          <span class="reading">Bellantuono 2025</span>
+          <span class="open-btn">Open Lab →</span>
+        </div>
+      </a>
+
+      <a class="case-card" href="case-studies/sampling.html" id="big-data">
+        <div class="head"><span class="ico">🗄️</span><h3>Big Network Data · Sampling</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-identify">Identify</span>
+          <span class="status-tag">Live Lab</span>
+        </div>
+        <p class="desc">A 40-parish Gulf evacuation network too big to wrangle whole. Pick a sampling strategy (random node, ego, snowball, random edge), watch which features survive — triangles, degree, geographic coverage. The friendship paradox is built into the design.</p>
+        <div class="footer-row">
+          <span class="reading">E&amp;K Ch. 2.4</span>
+          <span class="open-btn">Open Lab →</span>
+        </div>
+      </a>
+
     </div>
   </section>
 
@@ -185,58 +237,6 @@
         <p class="desc">Classify nodes, edges, direction, weighting, and the small-world phenomenon. Build your first graph from an edgelist and recognize when your problem is a graph problem.</p>
         <div class="footer-row">
           <span class="reading">Gladwell · Barabási Ch. 1–2</span>
-          <span class="open-btn">Coming Soon</span>
-        </div>
-      </div>
-
-      <div class="case-card soon" id="routing">
-        <div class="head"><span class="ico">🚦</span><h3>Routing &amp; Optimization</h3></div>
-        <div class="meta-row">
-          <span class="skill-chip skill-predict">Predict</span>
-          <span class="status-tag status-soon">Coming Soon</span>
-        </div>
-        <p class="desc">Solve real flow and routing problems in logistics and transit. Counterfactual graph mutation — add a node, measure metric M, resample edge weights, compare adjusted networks.</p>
-        <div class="footer-row">
-          <span class="reading">Bertsekas · Network Optimization</span>
-          <span class="open-btn">Coming Soon</span>
-        </div>
-      </div>
-
-      <div class="case-card soon" id="clusters">
-        <div class="head"><span class="ico">🧩</span><h3>Clustering &amp; Communities</h3></div>
-        <div class="meta-row">
-          <span class="skill-chip skill-measure">Measure</span>
-          <span class="status-tag status-soon">Coming Soon</span>
-        </div>
-        <p class="desc">Detect structure in large-scale networks automatically. Bipartite graphs, affiliation, matching markets. Move from modularity to meaningful clusters.</p>
-        <div class="footer-row">
-          <span class="reading">Barabási Ch. 9 · E&amp;K Ch. 4 &amp; 10</span>
-          <span class="open-btn">Coming Soon</span>
-        </div>
-      </div>
-
-      <div class="case-card soon" id="viz">
-        <div class="head"><span class="ico">🗺️</span><h3>Visualization · Evacuation</h3></div>
-        <div class="meta-row">
-          <span class="skill-chip skill-identify">Identify</span>
-          <span class="status-tag status-soon">Coming Soon</span>
-        </div>
-        <p class="desc">Bluebikes, hurricane evacuation, and healthcare accessibility — beautiful, interactive graphics that communicate insight without losing rigor.</p>
-        <div class="footer-row">
-          <span class="reading">Bellantuono 2025</span>
-          <span class="open-btn">Coming Soon</span>
-        </div>
-      </div>
-
-      <div class="case-card soon" id="big-data">
-        <div class="head"><span class="ico">🗄️</span><h3>Big Network Data</h3></div>
-        <div class="meta-row">
-          <span class="skill-chip skill-identify">Identify</span>
-          <span class="status-tag status-soon">Coming Soon</span>
-        </div>
-        <p class="desc">Work with millions of edges using databases and smart sampling. Wrangling edgelists, grouping, joins, network joins, aggregation, intro to SQLite.</p>
-        <div class="footer-row">
-          <span class="reading">E&amp;K Ch. 2.4</span>
           <span class="open-btn">Coming Soon</span>
         </div>
       </div>
