@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 build/
 .Rproj.user/
 .Rhistory
@@ -6,3 +7,25 @@ build/
 .env
 __pycache__/
 *.pyc
+=======
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Plots produced by the example scripts (each script writes a .png in
+# the current working directory for the reader to inspect). These are
+# build artifacts, not source.
+*.png
+!docs/assets/*.png
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# Editors
+.vscode/
+.idea/
+.DS_Store
+>>>>>>> 3789d99 (Add parallel R + Python teaching scripts for all 11 case studies)
