@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course Materials · SYSEN 5470</title>
+<link rel="stylesheet" href="assets/design.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .placeholder-flag {
+    display: inline-block; padding: 4px 10px; margin-bottom: 18px;
+    background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.4);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--node-4); letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .materials-list {
+    display: grid; grid-template-columns: 1fr; gap: 14px;
+  }
+  .mat-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 22px 24px;
+    backdrop-filter: blur(8px);
+    display: grid; grid-template-columns: 56px 1fr; gap: 18px;
+    transition: border-color .2s, transform .15s;
+  }
+  .mat-card:hover { border-color: var(--green-bright); transform: translateY(-2px); }
+  .mat-card.optional { border-style: dashed; }
+  .mat-card .num {
+    font-family: var(--font-display); font-size: 36px;
+    color: var(--green-bright); line-height: 1; letter-spacing: 0.02em;
+  }
+  .mat-card h3 {
+    font-family: var(--font-display); font-size: 22px;
+    color: var(--white); letter-spacing: 0.03em; margin-bottom: 6px;
+    line-height: 1.1;
+  }
+  .mat-card h3 .opt-tag {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--node-4); letter-spacing: 0.14em; text-transform: uppercase;
+    margin-left: 8px; vertical-align: 4px;
+  }
+  .mat-card p {
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.6;
+  }
+  .mat-card p + p { margin-top: 6px; }
+  .mat-card a {
+    color: var(--green-bright);
+  }
+  @media (max-width: 600px) {
+    .mat-card { grid-template-columns: 1fr; }
+    .mat-card .num { font-size: 28px; }
+  }
+</style>
+</head>
+<body data-page="materials">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="index.html"          data-page="home">Overview</a>
+      <a href="syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="materials.html"      data-page="materials">Materials</a>
+      <a href="case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="readings.html"       data-page="readings">Readings</a>
+      <a href="sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="about.html"          data-page="about">About</a>
+    </div>
+    <a href="index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Course Materials</p>
+    <h1 class="hero-title">What to <span>Bring</span>.</h1>
+    <span class="placeholder-flag">⚠ Placeholder · Subject to update before the course</span>
+    <p class="hook">Short list, on purpose. The course leans on hand-sketching, your own working data, and free open-source software. Here's what to have on day one.</p>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Required</div>
+    <div class="materials-list">
+
+      <div class="mat-card">
+        <div class="num">1</div>
+        <div>
+          <h3>A sketchbook + your favorite pens</h3>
+          <p>Any unlined sketchbook is fine — pocket-size or full-size, your call. Bring whatever you actually like to draw with: pens, colored pencils, markers, highlighters. The sketch-before-code rhythm only works if the tools feel good in your hand.</p>
+        </div>
+      </div>
+
+      <div class="mat-card">
+        <div class="num">2</div>
+        <div>
+          <h3>A camera on hand</h3>
+          <p>Your phone camera is fine. You'll photograph sketch-pad assignments and upload them as part of weekly submissions, so make sure it's somewhere within arm's reach when you sit down to work.</p>
+        </div>
+      </div>
+
+      <div class="mat-card">
+        <div class="num">3</div>
+        <div>
+          <h3>The Canvas mobile app</h3>
+          <p>Install the Canvas Student app on your phone. The sketch-pad assignments are much faster to submit straight from your phone (snap → upload → done) than dragging photos through a desktop browser.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Optional but Useful</div>
+    <div class="materials-list">
+
+      <div class="mat-card optional">
+        <div class="num">4</div>
+        <div>
+          <h3>A Claude Pro subscription <span class="opt-tag">Optional</span></h3>
+          <p>$20 for one month covers the entire course. For a 3-week intensive, having a strong assistant for nitty-gritty syntax, debugging, and clarifying questions can save you real hours — especially evenings and weekends when office hours are closed.</p>
+          <p>Not required, and you can absolutely succeed without it. But if you're going to try one paid subscription for the duration, this is the one we'd suggest. See <a href="https://www.anthropic.com/pricing" target="_blank" rel="noopener">anthropic.com/pricing</a>.</p>
+        </div>
+      </div>
+
+      <div class="mat-card optional">
+        <div class="num">5</div>
+        <div>
+          <h3>Software · TBD <span class="opt-tag">Bring your own IDE</span></h3>
+          <p>Students are welcome to use their preferred development environment.</p>
+          <p><strong>Suggested:</strong> <a href="https://positron.posit.co/" target="_blank" rel="noopener">Positron</a> for data-science work in R and Python — same Posit folks who make RStudio, but multi-language and AI-aware. For broader systems work, <a href="https://code.visualstudio.com/" target="_blank" rel="noopener">VS Code</a> + <a href="https://www.cursor.com/" target="_blank" rel="noopener">Cursor</a> are both solid options.</p>
+          <p>A specific software list and setup guide will be posted before the course starts.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="cta" id="enroll">
+    <h2>Questions about Materials?</h2>
+    <p>If you're unsure whether something on (or off) this list applies to you, just ask.</p>
+    <div class="cta-details">
+      <span>SYSEN 5470</span>
+      <span>June 22 – July 10, 2026</span>
+      <span>3 Credits</span>
+    </div>
+    <a href="mailto:tmf77@cornell.edu" class="btn primary">Email tmf77@cornell.edu <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Course Materials</strong><br>
+    Cornell Engineering · Summer 2026 · This page is a placeholder and will be updated before the course begins.
+  </p>
+
+</div>
+
+<script src="assets/network-bg.js" defer></script>
+<script src="assets/site.js" defer></script>
+</body>
+</html>
