@@ -16,7 +16,6 @@
 
 library(dplyr)
 library(readr)
-library(arrow)
 library(here)
 
 # ----- paths -----------------------------------------------------------------
@@ -34,7 +33,7 @@ library(here)
 #' One row per (start_station, end_station, day, rush) combination, with
 #' `count` = number of trips. Already filtered to AM rush + 2021.
 load_edges <- function() {
-  arrow::read_parquet(file.path(.case_dir(), "edges.parquet"))
+  readr::read_csv(file.path(.case_dir(), "edges.csv"))
 }
 
 #' Load the slim stations node table.
@@ -42,7 +41,7 @@ load_edges <- function() {
 #' One row per station, with a `maj_black` flag ("yes"/"no") from the
 #' census block group the station sits in.
 load_stations <- function() {
-  arrow::read_parquet(file.path(.case_dir(), "stations.parquet"))
+  readr::read_csv(file.path(.case_dir(), "stations.csv"))
 }
 
 # ----- the reference join ----------------------------------------------------

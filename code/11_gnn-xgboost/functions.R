@@ -9,14 +9,13 @@
 
 library(dplyr)
 library(readr)
-library(arrow)
 library(here)
 
 .case_dir <- function() here::here("code", "11_gnn-xgboost", "data")
 
-load_suppliers <- function() arrow::read_parquet(file.path(.case_dir(), "suppliers.parquet"))
-load_edges     <- function() arrow::read_parquet(file.path(.case_dir(), "edges.parquet"))
-load_panel     <- function() arrow::read_parquet(file.path(.case_dir(), "panel.parquet"))
+load_suppliers <- function() readr::read_csv(file.path(.case_dir(), "suppliers.csv"))
+load_edges     <- function() readr::read_csv(file.path(.case_dir(), "edges.csv"))
+load_panel     <- function() readr::read_csv(file.path(.case_dir(), "panel.csv"))
 
 #' Add a `lag_rate` column: trailing `window`-week disruption rate
 #' per supplier. Uses a rolling mean over the previous `window` weeks
@@ -27,12 +26,12 @@ add_lag_features <- function(panel, window = 4) {
   panel |>
     group_by(supplier_id) |>
     mutate(
-      prev = lag(disrupted, n = 1, default = NA_real_),
+      # week 0 has no history; treat absent history as 0 disruption
+      prev = dplyr::lag(disrupted, n = 1, default = 0),
       lag_rate = zoo::rollapply(
-        prev, width = window, FUN = function(x) mean(x, na.rm = TRUE),
-        fill = NA, align = "right", partial = TRUE
-      ),
-      lag_rate = tidyr::replace_na(lag_rate, 0)
+        prev, width = window, FUN = mean,
+        fill = 0, align = "right", partial = TRUE
+      )
     ) |>
     select(-prev) |>
     ungroup()

@@ -21,7 +21,6 @@ library(tidyr)
 library(ggplot2)
 library(viridis)
 library(here)
-library(arrow)
 
 ## 0.2 Load helpers ##########################################################
 

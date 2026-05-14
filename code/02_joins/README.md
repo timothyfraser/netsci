@@ -24,7 +24,7 @@ big tabular data without reaching for anything fancier.
 ## Prerequisites
 
 - The case study lab: [Network Joins](../../docs/case-studies/joins.html).
-- R packages: `dplyr`, `readr`, `arrow`, `ggplot2`, `here`.
+- R packages: `dplyr`, `readr`, `ggplot2`, `here`.
 - Python packages: see [`code/requirements.txt`](../requirements.txt) —
   you need `pandas`, `pyarrow`, `matplotlib`, `seaborn`.
 
@@ -38,8 +38,8 @@ big tabular data without reaching for anything fancier.
 ├── functions.R       # tiny path-resolved data loaders for R
 ├── functions.py      # tiny path-resolved data loaders for Python
 └── data/
-    ├── edges.parquet     # ~50,000 AM rush 2021 trip rows
-    ├── stations.parquet  # ~500 stations with a maj_black flag
+    ├── edges.csv     # ~50,000 AM rush 2021 trip rows
+    ├── stations.csv  # ~500 stations with a maj_black flag
     └── _generate.py      # how the parquet files are made (deterministic)
 ```
 

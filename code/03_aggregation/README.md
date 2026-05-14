@@ -23,7 +23,7 @@ different stories. This case walks you through:
 - The case study lab: [Aggregation](../../docs/case-studies/aggregation.html).
 - Case study 02 (Joins) — this one assumes you're comfortable with
   double-side joins.
-- R packages: `dplyr`, `tidyr`, `ggplot2`, `viridis`, `arrow`, `here`.
+- R packages: `dplyr`, `tidyr`, `readr`, `ggplot2`, `viridis`, `here`.
 - Python packages: see [`code/requirements.txt`](../requirements.txt).
 
 ## Files in this folder
@@ -36,8 +36,8 @@ different stories. This case walks you through:
 ├── functions.R
 ├── functions.py
 └── data/
-    ├── edges.parquet     # 40,000 AM rush 2021 trip rows
-    ├── stations.parquet  # 500 stations with neighborhood + income_quintile
+    ├── edges.csv     # 40,000 AM rush 2021 trip rows
+    ├── stations.csv  # 500 stations with neighborhood + income_quintile
     └── _generate.py
 ```
 

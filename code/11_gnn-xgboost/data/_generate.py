@@ -13,9 +13,9 @@ disruptions predict it. This is the signal that lets a GNN
 embedding outperform plain features.
 
 Outputs:
-  - suppliers.parquet (500 rows, static traits)
-  - edges.parquet    (~1200 directed dependency edges)
-  - panel.parquet    (500 * 52 = 26000 rows, supplier x week x label)
+  - suppliers.csv (500 rows, static traits)
+  - edges.csv    (~1200 directed dependency edges)
+  - panel.csv    (500 * 52 = 26000 rows, supplier x week x label)
 
 Run:
     python code/11_gnn-xgboost/data/_generate.py
@@ -102,14 +102,14 @@ def main() -> None:
     panel = pd.DataFrame(panel_rows)
 
     # --- write --------------------------------------------------------------
-    suppliers.sort_values("supplier_id").to_parquet(HERE / "suppliers.parquet",
+    suppliers.sort_values("supplier_id").to_csv(HERE / "suppliers.csv",
                                                     index=False)
-    edges.to_parquet(HERE / "edges.parquet", index=False)
-    panel.to_parquet(HERE / "panel.parquet", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+    panel.to_csv(HERE / "panel.csv", index=False)
 
-    print(f"wrote {HERE / 'suppliers.parquet'} ({len(suppliers)} suppliers)")
-    print(f"wrote {HERE / 'edges.parquet'}     ({len(edges):,} edges)")
-    print(f"wrote {HERE / 'panel.parquet'}     ({len(panel):,} rows = "
+    print(f"wrote {HERE / 'suppliers.csv'} ({len(suppliers)} suppliers)")
+    print(f"wrote {HERE / 'edges.csv'}     ({len(edges):,} edges)")
+    print(f"wrote {HERE / 'panel.csv'}     ({len(panel):,} rows = "
           f"{n_suppliers} x {n_weeks})")
     print(f"  overall disruption rate: {panel['disrupted'].mean():.3f}")
 

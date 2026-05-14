@@ -46,7 +46,7 @@ g
 # undirected copy whose edges mean "i and j depend on each other,
 # in either direction." Standard DSM preprocessing.
 
-g_undirected <- igraph::as_undirected(g, mode = "collapse")
+g_undirected <- igraph::as.undirected(g, mode = "collapse")
 g_undirected
 
 # Louvain (igraph's `cluster_louvain`):

@@ -42,7 +42,7 @@ hops), so there's no torch dependency.
 
 - Case study 10 (GNN by Hand) so the embedding step makes sense.
 - The interactive lab.
-- R packages: `dplyr`, `tidyr`, `ggplot2`, `arrow`, `xgboost`, `zoo`,
+- R packages: `dplyr`, `tidyr`, `readr`, `ggplot2`, `xgboost`, `zoo`,
   `here`.
 - Python packages: see [`code/requirements.txt`](../requirements.txt).
   Uses `scikit-learn` for AUC.
@@ -57,9 +57,9 @@ hops), so there's no torch dependency.
 ├── functions.R            # lag_rate helper
 ├── functions.py           # lag_rate, adjacency, GNN-aggregation helpers
 └── data/
-    ├── suppliers.parquet  # 500 suppliers, static features
-    ├── edges.parquet      # ~1,200 directed dependency edges
-    ├── panel.parquet      # 26,000 rows: supplier x week x disrupted
+    ├── suppliers.csv  # 500 suppliers, static features
+    ├── edges.csv      # ~1,200 directed dependency edges
+    ├── panel.csv      # 26,000 rows: supplier x week x disrupted
     └── _generate.py
 ```
 

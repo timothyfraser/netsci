@@ -1,13 +1,9 @@
-<<<<<<< HEAD
+# Build artifacts
 build/
-.Rproj.user/
-.Rhistory
-.RData
-.Ruserdata
+
+# Secrets
 .env
-__pycache__/
-*.pyc
-=======
+
 # Python
 __pycache__/
 *.pyc
@@ -23,9 +19,11 @@ __pycache__/
 .Rhistory
 .RData
 .Rproj.user/
+.Ruserdata
+Rplots.pdf
+*.pdf
 
 # Editors
 .vscode/
 .idea/
 .DS_Store
->>>>>>> 3789d99 (Add parallel R + Python teaching scripts for all 11 case studies)

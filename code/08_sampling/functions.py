@@ -11,11 +11,15 @@ def _case_dir() -> Path:
 
 
 def load_nodes() -> pd.DataFrame:
-    return pd.read_parquet(_case_dir() / "nodes.parquet")
+    # geoid is a numeric-looking string ("1208692158"); force string read
+    # so equality comparisons against literal "1208692158" succeed.
+    return pd.read_csv(_case_dir() / "nodes.csv", dtype={"geoid": "string"})
 
 
 def load_edges() -> pd.DataFrame:
-    return pd.read_parquet(_case_dir() / "edges.parquet")
+    # date_time is ISO-8601 in CSV; parse to Timestamps so groupby
+    # gives an ordered time series.
+    return pd.read_csv(_case_dir() / "edges.csv", parse_dates=["date_time"])
 
 
 def load_subdivisions() -> gpd.GeoDataFrame:

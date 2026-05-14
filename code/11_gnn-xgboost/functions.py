@@ -20,15 +20,15 @@ def _case_dir() -> Path:
 
 
 def load_suppliers() -> pd.DataFrame:
-    return pd.read_parquet(_case_dir() / "suppliers.parquet")
+    return pd.read_csv(_case_dir() / "suppliers.csv")
 
 
 def load_edges() -> pd.DataFrame:
-    return pd.read_parquet(_case_dir() / "edges.parquet")
+    return pd.read_csv(_case_dir() / "edges.csv")
 
 
 def load_panel() -> pd.DataFrame:
-    return pd.read_parquet(_case_dir() / "panel.parquet")
+    return pd.read_csv(_case_dir() / "panel.csv")
 
 
 def add_lag_features(panel: pd.DataFrame, window: int = 4) -> pd.DataFrame:

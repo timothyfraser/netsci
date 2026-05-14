@@ -4,13 +4,12 @@
 #' Path-resolved loaders for the slim mobility-flow data.
 
 library(dplyr)
-library(arrow)
 library(here)
 
 .case_dir <- function() here::here("code", "03_aggregation", "data")
 
-load_edges    <- function() arrow::read_parquet(file.path(.case_dir(), "edges.parquet"))
-load_stations <- function() arrow::read_parquet(file.path(.case_dir(), "stations.parquet"))
+load_edges    <- function() readr::read_csv(file.path(.case_dir(), "edges.csv"))
+load_stations <- function() readr::read_csv(file.path(.case_dir(), "stations.csv"))
 
 #' Edges with start- and end-side traits already joined in.
 make_enriched <- function(edges = load_edges(), stations = load_stations()) {

@@ -1,5 +1,5 @@
 #' @name example.R
-#' @title Case Study 11 — GNN + XGBoost (R track: XGBoost-only variant)
+#' @title Case Study 11 — GNN + XGBoost (R track: feature-engineering variant)
 #' @author <your-name-here>
 #' @description
 #' The full case study lab combines:
@@ -9,13 +9,14 @@
 #' into XGBoost, and shows that the combination beats any one piece
 #' alone.
 #'
-#' R can do the static-features and lag pieces just fine via the
-#' `xgboost` package. But there is no widely-used R GNN library, so
-#' the **GNN embedding step is Python-only**.
+#' R can do the static-features and lag pieces fine. There is no
+#' widely-used R GNN library, so the **GNN embedding step is
+#' Python-only**.
 #'
-#' This R script trains XGBoost on (raw + lag) features and reports
-#' the AUC. The Python script (`example.py`) trains XGBoost on
-#' (raw + lag + GNN). The README documents the AUC gap.
+#' This R script compares two feature sets on the same train/test
+#' split:  raw  vs  raw+lag . It prefers `xgboost` if installed (the
+#' canonical case-study tool), and falls back to base R `glm()` so
+#' the script always runs.
 
 
 # 0. Setup ###################################################################
@@ -25,10 +26,13 @@
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-library(arrow)
-library(xgboost)
-library(zoo)        # for rolling-mean lag feature
+library(zoo)         # rolling-mean lag feature
 library(here)
+
+# xgboost is optional. Detect once.
+HAS_XGB <- requireNamespace("xgboost", quietly = TRUE)
+cat(sprintf("Using model backend: %s\n",
+            if (HAS_XGB) "xgboost" else "base R glm()"))
 
 ## 0.2 Load helpers ##########################################################
 
@@ -40,21 +44,16 @@ suppliers <- load_suppliers()
 edges     <- load_edges()
 panel     <- load_panel()
 
-suppliers |> head()
-panel |> head()
-
 
 # 1. Add lag feature ##########################################################
 
 panel <- add_lag_features(panel, window = 4)
-panel |> head(10)
 
 
 # 2. Merge static features ###################################################
 
 dat <- panel |>
   left_join(suppliers, by = "supplier_id") |>
-  # one-hot region
   mutate(
     region_MW = as.integer(region == "MW"),
     region_NE = as.integer(region == "NE"),
@@ -76,62 +75,79 @@ raw_cols <- c("tier", "capacity", "geo_risk",
               "region_MW", "region_NE", "region_SE", "region_W")
 lag_cols <- c(raw_cols, "lag_rate")
 
-fit_and_auc <- function(features) {
-  dtrain <- xgb.DMatrix(
-    data  = as.matrix(train[, features]),
-    label = train$disrupted
-  )
-  dtest <- xgb.DMatrix(
-    data  = as.matrix(test[, features]),
-    label = test$disrupted
-  )
-  model <- xgboost::xgboost(
-    data            = dtrain,
-    nrounds         = 200,
-    max_depth       = 4,
-    eta             = 0.05,
-    objective       = "binary:logistic",
-    eval_metric     = "auc",
-    verbose         = 0
-  )
-  preds <- predict(model, dtest)
-  # AUC: rank-based
-  pos <- preds[test$disrupted == 1]
-  neg <- preds[test$disrupted == 0]
-  auc <- mean(outer(pos, neg, ">")) + 0.5 * mean(outer(pos, neg, "=="))
-  list(model = model, auc = auc)
+#' Rank-based AUC (no extra package needed).
+auc_rank <- function(scores, labels) {
+  pos <- scores[labels == 1]
+  neg <- scores[labels == 0]
+  if (length(pos) == 0 || length(neg) == 0) return(NA_real_)
+  mean(outer(pos, neg, ">")) + 0.5 * mean(outer(pos, neg, "=="))
 }
 
-raw_fit <- fit_and_auc(raw_cols)
-lag_fit <- fit_and_auc(lag_cols)
+fit_and_score <- function(features) {
+  if (HAS_XGB) {
+    dtrain <- xgboost::xgb.DMatrix(
+      data  = as.matrix(train[, features]),
+      label = train$disrupted
+    )
+    dtest <- xgboost::xgb.DMatrix(
+      data  = as.matrix(test[, features]),
+      label = test$disrupted
+    )
+    model <- xgboost::xgboost(
+      data        = dtrain,
+      nrounds     = 200,
+      max_depth   = 4,
+      eta         = 0.05,
+      objective   = "binary:logistic",
+      eval_metric = "auc",
+      verbose     = 0
+    )
+    preds <- predict(model, dtest)
+    imp <- xgboost::xgb.importance(model = model,
+                                   feature_names = features) |>
+      arrange(desc(Gain))
+  } else {
+    # base R logistic regression fallback
+    f <- as.formula(paste("disrupted ~", paste(features, collapse = " + ")))
+    model <- glm(f, data = train, family = binomial())
+    preds <- predict(model, newdata = test, type = "response")
+    co <- summary(model)$coefficients
+    co <- co[rownames(co) != "(Intercept)", , drop = FALSE]
+    imp <- tibble::tibble(
+      Feature = rownames(co),
+      Gain    = abs(co[, "z value"])
+    ) |> arrange(desc(Gain))
+  }
+  list(model = model, auc = auc_rank(preds, test$disrupted), imp = imp)
+}
+
+raw_fit <- fit_and_score(raw_cols)
+lag_fit <- fit_and_score(lag_cols)
 
 cat(sprintf("AUC, raw features only: %.4f\n", raw_fit$auc))
 cat(sprintf("AUC, raw + lag:         %.4f\n", lag_fit$auc))
 
-cat("\nFor the GNN embedding pipeline that pushes AUC higher,\n",
-    "switch to example.py. (Or call it from here via reticulate.)\n")
 
+# 5. Feature importance (or |z| if using glm) ################################
 
-# 5. Feature importance ######################################################
-
-imp <- xgboost::xgb.importance(model = lag_fit$model,
-                               feature_names = lag_cols) |>
-  arrange(desc(Gain))
-print(imp)
+print(lag_fit$imp)
 
 
 # 6. Learning Check (R track) ###############################################
 #
 # QUESTION: On the held-out test weeks (40..51), what are the top 3
-# features by XGBoost gain for the (raw + lag) model? Submit the
-# three feature names, comma-separated, in descending gain order.
+# features by gain (xgboost) or by |z| value (glm fallback) for the
+# (raw + lag) model? Submit the three feature names, comma-separated,
+# in descending order.
+#
+# Note: the *order* may be the same across both backends even when the
+# underlying scores differ.
 
-top3 <- imp |> slice(1:3) |> pull(Feature)
+top3 <- lag_fit$imp |> slice(1:3) |> pull(Feature)
 cat(sprintf("Learning Check answer (R track): %s\n",
             paste(top3, collapse = ", ")))
 
 
-# NOTE on the Python LC: the Python script reports the AUC of the
-# (raw + lag + GNN) model on the same test split. Those two LC
-# answers are intentionally different — they test different pieces
-# of the case-study pipeline.
+# NOTE: the Python LC asks for AUC of the (raw + lag + GNN) model on
+# the same test split. The two LC answers are intentionally different
+# — they test different pieces of the case-study pipeline.

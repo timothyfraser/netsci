@@ -13,11 +13,11 @@ def _case_dir() -> Path:
 
 
 def load_edges() -> pd.DataFrame:
-    return pd.read_parquet(_case_dir() / "edges.parquet")
+    return pd.read_csv(_case_dir() / "edges.csv")
 
 
 def load_stations() -> pd.DataFrame:
-    return pd.read_parquet(_case_dir() / "stations.parquet")
+    return pd.read_csv(_case_dir() / "stations.csv")
 
 
 def make_enriched(edges: pd.DataFrame | None = None,

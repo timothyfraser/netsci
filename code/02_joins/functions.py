@@ -31,7 +31,7 @@ def load_edges() -> pd.DataFrame:
     One row per (start_station, end_station, day, rush) combination, with
     ``count`` = number of trips. Already filtered to AM rush + 2021.
     """
-    return pd.read_parquet(_case_dir() / "edges.parquet")
+    return pd.read_csv(_case_dir() / "edges.csv")
 
 
 def load_stations() -> pd.DataFrame:
@@ -40,7 +40,7 @@ def load_stations() -> pd.DataFrame:
     One row per station, with a ``maj_black`` flag ("yes"/"no") from the
     census block group the station sits in.
     """
-    return pd.read_parquet(_case_dir() / "stations.parquet")
+    return pd.read_csv(_case_dir() / "stations.csv")
 
 
 # ----- the reference join ----------------------------------------------------

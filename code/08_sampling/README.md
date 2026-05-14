@@ -28,7 +28,7 @@ two-week crisis window.
 
 - Case study 02 (Joins).
 - The interactive lab.
-- R packages: `dplyr`, `tidyr`, `ggplot2`, `sf`, `arrow`, `here`.
+- R packages: `dplyr`, `tidyr`, `readr`, `ggplot2`, `sf`, `here`.
 - Python packages: see [`code/requirements.txt`](../requirements.txt).
   Spatial operations need `geopandas` and `shapely`.
 
@@ -42,8 +42,8 @@ two-week crisis window.
 ├── functions.R                       # `slice_stats()` + loaders
 ├── functions.py
 └── data/
-    ├── nodes.parquet                  # 316 FL county subdivisions w/ centroid x,y
-    ├── edges.parquet                  # ~33k 8-hour-slice evacuation flows
+    ├── nodes.csv                  # 316 FL county subdivisions w/ centroid x,y
+    ├── edges.csv                  # ~33k 8-hour-slice evacuation flows
     ├── county_subdivisions.geojson    # FL only, simplified polygons
     └── _generate.py                   # trims the raw sts data
 ```

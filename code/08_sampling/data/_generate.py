@@ -72,8 +72,8 @@ def main() -> None:
     e = e.reset_index(drop=True)
 
     # --- write outputs --------------------------------------------------------
-    n.to_parquet(HERE / "nodes.parquet", index=False)
-    e.to_parquet(HERE / "edges.parquet", index=False)
+    n.to_csv(HERE / "nodes.csv", index=False)
+    e.to_csv(HERE / "edges.csv", index=False)
 
     # Trim subdivisions geojson: drop attribute columns and simplify
     # geometry to keep the file small enough to bundle in a repo.
@@ -82,8 +82,8 @@ def main() -> None:
                                                     preserve_topology=True)
     cs_slim.to_file(HERE / "county_subdivisions.geojson", driver="GeoJSON")
 
-    print(f"wrote {HERE / 'nodes.parquet'} ({len(n)} nodes)")
-    print(f"wrote {HERE / 'edges.parquet'} ({len(e):,} edges)")
+    print(f"wrote {HERE / 'nodes.csv'} ({len(n)} nodes)")
+    print(f"wrote {HERE / 'edges.csv'} ({len(e):,} edges)")
     print(f"wrote {HERE / 'county_subdivisions.geojson'} (FL only)")
 
 

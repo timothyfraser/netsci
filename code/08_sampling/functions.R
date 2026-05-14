@@ -2,14 +2,26 @@
 #' @title Helpers for the Sampling case study
 
 library(dplyr)
-library(arrow)
 library(sf)
 library(here)
 
 .case_dir <- function() here::here("code", "08_sampling", "data")
 
-load_nodes <- function() arrow::read_parquet(file.path(.case_dir(), "nodes.parquet"))
-load_edges <- function() arrow::read_parquet(file.path(.case_dir(), "edges.parquet"))
+load_nodes <- function() {
+  readr::read_csv(
+    file.path(.case_dir(), "nodes.csv"),
+    # geoid is a numeric-looking string; keep it as character so
+    # comparisons like `geoid == "1208692158"` work.
+    col_types = readr::cols(geoid = readr::col_character(),
+                            .default = readr::col_guess())
+  )
+}
+load_edges <- function() {
+  readr::read_csv(
+    file.path(.case_dir(), "edges.csv"),
+    show_col_types = FALSE
+  )
+}
 load_subdivisions <- function() {
   sf::st_read(file.path(.case_dir(), "county_subdivisions.geojson"),
               quiet = TRUE)

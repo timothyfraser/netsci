@@ -24,7 +24,7 @@
 
 library(dplyr)        # for left_join, group_by, summarize
 library(readr)        # for any csv work
-library(arrow)        # for parquet
+library(readr)        # for read_csv
 library(tibble)
 library(ggplot2)
 library(here)

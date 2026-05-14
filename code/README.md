@@ -44,10 +44,8 @@ install.packages(c(
   "ggplot2", "viridis", "patchwork", "scales",
   # spatial (case 08 only)
   "sf",
-  # i/o
-  "arrow",
   # case 11 only
-  "xgboost"
+  "xgboost", "zoo"
 ))
 ```
 

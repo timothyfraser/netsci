@@ -66,7 +66,12 @@ edge_stats  <- slice_stats(edge_sample, n_total)
 
 ## 2.3 Spatial buffer: nodes within 200 km of Miami ##########################
 
-miami <- nodes |> filter(geoid == "1208692158") |> slice(1)
+# Drop the handful of nodes whose centroid couldn't be computed (a
+# subdivision present in the node table but missing from the trimmed
+# geojson). sf is strict about NAs in coordinates.
+nodes_geo <- nodes |> filter(!is.na(x), !is.na(y))
+
+miami <- nodes_geo |> filter(geoid == "1208692158") |> slice(1)
 poi <- sf::st_as_sf(
   data.frame(x = miami$x, y = miami$y),
   coords = c("x", "y"), crs = 4326
@@ -76,7 +81,7 @@ buf <- poi |>
   sf::st_buffer(dist = 200 * 1000) |>
   sf::st_transform(4326)
 
-node_pts <- sf::st_as_sf(nodes, coords = c("x", "y"), crs = 4326)
+node_pts <- sf::st_as_sf(nodes_geo, coords = c("x", "y"), crs = 4326)
 nodes_in_buf <- sf::st_join(node_pts, buf, join = sf::st_within, left = FALSE)
 ids_in <- nodes_in_buf$node
 

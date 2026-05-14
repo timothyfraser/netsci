@@ -75,11 +75,11 @@ def main() -> None:
     edges = edges.sort_values(["day", "start_code", "end_code"]).reset_index(drop=True)
     stations = stations.sort_values("code").reset_index(drop=True)
 
-    edges.to_parquet(HERE / "edges.parquet", index=False)
-    stations.to_parquet(HERE / "stations.parquet", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+    stations.to_csv(HERE / "stations.csv", index=False)
 
-    print(f"wrote {HERE / 'edges.parquet'}  ({len(edges):,} rows)")
-    print(f"wrote {HERE / 'stations.parquet'} ({len(stations):,} rows)")
+    print(f"wrote {HERE / 'edges.csv'}  ({len(edges):,} rows)")
+    print(f"wrote {HERE / 'stations.csv'} ({len(stations):,} rows)")
 
 
 if __name__ == "__main__":
