@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assignments · SYSEN 5470</title>
+<meta name="description" content="Weekly assignment cadence, project case studies, office hours, and final presentation for SYSEN 5470.">
+<link rel="stylesheet" href="assets/design.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  /* Reuse sketchpad's why-card style for the at-a-glance summary */
+  .why-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 28px 32px;
+    backdrop-filter: blur(8px); margin-bottom: 40px;
+    display: grid; grid-template-columns: 80px 1fr; gap: 24px; align-items: center;
+  }
+  .why-card .mark {
+    font-family: var(--font-display); font-size: 72px;
+    color: var(--green-bright); line-height: 1;
+    text-shadow: 0 0 24px rgba(57,255,20,0.5);
+  }
+  .why-card p {
+    font-family: var(--font-body); font-size: 15px;
+    color: var(--green-mint); line-height: 1.65;
+  }
+  .why-card strong { color: var(--white); font-weight: 500; }
+  @media (max-width: 560px) { .why-card { grid-template-columns: 1fr; text-align: center; } }
+
+  /* Cadence card — one per kind of weekly submission */
+  .cadence-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 22px 26px;
+    margin-bottom: 18px;
+    display: grid; grid-template-columns: 56px 1fr; gap: 20px;
+    backdrop-filter: blur(8px);
+  }
+  .cadence-card .ico { font-size: 32px; color: var(--green-bright); }
+  .cadence-card h3 {
+    font-family: var(--font-display); font-size: 19px; color: var(--white);
+    margin: 0 0 8px;
+  }
+  .cadence-card p {
+    font-family: var(--font-body); font-size: 14.5px; color: var(--green-mint);
+    line-height: 1.6; margin: 0;
+  }
+  .cadence-card .meta {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--green-bright); margin-bottom: 6px;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+
+  /* Project case studies table */
+  .case-table {
+    width: 100%; border-collapse: collapse; margin-top: 16px;
+    font-family: var(--font-body); font-size: 14.5px;
+  }
+  .case-table th, .case-table td {
+    border-bottom: 1px solid var(--border); padding: 10px 12px;
+    color: var(--green-mint); text-align: left; vertical-align: top;
+  }
+  .case-table th {
+    color: var(--white); font-family: var(--font-display);
+    font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .case-table a {
+    color: var(--green-bright); text-decoration: none;
+  }
+  .case-table a:hover { text-decoration: underline; }
+
+  /* Inline checklist for what goes in a project report */
+  .checklist {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 22px 28px;
+    backdrop-filter: blur(8px); margin: 20px 0 8px;
+  }
+  .checklist h3 {
+    font-family: var(--font-display); font-size: 18px;
+    color: var(--white); margin: 0 0 12px;
+  }
+  .checklist ul {
+    list-style: none; padding: 0; margin: 0;
+    font-family: var(--font-body); font-size: 14.5px; color: var(--green-mint);
+    line-height: 1.65;
+  }
+  .checklist li::before {
+    content: '☐ '; color: var(--green-bright); font-family: var(--font-mono);
+  }
+
+  /* The big "Monday 9 a.m." banner */
+  .deadline-banner {
+    background: linear-gradient(120deg, rgba(57,255,20,0.06), rgba(57,255,20,0.02));
+    border: 1px solid var(--green-bright);
+    border-radius: var(--radius-lg); padding: 22px 28px;
+    margin-bottom: 26px; text-align: center;
+  }
+  .deadline-banner strong {
+    color: var(--green-bright); font-family: var(--font-mono);
+    letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500;
+  }
+  .deadline-banner span {
+    color: var(--white); font-family: var(--font-display); font-size: 22px;
+    display: block; margin-top: 4px;
+  }
+</style>
+</head>
+<body data-page="assignments">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="index.html"          data-page="home">Overview</a>
+      <a href="syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="materials.html"      data-page="materials">Materials</a>
+      <a href="case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="playground.html"     data-page="playground">Playground</a>
+      <a href="readings.html"       data-page="readings">Readings</a>
+      <a href="sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="assignments.html"    data-page="assignments">Assignments</a>
+      <a href="about.html"          data-page="about">About</a>
+    </div>
+    <a href="index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Assignments</p>
+    <h1 class="hero-title">A Weekly <span>Rhythm</span>.<br>Three Weeks. One Report at a Time.</h1>
+    <p class="hook">Every Monday at 9 a.m., you submit the same four things from the previous week — a sketch, a case-study check, a code check, and your project case study. Rinse, repeat, three times. By the end, you'll have shipped three short reports applying network science to a problem you chose.</p>
+  </section>
+
+  <section class="section">
+    <div class="deadline-banner">
+      <strong>Submission deadline</strong>
+      <span>Every Monday at 9:00 a.m.</span>
+    </div>
+
+    <div class="why-card">
+      <div class="mark">⏱</div>
+      <p><strong>Why a steady weekly cadence?</strong> Network science is a habit, not a one-shot performance. The Monday cadence is short enough that you'll never have a week's worth of work to catch up on, and long enough that you can sit with hard ideas before producing something. You're encouraged to submit earlier — there's no bonus for going to the wire.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">What you submit each week</div>
+
+    <div class="cadence-card">
+      <div class="ico">✏️</div>
+      <div>
+        <div class="meta">Item 1 · Sketchpad</div>
+        <h3>Sketches for the current week</h3>
+        <p>Hand-drawn sketches for every <a href="sketchpad.html">sketchpad prompt</a> assigned to the current week. Photograph and upload. The sketch precedes the code — it's how you check that you understand the structure before syntax can hide it.</p>
+      </div>
+    </div>
+
+    <div class="cadence-card">
+      <div class="ico">🧪</div>
+      <div>
+        <div class="meta">Item 2 · Case Study Learning Checks</div>
+        <h3>One LC per case study from last week</h3>
+        <p>For every <a href="case-studies.html">interactive case study lab</a> assigned to the previous week, submit the in-lab Learning Check answer.</p>
+      </div>
+    </div>
+
+    <div class="cadence-card">
+      <div class="ico">⌨️</div>
+      <div>
+        <div class="meta">Item 3 · Code Learning Checks</div>
+        <h3>One LC per <code>example.R</code> / <code>example.py</code> from last week</h3>
+        <p>For every case study you completed last week, you also run the <code>example.R</code> or <code>example.py</code> script in the matching <code>code/</code> folder. Each script prints a single numeric (or string) answer at the bottom — that's your code Learning Check answer. Pick either track (R or Python). You don't need to do both.</p>
+      </div>
+    </div>
+
+    <div class="cadence-card">
+      <div class="ico">📄</div>
+      <div>
+        <div class="meta">Item 4 · Project Case Study</div>
+        <h3>Your project code &amp; report for this week's case study</h3>
+        <p>You pick <strong>3 out of 11</strong> case studies to do as project case studies (one per week). For each one you submit (a) a <code>project.R</code> or <code>project.py</code> that runs your full analysis on a network <em>you</em> chose, and (b) a 2-page-minimum report in your own words. See the Project section below for the full spec.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Project case studies</div>
+    <p style="font-family: var(--font-body); font-size: 15px; color: var(--green-mint); line-height: 1.65; max-width: 760px;">
+      The project is a big chunk of your grade. Over three weeks you'll
+      pick <strong>3 of the 11</strong> case study methods, apply each
+      one to a network you chose, and write a short report. The point
+      isn't to redo the example script with different data — it's to
+      pose a meaningful question, justify your operationalization, run
+      a defensible analysis, and report your results as quantitative
+      quantities of interest in prose. Each report should comfortably
+      fill at least two pages.
+    </p>
+
+    <div class="checklist">
+      <h3>Every project report must include</h3>
+      <ul>
+        <li>The question, in one sentence.</li>
+        <li>How you operationalized the network — what's a node, what's an edge, what's an edge weight, where did the data come from.</li>
+        <li>The procedure you ran, in plain language, in order.</li>
+        <li>Your results stated as <em>numbers in prose</em>, with at most 1–2 supporting figures and 1 table.</li>
+        <li>What this tells you, and what it doesn't (2–3 sentences).</li>
+      </ul>
+    </div>
+
+    <div class="checklist">
+      <h3>Hard requirements</h3>
+      <ul>
+        <li>The <em>writing must be your own</em>. AI-generated prose is not accepted. You can use AI to debug code; you cannot use it to write your report.</li>
+        <li>Your network must have <strong>at least 100 nodes</strong>. Networks of <strong>1,000+ nodes are strongly preferred</strong> — they force you to handle the difficulty of real-world data, which is the whole point of the course.</li>
+        <li>If you haven't decided on a network by the <em>end of week 1</em>, contact the instructor and one will be manufactured to fit your field or chosen industry.</li>
+        <li>Submit both the script (<code>project.R</code> or <code>project.py</code>) and the report (PDF preferred). The script must run end-to-end on the dataset you submit alongside it.</li>
+      </ul>
+    </div>
+
+    <p style="font-family: var(--font-body); font-size: 15px; color: var(--green-mint); line-height: 1.65; max-width: 760px; margin-top: 20px;">
+      Each case study folder under <code>code/</code> has a dedicated
+      <em>Your Project Case Study</em> section in its README, with 3
+      suggested project questions to pick from. You don't have to use
+      one of the suggestions — they're starting points.
+    </p>
+
+    <table class="case-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Case study</th>
+          <th>Skill</th>
+          <th>Interactive lab</th>
+          <th>Code folder (GitHub)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>01</td><td>Build a Network</td><td>Identify</td>
+            <td><a href="case-studies/build-a-network.html">Lab</a></td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/01_build-a-network#readme">Code &amp; README</a></td></tr>
+        <tr><td>02</td><td>Network Joins</td><td>Identify</td>
+            <td><a href="case-studies/joins.html">Lab</a></td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/02_joins#readme">Code &amp; README</a></td></tr>
+        <tr><td>03</td><td>Aggregation</td><td>Identify</td>
+            <td><a href="case-studies/aggregation.html">Lab</a></td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/03_aggregation#readme">Code &amp; README</a></td></tr>
+        <tr><td>04</td><td>Centrality &amp; Criticality</td><td>Measure</td>
+            <td><a href="case-studies/centrality.html">Lab</a></td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/04_centrality#readme">Code &amp; README</a></td></tr>
+        <tr><td>05</td><td>Supply Chain Resilience</td><td>Measure</td>
+            <td><a href="case-studies/supply-chain.html">Lab</a></td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/05_supply-chain#readme">Code &amp; README</a></td></tr>
+        <tr><td>06</td><td>DSM Clustering</td><td>Measure</td>
+            <td><a href="case-studies/dsm-clustering.html">Lab</a></td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/06_dsm-clustering#readme">Code &amp; README</a></td></tr>
+        <tr><td>07</td><td>Network Permutation</td><td>Infer</td>
+            <td><a href="case-studies/permutation.html">Lab</a></td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/07_permutation#readme">Code &amp; README</a></td></tr>
+        <tr><td>08</td><td>Sampling Big Networks</td><td>Identify</td>
+            <td><a href="case-studies/sampling.html">Lab</a></td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/08_sampling#readme">Code &amp; README</a></td></tr>
+        <tr><td>09</td><td>Counterfactual Monte Carlo</td><td>Predict</td>
+            <td><a href="case-studies/counterfactual.html">Lab</a></td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/09_counterfactual#readme">Code &amp; README</a></td></tr>
+        <tr><td>10</td><td>GNN by Hand</td><td>Predict</td>
+            <td><a href="case-studies/gnn-by-hand.html">Lab</a></td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/10_gnn-by-hand#readme">Code &amp; README</a></td></tr>
+        <tr><td>11</td><td>GNN + XGBoost</td><td>Predict</td>
+            <td><a href="case-studies/gnn-xgboost.html">Lab</a></td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/11_gnn-xgboost#readme">Code &amp; README</a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Office hours &amp; meetings</div>
+    <div class="why-card">
+      <div class="mark">☎️</div>
+      <p>You're required to meet with the instructor for <strong>three virtual office-hour sessions</strong> across the course. These count toward your activities grade. They're informal — bring a question, a stuck spot, or a project you're considering. Sign up via the link in the course site.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Final presentation</div>
+    <div class="why-card">
+      <div class="mark">🎤</div>
+      <p>At the end of the term, you give a short presentation on your <strong>strongest of the three project case studies</strong>. We'll use these to share what worked across cohorts. Format and length are confirmed in the course site once enrollment closes.</p>
+    </div>
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Assignments</strong><br>
+    Cornell Engineering · Summer 2026 · Three Mondays, three reports, one network you'll know inside-out.
+  </p>
+
+</div>
+
+<script src="assets/network-bg.js" defer></script>
+<script src="assets/site.js" defer></script>
+</body>
+</html>

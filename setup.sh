@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
+# Some sandbox images carry third-party PPAs (deadsnakes, ondrej/php) that
+# return 403 from launchpad and abort `apt-get update` under `set -e`.
+# Disable any non-essential .sources/.list we don't need before touching apt.
+for f in /etc/apt/sources.list.d/deadsnakes-ubuntu-ppa-noble.sources \
+         /etc/apt/sources.list.d/ondrej-ubuntu-php-noble.sources; do
+  [ -e "$f" ] && sudo mv "$f" "$f.disabled" || true
+done
+
 # --- R base + build tools ---
 sudo apt-get update
 sudo apt-get install -y --no-install-recommends \
@@ -41,11 +49,13 @@ EOF
 Rscript -e '
 pkgs <- c(
   "tidyverse","here","janitor","glue","fs",
-  "network","igraph","tidygraph",
+  "network","igraph","tidygraph","ggraph",
   "readxl","writexl","arrow",
   "DBI","RPostgres","RMariaDB","RSQLite",
   "tidymodels","broom","bonsai","lightgbm","xgboost",
   "sf",
+  # extras used by /code/<case>/example.R scripts
+  "viridis","zoo","patchwork","reticulate",
   "httr2","jsonlite","plumber",
   "shiny","shinychat","bslib","DT",
   "devtools","usethis","renv","testthat","lintr","styler",

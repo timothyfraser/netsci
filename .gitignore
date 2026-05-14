@@ -1,8 +1,29 @@
+# Build artifacts
 build/
-.Rproj.user/
-.Rhistory
-.RData
-.Ruserdata
+
+# Secrets
 .env
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+
+# Plots produced by the example scripts (each script writes a .png in
+# the current working directory for the reader to inspect). These are
+# build artifacts, not source.
+*.png
+!docs/assets/*.png
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+.Ruserdata
+Rplots.pdf
+*.pdf
+
+# Editors
+.vscode/
+.idea/
+.DS_Store
