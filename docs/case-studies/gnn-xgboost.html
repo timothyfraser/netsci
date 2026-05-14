@@ -302,6 +302,7 @@
       <a href="../materials.html"      data-page="materials">Materials</a>
       <a href="../case-studies.html"   data-page="cases">Case Studies</a>
       <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../playground.html"     data-page="playground">Playground</a>
       <a href="../readings.html"       data-page="readings">Readings</a>
       <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
       <a href="../about.html"          data-page="about">About</a>
@@ -495,7 +496,13 @@
     <div class="lc-feedback feedback-answer" id="lc3-answer"><strong>B is correct.</strong> The lag-1 residual autocorrelation confirms that the model at time T is systematically under-predicting disruptions that persist from T−1. This means disruptions have memory — a disrupted supplier stays disrupted, and its downstream partners become increasingly exposed over subsequent periods. The lagged embedding captures the <em>structural pathway</em> of that exposure: as upstream nodes enter distress, the neighborhood structure changes in ways the GNN can encode, providing an early warning signal before the downstream disruption shows up in firm-level metrics.</div>
   </div>
 
-  <p class="site-footer">
+  <div class="lab-cta-row">
+    <span class="cta-lede"><strong>Try this on your own data.</strong> Open the Coding Playground, upload your network, and use the same tools.</span>
+    <a href="../playground-r.html" class="btn primary">→ R Playground</a>
+    <a href="../playground-py.html" class="btn ghost">→ Python Playground</a>
+  </div>
+
+    <p class="site-footer">
     <strong>SYSEN 5470 · GNN + XGBoost · Supplier Disruption Risk</strong><br>
     Cornell Engineering · Summer 2026 · <a href="../case-studies.html">← All case studies</a>
   </p>

@@ -1,0 +1,17 @@
+node_id,name,region,tier,capacity_units
+F01,Akron Plant,Midwest,1,1200
+F02,Detroit Assy,Midwest,1,1500
+F03,Atlanta Hub,South,1,1100
+F04,Phoenix Final,West,1,900
+F05,Cleveland Sub,Midwest,2,700
+F06,Nashville Sub,South,2,650
+F07,Dallas Sub,South,2,800
+F08,Reno Sub,West,2,550
+F09,Albany Sub,Northeast,2,600
+F10,Toledo Raw,Midwest,3,400
+F11,Memphis Raw,South,3,450
+F12,Houston Raw,South,3,500
+F13,Salt Lake Raw,West,3,380
+F14,Erie Raw,Northeast,3,420
+F15,Boise Raw,West,3,360
+F16,Birmingham Raw,South,3,470

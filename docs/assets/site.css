@@ -381,3 +381,37 @@ a.chip { text-decoration: none; }
   line-height: 1.55; color: var(--green-mint); max-width: 760px;
   margin-bottom: 32px;
 }
+
+/* ── Lab CTA row (Try this in the Coding Playground) ──────── */
+.lab-cta-row {
+  margin: 36px 0 24px;
+  padding: 18px 22px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green-bright);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+}
+.lab-cta-row .cta-lede {
+  flex: 1 1 280px;
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--green-mint); line-height: 1.5;
+}
+.lab-cta-row .cta-lede strong { color: var(--white); }
+.lab-cta-row a.btn {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 9px 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); cursor: pointer;
+  transition: all 0.15s; text-decoration: none;
+  display: inline-block;
+}
+.lab-cta-row a.btn.primary {
+  background: var(--green-bright); color: var(--black); border-color: var(--green-bright);
+}
+.lab-cta-row a.btn.primary:hover { background: var(--green-mid); border-color: var(--green-mid); }
+.lab-cta-row a.btn.ghost {
+  background: transparent; color: var(--green-bright); border-color: var(--green-bright);
+}
+.lab-cta-row a.btn.ghost:hover { background: rgba(57,255,20,0.08); }

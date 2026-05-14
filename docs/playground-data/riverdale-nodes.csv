@@ -1,0 +1,19 @@
+id,label,zone,type
+union_terminal,Union Terminal,downtown,hub
+central_commons,Central Commons,downtown,normal
+depot_north,Depot North,downtown,normal
+civic_plaza,Civic Plaza,downtown,normal
+harbor_view,Harbor View,downtown,normal
+market_street,Market Street,downtown,normal
+ironworks,Ironworks,midtown,bridge
+elmhurst,Elmhurst,midtown,normal
+riverside_park,Riverside Park,midtown,normal
+airside,Airside,midtown,normal
+greenway,Greenway,midtown,normal
+northgate,Northgate,suburb,normal
+fernwood,Fernwood,suburb,normal
+oldbury,Oldbury,suburb,normal
+eastfield,Eastfield,suburb,normal
+westbridge,Westbridge,suburb,normal
+lakeshore,Lakeshore,suburb,normal
+millhaven,Millhaven,suburb,normal

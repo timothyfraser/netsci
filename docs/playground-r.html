@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R Playground · SYSEN 5470</title>
+<link rel="stylesheet" href="assets/design.css">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/r/r.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<style>
+  .pg-hero { margin-bottom: 24px; }
+  .pg-hero h1 {
+    font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px);
+    line-height: 1.05; letter-spacing: 0.03em; color: var(--white); margin-bottom: 14px;
+  }
+  .pg-hero h1 em { color: var(--green-bright); font-style: normal; }
+  .pg-hero p {
+    font-family: var(--font-body); font-size: 16px; font-weight: 300;
+    line-height: 1.55; color: var(--green-mint); max-width: 720px;
+    border-left: 3px solid var(--green-bright); padding-left: 18px;
+  }
+
+  /* STATUS PILL */
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 10px;
+    margin-top: 16px; padding: 10px 18px;
+    background: rgba(5,46,22,0.65); border: 1px solid var(--border);
+    border-radius: 999px;
+    font-family: var(--font-mono); font-size: 12.5px;
+    color: var(--green-mint); letter-spacing: 0.04em;
+    transition: all 0.25s;
+  }
+  .status-pill.loading { border-color: var(--node-4); color: var(--node-4); }
+  .status-pill.ready { border-color: var(--green-bright); color: var(--green-bright); background: rgba(57,255,20,0.08); box-shadow: 0 0 12px rgba(57,255,20,0.18); }
+  .status-pill.error { border-color: var(--node-7); color: var(--node-7); background: rgba(249,115,22,0.08); }
+  .status-pill .pulse {
+    width: 8px; height: 8px; border-radius: 50%; background: currentColor;
+    box-shadow: 0 0 8px currentColor;
+  }
+  .status-pill.loading .pulse { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  /* COLLAPSIBLE DISCLOSURE PANELS */
+  details {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 14px; backdrop-filter: blur(8px);
+  }
+  details summary {
+    cursor: pointer; padding: 14px 20px;
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--green-bright);
+    user-select: none;
+    list-style: none;
+    display: flex; align-items: center; gap: 10px;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before {
+    content: '▸'; color: var(--green-bright);
+    transition: transform 0.2s;
+    display: inline-block;
+  }
+  details[open] summary::before { transform: rotate(90deg); }
+  details .disclosure-body {
+    padding: 4px 22px 18px;
+    font-family: var(--font-body); font-size: 13.5px;
+    color: var(--green-mint); line-height: 1.65;
+  }
+  details .disclosure-body ul {
+    margin: 4px 0 0 18px; padding: 0;
+  }
+  details .disclosure-body li { margin-bottom: 5px; }
+  details .disclosure-body strong { color: var(--white); }
+  details .disclosure-body code {
+    font-family: var(--font-mono); font-size: 12px;
+    background: rgba(57,255,20,0.08);
+    border: 1px solid rgba(57,255,20,0.18);
+    padding: 1px 6px; border-radius: 3px;
+    color: var(--green-laser);
+  }
+  details .pkg-pill {
+    display: inline-block; padding: 2px 9px;
+    background: rgba(5,46,22,0.6); border: 1px solid var(--border);
+    border-radius: 999px;
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--green-bright); letter-spacing: 0.04em;
+    margin: 3px 4px 3px 0;
+  }
+
+  /* MAIN GRID — editor left, output right */
+  .pg-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+    margin-top: 18px;
+  }
+  @media (max-width: 1100px) { .pg-grid { grid-template-columns: 1fr; } }
+
+  .pg-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 16px;
+    backdrop-filter: blur(8px);
+    display: flex; flex-direction: column;
+    min-height: 540px;
+  }
+  .pg-card h3 {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--green-bright); margin-bottom: 12px;
+  }
+
+  /* TOOLBAR */
+  .pg-toolbar {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
+  }
+  .pg-btn {
+    background: rgba(5,46,22,0.5); color: var(--white);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .pg-btn:hover:not(:disabled) { border-color: var(--green-bright); color: var(--green-bright); }
+  .pg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .pg-btn.primary {
+    background: var(--green-bright); color: var(--black); border-color: var(--green-bright);
+  }
+  .pg-btn.primary:hover:not(:disabled) { background: var(--green-mid); border-color: var(--green-mid); color: var(--black); }
+  .pg-btn.ghost { background: transparent; color: var(--grey); }
+  .pg-toolbar-spacer { flex: 1; }
+  .pg-select {
+    background: rgba(5,46,22,0.5); color: var(--white);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    font-family: var(--font-body); font-size: 12.5px;
+    cursor: pointer;
+  }
+  .pg-select:focus { outline: none; border-color: var(--green-bright); }
+
+  /* CODEMIRROR THEME */
+  .CodeMirror {
+    height: auto; min-height: 380px; flex: 1;
+    background: rgba(5,10,5,0.7) !important;
+    color: var(--white) !important;
+    border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 13px; line-height: 1.55;
+  }
+  .CodeMirror-gutters { background: rgba(5,46,22,0.5) !important; border-right: 1px solid var(--border-soft) !important; }
+  .CodeMirror-linenumber { color: var(--grey-dim) !important; }
+  .CodeMirror-cursor { border-left: 2px solid var(--green-bright) !important; }
+  .CodeMirror-selected { background: rgba(57,255,20,0.15) !important; }
+  .CodeMirror-matchingbracket { color: var(--node-4) !important; background: rgba(251,191,36,0.18); }
+  /* syntax tokens */
+  .cm-keyword  { color: var(--green-bright); }
+  .cm-builtin  { color: var(--node-3); }
+  .cm-string   { color: var(--node-4); }
+  .cm-comment  { color: var(--grey); font-style: italic; }
+  .cm-number   { color: var(--node-3); }
+  .cm-operator { color: var(--node-5); }
+  .cm-variable { color: var(--white); }
+  .cm-variable-2 { color: var(--green-laser); }
+  .cm-def      { color: var(--green-bright); }
+
+  /* OUTPUT TABS */
+  .pg-tabs {
+    display: flex; gap: 4px; margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .pg-tab {
+    padding: 8px 14px;
+    background: transparent; border: none;
+    border-bottom: 2px solid transparent;
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--grey); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pg-tab:hover { color: var(--white); }
+  .pg-tab.active { color: var(--green-bright); border-bottom-color: var(--green-bright); }
+  .pg-tab .tab-count {
+    margin-left: 6px; padding: 1px 7px;
+    background: rgba(57,255,20,0.14); color: var(--green-bright);
+    border-radius: 999px; font-size: 9.5px;
+  }
+
+  .pg-tab-panel { display: none; flex: 1; min-height: 0; flex-direction: column; }
+  .pg-tab-panel.active { display: flex; }
+
+  /* CONSOLE */
+  .pg-console {
+    flex: 1; min-height: 380px; overflow-y: auto;
+    background: rgba(5,10,5,0.7);
+    border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-family: var(--font-mono); font-size: 12.5px;
+    color: var(--white); line-height: 1.55;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .pg-console .out-stderr { color: var(--node-7); }
+  .pg-console .out-msg    { color: var(--node-4); }
+  .pg-console .out-prompt { color: var(--green-bright); }
+  .pg-console .out-empty  {
+    color: var(--grey); font-style: italic; font-family: var(--font-body);
+  }
+
+  /* PLOTS */
+  .pg-plots {
+    flex: 1; min-height: 380px; overflow-y: auto;
+    background: rgba(5,46,22,0.35);
+    border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+    padding: 14px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .pg-plots .plot-item {
+    background: white;
+    border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+    padding: 8px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .pg-plots .plot-item img, .pg-plots .plot-item canvas {
+    max-width: 100%; height: auto; border-radius: 3px;
+  }
+  .pg-plots .plot-item .plot-actions {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--grey-dim); letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .pg-plots .plot-item a {
+    color: var(--green-dark); text-decoration: none;
+  }
+  .pg-plots .empty {
+    color: var(--grey); font-style: italic; font-family: var(--font-body);
+    text-align: center; padding: 40px 12px;
+  }
+
+  /* OBJECTS */
+  .pg-objects {
+    flex: 1; min-height: 380px; overflow-y: auto;
+    background: rgba(5,10,5,0.6);
+    border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+    padding: 0;
+  }
+  .pg-objects table {
+    width: 100%; border-collapse: collapse;
+    font-family: var(--font-mono); font-size: 12.5px;
+  }
+  .pg-objects th {
+    text-align: left; padding: 9px 14px;
+    background: rgba(5,46,22,0.6); color: var(--green-bright);
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border-soft);
+    position: sticky; top: 0;
+  }
+  .pg-objects td {
+    padding: 8px 14px;
+    border-bottom: 1px solid rgba(57,255,20,0.05);
+    color: var(--white);
+  }
+  .pg-objects tr:hover td { background: rgba(57,255,20,0.04); }
+  .pg-objects td.col-class { color: var(--node-3); }
+  .pg-objects td.col-size  { color: var(--grey); }
+  .pg-objects .empty {
+    color: var(--grey); font-style: italic; font-family: var(--font-body);
+    text-align: center; padding: 40px 12px;
+  }
+
+  /* DATA */
+  .pg-data {
+    flex: 1; min-height: 380px; overflow: auto;
+    background: rgba(5,10,5,0.6);
+    border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--white);
+  }
+  .pg-data .file-block {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .pg-data .file-block:last-child { border-bottom: none; }
+  .pg-data .file-name {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--green-bright); letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .pg-data .file-name .file-meta { color: var(--grey); }
+  .pg-data table { border-collapse: collapse; font-size: 11.5px; }
+  .pg-data th {
+    text-align: left; padding: 4px 10px 4px 0;
+    color: var(--node-3); border-bottom: 1px solid var(--border-soft);
+  }
+  .pg-data td { padding: 3px 10px 3px 0; color: var(--green-mint); }
+  .pg-data .empty {
+    color: var(--grey); font-style: italic; font-family: var(--font-body);
+    text-align: center; padding: 40px 12px;
+  }
+
+  /* PERSISTENCE STATUS BAR */
+  .pg-persist {
+    margin-top: 16px; padding: 12px 18px;
+    background: rgba(5,46,22,0.5); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    display: flex; gap: 22px; flex-wrap: wrap; align-items: center;
+    font-family: var(--font-mono); font-size: 11.5px;
+    color: var(--green-mint); letter-spacing: 0.04em;
+  }
+  .pg-persist .persist-item { display: flex; gap: 8px; align-items: center; }
+  .pg-persist .persist-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green-bright); box-shadow: 0 0 6px var(--green-bright);
+  }
+  .pg-persist .persist-warn { color: var(--node-4); }
+  .pg-persist .persist-warn::before { content: '⚠ '; }
+  .pg-persist a {
+    color: var(--green-bright);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--card-bg); border: 1px solid var(--green-bright);
+    color: var(--white); padding: 12px 18px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body); font-size: 13px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    z-index: 1000; opacity: 0;
+    transform: translateY(20px); transition: all 0.25s;
+    pointer-events: none; max-width: 360px;
+    backdrop-filter: blur(12px);
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.err { border-color: var(--node-7); color: var(--node-7); }
+</style>
+</head>
+<body data-page="playground">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="index.html"          data-page="home">Overview</a>
+      <a href="syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="materials.html"      data-page="materials">Materials</a>
+      <a href="case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="playground.html"     data-page="playground">Playground</a>
+      <a href="readings.html"       data-page="readings">Readings</a>
+      <a href="sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="about.html"          data-page="about">About</a>
+    </div>
+    <a href="index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page-wide">
+
+  <section class="pg-hero">
+    <p class="course-number">SYSEN 5470 · Coding Playground</p>
+    <h1><em>R</em> Playground</h1>
+    <p>A full R interpreter, compiled to WebAssembly, running in your browser tab. No install. Tidyverse + igraph + tidygraph + DBI/RSQLite are pre-installed. Your code and uploaded CSVs are saved to your own browser — they survive a refresh but never leave your device.</p>
+    <span class="status-pill loading" id="status"><span class="pulse"></span><span id="status-text">Loading WebR runtime…</span></span>
+  </section>
+
+  <details open>
+    <summary>How this works</summary>
+    <div class="disclosure-body">
+      <ul>
+        <li>The R interpreter runs <strong>entirely in this browser tab</strong> via WebAssembly. Nothing is sent to a server.</li>
+        <li>First load downloads ~30MB of R + WASM. Your browser caches it, so subsequent visits start in a second or two.</li>
+        <li>A browser tab has a <strong>~2–4 GB memory ceiling</strong>. Fine for any course dataset; not enough for million-row CSVs at full resolution.</li>
+        <li>Your code is auto-saved to your browser's <code>localStorage</code>. Uploaded files are saved to your browser's <code>IndexedDB</code>. Both stay on your device.</li>
+        <li>Click <strong>Run</strong> (or press <code>Ctrl/Cmd + Enter</code>) to execute the editor's contents. Stdout, plots, and the current workspace populate on the right.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Pre-installed packages</summary>
+    <div class="disclosure-body">
+      <p>The packages below are loaded into your session once WebR is ready. To install additional ones, run <code>webr::install("&lt;pkg&gt;")</code> if it's available in the WebR CRAN repo.</p>
+      <p style="margin-top: 10px;">
+        <span class="pkg-pill">dplyr</span>
+        <span class="pkg-pill">tidyr</span>
+        <span class="pkg-pill">ggplot2</span>
+        <span class="pkg-pill">readr</span>
+        <span class="pkg-pill">igraph</span>
+        <span class="pkg-pill">tidygraph</span>
+        <span class="pkg-pill">DBI</span>
+        <span class="pkg-pill">RSQLite</span>
+      </p>
+    </div>
+  </details>
+
+  <div class="pg-grid">
+
+    <!-- EDITOR -->
+    <div class="pg-card">
+      <h3>📝 Code Editor</h3>
+      <div class="pg-toolbar">
+        <button class="pg-btn primary" id="btn-run" disabled>▶ Run</button>
+        <button class="pg-btn ghost" id="btn-reset">↻ Reset</button>
+        <span class="pg-toolbar-spacer"></span>
+        <select class="pg-select" id="sample-select">
+          <option value="">▾ Load sample…</option>
+          <option value="karate">Karate club (34 nodes)</option>
+          <option value="lakeside">Lakeside Bikeshare (15 nodes)</option>
+          <option value="riverdale">Riverdale Metro (18 nodes)</option>
+          <option value="supply-chain">Supply Chain (16 factories)</option>
+        </select>
+        <input type="file" id="file-upload" multiple accept=".csv,.tsv,.txt,.json" style="display: none;">
+        <button class="pg-btn" id="btn-upload">⬆ Upload CSV</button>
+      </div>
+      <textarea id="editor"></textarea>
+    </div>
+
+    <!-- OUTPUT -->
+    <div class="pg-card">
+      <h3>📤 Output</h3>
+      <div class="pg-tabs" id="tabs">
+        <button class="pg-tab active" data-tab="console">Console</button>
+        <button class="pg-tab" data-tab="plots">Plots <span class="tab-count" id="plot-count" style="display:none;">0</span></button>
+        <button class="pg-tab" data-tab="objects">Objects <span class="tab-count" id="obj-count" style="display:none;">0</span></button>
+        <button class="pg-tab" data-tab="data">Data <span class="tab-count" id="data-count" style="display:none;">0</span></button>
+      </div>
+
+      <div class="pg-tab-panel active" data-panel="console">
+        <div class="pg-console" id="console"><span class="out-empty">WebR is loading. The console will activate once the runtime is ready.</span></div>
+      </div>
+
+      <div class="pg-tab-panel" data-panel="plots">
+        <div class="pg-plots" id="plots"><div class="empty">No plots yet. Call <code>plot()</code>, <code>ggplot()</code>, or any graphics function in the editor.</div></div>
+      </div>
+
+      <div class="pg-tab-panel" data-panel="objects">
+        <div class="pg-objects" id="objects"><div class="empty">No objects in your workspace yet.</div></div>
+      </div>
+
+      <div class="pg-tab-panel" data-panel="data">
+        <div class="pg-data" id="data-preview"><div class="empty">No files uploaded yet. Use ⬆ Upload CSV or ▾ Load sample to bring data into your session.</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="pg-persist">
+    <span class="persist-item"><span class="persist-dot"></span><strong style="color: var(--white)">Code</strong> auto-saved to localStorage</span>
+    <span class="persist-item"><span class="persist-dot"></span><strong style="color: var(--white)">Uploaded files</strong> persisted in IndexedDB (survive refresh, stay on your device)</span>
+    <span class="persist-item"><a id="btn-clear-code">Clear saved code</a></span>
+    <span class="persist-item"><a id="btn-clear-files">Clear uploaded files</a></span>
+  </div>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · R Playground</strong> · Powered by <a href="https://docs.r-wasm.org/webr/latest/" target="_blank" rel="noopener">WebR</a> · 100% client-side · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/network-bg.js" defer></script>
+<script src="assets/site.js" defer></script>
+
+<script type="module">
+import { WebR } from 'https://webr.r-wasm.org/latest/webr.mjs';
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+const STARTER_CODE = `# Welcome to the R Playground.
+# Tidyverse + igraph + tidygraph are pre-installed.
+#
+# Tip: click ▾ Load sample to bring a network into your workspace,
+#      then run this template adapted to your data.
+
+library(igraph)
+
+# Load the karate club from the sample loader, or substitute your own files.
+# nodes <- read.csv("karate-nodes.csv")
+# edges <- read.csv("karate-edges.csv")
+# g <- graph_from_data_frame(edges, vertices = nodes, directed = FALSE)
+# summary(g)
+# plot(g, vertex.size = 8, vertex.label.cex = 0.7)
+
+# Quick demo without any uploads:
+g <- make_ring(10)
+summary(g)
+plot(g, vertex.color = "#39FF14", vertex.size = 20, edge.color = "#86efac")
+`;
+
+const SAMPLE_CONFIGS = {
+  karate:        { files: ['karate-nodes.csv',        'karate-edges.csv'],        title: "Zachary's karate club"      , directed: 'FALSE' },
+  lakeside:      { files: ['lakeside-nodes.csv',      'lakeside-edges.csv'],      title: 'Lakeside Bikeshare'         , directed: 'FALSE' },
+  riverdale:     { files: ['riverdale-nodes.csv',     'riverdale-edges.csv'],     title: 'Riverdale Metro'            , directed: 'FALSE' },
+  'supply-chain':{ files: ['supply-chain-nodes.csv',  'supply-chain-edges.csv'],  title: 'Supply Chain'               , directed: 'TRUE'  },
+};
+function sampleSnippet(key) {
+  const cfg = SAMPLE_CONFIGS[key];
+  if (key === 'supply-chain') {
+    return `# ${cfg.title} loaded.
+library(igraph)
+nodes <- read.csv("supply-chain-nodes.csv")
+edges <- read.csv("supply-chain-edges.csv")
+# edges use from_id / to_id, so rename for igraph:
+edges <- transform(edges, source = from_id, target = to_id)
+g <- graph_from_data_frame(edges[, c("source","target","volume_units")],
+                            vertices = nodes, directed = TRUE)
+summary(g)
+plot(g, vertex.size = 10, vertex.label.cex = 0.6,
+     edge.arrow.size = 0.4, edge.color = "#86efac")
+`;
+  }
+  return `# ${cfg.title} loaded.
+library(igraph)
+nodes <- read.csv("${cfg.files[0]}")
+edges <- read.csv("${cfg.files[1]}")
+g <- graph_from_data_frame(edges, vertices = nodes, directed = ${cfg.directed})
+summary(g)
+plot(g, vertex.size = 10, vertex.label.cex = 0.7, edge.color = "#86efac")
+`;
+}
+
+const CODE_STORE_KEY = 'playground-r-code-v1';
+const IDB_NAME = 'playground-r-files';
+
+// ============================================================
+// IndexedDB wrapper (uploaded files persist across refresh)
+// ============================================================
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('files');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbPutFile(name, bytes) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('files', 'readwrite');
+    tx.objectStore('files').put(bytes, name);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbAllFiles() {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('files', 'readonly');
+    const store = tx.objectStore('files');
+    const req = store.openCursor();
+    const out = [];
+    req.onsuccess = e => {
+      const cur = e.target.result;
+      if (cur) { out.push({ name: cur.key, bytes: cur.value }); cur.continue(); }
+      else resolve(out);
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbClear() {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('files', 'readwrite');
+    tx.objectStore('files').clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// ============================================================
+// CODEMIRROR EDITOR
+// ============================================================
+const savedCode = localStorage.getItem(CODE_STORE_KEY);
+const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+  mode: 'r',
+  lineNumbers: true,
+  matchBrackets: true,
+  indentUnit: 2,
+  tabSize: 2,
+  lineWrapping: true,
+  value: savedCode || STARTER_CODE
+});
+if (savedCode == null) editor.setValue(STARTER_CODE);
+
+let saveTimer = null;
+editor.on('change', () => {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    localStorage.setItem(CODE_STORE_KEY, editor.getValue());
+  }, 500);
+});
+
+editor.setOption('extraKeys', {
+  'Ctrl-Enter': () => runCode(),
+  'Cmd-Enter':  () => runCode(),
+});
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+const $ = id => document.getElementById(id);
+function setStatus(text, cls) {
+  $('status').className = 'status-pill ' + (cls || 'loading');
+  $('status-text').textContent = text;
+}
+function toast(msg, kind) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (kind === 'err' ? ' err' : '');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+function human(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Tabs
+document.querySelectorAll('.pg-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.pg-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.pg-tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelector(`.pg-tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add('active');
+  });
+});
+
+// Console
+function clearConsole() { $('console').innerHTML = ''; }
+function appendConsole(items) {
+  const c = $('console');
+  if (c.querySelector('.out-empty')) c.innerHTML = '';
+  for (const item of items) {
+    const span = document.createElement('span');
+    span.className = item.type === 'stderr' ? 'out-stderr' :
+                     item.type === 'message' ? 'out-msg' : '';
+    span.textContent = (item.data || '') + (item.data && !String(item.data).endsWith('\n') ? '\n' : '');
+    c.appendChild(span);
+  }
+  c.scrollTop = c.scrollHeight;
+}
+
+// Plots
+let plotCount = 0;
+function clearPlots() {
+  plotCount = 0;
+  $('plots').innerHTML = '<div class="empty">No plots yet. Call <code>plot()</code>, <code>ggplot()</code>, or any graphics function in the editor.</div>';
+  $('plot-count').style.display = 'none';
+}
+function addPlotFromImageBitmap(imgBitmap) {
+  if (plotCount === 0) $('plots').innerHTML = '';
+  plotCount++;
+  $('plot-count').textContent = plotCount;
+  $('plot-count').style.display = 'inline-block';
+
+  const canvas = document.createElement('canvas');
+  canvas.width = imgBitmap.width;
+  canvas.height = imgBitmap.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(imgBitmap, 0, 0);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'plot-item';
+  const actions = document.createElement('div');
+  actions.className = 'plot-actions';
+  actions.innerHTML = `<span>Plot ${plotCount} · ${imgBitmap.width}×${imgBitmap.height}</span>`;
+  const dl = document.createElement('a');
+  dl.textContent = '⬇ Download';
+  dl.href = canvas.toDataURL('image/png');
+  dl.download = `plot-${plotCount}.png`;
+  actions.appendChild(dl);
+  wrap.appendChild(canvas);
+  wrap.appendChild(actions);
+  $('plots').appendChild(wrap);
+}
+
+// Objects
+function renderObjects(raw) {
+  const box = $('objects');
+  if (!raw || raw.trim() === '') {
+    box.innerHTML = '<div class="empty">No objects in your workspace yet.</div>';
+    $('obj-count').style.display = 'none';
+    return;
+  }
+  const lines = raw.trim().split('\n').filter(Boolean);
+  $('obj-count').textContent = lines.length;
+  $('obj-count').style.display = 'inline-block';
+  let html = '<table><thead><tr><th>Name</th><th>Class</th><th>Size</th></tr></thead><tbody>';
+  for (const line of lines) {
+    const parts = line.split('\t');
+    if (parts.length < 3) continue;
+    html += `<tr><td>${escapeHtml(parts[0])}</td><td class="col-class">${escapeHtml(parts[1])}</td><td class="col-size">${escapeHtml(parts[2])}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  box.innerHTML = html;
+}
+
+// Data preview
+const dataFiles = new Map(); // name -> { bytes, preview }
+function renderDataPanel() {
+  const box = $('data-preview');
+  if (dataFiles.size === 0) {
+    box.innerHTML = '<div class="empty">No files uploaded yet. Use ⬆ Upload CSV or ▾ Load sample to bring data into your session.</div>';
+    $('data-count').style.display = 'none';
+    return;
+  }
+  $('data-count').textContent = dataFiles.size;
+  $('data-count').style.display = 'inline-block';
+  let html = '';
+  for (const [name, info] of dataFiles) {
+    html += `<div class="file-block">`;
+    html += `<div class="file-name"><span>${escapeHtml(name)}</span><span class="file-meta">${human(info.bytes.byteLength)}</span></div>`;
+    const lines = info.preview.split('\n').filter(Boolean).slice(0, 11);
+    if (lines.length === 0) { html += `<div style="color: var(--grey);">(empty)</div>`; }
+    else {
+      html += `<table><thead><tr>`;
+      lines[0].split(',').forEach(h => { html += `<th>${escapeHtml(h)}</th>`; });
+      html += `</tr></thead><tbody>`;
+      lines.slice(1).forEach(row => {
+        html += `<tr>`;
+        row.split(',').forEach(c => { html += `<td>${escapeHtml(c)}</td>`; });
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+    }
+    html += `</div>`;
+  }
+  box.innerHTML = html;
+}
+
+// ============================================================
+// WEBR SETUP
+// ============================================================
+const webR = new WebR();
+let isReady = false;
+
+async function bootstrap() {
+  try {
+    setStatus('Loading WebR runtime…', 'loading');
+    await webR.init();
+
+    setStatus('Installing packages (this takes ~30s on first load)…', 'loading');
+    await webR.installPackages(['dplyr','tidyr','ggplot2','readr','igraph','tidygraph','DBI','RSQLite']);
+
+    // Auto-attach the most common ones
+    await webR.evalRVoid(`
+      suppressMessages({
+        library(dplyr); library(tidyr); library(ggplot2)
+        library(igraph); library(tidygraph)
+      })
+    `);
+
+    // Restore any previously-uploaded files from IndexedDB into the WASM FS
+    setStatus('Restoring saved files…', 'loading');
+    const saved = await idbAllFiles();
+    for (const { name, bytes } of saved) {
+      try {
+        await webR.FS.writeFile('/home/web_user/' + name, bytes);
+        const preview = new TextDecoder().decode(bytes.slice(0, 4096));
+        dataFiles.set(name, { bytes, preview });
+      } catch (e) { /* ignore individual restore failures */ }
+    }
+    renderDataPanel();
+
+    setStatus('Ready ✓', 'ready');
+    isReady = true;
+    $('btn-run').disabled = false;
+    clearConsole();
+    appendConsole([{ type: 'message',
+      data: `WebR ready. ${saved.length ? `Restored ${saved.length} file(s). ` : ''}Press Ctrl/Cmd+Enter to run.\n` }]);
+    refreshObjects();
+  } catch (e) {
+    setStatus('Failed to load WebR — see console', 'error');
+    appendConsole([{ type: 'stderr', data: `WebR bootstrap failed: ${e.message}\n` }]);
+  }
+}
+
+async function runCode() {
+  if (!isReady) return;
+  const code = editor.getValue();
+  clearConsole();
+  clearPlots();
+
+  $('btn-run').disabled = true;
+  $('btn-run').textContent = '⏳ Running…';
+
+  const shelter = await new webR.Shelter();
+  try {
+    const cap = await shelter.captureR(code, {
+      captureGraphics: { width: 600, height: 400 },
+      withAutoprint: true,
+    });
+    appendConsole(cap.output);
+    for (const img of (cap.images || [])) {
+      addPlotFromImageBitmap(img);
+    }
+    await refreshObjects();
+  } catch (e) {
+    appendConsole([{ type: 'stderr', data: `Error: ${e.message}\n` }]);
+  } finally {
+    shelter.purge();
+    $('btn-run').disabled = false;
+    $('btn-run').textContent = '▶ Run';
+  }
+}
+
+async function refreshObjects() {
+  if (!isReady) return;
+  try {
+    const out = await webR.evalRString(`
+      .pg_objs <- ls(envir = .GlobalEnv)
+      if (length(.pg_objs) == 0) "" else
+      paste(.pg_objs,
+            sapply(.pg_objs, function(x) class(get(x, envir = .GlobalEnv))[1]),
+            sapply(.pg_objs, function(x) {
+              v <- get(x, envir = .GlobalEnv)
+              if (is.data.frame(v)) sprintf("%d x %d", nrow(v), ncol(v))
+              else if (inherits(v, "igraph")) sprintf("V=%d E=%d", igraph::vcount(v), igraph::ecount(v))
+              else if (is.atomic(v)) sprintf("len %d", length(v))
+              else "—"
+            }),
+            sep = "\\t", collapse = "\\n")
+    `);
+    renderObjects(out);
+  } catch (e) { /* skip */ }
+}
+
+async function writeFileToFS(name, bytes) {
+  await webR.FS.writeFile('/home/web_user/' + name, bytes);
+}
+
+// ============================================================
+// SAMPLE LOADER
+// ============================================================
+async function loadSample(key) {
+  const cfg = SAMPLE_CONFIGS[key];
+  if (!cfg) return;
+  toast(`Loading ${cfg.title}…`);
+  for (const fname of cfg.files) {
+    try {
+      const resp = await fetch(`playground-data/${fname}`);
+      if (!resp.ok) throw new Error(`fetch ${fname} → HTTP ${resp.status}`);
+      const buf = new Uint8Array(await resp.arrayBuffer());
+      await writeFileToFS(fname, buf);
+      await idbPutFile(fname, buf);
+      const preview = new TextDecoder().decode(buf.slice(0, 4096));
+      dataFiles.set(fname, { bytes: buf, preview });
+    } catch (e) {
+      toast(`Failed to load ${fname}: ${e.message}`, 'err');
+      return;
+    }
+  }
+  renderDataPanel();
+  // Insert starter snippet at top of editor
+  const snippet = sampleSnippet(key);
+  editor.setValue(snippet + '\n# (previous code below)\n# ' + editor.getValue().split('\n').join('\n# '));
+  toast(`Loaded ${cfg.title}. Snippet inserted; press ▶ Run.`);
+}
+
+// ============================================================
+// EVENT WIRING
+// ============================================================
+$('btn-run').addEventListener('click', runCode);
+
+$('btn-reset').addEventListener('click', () => {
+  if (!confirm('Reset the editor to the starter snippet? (Your saved code in localStorage will also be cleared.)')) return;
+  editor.setValue(STARTER_CODE);
+  localStorage.removeItem(CODE_STORE_KEY);
+});
+
+$('btn-upload').addEventListener('click', () => $('file-upload').click());
+$('file-upload').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files);
+  for (const file of files) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    try {
+      await writeFileToFS(file.name, bytes);
+      await idbPutFile(file.name, bytes);
+      const preview = new TextDecoder().decode(bytes.slice(0, 4096));
+      dataFiles.set(file.name, { bytes, preview });
+      toast(`Uploaded ${file.name} (${human(bytes.byteLength)}). Read with read.csv("${file.name}").`);
+    } catch (err) {
+      toast(`Upload of ${file.name} failed: ${err.message}`, 'err');
+    }
+  }
+  renderDataPanel();
+  e.target.value = '';
+});
+
+$('sample-select').addEventListener('change', (e) => {
+  const key = e.target.value;
+  if (!key) return;
+  loadSample(key);
+  e.target.value = '';
+});
+
+$('btn-clear-code').addEventListener('click', (e) => {
+  e.preventDefault();
+  if (!confirm('Clear your saved code? The editor will reset to the starter snippet.')) return;
+  localStorage.removeItem(CODE_STORE_KEY);
+  editor.setValue(STARTER_CODE);
+  toast('Saved code cleared.');
+});
+
+$('btn-clear-files').addEventListener('click', async (e) => {
+  e.preventDefault();
+  if (!confirm('Clear all uploaded files from your browser? (Your code stays.)')) return;
+  await idbClear();
+  // Also delete from WASM FS — best-effort
+  for (const name of dataFiles.keys()) {
+    try { await webR.FS.unlink('/home/web_user/' + name); } catch {}
+  }
+  dataFiles.clear();
+  renderDataPanel();
+  toast('Uploaded files cleared.');
+});
+
+// Kick off
+bootstrap();
+</script>
+</body>
+</html>
