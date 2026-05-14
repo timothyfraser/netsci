@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build a Network · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+.lab-hero { margin-bottom: 24px; }
+.lab-hero .course-number { margin-bottom: 10px; }
+.lab-hero h1 {
+  font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px);
+  line-height: 1.05; letter-spacing: 0.03em; color: var(--white); margin-bottom: 14px;
+}
+.lab-hero h1 em { color: var(--green-bright); font-style: normal; }
+.lab-hero p {
+  font-family: var(--font-body); font-size: 16px; font-weight: 300;
+  line-height: 1.55; color: var(--green-mint); max-width: 780px;
+  border-left: 3px solid var(--green-bright); padding-left: 18px;
+}
+
+.intro-block {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 26px;
+  margin-bottom: 16px; backdrop-filter: blur(8px);
+}
+.intro-block h3 {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 12px;
+}
+.intro-block p {
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--green-mint); line-height: 1.65; margin-bottom: 10px;
+}
+.intro-block p:last-child { margin-bottom: 0; }
+.intro-block strong { color: var(--white); }
+.intro-block em { color: var(--node-3); font-style: italic; }
+.intro-block code {
+  font-family: var(--font-mono); font-size: 12px;
+  background: rgba(57,255,20,0.08);
+  border: 1px solid rgba(57,255,20,0.18);
+  padding: 1px 6px; border-radius: 3px;
+  color: var(--green-laser);
+}
+
+.sketchpad-block {
+  background: rgba(251,191,36,0.06);
+  border: 1px dashed rgba(251,191,36,0.5);
+  border-radius: var(--radius-lg); padding: 20px 24px;
+  margin-bottom: 20px;
+}
+.sketchpad-block h3 {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--node-4); margin-bottom: 12px;
+}
+.sketchpad-block p {
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--white); line-height: 1.65; margin-bottom: 12px;
+}
+.sketchpad-block p:last-child { margin-bottom: 0; }
+.sketchpad-block .prose {
+  background: rgba(5,46,22,0.5);
+  border-left: 3px solid var(--node-4);
+  padding: 14px 18px; border-radius: var(--radius-sm);
+  font-style: italic; margin: 14px 0; color: var(--green-mint);
+  font-family: var(--font-body);
+}
+.sketchpad-block strong { color: var(--node-4); }
+
+.toolbar {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 14px 18px;
+  margin-bottom: 16px;
+  display: flex; flex-wrap: wrap; gap: 18px; align-items: center;
+  backdrop-filter: blur(8px);
+}
+.toolbar-group {
+  display: flex; align-items: center; gap: 8px;
+  padding-right: 18px; border-right: 1px solid var(--border-soft);
+}
+.toolbar-group:last-child { border-right: none; padding-right: 0; }
+.toolbar-label {
+  font-family: var(--font-mono); font-size: 9.5px;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--grey); margin-right: 4px;
+}
+.tool-btn {
+  background: rgba(5,46,22,0.5); color: var(--grey);
+  border: 1px solid var(--border); padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 12.5px; font-weight: 500;
+  cursor: pointer; transition: all 0.12s;
+}
+.tool-btn:hover { color: var(--white); border-color: var(--green-bright); }
+.tool-btn.active {
+  background: rgba(57,255,20,0.14); color: var(--green-bright);
+  border-color: var(--green-bright);
+}
+.tool-btn.danger-tool.active {
+  background: rgba(249,115,22,0.12); color: var(--node-7); border-color: var(--node-7);
+}
+.select-styled {
+  background: rgba(5,46,22,0.5); color: var(--white);
+  border: 1px solid var(--border); padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 13px; cursor: pointer;
+}
+
+.workspace {
+  display: grid; grid-template-columns: 1fr 360px;
+  gap: 16px; margin-bottom: 16px;
+}
+@media (max-width: 1100px) {
+  .workspace { grid-template-columns: 1fr; }
+  .tables-row { grid-template-columns: 1fr; }
+}
+
+.canvas-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  backdrop-filter: blur(8px);
+}
+.canvas-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 10px; flex-wrap: wrap; gap: 8px;
+}
+.canvas-header h2 {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--green-bright);
+}
+.canvas-status {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--node-4); letter-spacing: 0.08em;
+}
+#network-svg {
+  width: 100%; height: 480px;
+  background: rgba(5,46,22,0.35);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+  display: block; cursor: crosshair;
+}
+#network-svg.tool-select { cursor: default; }
+#network-svg.tool-delete { cursor: not-allowed; }
+
+.canvas-hint {
+  margin-top: 10px; padding: 8px 12px;
+  background: rgba(5,46,22,0.5);
+  border-left: 3px solid var(--green-bright);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 11.5px;
+  color: var(--green-mint);
+}
+.canvas-hint strong { color: var(--green-bright); font-weight: 500; }
+
+.sidebar { display: flex; flex-direction: column; gap: 14px; }
+
+.card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  backdrop-filter: blur(8px);
+}
+.card h3 {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border-soft);
+}
+
+.metric-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 7px 0; border-bottom: 1px solid var(--border-soft);
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-label { font-size: 13px; color: var(--grey); }
+.metric-value {
+  font-family: var(--font-mono); font-size: 14px;
+  font-weight: 500; color: var(--white);
+}
+.metric-value.good { color: var(--green-bright); }
+.metric-value.warn { color: var(--node-4); }
+.metric-value.bad  { color: var(--node-7); }
+
+.sync-badge {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--grey); letter-spacing: 0.1em;
+  padding: 6px 10px; background: rgba(5,46,22,0.5);
+  border-radius: var(--radius-sm);
+  text-align: center; justify-content: center;
+}
+.sync-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green-bright);
+  box-shadow: 0 0 8px var(--green-bright);
+}
+
+.tables-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 16px; margin-bottom: 16px;
+}
+.table-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px;
+  backdrop-filter: blur(8px);
+}
+.table-card h3 {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 12px;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.table-card h3 .count {
+  font-size: 10px; color: var(--green-bright);
+  background: rgba(57,255,20,0.1);
+  padding: 2px 8px; border-radius: 10px;
+  letter-spacing: 0.06em;
+}
+.data-table {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--font-mono); font-size: 12px;
+}
+.data-table th {
+  text-align: left; padding: 8px 6px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--grey); font-weight: 500; letter-spacing: 0.04em;
+}
+.data-table td {
+  padding: 6px;
+  border-bottom: 1px solid rgba(57,255,20,0.06);
+  color: var(--white);
+}
+.data-table tr:hover td { background: rgba(57,255,20,0.04); }
+.data-table input, .data-table select {
+  background: rgba(5,46,22,0.6); border: 1px solid var(--border);
+  color: var(--white); padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 12px;
+  width: 100%; min-width: 60px;
+}
+.data-table input:focus, .data-table select:focus {
+  outline: none; border-color: var(--green-bright);
+}
+.del-btn {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--grey); cursor: pointer;
+  padding: 3px 8px; border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+.del-btn:hover { color: var(--node-7); border-color: var(--node-7); }
+.table-empty {
+  padding: 24px; text-align: center; color: var(--grey);
+  font-size: 12px; font-family: var(--font-mono);
+}
+.table-scroll { max-height: 220px; overflow-y: auto; }
+
+.matrix-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px;
+  margin-bottom: 16px; backdrop-filter: blur(8px);
+}
+.matrix-card h3 {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 12px;
+  display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap;
+}
+#matrix-svg {
+  width: 100%; min-height: 320px;
+  background: rgba(5,46,22,0.35);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+}
+
+.io-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  background: rgba(5,46,22,0.5); color: var(--white);
+  border: 1px solid var(--border); padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn:hover { border-color: var(--green-bright); color: var(--green-bright); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn:disabled:hover { border-color: var(--border); color: var(--white); }
+.btn-primary {
+  background: var(--green-bright); color: var(--black);
+  border-color: var(--green-bright);
+}
+.btn-primary:hover { background: var(--green-mid); border-color: var(--green-mid); color: var(--black); }
+.btn-danger { background: transparent; color: var(--node-7); border-color: var(--node-7); }
+.btn-danger:hover { background: rgba(249,115,22,0.08); }
+
+.lc-section-header {
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--green-bright); margin: 28px 0 14px;
+}
+
+.lc-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 26px;
+  margin-bottom: 16px; backdrop-filter: blur(8px);
+}
+.lc-header {
+  display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px;
+}
+.lc-number {
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.12em; color: var(--green-bright);
+  background: rgba(57,255,20,0.1);
+  padding: 4px 10px; border-radius: var(--radius-sm);
+  border: 1px solid rgba(57,255,20,0.3);
+  flex-shrink: 0; margin-top: 2px;
+}
+.lc-question {
+  font-family: var(--font-display); font-size: 20px;
+  line-height: 1.3; color: var(--white); letter-spacing: 0.02em;
+  flex: 1;
+}
+.lc-prose {
+  background: rgba(5,46,22,0.5); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 14px 18px;
+  margin: 12px 0 16px;
+  font-family: var(--font-body); font-size: 13.5px;
+  color: var(--green-mint); font-style: italic; line-height: 1.65;
+}
+.lc-task {
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--green-mint); margin: 12px 0; line-height: 1.6;
+}
+.lc-task strong { color: var(--node-4); }
+.lc-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.lc-option {
+  padding: 12px 16px; background: rgba(5,46,22,0.4);
+  border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.15s;
+  font-family: var(--font-body); font-size: 13.5px;
+  color: var(--green-mint); line-height: 1.5;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.lc-option:hover { border-color: var(--green-bright); color: var(--white); }
+.lc-option-letter {
+  font-family: var(--font-mono); font-weight: 700;
+  color: var(--green-bright); flex-shrink: 0;
+}
+.lc-option.correct          { border-color: var(--green-bright); background: rgba(57,255,20,0.1); color: var(--white); }
+.lc-option.incorrect        { border-color: var(--node-7); background: rgba(249,115,22,0.08); color: var(--white); }
+.lc-option.revealed-correct { border-color: var(--green-bright); background: rgba(57,255,20,0.12); color: var(--white); }
+
+.lc-actions { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+.lc-feedback {
+  display: none; margin-top: 14px;
+  padding: 14px 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+  font-family: var(--font-body); font-size: 13px;
+  line-height: 1.65; color: var(--green-mint);
+}
+.feedback-hint { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.3); }
+.feedback-hint strong { color: var(--node-4); }
+.feedback-answer { background: rgba(57,255,20,0.05); border-color: rgba(57,255,20,0.3); }
+.feedback-answer strong { color: var(--green-bright); }
+.feedback-answer em { color: var(--node-3); font-style: italic; }
+
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--card-bg); border: 1px solid var(--node-4);
+  color: var(--white); padding: 12px 18px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body); font-size: 13px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  z-index: 1000; opacity: 0;
+  transform: translateY(20px); transition: all 0.25s;
+  pointer-events: none; max-width: 320px;
+  backdrop-filter: blur(12px);
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body data-page="cases">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../materials.html"      data-page="materials">Materials</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../readings.html"       data-page="readings">Readings</a>
+      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="../about.html"          data-page="about">About</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page-wide">
+
+  <section class="lab-hero">
+    <p class="course-number">SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify</p>
+    <h1>Build a Network: <em>Identify the Problem</em></h1>
+    <p>A network is not a picture of stuff connected to stuff — it's a deliberate choice about what counts as a node, what counts as a tie, and what direction information flows. This playground lets you construct networks from prose, see them as node-link diagrams, adjacency matrices, and edge tables simultaneously, and compute structural properties as you build. The tool is for verification and computation. The thinking happens on your sketchpad.</p>
+  </section>
+
+  <div class="intro-block">
+    <h3>🧭 How to use this playground</h3>
+    <p><strong>Three tools, exclusive — pick one at a time:</strong> 🖱 <strong>Select</strong> highlights a node and shows its details, and lets you drag it around when in manual layout. ✏️ <strong>Add Node</strong> drops a node anywhere you click on empty canvas. 🔗 <strong>Add Edge</strong> connects two nodes — click source, then target. 🗑 <strong>Delete</strong> removes the node or edge you click.</p>
+    <p><strong>Three representations, one network:</strong> the node-link diagram, the node and edge tables, and the adjacency matrix are all views of the same data. Edit anywhere and the others update. This is the lab's central concept: <em>a network is its edge list and its node list.</em> The picture is just one way to draw them.</p>
+    <p><strong>Layouts:</strong> <em>Manual</em> lets you drag nodes; <em>Force-directed</em> runs a physics simulation; <em>Circular</em> arranges nodes on a ring; <em>Bipartite / Tripartite / Quadripartite stacks</em> become available when you switch partition mode to k=2, 3, or 4 and assign types in the node table.</p>
+    <p><strong>Undo your way out of any mistake:</strong> ↶ Undo and ↷ Redo live in the toolbar, or use <code>Ctrl/Cmd+Z</code> and <code>Ctrl/Cmd+Shift+Z</code>. Up to 50 steps of history are kept.</p>
+  </div>
+
+  <div class="sketchpad-block">
+    <h3>✏️ Sketchpad Moment — do this before touching the tool</h3>
+    <p><strong>Read this paragraph carefully:</strong></p>
+    <div class="prose">"The city's emergency operations center (EOC) coordinates response with the fire department, police department, and hospital. The fire chief and police chief exchange text messages directly throughout each shift. During the last storm, the hospital emailed status reports to the EOC every two hours, and the police called the EOC whenever a road was closed. The EOC, in turn, broadcast briefings to all three agencies over a shared radio channel. The fire department posts its dispatch log to a shared portal that the police and EOC read but the hospital does not."</div>
+    <p><strong>On your sketchpad, draw this network TWO ways.</strong></p>
+    <p>First, as an <strong>undirected</strong> network where an edge means "these two parties communicate at all, in either direction." Then again, as a <strong>directed</strong>, possibly multi-edge network where each arrow represents one specific channel (call, email, text, radio broadcast, portal post).</p>
+    <p>Then answer in writing under your drawings: <strong>Who would find the first network more useful, and who would find the second more useful?</strong> Name a specific role — not "decision-makers" or "managers," but the actual person whose job depends on this view. What is each role trying to figure out, and which version helps them figure it out?</p>
+    <p style="color: var(--grey); font-size: 12.5px;">The bigger lesson: a network is a choice about what counts as a tie. The question you are asking determines which version is "right." There is no universally correct answer.</p>
+  </div>
+
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <span class="toolbar-label">Tool</span>
+      <button class="tool-btn active" id="tool-select" onclick="setTool('select')">🖱 Select</button>
+      <button class="tool-btn" id="tool-add-node" onclick="setTool('add-node')">✏️ Add Node</button>
+      <button class="tool-btn" id="tool-add-edge" onclick="setTool('add-edge')">🔗 Add Edge</button>
+      <button class="tool-btn danger-tool" id="tool-delete" onclick="setTool('delete')">🗑 Delete</button>
+    </div>
+
+    <div class="toolbar-group">
+      <span class="toolbar-label">Direction</span>
+      <button class="tool-btn active" id="dir-directed" onclick="setDirected(true)">→ Directed</button>
+      <button class="tool-btn" id="dir-undirected" onclick="setDirected(false)">— Undirected</button>
+    </div>
+
+    <div class="toolbar-group">
+      <span class="toolbar-label">Layout</span>
+      <select class="select-styled" id="layout-select" onchange="setLayout(this.value)">
+        <option value="manual">Manual (drag)</option>
+        <option value="force">Force-directed</option>
+        <option value="circular">Circular</option>
+        <option value="bipartite">Bipartite stack (k=2)</option>
+        <option value="tripartite">Tripartite stack (k=3)</option>
+        <option value="quadripartite">Quadripartite grid (k=4)</option>
+      </select>
+    </div>
+
+    <div class="toolbar-group">
+      <span class="toolbar-label">Partition</span>
+      <select class="select-styled" id="partition-select" onchange="setPartition(parseInt(this.value))">
+        <option value="1">Unipartite</option>
+        <option value="2">Bipartite (k=2)</option>
+        <option value="3">Tripartite (k=3)</option>
+        <option value="4">Quadripartite (k=4)</option>
+      </select>
+    </div>
+
+    <div class="toolbar-group">
+      <span class="toolbar-label">Data</span>
+      <button class="btn" onclick="exportJSON()">⬇ JSON</button>
+      <button class="btn" onclick="exportCSV()">⬇ CSV</button>
+      <button class="btn" onclick="document.getElementById('import-file').click()">⬆ Import</button>
+      <input type="file" id="import-file" style="display:none" accept=".json" onchange="importJSON(event)">
+      <button class="btn btn-danger" onclick="clearAll()">⌫ Clear</button>
+    </div>
+
+    <div class="toolbar-group">
+      <span class="toolbar-label">History</span>
+      <button class="btn" id="undo-btn" onclick="undo()" disabled title="Undo (Ctrl/Cmd+Z)">↶ Undo</button>
+      <button class="btn" id="redo-btn" onclick="redo()" disabled title="Redo (Ctrl/Cmd+Shift+Z)">↷ Redo</button>
+    </div>
+  </div>
+
+  <div class="workspace">
+    <div class="canvas-card">
+      <div class="canvas-header">
+        <h2>📐 Network Canvas</h2>
+        <span class="canvas-status" id="canvas-status">SELECT TOOL · 0 NODES · 0 EDGES</span>
+      </div>
+      <svg id="network-svg" class="tool-select"></svg>
+      <div class="canvas-hint" id="canvas-hint">
+        <strong>SELECT MODE:</strong> click a node to inspect, drag to reposition (manual layout only).
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="card">
+        <h3>📊 Network Metrics</h3>
+        <div class="metric-row"><span class="metric-label">Nodes</span><span class="metric-value" id="m-nodes">0</span></div>
+        <div class="metric-row"><span class="metric-label">Edges</span><span class="metric-value" id="m-edges">0</span></div>
+        <div class="metric-row"><span class="metric-label">Avg degree</span><span class="metric-value" id="m-avg-deg">—</span></div>
+        <div class="metric-row"><span class="metric-label">Max degree</span><span class="metric-value" id="m-max-deg">—</span></div>
+        <div class="metric-row"><span class="metric-label">Density</span><span class="metric-value" id="m-density">—</span></div>
+        <div class="metric-row"><span class="metric-label">Components</span><span class="metric-value" id="m-components">—</span></div>
+        <div class="metric-row"><span class="metric-label">Avg path length</span><span class="metric-value" id="m-apl">—</span></div>
+      </div>
+
+      <div class="card">
+        <h3>🎯 Selected Node</h3>
+        <div id="selected-info" style="font-family: var(--font-body); font-size: 13px; color: var(--grey);">
+          No node selected. Use 🖱 Select and click a node.
+        </div>
+      </div>
+
+      <div class="sync-badge">
+        <span class="sync-dot"></span>3 VIEWS · 1 NETWORK · LIVE SYNC
+      </div>
+    </div>
+  </div>
+
+  <div class="tables-row">
+    <div class="table-card">
+      <h3>NODE TABLE <span class="count" id="node-count-badge">0</span></h3>
+      <div class="table-scroll">
+        <table class="data-table" id="node-table">
+          <thead>
+            <tr id="node-header">
+              <th>ID</th><th>Name</th><th>Degree</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="node-tbody">
+            <tr><td colspan="4" class="table-empty">No nodes yet. Click ✏️ Add Node then click the canvas.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h3>EDGE TABLE <span class="count" id="edge-count-badge">0</span></h3>
+      <div class="table-scroll">
+        <table class="data-table" id="edge-table">
+          <thead><tr><th>Source</th><th>Target</th><th>Weight</th><th></th></tr></thead>
+          <tbody id="edge-tbody">
+            <tr><td colspan="4" class="table-empty">No edges yet. Click 🔗 Add Edge then click two nodes.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="matrix-card">
+    <h3>🔲 ADJACENCY MATRIX <span style="color: var(--grey); font-weight: 400; font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-size: 11.5px;">— same network, different view. Cell shade = edge weight. Hover a cell to highlight that edge on the canvas.</span></h3>
+    <svg id="matrix-svg"></svg>
+  </div>
+
+  <h3 class="lc-section-header">📝 Learning Checks — Build, then answer</h3>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 01</span>
+      <div class="lc-question">An island electricity grid — build it, then read its structure from the adjacency matrix.</div>
+    </div>
+    <div class="lc-prose">
+      "A small island grid has one main generating station feeding three transmission substations. Substation A feeds three distribution feeders serving the north residential district, the downtown district, and the hospital district. Substation B feeds two feeders serving the south residential district and the industrial zone. Substation C is held in reserve and connects only to Substation A and to the hospital district as a backup path. The hospital district also has a direct backup tie to the south residential feeder."
+    </div>
+    <div class="lc-task">
+      <strong>Build it</strong>: construct this grid in the canvas. Decide whether to treat it as directed (power flow generation → loads) or undirected (tie line carries either way) — your choice, but be ready to justify it. Then <strong>open the adjacency matrix view above</strong> and inspect the rows and columns.
+    </div>
+    <div class="lc-question" style="font-size: 16px; margin-top: 8px;">Looking at the adjacency matrix, which row/column has the most filled cells, and what does the matrix view reveal about that node that the node-link diagram does not make as obvious?</div>
+    <div class="lc-options" id="lc1-options">
+      <div class="lc-option" onclick="selectOption(1, 'A')"><span class="lc-option-letter">A</span><span>The main generating station's row has the most filled cells, because it powers the entire grid — the matrix simply restates what the node-link diagram already showed.</span></div>
+      <div class="lc-option" onclick="selectOption(1, 'B')"><span class="lc-option-letter">B</span><span>Substation A and the hospital district both have heavily-filled rows. The matrix makes their high degree visually equal — they appear equally central by this measure — even though their roles in the system are very different. The matrix view reveals degree at a glance but flattens hierarchy.</span></div>
+      <div class="lc-option" onclick="selectOption(1, 'C')"><span class="lc-option-letter">C</span><span>Every row has roughly the same number of filled cells, because the grid is a balanced radial network.</span></div>
+    </div>
+    <div class="lc-actions">
+      <button class="btn" onclick="showHint(1)">💡 Hint</button>
+      <button class="btn" onclick="showAnswer(1)">🔓 Reveal Answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc1-hint">
+      <strong>Hint:</strong> count the nodes each node is connected to. Substation A connects to the main generator, three feeders, and Substation C — that's 5. The hospital district connects to its feeder from Substation A, Substation C as backup, and the south residential feeder — that's 3. Now check the avg-degree metric panel: average is fine, but the matrix view shows you each node's degree visually, just by row/column density.
+    </div>
+    <div class="lc-feedback feedback-answer" id="lc1-answer">
+      <strong>Answer: B.</strong> The matrix's strength is that <em>row sum = degree</em> — heavy rows scream "high degree" regardless of how the node-link layout positioned them. Substation A is the highest-degree node here (typically 5 ties), and the hospital district is also high (3 ties) because of the dual backup arrangement. The matrix view makes that visible at a glance — but it loses the system hierarchy. A radial diagram clearly shows that Substation A is upstream of three feeders, while the matrix treats all 5 of its ties as equivalent. This is the key lesson: <strong>different representations make different structural properties visible.</strong> Average degree is a one-number summary; the matrix is a per-node summary; the node-link is a hierarchy/topology summary. Each one hides what the others show.
+    </div>
+  </div>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 02</span>
+      <div class="lc-question">A small-world transportation network — see how layout choice changes what you notice.</div>
+    </div>
+    <div class="lc-prose">
+      "Six neighborhoods in a small city are each connected to their two nearest neighbors by local roads, forming a ring: Northgate — Eastside — Riverside — Southpark — Westend — Hillcrest — back to Northgate. In addition, the city operates three express bus lines that act as shortcuts: one connects Northgate directly to Southpark, one connects Eastside to Westend, and one connects Riverside to Hillcrest."
+    </div>
+    <div class="lc-task">
+      <strong>Build it</strong> as an undirected network with 6 nodes and 9 edges. Now view the network under three layouts in sequence: <strong>Circular</strong>, <strong>Force-directed</strong>, and <strong>Manual</strong> (where you drag nodes yourself to whatever arrangement makes sense to you). Look at the "Avg path length" metric — it stays the same across layouts, because the network is the same.
+    </div>
+    <div class="lc-question" style="font-size: 16px; margin-top: 8px;">Under which layout are the three express-line "shortcuts" most clearly visible as shortcuts — and what does this teach you about layout choice when communicating a network?</div>
+    <div class="lc-options" id="lc2-options">
+      <div class="lc-option" onclick="selectOption(2, 'A')"><span class="lc-option-letter">A</span><span>Force-directed makes the shortcuts most obvious, because the physics pulls connected nodes together and the long edges naturally cross the layout — it's the most accurate visualization.</span></div>
+      <div class="lc-option" onclick="selectOption(2, 'B')"><span class="lc-option-letter">B</span><span>Circular makes the shortcuts most obvious as <em>shortcuts</em> — the ring of local roads becomes the visible perimeter and the express lines cut across the circle, making their "shortcut" role obvious. Force-directed actually hides this structure because it deforms the ring to accommodate the cross-ties. <strong>Layout choice is a rhetorical decision.</strong></span></div>
+      <div class="lc-option" onclick="selectOption(2, 'C')"><span class="lc-option-letter">C</span><span>It doesn't matter — the network's average path length is the same under any layout, so the layouts are equivalent for analysis purposes.</span></div>
+    </div>
+    <div class="lc-actions">
+      <button class="btn" onclick="showHint(2)">💡 Hint</button>
+      <button class="btn" onclick="showAnswer(2)">🔓 Reveal Answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc2-hint">
+      <strong>Hint:</strong> the question is not which layout is most "accurate" — they all encode the same edges. The question is which layout makes the <em>concept of "shortcut"</em> visually obvious. A shortcut is meaningful only when there is a longer alternative path. Where does the longer alternative show itself most clearly?
+    </div>
+    <div class="lc-feedback feedback-answer" id="lc2-answer">
+      <strong>Answer: B.</strong> Under circular layout, the local-road ring becomes the literal circumference, and the three express lines visibly chord across the circle. You can <em>see</em> that each express line skips three nodes of local roads. Under force-directed, the simulation balances forces in a way that often disrupts the ring — Northgate gets pulled toward Southpark by their shortcut edge, the ring buckles, and the "shortcut-ness" disappears because it no longer looks like a shortcut against any visible alternative. C is wrong because it conflates analytical equivalence with communicative equivalence. The underlying graph is the same; <strong>the story it tells is not.</strong> This is course outcome #2 (communicate insights) in action: layout is a choice, not a default. (Note: this network is the classic Watts-Strogatz small-world setup in miniature. Average path length here is about 1.7. If you delete the three express lines and recompute, it jumps to roughly 1.8 → reduced to 1.7 is small for n=6 but the effect grows dramatically with network size.)
+    </div>
+  </div>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 03</span>
+      <div class="lc-question">A supply chain — only readable once you tell the tool it's bipartite.</div>
+    </div>
+    <div class="lc-prose">
+      "A regional electronics manufacturer sources from three suppliers. Supplier A provides capacitors and resistors. Supplier B provides circuit boards and capacitors. Supplier C provides displays, circuit boards, and connectors."
+    </div>
+    <div class="lc-task">
+      <strong>Build it</strong>: 7 nodes total (3 suppliers + 4 components) and 7 edges connecting suppliers to the components they provide. Start in <strong>Unipartite</strong> mode and Force-directed layout. Notice that even though you, the human, know suppliers and components are different kinds of things, the network treats them as one kind. Now switch <strong>Partition</strong> mode to <strong>Bipartite (k=2)</strong> — a Type column appears in the node table. Assign each supplier type 0 and each component type 1. Then change <strong>Layout</strong> to <strong>Bipartite stack</strong>. The network re-organizes itself.
+    </div>
+    <div class="lc-question" style="font-size: 16px; margin-top: 8px;">Pick the component with only one supplier (your single point of failure). Looking at the bipartite layout, how many <em>other components</em> are second-degree neighbors of that critical component — i.e., other components that share at least one supplier with it?</div>
+    <div class="lc-options" id="lc3-options">
+      <div class="lc-option" onclick="selectOption(3, 'A')"><span class="lc-option-letter">A</span><span>Zero — the critical component is isolated since it has only one supplier.</span></div>
+      <div class="lc-option" onclick="selectOption(3, 'B')"><span class="lc-option-letter">B</span><span>One. Connectors is the single-supplier component (Supplier C only). Following the two-step path connectors → Supplier C → {circuit boards, displays} reveals that connectors shares supplier C with two other components — circuit boards and displays — making 2 second-degree neighbors.</span></div>
+      <div class="lc-option" onclick="selectOption(3, 'C')"><span class="lc-option-letter">C</span><span>Two — connectors is the single-supplier component, and via Supplier C it shares a supplier with circuit boards and displays. Those are its second-degree neighbors. This means a disruption to Supplier C affects connectors AND its two coaffiliated components — the single point of failure cascades to three components, not one.</span></div>
+    </div>
+    <div class="lc-actions">
+      <button class="btn" onclick="showHint(3)">💡 Hint</button>
+      <button class="btn" onclick="showAnswer(3)">🔓 Reveal Answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc3-hint">
+      <strong>Hint:</strong> a second-degree neighbor in a bipartite network is reached by going through one intermediary — component → supplier → another component. Identify the single-supplier component first: which component appears in only one supplier's list? Then trace through its supplier to see which other components that supplier also feeds.
+    </div>
+    <div class="lc-feedback feedback-answer" id="lc3-answer">
+      <strong>Answer: C.</strong> Connectors has only one supplier (Supplier C). Supplier C also provides displays and circuit boards. So the two-step neighbors of connectors are {circuit boards, displays} — two components. The systems-engineering interpretation: a disruption to Supplier C does not just take out connectors; it cascades to circuit boards and displays as well. This is called the <em>one-mode projection</em> of a bipartite network — and it's why bipartite analysis is essential for supply-chain risk: the apparent single-supplier-single-component vulnerability is actually a multi-component vulnerability when you account for shared suppliers. The bipartite stack layout makes this visible because it cleanly separates the two node types — in unipartite force-directed view, suppliers and components mix together and the two-hop structure is much harder to trace. <strong>The layout is not just decoration — it's the analytic frame that makes the question answerable.</strong>
+    </div>
+  </div>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Network Fundamentals · Build-a-Network Playground</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let nodes = [];
+let edges = [];
+let nodeIdCounter = 0;
+let edgeIdCounter = 0;
+let currentTool = 'select';
+let isDirected = true;
+let currentLayout = 'manual';
+let partitionK = 1;
+let selectedNodeId = null;
+let edgeSourceId = null;
+let draggingNodeId = null;
+let dragOffset = { x: 0, y: 0 };
+let forceSim = null;
+let hoveredMatrixEdge = null;
+
+const TYPE_COLORS = [
+  'var(--green-bright)', // type 0 — green
+  'var(--node-4)',       // type 1 — amber
+  'var(--node-3)',       // type 2 — teal
+  'var(--node-5)',       // type 3 — magenta
+];
+
+const HISTORY_LIMIT = 50;
+let undoStack = [];
+let redoStack = [];
+let isRestoringSnapshot = false;
+
+function snapshot() {
+  return {
+    nodes: JSON.parse(JSON.stringify(nodes)),
+    edges: JSON.parse(JSON.stringify(edges)),
+    nodeIdCounter, edgeIdCounter, partitionK, isDirected, currentLayout, selectedNodeId,
+  };
+}
+function pushHistory() {
+  if (isRestoringSnapshot) return;
+  undoStack.push(snapshot());
+  if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
+  redoStack = [];
+  updateHistoryButtons();
+}
+function restoreSnapshot(snap) {
+  isRestoringSnapshot = true;
+  nodes = JSON.parse(JSON.stringify(snap.nodes));
+  edges = JSON.parse(JSON.stringify(snap.edges));
+  nodeIdCounter = snap.nodeIdCounter;
+  edgeIdCounter = snap.edgeIdCounter;
+  partitionK = snap.partitionK;
+  isDirected = snap.isDirected;
+  currentLayout = snap.currentLayout;
+  selectedNodeId = snap.selectedNodeId;
+  edgeSourceId = null;
+  document.getElementById('dir-directed').classList.toggle('active', isDirected);
+  document.getElementById('dir-undirected').classList.toggle('active', !isDirected);
+  document.getElementById('layout-select').value = currentLayout;
+  document.getElementById('partition-select').value = partitionK;
+  rebuildNodeTable();
+  rebuildEdgeTable();
+  redrawCanvas();
+  updateMetrics();
+  redrawMatrix();
+  updateSelectedInfo();
+  isRestoringSnapshot = false;
+}
+function undo() {
+  if (undoStack.length === 0) return;
+  redoStack.push(snapshot());
+  if (redoStack.length > HISTORY_LIMIT) redoStack.shift();
+  restoreSnapshot(undoStack.pop());
+  updateHistoryButtons();
+  showToast('Undone.');
+}
+function redo() {
+  if (redoStack.length === 0) return;
+  undoStack.push(snapshot());
+  if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
+  restoreSnapshot(redoStack.pop());
+  updateHistoryButtons();
+  showToast('Redone.');
+}
+function updateHistoryButtons() {
+  document.getElementById('undo-btn').disabled = undoStack.length === 0;
+  document.getElementById('redo-btn').disabled = redoStack.length === 0;
+}
+window.addEventListener('keydown', e => {
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+  const mod = e.ctrlKey || e.metaKey;
+  if (!mod) return;
+  if (e.key === 'z' || e.key === 'Z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
+  else if (e.key === 'y' || e.key === 'Y') { e.preventDefault(); redo(); }
+});
+
+const svgEl = document.getElementById('network-svg');
+const svg = d3.select(svgEl);
+const matrixSvgEl = document.getElementById('matrix-svg');
+const matrixSvg = d3.select(matrixSvgEl);
+
+function setTool(t) {
+  currentTool = t;
+  document.querySelectorAll('.toolbar-group:first-child .tool-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tool-' + t).classList.add('active');
+  svgEl.className = 'tool-' + t;
+  edgeSourceId = null;
+  selectedNodeId = null;
+  const hints = {
+    'select': '<strong>SELECT MODE:</strong> click a node to inspect, drag to reposition (manual layout only).',
+    'add-node': '<strong>ADD NODE MODE:</strong> click anywhere on the empty canvas to drop a new node. It gets the next available ID.',
+    'add-edge': '<strong>ADD EDGE MODE:</strong> click a source node, then click a target node. The edge will use the current directed/undirected setting.',
+    'delete': '<strong>DELETE MODE:</strong> click a node to delete it (and all its edges) or click an edge to delete just that edge.',
+  };
+  document.getElementById('canvas-hint').innerHTML = hints[t];
+  redrawCanvas();
+  updateSelectedInfo();
+}
+function setDirected(d) {
+  if (d === isDirected) return;
+  pushHistory();
+  isDirected = d;
+  document.getElementById('dir-directed').classList.toggle('active', d);
+  document.getElementById('dir-undirected').classList.toggle('active', !d);
+  redrawCanvas();
+  updateMetrics();
+  redrawMatrix();
+}
+function setLayout(l) {
+  if (l === currentLayout) return;
+  pushHistory();
+  currentLayout = l;
+  if (forceSim) { forceSim.stop(); forceSim = null; }
+  applyLayout();
+  redrawCanvas();
+}
+function setPartition(k) {
+  if (k === partitionK) return;
+  pushHistory();
+  if (k < partitionK) {
+    let changed = 0;
+    nodes.forEach(n => { if ((n.type || 0) >= k) { n.type = k - 1; changed++; } });
+    if (changed > 0) showToast(`Reduced partition: ${changed} node type(s) clamped to ${k - 1}.`);
+  }
+  partitionK = k;
+  rebuildNodeTable();
+  redrawCanvas();
+  redrawMatrix();
+}
+
+function redrawCanvas() {
+  svg.selectAll('*').remove();
+
+  const defs = svg.append('defs');
+  defs.append('marker')
+    .attr('id', 'arrow')
+    .attr('viewBox', '0 -5 10 10')
+    .attr('refX', 18).attr('refY', 0)
+    .attr('markerWidth', 8).attr('markerHeight', 8)
+    .attr('orient', 'auto')
+    .append('path').attr('d', 'M0,-5L10,0L0,5')
+    .attr('fill', '#a3b8a3');
+
+  const edgeG = svg.append('g').attr('class', 'edges');
+  edges.forEach(e => {
+    const s = nodes.find(n => n.id === e.source);
+    const t = nodes.find(n => n.id === e.target);
+    if (!s || !t) return;
+    const isHovered = hoveredMatrixEdge && hoveredMatrixEdge.source === e.source && hoveredMatrixEdge.target === e.target;
+    const lineWidth = Math.max(1, Math.log(Math.max(e.weight, 1)) * 1.5 + 1);
+    edgeG.append('line')
+      .attr('x1', s.x).attr('y1', s.y)
+      .attr('x2', t.x).attr('y2', t.y)
+      .attr('stroke', isHovered ? '#5eead4' : '#a3b8a3')
+      .attr('stroke-width', isHovered ? lineWidth + 2 : lineWidth)
+      .attr('stroke-opacity', isHovered ? 0.95 : 0.55)
+      .attr('marker-end', isDirected ? 'url(#arrow)' : null)
+      .style('cursor', currentTool === 'delete' ? 'not-allowed' : 'default')
+      .on('click', function(event) {
+        event.stopPropagation();
+        if (currentTool === 'delete') deleteEdge(e.id);
+      });
+  });
+
+  const TYPE_HEX = ['#39FF14', '#fbbf24', '#5eead4', '#f472b6'];
+  const nodeG = svg.append('g').attr('class', 'nodes');
+  nodes.forEach(n => {
+    const color = partitionK > 1 ? TYPE_HEX[n.type || 0] : '#39FF14';
+    const isSelected = selectedNodeId === n.id;
+    const isEdgeSource = edgeSourceId === n.id;
+    const g = nodeG.append('g')
+      .attr('transform', `translate(${n.x},${n.y})`)
+      .style('cursor', currentTool === 'add-node' ? 'crosshair' : 'pointer')
+      .on('click', function(event) {
+        event.stopPropagation();
+        handleNodeClick(n.id);
+      })
+      .on('mousedown', function(event) {
+        if (currentTool === 'select' && currentLayout === 'manual') {
+          event.preventDefault();
+          startDrag(n.id, event);
+        }
+      });
+
+    if (isSelected || isEdgeSource) {
+      g.append('circle')
+        .attr('r', 18).attr('fill', 'none')
+        .attr('stroke', isEdgeSource ? '#fbbf24' : color)
+        .attr('stroke-width', 2).attr('stroke-dasharray', '4,3').attr('opacity', 0.8);
+    }
+    g.append('circle')
+      .attr('r', 11).attr('fill', color)
+      .attr('stroke', '#050a05').attr('stroke-width', 2);
+    g.append('text')
+      .attr('text-anchor', 'middle').attr('dy', 28)
+      .attr('font-family', 'DM Sans, sans-serif').attr('font-size', 11)
+      .attr('fill', '#f0fdf4').text(n.name || n.id);
+    if (partitionK > 1) {
+      g.append('text')
+        .attr('text-anchor', 'middle').attr('dy', -16)
+        .attr('font-family', 'Space Mono, monospace').attr('font-size', 9)
+        .attr('fill', color).text(`t${n.type || 0}`);
+    }
+  });
+
+  svg.on('click', function(event) {
+    if (currentTool === 'add-node') {
+      const [x, y] = d3.pointer(event, svgEl);
+      addNode(x, y);
+    } else if (currentTool === 'select') {
+      selectedNodeId = null;
+      updateSelectedInfo();
+      redrawCanvas();
+    }
+  });
+}
+
+function addNode(x, y) {
+  pushHistory();
+  nodeIdCounter++;
+  nodes.push({ id: `n${nodeIdCounter}`, name: '', type: 0, x: x, y: y });
+  rebuildNodeTable();
+  redrawCanvas();
+  updateMetrics();
+  redrawMatrix();
+  showToast(`Added node n${nodeIdCounter}. Click its Name cell to label it.`);
+}
+
+function handleNodeClick(nodeId) {
+  if (currentTool === 'add-edge') {
+    if (!edgeSourceId) {
+      edgeSourceId = nodeId;
+      redrawCanvas();
+      showToast(`Source: ${nameOrId(nodeId)}. Now click target node.`);
+    } else if (edgeSourceId !== nodeId) {
+      addEdge(edgeSourceId, nodeId);
+      edgeSourceId = null;
+      redrawCanvas();
+    } else {
+      edgeSourceId = null;
+      showToast('Cancelled — clicked source node twice.');
+      redrawCanvas();
+    }
+  } else if (currentTool === 'delete') {
+    deleteNode(nodeId);
+  } else if (currentTool === 'select') {
+    selectedNodeId = nodeId;
+    updateSelectedInfo();
+    redrawCanvas();
+  }
+}
+
+function addEdge(sourceId, targetId) {
+  const dup = edges.find(e => isDirected
+    ? (e.source === sourceId && e.target === targetId)
+    : ((e.source === sourceId && e.target === targetId) || (e.source === targetId && e.target === sourceId)));
+  if (dup) { showToast(`Edge already exists between ${nameOrId(sourceId)} and ${nameOrId(targetId)}.`); return; }
+  pushHistory();
+  edgeIdCounter++;
+  edges.push({ id: `e${edgeIdCounter}`, source: sourceId, target: targetId, weight: 1 });
+  rebuildEdgeTable();
+  rebuildNodeTable();
+  redrawCanvas();
+  updateMetrics();
+  redrawMatrix();
+}
+
+function deleteNode(nodeId) {
+  pushHistory();
+  nodes = nodes.filter(n => n.id !== nodeId);
+  edges = edges.filter(e => e.source !== nodeId && e.target !== nodeId);
+  if (selectedNodeId === nodeId) selectedNodeId = null;
+  rebuildNodeTable();
+  rebuildEdgeTable();
+  redrawCanvas();
+  updateMetrics();
+  updateSelectedInfo();
+  redrawMatrix();
+  showToast(`Removed ${nodeId} and incident edges.`);
+}
+
+function deleteEdge(edgeId) {
+  pushHistory();
+  edges = edges.filter(e => e.id !== edgeId);
+  rebuildEdgeTable();
+  rebuildNodeTable();
+  redrawCanvas();
+  updateMetrics();
+  redrawMatrix();
+}
+
+function updateNodeName(nodeId, name) {
+  const n = nodes.find(nn => nn.id === nodeId);
+  if (n) { n.name = name; redrawCanvas(); redrawMatrix(); updateSelectedInfo(); }
+}
+function updateNodeType(nodeId, type) {
+  const n = nodes.find(nn => nn.id === nodeId);
+  if (n) {
+    if ((n.type || 0) !== parseInt(type)) pushHistory();
+    n.type = parseInt(type);
+    redrawCanvas();
+    redrawMatrix();
+  }
+}
+function captureEditStart() { if (isRestoringSnapshot) return; pushHistory(); }
+function updateEdgeWeight(edgeId, w) {
+  const e = edges.find(ee => ee.id === edgeId);
+  if (e) { e.weight = Math.max(0, parseFloat(w) || 0); redrawCanvas(); redrawMatrix(); }
+}
+function nameOrId(id) { const n = nodes.find(nn => nn.id === id); return n ? (n.name || n.id) : id; }
+
+function startDrag(nodeId, event) {
+  pushHistory();
+  draggingNodeId = nodeId;
+  const n = nodes.find(nn => nn.id === nodeId);
+  const [px, py] = d3.pointer(event, svgEl);
+  dragOffset = { x: px - n.x, y: py - n.y };
+  window.addEventListener('mousemove', onDrag);
+  window.addEventListener('mouseup', endDrag);
+}
+function onDrag(event) {
+  if (!draggingNodeId) return;
+  const n = nodes.find(nn => nn.id === draggingNodeId);
+  if (!n) return;
+  const rect = svgEl.getBoundingClientRect();
+  n.x = Math.max(20, Math.min(svgEl.clientWidth - 20, event.clientX - rect.left - dragOffset.x));
+  n.y = Math.max(20, Math.min(svgEl.clientHeight - 20, event.clientY - rect.top - dragOffset.y));
+  redrawCanvas();
+}
+function endDrag() {
+  draggingNodeId = null;
+  window.removeEventListener('mousemove', onDrag);
+  window.removeEventListener('mouseup', endDrag);
+}
+
+function applyLayout() {
+  const w = svgEl.clientWidth, h = svgEl.clientHeight;
+  const cx = w / 2, cy = h / 2;
+  if (nodes.length === 0) return;
+
+  if (currentLayout === 'circular') {
+    const r = Math.min(w, h) * 0.36;
+    nodes.forEach((n, i) => {
+      const theta = (i / nodes.length) * 2 * Math.PI - Math.PI / 2;
+      n.x = cx + r * Math.cos(theta);
+      n.y = cy + r * Math.sin(theta);
+    });
+  } else if (currentLayout === 'force') {
+    runForceLayout();
+  } else if (currentLayout === 'bipartite' || currentLayout === 'tripartite' || currentLayout === 'quadripartite') {
+    const k = currentLayout === 'bipartite' ? 2 : (currentLayout === 'tripartite' ? 3 : 4);
+    if (partitionK < k) {
+      showToast(`Set Partition mode to k=${k} first, then assign node types.`);
+      return;
+    }
+    const groups = [];
+    for (let i = 0; i < k; i++) groups.push([]);
+    nodes.forEach(n => { const t = Math.min(n.type || 0, k - 1); groups[t].push(n); });
+
+    if (k === 4) {
+      const padY = h * 0.18;
+      const quadrants = [
+        { x: w * 0.30, y: padY },
+        { x: w * 0.70, y: padY },
+        { x: w * 0.30, y: h - padY },
+        { x: w * 0.70, y: h - padY },
+      ];
+      groups.forEach((group, ti) => {
+        const center = quadrants[ti];
+        const r = Math.min(w, h) * 0.12;
+        group.forEach((n, i) => {
+          if (group.length === 1) { n.x = center.x; n.y = center.y; }
+          else {
+            const theta = (i / group.length) * 2 * Math.PI;
+            n.x = center.x + r * Math.cos(theta);
+            n.y = center.y + r * Math.sin(theta);
+          }
+        });
+      });
+    } else {
+      const padY = 40;
+      const usableH = h - 2 * padY;
+      groups.forEach((group, ti) => {
+        const bandY = padY + (ti + 0.5) * (usableH / k);
+        const spacing = group.length > 1 ? (w - 80) / (group.length - 1) : 0;
+        group.forEach((n, i) => {
+          n.x = group.length > 1 ? 40 + i * spacing : w / 2;
+          n.y = bandY;
+        });
+      });
+    }
+  }
+}
+
+function runForceLayout() {
+  if (forceSim) forceSim.stop();
+  const w = svgEl.clientWidth, h = svgEl.clientHeight;
+  const linkData = edges.map(e => ({ source: e.source, target: e.target }));
+  const nodeData = nodes.map(n => ({ id: n.id, x: n.x, y: n.y }));
+  forceSim = d3.forceSimulation(nodeData)
+    .force('link', d3.forceLink(linkData).id(d => d.id).distance(80).strength(0.5))
+    .force('charge', d3.forceManyBody().strength(-280))
+    .force('center', d3.forceCenter(w / 2, h / 2))
+    .force('collide', d3.forceCollide().radius(28))
+    .on('tick', () => {
+      nodeData.forEach(nd => {
+        const n = nodes.find(nn => nn.id === nd.id);
+        if (n) {
+          n.x = Math.max(20, Math.min(w - 20, nd.x));
+          n.y = Math.max(20, Math.min(h - 20, nd.y));
+        }
+      });
+      redrawCanvas();
+    });
+  setTimeout(() => { if (forceSim) forceSim.alpha(0).stop(); }, 4000);
+}
+
+function buildUndirectedAdjacency() {
+  const adj = {};
+  nodes.forEach(n => adj[n.id] = new Set());
+  edges.forEach(e => {
+    if (adj[e.source] && adj[e.target]) {
+      adj[e.source].add(e.target);
+      adj[e.target].add(e.source);
+    }
+  });
+  return adj;
+}
+
+function degreeOf(nodeId) {
+  if (isDirected) {
+    let d = 0;
+    edges.forEach(e => { if (e.source === nodeId || e.target === nodeId) d++; });
+    return d;
+  } else {
+    const adj = buildUndirectedAdjacency();
+    return adj[nodeId] ? adj[nodeId].size : 0;
+  }
+}
+
+function computeComponentsAndAPL() {
+  if (nodes.length === 0) return { components: 0, apl: null };
+  const adj = buildUndirectedAdjacency();
+  const visited = new Set();
+  let components = 0;
+  let totalPaths = 0, totalDist = 0, anyDisconnected = false;
+  nodes.forEach(start => {
+    if (visited.has(start.id)) return;
+    components++;
+    const compNodes = [];
+    const queue = [start.id];
+    visited.add(start.id);
+    while (queue.length) {
+      const cur = queue.shift();
+      compNodes.push(cur);
+      adj[cur].forEach(nb => { if (!visited.has(nb)) { visited.add(nb); queue.push(nb); } });
+    }
+    compNodes.forEach(src => {
+      const dist = { [src]: 0 };
+      const q = [src];
+      while (q.length) {
+        const cur = q.shift();
+        adj[cur].forEach(nb => { if (!(nb in dist)) { dist[nb] = dist[cur] + 1; q.push(nb); } });
+      }
+      compNodes.forEach(t => { if (t !== src) { totalPaths++; totalDist += dist[t]; } });
+    });
+  });
+  if (components > 1) anyDisconnected = true;
+  return { components, apl: totalPaths > 0 ? (totalDist / totalPaths) : null, disconnected: anyDisconnected };
+}
+
+function updateMetrics() {
+  document.getElementById('m-nodes').textContent = nodes.length;
+  document.getElementById('m-edges').textContent = edges.length;
+  document.getElementById('node-count-badge').textContent = nodes.length;
+  document.getElementById('edge-count-badge').textContent = edges.length;
+  if (nodes.length === 0) {
+    ['m-avg-deg','m-max-deg','m-density','m-components','m-apl'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    document.getElementById('canvas-status').textContent =
+      `${currentTool.toUpperCase().replace('-',' ')} TOOL · 0 NODES · 0 EDGES`;
+    return;
+  }
+  const degrees = nodes.map(n => degreeOf(n.id));
+  const avgDeg = degrees.reduce((a,b)=>a+b,0) / nodes.length;
+  const maxDeg = Math.max(...degrees);
+  const maxDegNode = nodes[degrees.indexOf(maxDeg)];
+  document.getElementById('m-avg-deg').textContent = avgDeg.toFixed(2);
+  document.getElementById('m-max-deg').textContent = `${maxDeg} (${maxDegNode.name || maxDegNode.id})`;
+
+  const n = nodes.length;
+  let possible = isDirected ? n * (n - 1) : n * (n - 1) / 2;
+  const density = possible > 0 ? edges.length / possible : 0;
+  document.getElementById('m-density').textContent = density.toFixed(3);
+
+  const { components, apl, disconnected } = computeComponentsAndAPL();
+  const compEl = document.getElementById('m-components');
+  compEl.textContent = components;
+  compEl.classList.toggle('warn', components > 1);
+
+  const aplEl = document.getElementById('m-apl');
+  if (apl === null) aplEl.textContent = '—';
+  else if (disconnected) {
+    aplEl.textContent = `${apl.toFixed(2)} (within-comp)`;
+    aplEl.classList.add('warn');
+  } else {
+    aplEl.textContent = apl.toFixed(2);
+    aplEl.classList.remove('warn');
+  }
+
+  document.getElementById('canvas-status').textContent =
+    `${currentTool.toUpperCase().replace('-',' ')} TOOL · ${nodes.length} NODES · ${edges.length} EDGES · ${isDirected ? 'DIRECTED' : 'UNDIRECTED'}`;
+}
+
+function updateSelectedInfo() {
+  const el = document.getElementById('selected-info');
+  if (!selectedNodeId) {
+    el.innerHTML = `<span style="color: var(--grey);">No node selected. Use 🖱 Select and click a node.</span>`;
+    return;
+  }
+  const n = nodes.find(nn => nn.id === selectedNodeId);
+  if (!n) { el.textContent = '—'; return; }
+  const deg = degreeOf(n.id);
+  const neighbors = new Set();
+  edges.forEach(e => {
+    if (e.source === n.id) neighbors.add(e.target);
+    if (e.target === n.id) neighbors.add(e.source);
+  });
+  const nbList = Array.from(neighbors).map(nameOrId).join(', ') || '—';
+  el.innerHTML = `
+    <div style="font-family: var(--font-display); font-size: 22px; color: var(--white); letter-spacing: 0.03em; margin-bottom: 6px;">${n.name || n.id}</div>
+    <div style="font-family: var(--font-mono); font-size: 10.5px; color: var(--grey); margin-bottom: 8px; letter-spacing: 0.06em;">ID: ${n.id}${partitionK > 1 ? ` · TYPE: ${n.type || 0}` : ''}</div>
+    <div style="font-family: var(--font-body); font-size: 12.5px; color: var(--green-mint);"><strong style="color: var(--green-bright);">${deg}</strong> connections</div>
+    <div style="font-family: var(--font-body); font-size: 12px; color: var(--grey); margin-top: 4px;">Neighbors: ${nbList}</div>
+  `;
+}
+
+function rebuildNodeTable() {
+  const tbody = document.getElementById('node-tbody');
+  const header = document.getElementById('node-header');
+  header.innerHTML = partitionK > 1
+    ? '<th>ID</th><th>Name</th><th>Type</th><th>Deg</th><th></th>'
+    : '<th>ID</th><th>Name</th><th>Degree</th><th></th>';
+  if (nodes.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${partitionK > 1 ? 5 : 4}" class="table-empty">No nodes yet. Click ✏️ Add Node then click the canvas.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  nodes.forEach(n => {
+    const tr = document.createElement('tr');
+    let typeCell = '';
+    if (partitionK > 1) {
+      let opts = '';
+      for (let i = 0; i < partitionK; i++) {
+        opts += `<option value="${i}" ${(n.type || 0) === i ? 'selected' : ''}>${i}</option>`;
+      }
+      typeCell = `<td><select onchange="updateNodeType('${n.id}', this.value)">${opts}</select></td>`;
+    }
+    tr.innerHTML = `
+      <td style="color: var(--grey);">${n.id}</td>
+      <td><input type="text" value="${escapeHtml(n.name)}" placeholder="(name)" onfocus="captureEditStart()" oninput="updateNodeName('${n.id}', this.value)"></td>
+      ${typeCell}
+      <td style="color: var(--green-bright);">${degreeOf(n.id)}</td>
+      <td><button class="del-btn" onclick="deleteNode('${n.id}')">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function rebuildEdgeTable() {
+  const tbody = document.getElementById('edge-tbody');
+  if (edges.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="table-empty">No edges yet. Click 🔗 Add Edge then click two nodes.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  edges.forEach(e => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color: var(--white);">${nameOrId(e.source)}</td>
+      <td style="color: var(--white);">${nameOrId(e.target)}</td>
+      <td><input type="number" min="0" step="0.5" value="${e.weight}" onfocus="captureEditStart()" oninput="updateEdgeWeight('${e.id}', this.value)"></td>
+      <td><button class="del-btn" onclick="deleteEdge('${e.id}')">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function redrawMatrix() {
+  matrixSvg.selectAll('*').remove();
+  if (nodes.length === 0) {
+    matrixSvg.append('text')
+      .attr('x', matrixSvgEl.clientWidth / 2).attr('y', 60)
+      .attr('text-anchor', 'middle').attr('fill', '#a3b8a3')
+      .attr('font-family', 'Space Mono, monospace').attr('font-size', 12)
+      .text('Build some nodes to populate the adjacency matrix.');
+    return;
+  }
+  const labelSpace = 90;
+  const cellAvailable = matrixSvgEl.clientWidth - labelSpace - 30;
+  const cellSize = Math.min(34, cellAvailable / nodes.length);
+  const totalSize = cellSize * nodes.length;
+  const svgHeight = totalSize + labelSpace + 20;
+  matrixSvgEl.setAttribute('height', svgHeight);
+
+  const maxW = Math.max(1, ...edges.map(e => e.weight || 1));
+  const colorScale = d3.scaleLinear().domain([0, maxW]).range(['#0a140a', '#39FF14']);
+
+  nodes.forEach((src, i) => {
+    nodes.forEach((tgt, j) => {
+      const x = labelSpace + j * cellSize;
+      const y = labelSpace + i * cellSize;
+      let edge;
+      if (isDirected) {
+        edge = edges.find(e => e.source === src.id && e.target === tgt.id);
+      } else {
+        edge = edges.find(e =>
+          (e.source === src.id && e.target === tgt.id) ||
+          (e.source === tgt.id && e.target === src.id)
+        );
+      }
+      const fill = edge ? colorScale(edge.weight || 1) : '#050a05';
+      matrixSvg.append('rect')
+        .attr('x', x).attr('y', y)
+        .attr('width', cellSize - 1).attr('height', cellSize - 1)
+        .attr('fill', fill)
+        .attr('stroke', 'rgba(57,255,20,0.15)')
+        .attr('stroke-width', 0.5)
+        .style('cursor', edge ? 'pointer' : 'default')
+        .on('mouseenter', () => {
+          if (edge) {
+            hoveredMatrixEdge = { source: edge.source, target: edge.target };
+            redrawCanvas();
+          }
+        })
+        .on('mouseleave', () => { hoveredMatrixEdge = null; redrawCanvas(); });
+      if (edge) {
+        matrixSvg.append('text')
+          .attr('x', x + cellSize/2).attr('y', y + cellSize/2 + 3)
+          .attr('text-anchor', 'middle')
+          .attr('font-family', 'Space Mono, monospace')
+          .attr('font-size', Math.max(7, cellSize * 0.32))
+          .attr('fill', edge.weight && edge.weight / maxW > 0.5 ? '#050a05' : '#f0fdf4')
+          .attr('pointer-events', 'none')
+          .text(edge.weight);
+      }
+    });
+  });
+
+  nodes.forEach((n, i) => {
+    matrixSvg.append('text')
+      .attr('x', labelSpace - 6).attr('y', labelSpace + i * cellSize + cellSize/2 + 3)
+      .attr('text-anchor', 'end')
+      .attr('font-family', 'Space Mono, monospace').attr('font-size', 10)
+      .attr('fill', '#a3b8a3').text((n.name || n.id).substring(0, 14));
+  });
+  nodes.forEach((n, j) => {
+    matrixSvg.append('text')
+      .attr('x', labelSpace + j * cellSize + cellSize/2).attr('y', labelSpace - 6)
+      .attr('text-anchor', 'start')
+      .attr('font-family', 'Space Mono, monospace').attr('font-size', 10)
+      .attr('fill', '#a3b8a3')
+      .attr('transform', `rotate(-50 ${labelSpace + j * cellSize + cellSize/2} ${labelSpace - 6})`)
+      .text((n.name || n.id).substring(0, 14));
+  });
+}
+
+function exportJSON() {
+  const payload = {
+    settings: { directed: isDirected, partitionK, layout: currentLayout },
+    nodes: nodes.map(n => ({ id: n.id, name: n.name, type: n.type, x: n.x, y: n.y })),
+    edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target, weight: e.weight })),
+  };
+  downloadFile(JSON.stringify(payload, null, 2), 'network.json', 'application/json');
+}
+
+function exportCSV() {
+  const nodeRows = ['id,name' + (partitionK > 1 ? ',type' : '')];
+  nodes.forEach(n => {
+    const row = [n.id, csvField(n.name)];
+    if (partitionK > 1) row.push(n.type || 0);
+    nodeRows.push(row.join(','));
+  });
+  const edgeRows = ['source,target,weight'];
+  edges.forEach(e => { edgeRows.push([e.source, e.target, e.weight].join(',')); });
+  downloadFile(nodeRows.join('\n'), 'nodes.csv', 'text/csv');
+  setTimeout(() => downloadFile(edgeRows.join('\n'), 'edges.csv', 'text/csv'), 120);
+}
+function csvField(s) {
+  if (!s) return '';
+  if (s.includes(',') || s.includes('"')) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+function downloadFile(content, name, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.nodes || !data.edges) throw new Error('Missing nodes or edges');
+      pushHistory();
+      nodes = data.nodes;
+      edges = data.edges;
+      if (data.settings) {
+        isDirected = data.settings.directed !== false;
+        partitionK = data.settings.partitionK || 1;
+        currentLayout = data.settings.layout || 'manual';
+      }
+      nodeIdCounter = Math.max(0, ...nodes.map(n => parseInt((n.id || 'n0').replace('n', '')) || 0));
+      edgeIdCounter = Math.max(0, ...edges.map(e => parseInt((e.id || 'e0').replace('e', '')) || 0));
+      document.getElementById('dir-directed').classList.toggle('active', isDirected);
+      document.getElementById('dir-undirected').classList.toggle('active', !isDirected);
+      document.getElementById('layout-select').value = currentLayout;
+      document.getElementById('partition-select').value = partitionK;
+      rebuildNodeTable();
+      rebuildEdgeTable();
+      redrawCanvas();
+      updateMetrics();
+      redrawMatrix();
+      showToast(`Imported ${nodes.length} nodes and ${edges.length} edges.`);
+    } catch(err) { showToast('Import failed: ' + err.message); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function clearAll() {
+  if (nodes.length === 0 && edges.length === 0) return;
+  if (!confirm('Delete all nodes and edges? (You can undo this with Ctrl/Cmd+Z.)')) return;
+  pushHistory();
+  nodes = []; edges = [];
+  nodeIdCounter = 0; edgeIdCounter = 0;
+  selectedNodeId = null; edgeSourceId = null;
+  rebuildNodeTable();
+  rebuildEdgeTable();
+  redrawCanvas();
+  updateMetrics();
+  redrawMatrix();
+  updateSelectedInfo();
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+const CORRECT_ANSWERS = { 1: 'B', 2: 'B', 3: 'C' };
+function selectOption(lc, opt) {
+  const container = document.getElementById(`lc${lc}-options`);
+  const options = container.querySelectorAll('.lc-option');
+  options.forEach(o => o.classList.remove('correct', 'incorrect'));
+  const idx = { A: 0, B: 1, C: 2 }[opt];
+  if (opt === CORRECT_ANSWERS[lc]) options[idx].classList.add('correct');
+  else options[idx].classList.add('incorrect');
+}
+function showHint(lc) {
+  const el = document.getElementById(`lc${lc}-hint`);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+function showAnswer(lc) {
+  const el = document.getElementById(`lc${lc}-answer`);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+  const container = document.getElementById(`lc${lc}-options`);
+  const options = container.querySelectorAll('.lc-option');
+  const idx = { A: 0, B: 1, C: 2 }[CORRECT_ANSWERS[lc]];
+  if (el.style.display === 'block') options[idx].classList.add('revealed-correct');
+}
+
+window.addEventListener('load', () => {
+  setTool('select');
+  rebuildNodeTable();
+  rebuildEdgeTable();
+  redrawCanvas();
+  updateMetrics();
+  redrawMatrix();
+});
+window.addEventListener('resize', () => { redrawCanvas(); redrawMatrix(); });
+</script>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

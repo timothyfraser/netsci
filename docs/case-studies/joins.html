@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Joins · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+.lab {
+  --r-color: var(--green-bright);
+  --py-color: var(--node-4);
+  --rename-color: var(--node-5);
+}
+
+.lab-hero { margin-bottom: 22px; }
+.lab-hero .course-number { margin-bottom: 10px; }
+.lab-hero h1 {
+  font-family: var(--font-display); font-size: clamp(34px, 5.2vw, 52px);
+  line-height: 1.05; letter-spacing: 0.03em; color: var(--white); margin-bottom: 14px;
+}
+.lab-hero h1 em { color: var(--green-bright); font-style: normal; }
+.lab-hero p {
+  font-family: var(--font-body); font-size: 16px; font-weight: 300;
+  line-height: 1.55; color: var(--green-mint); max-width: 780px;
+  border-left: 3px solid var(--green-bright); padding-left: 18px;
+}
+.synthetic-flag {
+  display: inline-block; margin-top: 14px; padding: 4px 10px;
+  background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.4);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--node-4); letter-spacing: 0.12em; text-transform: uppercase;
+}
+
+.lang-toggle-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 14px 20px;
+  display: flex; align-items: center; gap: 16px;
+  justify-content: space-between; flex-wrap: wrap;
+  backdrop-filter: blur(8px); margin-bottom: 16px;
+}
+.lang-toggle-card .toggle-label {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; color: var(--grey); text-transform: uppercase;
+}
+.lang-toggle {
+  display: flex; gap: 4px; padding: 4px;
+  background: rgba(5,46,22,0.5); border-radius: var(--radius-md);
+}
+.lang-btn {
+  padding: 10px 22px;
+  background: transparent; border: 1px solid transparent;
+  border-radius: var(--radius-sm); color: var(--grey);
+  font-family: var(--font-mono); font-size: 12.5px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; gap: 8px;
+}
+.lang-btn .lang-marker {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; background: currentColor; opacity: 0.5;
+}
+.lang-btn.active.lang-r { background: var(--green-bright); color: var(--black); }
+.lang-btn.active.lang-py { background: var(--node-4); color: var(--black); }
+.lang-btn.active .lang-marker { opacity: 1; background: currentColor; }
+.lang-help {
+  font-family: var(--font-body); font-size: 12.5px;
+  color: var(--grey); font-style: italic; flex: 1; min-width: 260px;
+}
+
+.card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px 24px;
+  margin-bottom: 16px; backdrop-filter: blur(8px);
+}
+.card h3 {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 14px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border-soft);
+}
+.card h3 .h3-accent { color: var(--node-4); }
+
+.source-tables {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+@media (max-width: 900px) { .source-tables { grid-template-columns: 1fr; } }
+
+.source-tables h4 {
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.1em; color: var(--node-4);
+  text-transform: uppercase; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.source-tables .table-note {
+  font-family: var(--font-body); font-size: 12.5px;
+  color: var(--grey); margin-bottom: 10px; font-style: italic;
+}
+.lang-name {
+  font-family: var(--font-mono); font-size: 10px;
+  padding: 2px 6px;
+  background: rgba(5,46,22,0.5); border-radius: 3px;
+  border: 1px solid var(--border); color: var(--white);
+  text-transform: none; letter-spacing: 0;
+}
+
+.data-table {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--font-mono); font-size: 12px;
+  background: rgba(5,46,22,0.4);
+  border-radius: var(--radius-sm); overflow: hidden;
+}
+.data-table th {
+  background: rgba(5,46,22,0.6); color: var(--green-bright);
+  padding: 8px 10px; text-align: left; font-weight: 500;
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border-soft);
+}
+.data-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(57,255,20,0.05);
+  color: var(--white);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: rgba(57,255,20,0.04); }
+.scroll-wrapper {
+  max-height: 260px; overflow-y: auto;
+  border-radius: var(--radius-sm); border: 1px solid var(--border-soft);
+}
+
+.builder-container {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+@media (max-width: 1050px) { .builder-container { grid-template-columns: 1fr; } }
+
+.builder-lang-indicator {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.1em; padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  margin-left: 8px; text-transform: uppercase;
+}
+.builder-lang-indicator.lang-r {
+  background: rgba(57,255,20,0.14); color: var(--green-bright);
+  border: 1px solid rgba(57,255,20,0.3);
+}
+.builder-lang-indicator.lang-py {
+  background: rgba(251,191,36,0.14); color: var(--node-4);
+  border: 1px solid rgba(251,191,36,0.3);
+}
+
+.word-bank {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  padding: 14px;
+  background: rgba(5,46,22,0.4);
+  border: 1px dashed var(--border); border-radius: var(--radius-md);
+  min-height: 120px;
+}
+.bank-section-label {
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 0.12em; color: var(--grey);
+  text-transform: uppercase; width: 100%;
+  margin-top: 4px; margin-bottom: -2px;
+}
+
+.chip {
+  display: inline-flex; align-items: center;
+  padding: 6px 12px;
+  background: rgba(5,46,22,0.6); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--white);
+  font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+  cursor: grab; user-select: none; transition: all 0.12s;
+  white-space: nowrap; max-width: 100%;
+}
+.chip:hover { background: rgba(57,255,20,0.08); transform: translateY(-1px); }
+.chip:active { cursor: grabbing; transform: scale(0.97); }
+.chip.dragging { opacity: 0.4; }
+.chip.kind-table   { color: var(--node-3); border-color: rgba(94,234,212,0.4); }
+.chip.kind-verb    { color: var(--green-bright); border-color: rgba(57,255,20,0.4); }
+.chip.kind-arg     { color: var(--node-4); border-color: rgba(251,191,36,0.4); }
+.chip.kind-pipe    { color: var(--grey); }
+.chip.kind-group   { color: var(--node-5); border-color: rgba(244,114,182,0.4); }
+.chip.kind-summary { color: #5eead4; border-color: rgba(94,234,212,0.4); }
+.chip.kind-rename  { color: var(--node-5); border-color: rgba(244,114,182,0.5); background: rgba(244,114,182,0.06); }
+
+.drop-zone {
+  min-height: 80px; padding: 14px;
+  background: rgba(5,46,22,0.4);
+  border: 2px solid var(--border); border-radius: var(--radius-md);
+  font-family: var(--font-mono); font-size: 13px; line-height: 1.9;
+  display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0;
+  transition: border-color 0.15s; position: relative;
+}
+.drop-zone.drag-over {
+  border-color: var(--green-bright);
+  background: rgba(57,255,20,0.05);
+}
+.drop-zone .placeholder {
+  color: var(--grey); font-style: italic; font-size: 12px;
+  font-family: var(--font-body); padding: 4px 6px;
+}
+
+.placed-chip-wrap { display: inline-flex; align-items: center; }
+.placed-chip {
+  display: inline-flex; align-items: center;
+  padding: 4px 8px 4px 10px;
+  background: rgba(5,46,22,0.6);
+  border-radius: var(--radius-sm); font-size: 12px;
+  border: 1px solid var(--border); margin: 3px 0;
+  cursor: grab; position: relative;
+}
+.placed-chip:active { cursor: grabbing; }
+.placed-chip.dragging { opacity: 0.4; }
+.placed-chip.kind-table   { color: var(--node-3); }
+.placed-chip.kind-verb    { color: var(--green-bright); }
+.placed-chip.kind-arg     { color: var(--node-4); }
+.placed-chip.kind-pipe    { color: var(--grey); }
+.placed-chip.kind-group   { color: var(--node-5); }
+.placed-chip.kind-summary { color: #5eead4; }
+.placed-chip.kind-rename  { color: var(--node-5); }
+
+.placed-chip .drag-handle {
+  margin-right: 6px; font-size: 12px; color: var(--grey);
+  opacity: 0.5; cursor: grab; user-select: none;
+}
+.placed-chip:hover .drag-handle { opacity: 1; }
+.placed-chip .x {
+  margin-left: 8px; padding: 1px 5px;
+  border-radius: 3px; opacity: 0.45; font-size: 11px; cursor: pointer;
+}
+.placed-chip .x:hover {
+  opacity: 1; color: var(--node-7); background: rgba(249,115,22,0.15);
+}
+
+.insertion-indicator {
+  display: inline-block; width: 3px; height: 22px;
+  background: var(--green-bright); margin: 0 2px;
+  border-radius: 2px; align-self: center;
+  visibility: hidden; flex-shrink: 0;
+}
+.insertion-indicator.active {
+  visibility: visible;
+  animation: pulseIndicator 0.6s ease-in-out infinite;
+}
+@keyframes pulseIndicator {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.builder-actions {
+  display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+}
+.btn {
+  padding: 8px 14px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: rgba(5,46,22,0.5); color: var(--white);
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn:hover { border-color: var(--green-bright); color: var(--green-bright); }
+.btn-primary {
+  background: var(--green-bright); border-color: var(--green-bright); color: var(--black);
+}
+.btn-primary:hover { background: var(--green-mid); border-color: var(--green-mid); color: var(--black); }
+.btn-neutral { background: transparent; color: var(--grey); }
+.btn-ghost { background: transparent; color: var(--grey); }
+.btn-small { padding: 5px 10px; font-size: 10px; }
+.copy-btn {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.06em; white-space: nowrap;
+  transition: color 0.2s, background 0.15s;
+}
+
+.gen-code-panel {
+  margin-top: 14px; padding: 14px 16px;
+  background: rgba(5,10,5,0.7); border-radius: var(--radius-sm);
+  border-left: 3px solid var(--green-bright);
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.65;
+  color: var(--white); white-space: pre-wrap;
+  max-height: 260px; overflow-y: auto;
+}
+.gen-code-panel.lang-py { border-left-color: var(--node-4); }
+.gen-code-panel.empty {
+  color: var(--grey); font-style: italic; font-family: var(--font-body);
+}
+.gen-code-label {
+  margin-top: 16px;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; color: var(--grey); text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.diagram-panel {
+  margin-top: 14px; padding: 24px;
+  background: rgba(5,10,5,0.6); border-radius: var(--radius-sm);
+  border-left: 3px solid var(--node-3);
+  min-height: 200px; overflow-x: auto;
+}
+.diagram-panel.empty {
+  color: var(--grey); font-style: italic;
+  font-family: var(--font-body); font-size: 12.5px;
+  padding: 24px; min-height: 80px;
+}
+.diagram-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 0;
+}
+.diagram-header .orientation-toggle {
+  display: flex; gap: 4px; padding: 3px;
+  background: rgba(5,46,22,0.5); border-radius: var(--radius-sm);
+}
+.orient-btn {
+  padding: 4px 10px;
+  background: transparent; border: none; border-radius: 3px;
+  color: var(--grey);
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.1em; cursor: pointer; text-transform: uppercase;
+}
+.orient-btn.active { background: var(--node-3); color: var(--black); }
+
+#diagram-content { display: flex; justify-content: center; width: 100%; }
+#diagram-content svg { max-width: 100%; height: auto; min-height: 200px; }
+
+.result-section { margin-top: 16px; }
+.result-status {
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 12px; margin-bottom: 12px;
+}
+.result-status.ok    { background: rgba(57,255,20,0.08); color: var(--green-bright); border-left: 3px solid var(--green-bright); }
+.result-status.err   { background: rgba(249,115,22,0.08); color: var(--node-7); border-left: 3px solid var(--node-7); }
+.result-status.empty { background: rgba(5,46,22,0.5); color: var(--grey); border-left: 3px solid var(--border); }
+
+.result-table-wrapper {
+  max-height: 320px; overflow: auto;
+  border-radius: var(--radius-sm); border: 1px solid var(--border-soft);
+}
+.result-table-wrapper .data-table th { position: sticky; top: 0; z-index: 2; }
+.result-meta {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--grey); margin-top: 8px; letter-spacing: 0.06em;
+}
+
+.sketchpad-card {
+  background: rgba(251,191,36,0.06);
+  border: 1px dashed rgba(251,191,36,0.5);
+  border-radius: var(--radius-lg); padding: 22px 26px;
+  margin-bottom: 16px;
+}
+.sketchpad-card h3 {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--node-4); margin-bottom: 12px;
+}
+.sketchpad-card p {
+  font-family: var(--font-body); font-size: 14.5px;
+  line-height: 1.6; color: var(--white);
+}
+.sketchpad-card .sketchpad-icon { font-size: 22px; margin-right: 8px; }
+.sketchpad-card ol {
+  margin-top: 12px; padding-left: 24px;
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--white);
+}
+.sketchpad-card ol li { margin-bottom: 6px; line-height: 1.55; color: var(--green-mint); }
+.sketchpad-card code {
+  font-family: var(--font-mono); font-size: 12px;
+  background: rgba(251,191,36,0.14);
+  padding: 1px 6px; border-radius: 3px;
+  color: var(--node-4);
+}
+
+.lc-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 26px;
+  margin-bottom: 14px; backdrop-filter: blur(8px);
+}
+.lc-header { margin-bottom: 14px; }
+.lc-number {
+  display: inline-block;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; color: var(--green-bright);
+  background: rgba(57,255,20,0.1);
+  padding: 4px 10px; border-radius: var(--radius-sm); margin-bottom: 10px;
+}
+.lc-question {
+  font-family: var(--font-display); font-size: 20px;
+  line-height: 1.35; color: var(--white); letter-spacing: 0.02em;
+}
+.lc-question code {
+  font-family: var(--font-mono);
+  background: rgba(5,46,22,0.6); padding: 2px 6px;
+  border-radius: 4px; font-size: 14px; color: var(--node-4);
+}
+.lc-numeric-input {
+  margin-top: 14px; display: flex; gap: 8px;
+  align-items: center; flex-wrap: wrap;
+}
+.lc-numeric-input label {
+  font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--grey); letter-spacing: 0.06em;
+}
+.lc-numeric-input input {
+  background: rgba(5,46,22,0.6); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 8px 12px;
+  color: var(--white);
+  font-family: var(--font-mono); font-size: 13px; width: 140px;
+}
+.lc-numeric-input input:focus { outline: none; border-color: var(--green-bright); }
+.lc-result-indicator {
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 6px 10px; border-radius: var(--radius-sm); display: none;
+}
+.lc-result-indicator.ok  { background: rgba(57,255,20,0.12); color: var(--green-bright); display: inline-block; }
+.lc-result-indicator.err { background: rgba(249,115,22,0.12); color: var(--node-7); display: inline-block; }
+
+.lc-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.lc-option {
+  padding: 12px 16px;
+  border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+  background: rgba(5,46,22,0.4);
+  cursor: pointer; transition: all 0.15s;
+  font-family: var(--font-body); font-size: 13px;
+  color: var(--green-mint); line-height: 1.55;
+  display: flex; gap: 12px;
+}
+.lc-option:hover { border-color: var(--green-bright); color: var(--white); }
+.lc-option .lc-letter {
+  font-family: var(--font-mono); font-weight: 700;
+  color: var(--green-bright); flex-shrink: 0;
+}
+.lc-option.correct          { border-color: var(--green-bright); background: rgba(57,255,20,0.1); color: var(--white); }
+.lc-option.incorrect        { border-color: var(--node-7); background: rgba(249,115,22,0.08); color: var(--white); }
+.lc-option.revealed-correct { border-color: var(--green-bright); background: rgba(57,255,20,0.12); color: var(--white); }
+.lc-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.lc-feedback {
+  margin-top: 12px; padding: 14px 16px;
+  border-radius: var(--radius-sm); font-family: var(--font-body);
+  font-size: 13px; line-height: 1.65; display: none;
+  border: 1px solid var(--border-soft);
+  color: var(--green-mint);
+}
+.feedback-hint { background: rgba(57,255,20,0.05); border-color: rgba(57,255,20,0.3); }
+.feedback-hint strong { color: var(--green-bright); }
+.feedback-answer { background: rgba(94,234,212,0.05); border-color: rgba(94,234,212,0.3); }
+.feedback-answer strong { color: var(--node-3); }
+.lc-feedback code {
+  background: rgba(5,46,22,0.6); padding: 1px 6px;
+  border-radius: 3px;
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--node-4);
+}
+
+.builder-callout {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--grey); padding: 8px 12px;
+  background: rgba(57,255,20,0.05);
+  border-left: 3px solid var(--green-bright);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-top: 10px;
+}
+.builder-callout strong { color: var(--green-bright); }
+.builder-callout code {
+  background: rgba(5,46,22,0.6); padding: 1px 5px;
+  border-radius: 3px; color: var(--node-4); font-family: var(--font-mono);
+}
+
+.lang-hidden { display: none !important; }
+</style>
+</head>
+<body data-page="cases" class="lab">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../materials.html"      data-page="materials">Materials</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../readings.html"       data-page="readings">Readings</a>
+      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="../about.html"          data-page="about">About</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page-wide">
+
+  <section class="lab-hero">
+    <p class="course-number">SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify</p>
+    <h1>Network Joins: Getting <em>Node Attributes</em> onto Edges</h1>
+    <p>You have factory metadata in one table and shipments in another — but to answer questions like <em>"how much volume flows from Tier 3 to Tier 1?"</em> you need them joined together. Build the join, the rename, the grouping, and the summary step by step using the drag-and-drop code builder in either R or Python. The result table and flowchart update live. Use it as your calculator for the learning checks.</p>
+    <div class="synthetic-flag">⚠ Synthetic supply-chain data — illustrative, not from any real company</div>
+  </section>
+
+  <div class="lang-toggle-card">
+    <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+      <span class="toggle-label">Language:</span>
+      <div class="lang-toggle" role="tablist">
+        <button class="lang-btn lang-r active" data-lang="r"><span class="lang-marker"></span>R · dplyr</button>
+        <button class="lang-btn lang-py" data-lang="py"><span class="lang-marker"></span>Python · pandas</button>
+      </div>
+    </div>
+    <div class="lang-help">Both produce the same answers. Builder, hints, code, and flowchart all switch with this toggle. Your pipeline is preserved when you switch.</div>
+  </div>
+
+  <div class="card">
+    <h3>📦 The two source tables — <span class="h3-accent">your raw data</span></h3>
+    <div class="source-tables">
+      <div>
+        <h4>nodes — one row per factory <span class="lang-name lang-r-only">nodes</span><span class="lang-name lang-py-only lang-hidden">nodes_df</span></h4>
+        <div class="table-note">Each factory has a region, tier, and capacity. Tier 1 = final assembly, Tier 2 = subassembly, Tier 3 = raw component.</div>
+        <div class="scroll-wrapper">
+          <table class="data-table" id="src-nodes-table"></table>
+        </div>
+      </div>
+      <div>
+        <h4>edges — one row per shipment lane <span class="lang-name lang-r-only">edges</span><span class="lang-name lang-py-only lang-hidden">edges_df</span></h4>
+        <div class="table-note">Each row is a regular shipment lane between two factories during Q1. <code>from_id</code> and <code>to_id</code> reference the <code>node_id</code> in the nodes table.</div>
+        <div class="scroll-wrapper">
+          <table class="data-table" id="src-edges-table"></table>
+        </div>
+      </div>
+    </div>
+    <div class="builder-callout"><strong>Note the asymmetry:</strong> edges have <code>from_id</code> and <code>to_id</code>, but the node table calls the same field <code>node_id</code>. That mismatch is the first thing every real network join has to solve, in either language.</div>
+  </div>
+
+  <div class="sketchpad-card">
+    <h3><span class="sketchpad-icon">✏️</span>Sketchpad Moment (do this before touching the builder)</h3>
+    <p>On your physical sketchpad:</p>
+    <ol>
+      <li>Sketch the two tables side by side. List the column names of each.</li>
+      <li><strong>Draw an arrow</strong> from <code>edges.from_id</code> to <code>nodes.node_id</code>. This arrow is your join key — the visual definition of a join. It exists independently of whether you'll write the code in R or Python.</li>
+      <li>Now sketch what the joined table would look like. Which columns survive? How many rows? What happens to <code>tier</code> if you join twice — once on <code>from_id</code> and once on <code>to_id</code>? Draw what you think the column names will look like.</li>
+      <li>Question to write down: when does the rename step become essential, and what columns is it renaming?</li>
+    </ol>
+    <p style="margin-top: 12px; font-size: 13.5px; font-family: var(--font-body); color: var(--grey);">Then come back here, pick your language, and verify your sketch with the builder. Sketches first, syntax second.</p>
+  </div>
+
+  <div class="card">
+    <h3>🛠 Code builder — <span class="h3-accent">drag chips into the pipeline; drag placed chips to reorder</span><span class="builder-lang-indicator lang-r" id="builder-lang-badge">R · dplyr</span></h3>
+
+    <div class="builder-container">
+      <div>
+        <p style="font-size: 10.5px; font-family: var(--font-mono); color: var(--grey); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px;">WORD BANK · drag (or double-click) any chip into the pipeline</p>
+        <div class="word-bank" id="word-bank"></div>
+      </div>
+      <div>
+        <p style="font-size: 10.5px; font-family: var(--font-mono); color: var(--grey); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px;">YOUR PIPELINE · drag chips to reorder · click ✕ to remove</p>
+        <div class="drop-zone" id="drop-zone">
+          <span class="placeholder">Drag chips here to build a pipeline. Start with a table.</span>
+        </div>
+        <div class="builder-actions">
+          <button class="btn btn-primary" onclick="runPipeline()">▶ Run pipeline</button>
+          <button class="btn btn-ghost" onclick="clearPipeline()">Clear</button>
+          <button class="btn btn-neutral" onclick="loadExample()">Load example</button>
+        </div>
+
+        <div class="gen-code-label">
+          <span>Generated code</span>
+          <span class="builder-lang-indicator lang-r" id="gen-lang-badge">R</span>
+          <button class="btn btn-small btn-neutral copy-btn" onclick="copyToClipboard('gen-code', this)" style="margin-left: auto;">📋 Copy code</button>
+        </div>
+        <div class="gen-code-panel empty" id="gen-code">Build a pipeline to see the equivalent code here.</div>
+      </div>
+    </div>
+
+    <div class="result-section">
+      <div class="result-status empty" id="result-status">No pipeline run yet. Drag chips, then click "Run pipeline".</div>
+      <div class="result-table-wrapper" id="result-wrapper" style="display: none;">
+        <table class="data-table" id="result-table"></table>
+      </div>
+      <div class="result-meta" id="result-meta" style="display: none;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📊 Process flowchart — <span class="h3-accent">live diagram of your pipeline</span></h3>
+    <div class="diagram-header" style="margin-top: 0;">
+      <span style="font-size: 12.5px; color: var(--grey); font-family: var(--font-body); font-style: italic; text-transform: none; letter-spacing: 0;">Each chip in your pipeline becomes a node here. Shapes and colors classify the operation: 📦 tables, 🔧 joins, 🏷 renames, 🔍 filters, 📑 groups, Σ summaries.</span>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <div class="orientation-toggle">
+          <button class="orient-btn active" data-orient="TD" onclick="setOrientation('TD')">↓ Vertical</button>
+          <button class="orient-btn" data-orient="LR" onclick="setOrientation('LR')">→ Horizontal</button>
+        </div>
+        <button class="btn btn-small btn-neutral copy-btn" onclick="copyToClipboard('mermaid-source', this)">📋 Copy Mermaid code</button>
+        <button class="btn btn-small btn-neutral copy-btn" onclick="copyDiagramSvg(this)">📋 Copy SVG</button>
+      </div>
+    </div>
+    <div class="diagram-panel empty" id="diagram-panel"><div id="diagram-content">Build a pipeline to see the flowchart here.</div></div>
+    <textarea id="mermaid-source" style="display: none;"></textarea>
+  </div>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 01</span>
+      <div class="lc-question">Build a pipeline that joins the <code>edges</code> table to the <code>nodes</code> table to get the <strong>origin factory's tier</strong> onto each shipment, then <strong>rename the joined columns</strong> with an <code>_origin</code> suffix so they're easy to reference. Then count how many shipment rows originate from <strong>Tier 3</strong> factories. (You'll find that without the rename step, your filter chips won't have a column to reference!)</div>
+    </div>
+    <div class="lc-numeric-input">
+      <label>YOUR ANSWER:</label>
+      <input type="number" id="lc1-answer-input" placeholder="number of rows" oninput="checkNumeric(1)">
+      <span class="lc-result-indicator" id="lc1-indicator"></span>
+    </div>
+    <div class="lc-actions">
+      <button class="btn btn-neutral" onclick="showHint(1)">💡 Hint</button>
+      <button class="btn btn-neutral" onclick="showAnswer(1)">🔓 Reveal Answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc1-hint"></div>
+    <div class="lc-feedback feedback-answer" id="lc1-answer"></div>
+  </div>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 02</span>
+      <div class="lc-question">Now answer the real engineering question: <strong>what is the total shipment volume (sum of <code>volume_units</code>) flowing from Tier 3 suppliers to Tier 1 assemblers?</strong> You'll need to join twice (once for origin, once for destination) and rename twice (once with <code>_origin</code>, once with <code>_dest</code>) — the second join is where the name collision really bites if you skip the rename.</div>
+    </div>
+    <div class="lc-numeric-input">
+      <label>YOUR ANSWER:</label>
+      <input type="number" id="lc2-answer-input" placeholder="total volume_units" oninput="checkNumeric(2)">
+      <span class="lc-result-indicator" id="lc2-indicator"></span>
+    </div>
+    <div class="lc-actions">
+      <button class="btn btn-neutral" onclick="showHint(2)">💡 Hint</button>
+      <button class="btn btn-neutral" onclick="showAnswer(2)">🔓 Reveal Answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc2-hint"></div>
+    <div class="lc-feedback feedback-answer" id="lc2-answer"></div>
+  </div>
+
+  <div class="lc-card">
+    <div class="lc-header">
+      <span class="lc-number">LC 03</span>
+      <div class="lc-question" id="lc3-question-text"></div>
+    </div>
+    <div class="lc-options" id="lc3-options">
+      <div class="lc-option" onclick="selectOption(3, 'A')"><span class="lc-letter">A</span><span id="lc3-opt-A"></span></div>
+      <div class="lc-option" onclick="selectOption(3, 'B')"><span class="lc-letter">B</span><span id="lc3-opt-B"></span></div>
+      <div class="lc-option" onclick="selectOption(3, 'C')"><span class="lc-letter">C</span><span id="lc3-opt-C"></span></div>
+    </div>
+    <div class="lc-actions">
+      <button class="btn btn-neutral" onclick="showHint(3)">💡 Hint</button>
+      <button class="btn btn-neutral" onclick="showAnswer(3)">🔓 Reveal Answer</button>
+    </div>
+    <div class="lc-feedback feedback-hint" id="lc3-hint"></div>
+    <div class="lc-feedback feedback-answer" id="lc3-answer"></div>
+  </div>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Big Network Data · Joins Builder Lab</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad: false,
+  theme: "dark",
+  securityLevel: "loose",
+  flowchart: { htmlLabels: true, curve: "basis", padding: 12 },
+  themeVariables: {
+    primaryColor: "#0a140a",
+    primaryTextColor: "#f0fdf4",
+    primaryBorderColor: "#39FF14",
+    lineColor: "#a3b8a3",
+    secondaryColor: "#052e16",
+    tertiaryColor: "#050a05",
+    fontFamily: "DM Sans, sans-serif"
+  }
+});
+
+let currentLang = "r";
+let currentOrientation = "TD";
+
+const NODES = [
+  { node_id: "F01", name: "Akron Plant",     region: "Midwest",  tier: 1, capacity_units: 1200 },
+  { node_id: "F02", name: "Detroit Assy",    region: "Midwest",  tier: 1, capacity_units: 1500 },
+  { node_id: "F03", name: "Atlanta Hub",     region: "South",    tier: 1, capacity_units: 1100 },
+  { node_id: "F04", name: "Phoenix Final",   region: "West",     tier: 1, capacity_units: 900  },
+  { node_id: "F05", name: "Cleveland Sub",   region: "Midwest",  tier: 2, capacity_units: 700  },
+  { node_id: "F06", name: "Nashville Sub",   region: "South",    tier: 2, capacity_units: 650  },
+  { node_id: "F07", name: "Dallas Sub",      region: "South",    tier: 2, capacity_units: 800  },
+  { node_id: "F08", name: "Reno Sub",        region: "West",     tier: 2, capacity_units: 550  },
+  { node_id: "F09", name: "Albany Sub",      region: "Northeast",tier: 2, capacity_units: 600  },
+  { node_id: "F10", name: "Toledo Raw",      region: "Midwest",  tier: 3, capacity_units: 400  },
+  { node_id: "F11", name: "Memphis Raw",     region: "South",    tier: 3, capacity_units: 450  },
+  { node_id: "F12", name: "Houston Raw",     region: "South",    tier: 3, capacity_units: 500  },
+  { node_id: "F13", name: "Salt Lake Raw",   region: "West",     tier: 3, capacity_units: 380  },
+  { node_id: "F14", name: "Erie Raw",        region: "Northeast",tier: 3, capacity_units: 420  },
+  { node_id: "F15", name: "Boise Raw",       region: "West",     tier: 3, capacity_units: 360  },
+  { node_id: "F16", name: "Birmingham Raw",  region: "South",    tier: 3, capacity_units: 470  }
+];
+
+const EDGES = [
+  { from_id: "F10", to_id: "F05", lane: "L01", volume_units: 320 },
+  { from_id: "F10", to_id: "F09", lane: "L02", volume_units: 180 },
+  { from_id: "F11", to_id: "F06", lane: "L03", volume_units: 290 },
+  { from_id: "F11", to_id: "F07", lane: "L04", volume_units: 240 },
+  { from_id: "F12", to_id: "F07", lane: "L05", volume_units: 410 },
+  { from_id: "F12", to_id: "F06", lane: "L06", volume_units: 220 },
+  { from_id: "F13", to_id: "F08", lane: "L07", volume_units: 280 },
+  { from_id: "F14", to_id: "F09", lane: "L08", volume_units: 310 },
+  { from_id: "F15", to_id: "F08", lane: "L09", volume_units: 200 },
+  { from_id: "F16", to_id: "F06", lane: "L10", volume_units: 260 },
+  { from_id: "F05", to_id: "F01", lane: "L11", volume_units: 480 },
+  { from_id: "F05", to_id: "F02", lane: "L12", volume_units: 350 },
+  { from_id: "F06", to_id: "F03", lane: "L13", volume_units: 510 },
+  { from_id: "F07", to_id: "F03", lane: "L14", volume_units: 440 },
+  { from_id: "F07", to_id: "F02", lane: "L15", volume_units: 290 },
+  { from_id: "F08", to_id: "F04", lane: "L16", volume_units: 380 },
+  { from_id: "F09", to_id: "F01", lane: "L17", volume_units: 320 },
+  { from_id: "F09", to_id: "F02", lane: "L18", volume_units: 270 },
+  { from_id: "F10", to_id: "F01", lane: "L19", volume_units: 340 },
+  { from_id: "F11", to_id: "F03", lane: "L20", volume_units: 280 },
+  { from_id: "F12", to_id: "F03", lane: "L21", volume_units: 410 },
+  { from_id: "F14", to_id: "F01", lane: "L22", volume_units: 250 },
+  { from_id: "F16", to_id: "F03", lane: "L23", volume_units: 320 },
+  { from_id: "F13", to_id: "F04", lane: "L24", volume_units: 247 },
+  { from_id: "F01", to_id: "F02", lane: "L25", volume_units: 150 },
+  { from_id: "F03", to_id: "F02", lane: "L26", volume_units: 130 },
+  { from_id: "F05", to_id: "F06", lane: "L27", volume_units: 90  },
+  { from_id: "F07", to_id: "F08", lane: "L28", volume_units: 110 },
+  { from_id: "F09", to_id: "F05", lane: "L29", volume_units: 80  },
+  { from_id: "F06", to_id: "F07", lane: "L30", volume_units: 95  }
+];
+
+const CHIPS = [
+  { id: "T_edges", section: "tables", kind: "table", op: "table", value: "edges",
+    text_r: "edges", text_py: "edges_df",
+    diagram_label: "📦 edges<br/>one row per shipment" },
+  { id: "T_nodes", section: "tables", kind: "table", op: "table", value: "nodes",
+    text_r: "nodes", text_py: "nodes_df",
+    diagram_label: "📦 nodes<br/>one row per factory" },
+
+  { id: "P_pipe", section: "pipe", kind: "pipe", op: "pipe",
+    text_r: "%>%", text_py: "→ (next step)" },
+
+  { id: "V_left", section: "verbs", kind: "verb", op: "verb", value: "left_join",
+    text_r: "left_join(nodes,", text_py: "merge(nodes_df, how='left',",
+    diagram_label: "🔧 left join<br/>keep all left rows" },
+  { id: "V_inner", section: "verbs", kind: "verb", op: "verb", value: "inner_join",
+    text_r: "inner_join(nodes,", text_py: "merge(nodes_df, how='inner',",
+    diagram_label: "🔧 inner join<br/>keep matched rows only" },
+
+  { id: "A_from", section: "keys", kind: "arg", op: "join_key", value: "from_id",
+    text_r: 'by = c("from_id" = "node_id"))',
+    text_py: 'left_on="from_id", right_on="node_id")' },
+  { id: "A_to", section: "keys", kind: "arg", op: "join_key", value: "to_id",
+    text_r: 'by = c("to_id" = "node_id"))',
+    text_py: 'left_on="to_id", right_on="node_id")' },
+
+  { id: "R_origin", section: "renames", kind: "rename", op: "rename", suffix: "_origin",
+    text_r: 'rename(name_origin=name.x, region_origin=region.x, tier_origin=tier.x, capacity_units_origin=capacity_units.x)',
+    text_py: 'rename(columns={"name_x":"name_origin","region_x":"region_origin","tier_x":"tier_origin","capacity_units_x":"capacity_units_origin"})',
+    diagram_label: "🏷 rename → _origin<br/>name.x, tier.x, etc." },
+  { id: "R_dest", section: "renames", kind: "rename", op: "rename", suffix: "_dest",
+    text_r: 'rename(name_dest=name.y, region_dest=region.y, tier_dest=tier.y, capacity_units_dest=capacity_units.y)',
+    text_py: 'rename(columns={"name_y":"name_dest","region_y":"region_dest","tier_y":"tier_dest","capacity_units_y":"capacity_units_dest"})',
+    diagram_label: "🏷 rename → _dest<br/>name.y, tier.y, etc." },
+  { id: "R_origin_first", section: "renames", kind: "rename", op: "rename_first", suffix: "_origin",
+    text_r: 'rename(name_origin=name, region_origin=region, tier_origin=tier, capacity_units_origin=capacity_units)',
+    text_py: 'rename(columns={"name":"name_origin","region":"region_origin","tier":"tier_origin","capacity_units":"capacity_units_origin"})',
+    diagram_label: "🏷 rename → _origin<br/>(first join: no suffix yet)" },
+  { id: "R_dest_first", section: "renames", kind: "rename", op: "rename_first", suffix: "_dest",
+    text_r: 'rename(name_dest=name, region_dest=region, tier_dest=tier, capacity_units_dest=capacity_units)',
+    text_py: 'rename(columns={"name":"name_dest","region":"region_dest","tier":"tier_dest","capacity_units":"capacity_units_dest"})',
+    diagram_label: "🏷 rename → _dest<br/>(first join: no suffix yet)" },
+
+  { id: "F_tier1", section: "filters", kind: "verb", op: "filter", col: "tier", val: 1,
+    text_r: "filter(tier == 1)", text_py: 'query("tier == 1")',
+    diagram_label: "🔍 filter<br/>tier == 1" },
+  { id: "F_tier2", section: "filters", kind: "verb", op: "filter", col: "tier", val: 2,
+    text_r: "filter(tier == 2)", text_py: 'query("tier == 2")',
+    diagram_label: "🔍 filter<br/>tier == 2" },
+  { id: "F_tier3", section: "filters", kind: "verb", op: "filter", col: "tier", val: 3,
+    text_r: "filter(tier == 3)", text_py: 'query("tier == 3")',
+    diagram_label: "🔍 filter<br/>tier == 3" },
+
+  { id: "F_tierO1", section: "filters", kind: "verb", op: "filter", col: "tier_origin", val: 1,
+    text_r: "filter(tier_origin == 1)", text_py: 'query("tier_origin == 1")',
+    diagram_label: "🔍 filter<br/>tier_origin == 1" },
+  { id: "F_tierO2", section: "filters", kind: "verb", op: "filter", col: "tier_origin", val: 2,
+    text_r: "filter(tier_origin == 2)", text_py: 'query("tier_origin == 2")',
+    diagram_label: "🔍 filter<br/>tier_origin == 2" },
+  { id: "F_tierO3", section: "filters", kind: "verb", op: "filter", col: "tier_origin", val: 3,
+    text_r: "filter(tier_origin == 3)", text_py: 'query("tier_origin == 3")',
+    diagram_label: "🔍 filter<br/>tier_origin == 3" },
+
+  { id: "F_tierD1", section: "filters", kind: "verb", op: "filter", col: "tier_dest", val: 1,
+    text_r: "filter(tier_dest == 1)", text_py: 'query("tier_dest == 1")',
+    diagram_label: "🔍 filter<br/>tier_dest == 1" },
+  { id: "F_tierD2", section: "filters", kind: "verb", op: "filter", col: "tier_dest", val: 2,
+    text_r: "filter(tier_dest == 2)", text_py: 'query("tier_dest == 2")',
+    diagram_label: "🔍 filter<br/>tier_dest == 2" },
+
+  { id: "F_regOS", section: "filters", kind: "verb", op: "filter", col: "region_origin", val: "South",
+    text_r: 'filter(region_origin == "South")', text_py: 'query(\'region_origin == "South"\')',
+    diagram_label: "🔍 filter<br/>region_origin == South" },
+  { id: "F_regDS", section: "filters", kind: "verb", op: "filter", col: "region_dest", val: "South",
+    text_r: 'filter(region_dest == "South")', text_py: 'query(\'region_dest == "South"\')',
+    diagram_label: "🔍 filter<br/>region_dest == South" },
+
+  { id: "G_tier", section: "groups", kind: "group", op: "group", col: "tier",
+    text_r: "group_by(tier)", text_py: 'groupby("tier")',
+    diagram_label: "📑 group by<br/>tier" },
+  { id: "G_region", section: "groups", kind: "group", op: "group", col: "region",
+    text_r: "group_by(region)", text_py: 'groupby("region")',
+    diagram_label: "📑 group by<br/>region" },
+  { id: "G_tierO", section: "groups", kind: "group", op: "group", col: "tier_origin",
+    text_r: "group_by(tier_origin)", text_py: 'groupby("tier_origin")',
+    diagram_label: "📑 group by<br/>tier_origin" },
+  { id: "G_tierD", section: "groups", kind: "group", op: "group", col: "tier_dest",
+    text_r: "group_by(tier_dest)", text_py: 'groupby("tier_dest")',
+    diagram_label: "📑 group by<br/>tier_dest" },
+  { id: "G_regO", section: "groups", kind: "group", op: "group", col: "region_origin",
+    text_r: "group_by(region_origin)", text_py: 'groupby("region_origin")',
+    diagram_label: "📑 group by<br/>region_origin" },
+  { id: "G_regD", section: "groups", kind: "group", op: "group", col: "region_dest",
+    text_r: "group_by(region_dest)", text_py: 'groupby("region_dest")',
+    diagram_label: "📑 group by<br/>region_dest" },
+
+  { id: "S_sum", section: "summaries", kind: "summary", op: "summarise", agg: "sum", col: "volume_units", name: "total",
+    text_r: "summarise(total = sum(volume_units))", text_py: 'agg(total=("volume_units","sum"))',
+    diagram_label: "Σ summarise<br/>total = sum(volume_units)" },
+  { id: "S_mean", section: "summaries", kind: "summary", op: "summarise", agg: "mean", col: "volume_units", name: "avg",
+    text_r: "summarise(avg = mean(volume_units))", text_py: 'agg(avg=("volume_units","mean"))',
+    diagram_label: "Σ summarise<br/>avg = mean(volume_units)" },
+  { id: "S_n", section: "summaries", kind: "summary", op: "summarise", agg: "count", col: null, name: "n",
+    text_r: "summarise(n = n())", text_py: 'size().reset_index(name="n")',
+    diagram_label: "Σ summarise<br/>n = count rows" }
+];
+
+const SECTION_LABELS = {
+  tables: "📦 Tables",
+  pipe: "🔗 Pipe / next step",
+  verbs: "🔧 Joins (verb)",
+  keys: "🗝 Join keys (arg)",
+  renames: "🏷 Rename (bundled)",
+  filters: "🔍 Filters",
+  groups: "📑 Group by",
+  summaries: "Σ Summarise"
+};
+
+function renderTable(targetId, rows, cols) {
+  const t = document.getElementById(targetId);
+  t.innerHTML = "";
+  const thead = document.createElement("thead");
+  const trH = document.createElement("tr");
+  cols.forEach(c => { const th = document.createElement("th"); th.textContent = c; trH.appendChild(th); });
+  thead.appendChild(trH); t.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  rows.forEach(r => {
+    const tr = document.createElement("tr");
+    cols.forEach(c => {
+      const td = document.createElement("td");
+      td.textContent = r[c] !== undefined ? r[c] : "";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  t.appendChild(tbody);
+}
+
+renderTable("src-nodes-table", NODES, ["node_id", "name", "region", "tier", "capacity_units"]);
+renderTable("src-edges-table", EDGES, ["from_id", "to_id", "lane", "volume_units"]);
+
+function renderWordBank() {
+  const bank = document.getElementById("word-bank");
+  bank.innerHTML = "";
+  const sections = ["tables", "pipe", "verbs", "keys", "renames", "filters", "groups", "summaries"];
+  sections.forEach(sec => {
+    const lab = document.createElement("div");
+    lab.className = "bank-section-label";
+    lab.textContent = SECTION_LABELS[sec];
+    bank.appendChild(lab);
+    CHIPS.filter(c => c.section === sec).forEach(c => {
+      const chip = document.createElement("div");
+      chip.className = `chip kind-${c.kind}`;
+      chip.textContent = currentLang === "r" ? c.text_r : c.text_py;
+      chip.draggable = true;
+      chip.dataset.id = c.id;
+      chip.dataset.source = "bank";
+      chip.addEventListener("dragstart", e => {
+        e.dataTransfer.setData("text/plain", JSON.stringify({source: "bank", id: c.id}));
+        chip.classList.add("dragging");
+      });
+      chip.addEventListener("dragend", () => chip.classList.remove("dragging"));
+      chip.addEventListener("dblclick", () => addChipToPipeline(c.id));
+      bank.appendChild(chip);
+    });
+  });
+}
+
+let pipeline = [];
+let dragInsertIndex = null;
+const dropZone = document.getElementById("drop-zone");
+
+function addChipToPipeline(chipId, idx = null) {
+  if (idx === null) pipeline.push(chipId);
+  else pipeline.splice(idx, 0, chipId);
+  renderPipeline();
+  scheduleAutoUpdates();
+}
+function removeChipAt(idx) {
+  pipeline.splice(idx, 1);
+  renderPipeline();
+  scheduleAutoUpdates();
+}
+function moveChip(fromIdx, toIdx) {
+  if (fromIdx === toIdx || fromIdx === toIdx - 1) return;
+  const [chip] = pipeline.splice(fromIdx, 1);
+  const adjusted = toIdx > fromIdx ? toIdx - 1 : toIdx;
+  pipeline.splice(adjusted, 0, chip);
+  renderPipeline();
+  scheduleAutoUpdates();
+}
+function clearPipeline() {
+  pipeline = [];
+  renderPipeline();
+  scheduleAutoUpdates();
+  document.getElementById("result-status").className = "result-status empty";
+  document.getElementById("result-status").textContent = "No pipeline run yet. Drag chips, then click 'Run pipeline'.";
+  document.getElementById("result-wrapper").style.display = "none";
+  document.getElementById("result-meta").style.display = "none";
+}
+function loadExample() {
+  pipeline = ["T_edges", "P_pipe", "V_left", "A_from", "P_pipe", "R_origin_first", "P_pipe", "F_tierO3"];
+  renderPipeline();
+  scheduleAutoUpdates();
+  runPipeline();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function renderPipeline() {
+  dropZone.innerHTML = "";
+  if (pipeline.length === 0) {
+    const ph = document.createElement("span");
+    ph.className = "placeholder";
+    ph.textContent = "Drag chips here to build a pipeline. Start with a table.";
+    dropZone.appendChild(ph);
+    return;
+  }
+  pipeline.forEach((cid, idx) => {
+    const indicator = document.createElement("span");
+    indicator.className = "insertion-indicator";
+    indicator.dataset.insertIdx = idx;
+    dropZone.appendChild(indicator);
+
+    const chip = CHIPS.find(c => c.id === cid);
+    const wrap = document.createElement("span");
+    wrap.className = "placed-chip-wrap";
+
+    const el = document.createElement("span");
+    el.className = `placed-chip kind-${chip.kind}`;
+    el.draggable = true;
+    el.dataset.idx = idx;
+    const text = currentLang === "r" ? chip.text_r : chip.text_py;
+    el.innerHTML = `<span class="drag-handle">⋮⋮</span>${escapeHtml(text)}<span class="x">✕</span>`;
+
+    el.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", JSON.stringify({source: "pipeline", idx: idx}));
+      el.classList.add("dragging");
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      clearInsertionIndicators();
+    });
+    el.querySelector(".x").addEventListener("click", e => {
+      e.stopPropagation();
+      removeChipAt(idx);
+    });
+    wrap.appendChild(el);
+    dropZone.appendChild(wrap);
+  });
+  const trailing = document.createElement("span");
+  trailing.className = "insertion-indicator";
+  trailing.dataset.insertIdx = pipeline.length;
+  dropZone.appendChild(trailing);
+}
+
+function clearInsertionIndicators() {
+  document.querySelectorAll(".insertion-indicator").forEach(el => el.classList.remove("active"));
+}
+
+dropZone.addEventListener("dragover", e => {
+  e.preventDefault();
+  dropZone.classList.add("drag-over");
+  if (pipeline.length === 0) return;
+  const indicators = [...document.querySelectorAll(".insertion-indicator")];
+  let closest = null, closestDist = Infinity;
+  indicators.forEach(ind => {
+    const rect = ind.getBoundingClientRect();
+    const indCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    const dist = Math.hypot(e.clientX - indCenter.x, e.clientY - indCenter.y);
+    if (dist < closestDist) { closestDist = dist; closest = ind; }
+  });
+  clearInsertionIndicators();
+  if (closest) {
+    closest.classList.add("active");
+    dragInsertIndex = parseInt(closest.dataset.insertIdx);
+  }
+});
+dropZone.addEventListener("dragleave", e => {
+  if (e.target === dropZone) {
+    dropZone.classList.remove("drag-over");
+    clearInsertionIndicators();
+  }
+});
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  dropZone.classList.remove("drag-over");
+  clearInsertionIndicators();
+  let payload;
+  try { payload = JSON.parse(e.dataTransfer.getData("text/plain")); } catch { return; }
+  if (payload.source === "bank") addChipToPipeline(payload.id, dragInsertIndex);
+  else if (payload.source === "pipeline") moveChip(payload.idx, dragInsertIndex !== null ? dragInsertIndex : pipeline.length);
+  dragInsertIndex = null;
+});
+
+function runPipeline() {
+  const status = document.getElementById("result-status");
+  const wrapper = document.getElementById("result-wrapper");
+  const meta = document.getElementById("result-meta");
+  if (pipeline.length === 0) {
+    status.className = "result-status err";
+    status.textContent = "✗ Pipeline is empty. Drag at least a table chip in.";
+    wrapper.style.display = "none";
+    meta.style.display = "none";
+    return;
+  }
+  try {
+    const result = executePipeline(pipeline);
+    if (!result.rows || result.rows.length === 0) {
+      status.className = "result-status ok";
+      status.textContent = `✓ Pipeline ran successfully but produced 0 rows. (Empty result is still a valid result.)`;
+      wrapper.style.display = "none";
+    } else {
+      status.className = "result-status ok";
+      status.textContent = `✓ Pipeline ran successfully.`;
+      renderResult(result.rows, result.cols);
+      wrapper.style.display = "block";
+    }
+    meta.style.display = "block";
+    meta.textContent = `Rows: ${result.rows.length}  ·  Columns: ${result.cols.length}  ·  Row meaning: ${result.row_meaning}`;
+  } catch (err) {
+    status.className = "result-status err";
+    status.textContent = `✗ ${err.message}`;
+    wrapper.style.display = "none";
+    meta.style.display = "none";
+  }
+}
+
+function executePipeline(pipe) {
+  let state = { rows: null, cols: [], row_meaning: "—", joins_done: 0, grouped_by: null };
+  const xSuffix = currentLang === "r" ? ".x" : "_x";
+  const ySuffix = currentLang === "r" ? ".y" : "_y";
+  let i = 0;
+  while (i < pipe.length) {
+    const chip = CHIPS.find(c => c.id === pipe[i]);
+    if (!chip) throw new Error(`Unknown chip at position ${i + 1}.`);
+
+    if (chip.op === "table") {
+      if (state.rows !== null) throw new Error(`Position ${i + 1}: can't put a table here. The pipeline should start with one table.`);
+      if (chip.value === "edges") {
+        state.rows = EDGES.map(r => ({ ...r }));
+        state.cols = ["from_id", "to_id", "lane", "volume_units"];
+        state.row_meaning = "one row per shipment lane";
+      } else if (chip.value === "nodes") {
+        state.rows = NODES.map(r => ({ ...r }));
+        state.cols = ["node_id", "name", "region", "tier", "capacity_units"];
+        state.row_meaning = "one row per factory";
+      }
+      i++;
+    } else if (chip.op === "pipe") {
+      if (state.rows === null) throw new Error(`Position ${i + 1}: pipe/step separator appears before any table.`);
+      i++;
+    } else if (chip.op === "verb") {
+      if (state.rows === null) throw new Error(`Position ${i + 1}: join verb needs a table before it.`);
+      const next = pipe[i + 1] ? CHIPS.find(c => c.id === pipe[i + 1]) : null;
+      if (!next || next.op !== "join_key") {
+        const example = currentLang === "r" ? 'by = c("from_id" = "node_id")' : 'left_on="from_id", right_on="node_id"';
+        throw new Error(`Position ${i + 1}: join verb must be followed by a join-key chip (e.g. ${example}).`);
+      }
+      const joinCol = next.value;
+      if (!state.cols.includes(joinCol)) {
+        throw new Error(`Join key '${joinCol}' not found in current pipeline columns. (Did you start with the edges table?)`);
+      }
+      state = performJoin(state, joinCol, chip.value, xSuffix, ySuffix);
+      i += 2;
+    } else if (chip.op === "filter") {
+      if (state.rows === null) throw new Error(`Position ${i + 1}: filter needs a table first.`);
+      if (!state.cols.includes(chip.col)) {
+        const suggest = currentLang === "r"
+          ? `(Tip: after a join, columns from nodes may be named '${chip.col}.x' or '${chip.col}.y' if there was a name collision. Add a rename chip to clean them up.)`
+          : `(Tip: after a merge, columns from nodes_df may be named '${chip.col}_x' or '${chip.col}_y' if there was a name collision. Add a rename chip to clean them up.)`;
+        throw new Error(`Filter references column '${chip.col}' which isn't in the current pipeline. ${suggest}`);
+      }
+      state.rows = state.rows.filter(r => r[chip.col] === chip.val);
+      i++;
+    } else if (chip.op === "group") {
+      if (state.rows === null) throw new Error(`Position ${i + 1}: group_by/groupby needs a table first.`);
+      if (!state.cols.includes(chip.col)) {
+        throw new Error(`group references column '${chip.col}' which isn't in the current pipeline.`);
+      }
+      state.grouped_by = chip.col;
+      i++;
+    } else if (chip.op === "summarise") {
+      if (state.rows === null) throw new Error(`Position ${i + 1}: summarise/agg needs a table first.`);
+      state = performSummarise(state, chip);
+      i++;
+    } else if (chip.op === "rename" || chip.op === "rename_first") {
+      if (state.rows === null) throw new Error(`Position ${i + 1}: rename needs a table first.`);
+      state = performRename(state, chip, xSuffix, ySuffix);
+      i++;
+    } else {
+      throw new Error(`Unknown operation: ${chip.op}`);
+    }
+  }
+  if (state.rows === null) throw new Error("Pipeline produced no data. Did you forget a table chip?");
+  return state;
+}
+
+function performJoin(state, leftCol, joinKind, xSuffix, ySuffix) {
+  const nodeAttrs = ["name", "region", "tier", "capacity_units"];
+  const collidingAttrs = nodeAttrs.filter(a => state.cols.includes(a));
+  let newCols = state.cols.slice();
+  collidingAttrs.forEach(a => {
+    const idx = newCols.indexOf(a);
+    newCols[idx] = a + xSuffix;
+  });
+  nodeAttrs.forEach(a => {
+    newCols.push(collidingAttrs.includes(a) ? a + ySuffix : a);
+  });
+
+  const nodeIdx = new Map(NODES.map(n => [n.node_id, n]));
+  const newRows = [];
+  state.rows.forEach(row => {
+    const key = row[leftCol];
+    const match = nodeIdx.get(key);
+    if (joinKind === "inner_join" && !match) return;
+    const newRow = {};
+    state.cols.forEach(col => {
+      if (collidingAttrs.includes(col)) newRow[col + xSuffix] = row[col];
+      else newRow[col] = row[col];
+    });
+    nodeAttrs.forEach(a => {
+      const destCol = collidingAttrs.includes(a) ? a + ySuffix : a;
+      newRow[destCol] = match ? match[a] : null;
+    });
+    newRows.push(newRow);
+  });
+
+  const sideName = leftCol === "from_id" ? "origin factory attributes" : "destination factory attributes";
+  return {
+    rows: newRows,
+    cols: newCols,
+    row_meaning: state.row_meaning + " + " + sideName + (collidingAttrs.length ? ` (collisions: ${collidingAttrs.length} columns suffixed)` : ""),
+    joins_done: state.joins_done + 1,
+    grouped_by: state.grouped_by
+  };
+}
+
+function performRename(state, chip, xSuffix, ySuffix) {
+  const nodeAttrs = ["name", "region", "tier", "capacity_units"];
+  const targetSuffix = chip.suffix;
+  let sourceSuffix;
+  if (chip.op === "rename") sourceSuffix = targetSuffix === "_origin" ? xSuffix : ySuffix;
+  else sourceSuffix = "";
+
+  const sourceCols = nodeAttrs.map(a => a + sourceSuffix);
+  const missing = sourceCols.filter(c => !state.cols.includes(c));
+  if (missing.length > 0) {
+    const example = currentLang === "r" ? "name.x" : "name_x";
+    if (chip.op === "rename") {
+      throw new Error(`Rename chip expects columns like '${sourceCols[0]}' but they're not present. Did you skip a join, or use the 'first join' rename when you should have used the regular one (or vice versa)? After two joins, columns are suffixed (${example}, ${example.replace('.x','.y').replace('_x','_y')}). After one join, columns are bare (name).`);
+    } else {
+      throw new Error(`Rename chip (first-join variant) expects bare columns like '${sourceCols[0]}' but they're not present. This chip is meant for use right after the first join, before any second join causes column collisions.`);
+    }
+  }
+
+  const renameMap = {};
+  nodeAttrs.forEach(a => { renameMap[a + sourceSuffix] = a + targetSuffix; });
+  const newRows = state.rows.map(row => {
+    const newRow = {};
+    Object.keys(row).forEach(k => {
+      const newK = renameMap[k] !== undefined ? renameMap[k] : k;
+      newRow[newK] = row[k];
+    });
+    return newRow;
+  });
+  const newCols = state.cols.map(c => renameMap[c] !== undefined ? renameMap[c] : c);
+  return {
+    rows: newRows,
+    cols: newCols,
+    row_meaning: state.row_meaning + ` → renamed with ${targetSuffix}`,
+    joins_done: state.joins_done,
+    grouped_by: state.grouped_by
+  };
+}
+
+function performSummarise(state, chip) {
+  if (state.grouped_by) {
+    const groups = new Map();
+    state.rows.forEach(r => {
+      const k = r[state.grouped_by];
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(r);
+    });
+    const newRows = [];
+    groups.forEach((rs, k) => {
+      const newRow = {};
+      newRow[state.grouped_by] = k;
+      newRow[chip.name] = computeAgg(rs, chip);
+      newRows.push(newRow);
+    });
+    newRows.sort((a, b) => {
+      const av = a[state.grouped_by], bv = b[state.grouped_by];
+      if (typeof av === "number") return av - bv;
+      return String(av).localeCompare(String(bv));
+    });
+    return {
+      rows: newRows, cols: [state.grouped_by, chip.name],
+      row_meaning: `one row per ${state.grouped_by} group`,
+      joins_done: state.joins_done, grouped_by: null
+    };
+  } else {
+    const newRow = {};
+    newRow[chip.name] = computeAgg(state.rows, chip);
+    return {
+      rows: [newRow], cols: [chip.name],
+      row_meaning: "one summary row over the whole table",
+      joins_done: state.joins_done, grouped_by: null
+    };
+  }
+}
+
+function computeAgg(rows, chip) {
+  if (chip.agg === "count") return rows.length;
+  const vals = rows.map(r => r[chip.col]).filter(v => v !== undefined && v !== null);
+  if (vals.length === 0) return 0;
+  if (chip.agg === "sum") return vals.reduce((a, b) => a + b, 0);
+  if (chip.agg === "mean") return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 100) / 100;
+  return null;
+}
+
+function renderResult(rows, cols) {
+  renderTable("result-table", rows.slice(0, 100), cols);
+}
+
+let autoUpdateTimer = null;
+function scheduleAutoUpdates() {
+  clearTimeout(autoUpdateTimer);
+  autoUpdateTimer = setTimeout(() => {
+    renderGeneratedCode();
+    renderDiagram();
+  }, 80);
+}
+
+function renderGeneratedCode() {
+  const panel = document.getElementById("gen-code");
+  if (pipeline.length === 0) {
+    panel.className = "gen-code-panel empty " + (currentLang === "py" ? "lang-py" : "");
+    panel.textContent = "Build a pipeline to see the equivalent code here.";
+    return;
+  }
+  panel.className = "gen-code-panel " + (currentLang === "py" ? "lang-py" : "");
+  panel.textContent = currentLang === "r" ? generateR(pipeline) : generatePy(pipeline);
+}
+
+function generateR(pipe) {
+  const lines = [];
+  pipe.forEach((cid, idx) => {
+    const chip = CHIPS.find(c => c.id === cid);
+    if (chip.op === "table") lines.push(chip.text_r);
+    else if (chip.op === "pipe") {
+      if (lines.length && !lines[lines.length - 1].endsWith("%>%")) lines[lines.length - 1] += " %>%";
+    } else if (chip.op === "verb") {
+      const next = CHIPS.find(c => c.id === pipe[idx + 1]);
+      if (next && next.op === "join_key") lines.push(`  ${chip.text_r} ${next.text_r}`);
+      else lines.push(`  ${chip.text_r}`);
+    } else if (chip.op === "join_key") {
+      // consumed
+    } else if (chip.op === "filter" || chip.op === "group" || chip.op === "summarise" || chip.op === "rename" || chip.op === "rename_first") {
+      lines.push(`  ${chip.text_r}`);
+    }
+  });
+  return `library(dplyr)\n\nresult <- ${lines.join("\n")}`;
+}
+
+function generatePy(pipe) {
+  const lines = [];
+  let pendingGroup = null;
+  pipe.forEach((cid, idx) => {
+    const chip = CHIPS.find(c => c.id === cid);
+    if (chip.op === "table") lines.push(`df = ${chip.text_py}.copy()`);
+    else if (chip.op === "pipe") { }
+    else if (chip.op === "verb") {
+      const next = CHIPS.find(c => c.id === pipe[idx + 1]);
+      if (next && next.op === "join_key") {
+        const how = chip.value === "inner_join" ? "inner" : "left";
+        const leftCol = next.value;
+        lines.push(`df = df.merge(nodes_df, left_on="${leftCol}", right_on="node_id", how="${how}")`);
+      }
+    } else if (chip.op === "join_key") { }
+    else if (chip.op === "rename" || chip.op === "rename_first") lines.push(`df = df.${chip.text_py}`);
+    else if (chip.op === "filter") {
+      if (typeof chip.val === "string") lines.push(`df = df.query('${chip.col} == "${chip.val}"')`);
+      else lines.push(`df = df.query("${chip.col} == ${chip.val}")`);
+    } else if (chip.op === "group") {
+      pendingGroup = chip.col;
+      lines.push(`# group set on '${chip.col}' (applied at next aggregation)`);
+    } else if (chip.op === "summarise") {
+      if (chip.agg === "count") {
+        if (pendingGroup) lines.push(`df = df.groupby("${pendingGroup}").size().reset_index(name="${chip.name}")`);
+        else lines.push(`df = pd.DataFrame({"${chip.name}": [len(df)]})`);
+      } else if (chip.agg === "sum") {
+        if (pendingGroup) lines.push(`df = df.groupby("${pendingGroup}")["${chip.col}"].sum().reset_index(name="${chip.name}")`);
+        else lines.push(`df = pd.DataFrame({"${chip.name}": [df["${chip.col}"].sum()]})`);
+      } else if (chip.agg === "mean") {
+        if (pendingGroup) lines.push(`df = df.groupby("${pendingGroup}")["${chip.col}"].mean().reset_index(name="${chip.name}")`);
+        else lines.push(`df = pd.DataFrame({"${chip.name}": [df["${chip.col}"].mean()]})`);
+      }
+      pendingGroup = null;
+    }
+  });
+  return "import pandas as pd\n\n" + lines.join("\n");
+}
+
+async function renderDiagram() {
+  const panel = document.getElementById("diagram-panel");
+  const container = document.getElementById("diagram-content");
+  if (pipeline.length === 0) {
+    panel.classList.add("empty");
+    container.innerHTML = "Build a pipeline to see the flowchart here.";
+    return;
+  }
+  panel.classList.remove("empty");
+
+  const nodes = [];
+  let nodeIdx = 0;
+  pipeline.forEach((cid, i) => {
+    const chip = CHIPS.find(c => c.id === cid);
+    if (!chip.diagram_label) return;
+    if (chip.op === "join_key") return;
+    let label = chip.diagram_label;
+    let shape = "rect";
+    if (chip.op === "table") shape = "stadium";
+    else if (chip.op === "verb") {
+      const next = CHIPS.find(c => c.id === pipeline[i + 1]);
+      if (next && next.op === "join_key") {
+        const sideLabel = next.value === "from_id" ? "on from_id" : "on to_id";
+        label = chip.diagram_label + `<br/><i>${sideLabel}</i>`;
+      }
+      shape = "rhombus";
+    } else if (chip.op === "rename" || chip.op === "rename_first") shape = "trapezoid";
+    else if (chip.op === "filter") shape = "rhombus";
+    else if (chip.op === "group") shape = "subroutine";
+    else if (chip.op === "summarise") shape = "circle";
+    nodes.push({ id: `n${nodeIdx++}`, label, shape, op: chip.op });
+  });
+
+  let mmd = `flowchart ${currentOrientation}\n`;
+  nodes.forEach(n => {
+    const safeLabel = `"${n.label}"`;
+    if (n.shape === "stadium") mmd += `  ${n.id}([${safeLabel}])\n`;
+    else if (n.shape === "rhombus") mmd += `  ${n.id}{${safeLabel}}\n`;
+    else if (n.shape === "trapezoid") mmd += `  ${n.id}[/${safeLabel}/]\n`;
+    else if (n.shape === "subroutine") mmd += `  ${n.id}[[${safeLabel}]]\n`;
+    else if (n.shape === "circle") mmd += `  ${n.id}((${safeLabel}))\n`;
+    else mmd += `  ${n.id}[${safeLabel}]\n`;
+  });
+  for (let i = 0; i < nodes.length - 1; i++) mmd += `  ${nodes[i].id} --> ${nodes[i + 1].id}\n`;
+
+  mmd += `  classDef tableCls   fill:#052e16,stroke:#5eead4,color:#5eead4\n`;
+  mmd += `  classDef joinCls    fill:#052e16,stroke:#39FF14,color:#39FF14\n`;
+  mmd += `  classDef renameCls  fill:#052e16,stroke:#f472b6,color:#f472b6\n`;
+  mmd += `  classDef filterCls  fill:#052e16,stroke:#fbbf24,color:#fbbf24\n`;
+  mmd += `  classDef groupCls   fill:#052e16,stroke:#f472b6,color:#f472b6\n`;
+  mmd += `  classDef summaryCls fill:#052e16,stroke:#5eead4,color:#5eead4\n`;
+  nodes.forEach(n => {
+    let cls = "";
+    if (n.op === "table") cls = "tableCls";
+    else if (n.op === "verb") cls = "joinCls";
+    else if (n.op === "rename" || n.op === "rename_first") cls = "renameCls";
+    else if (n.op === "filter") cls = "filterCls";
+    else if (n.op === "group") cls = "groupCls";
+    else if (n.op === "summarise") cls = "summaryCls";
+    if (cls) mmd += `  class ${n.id} ${cls}\n`;
+  });
+
+  document.getElementById("mermaid-source").value = mmd;
+  try {
+    const renderId = "mermaid-" + Date.now();
+    const { svg } = await mermaid.render(renderId, mmd);
+    container.innerHTML = svg;
+  } catch (e) {
+    container.innerHTML = `<div style="color: var(--node-7); font-family: var(--font-mono); font-size: 11px; padding: 8px;">Diagram render error: ${escapeHtml(e.message || String(e))}</div>`;
+  }
+}
+
+function setOrientation(o) {
+  currentOrientation = o;
+  document.querySelectorAll(".orient-btn").forEach(b => b.classList.toggle("active", b.dataset.orient === o));
+  renderDiagram();
+}
+
+function copyToClipboard(elementId, btn) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const text = el.tagName === "TEXTAREA" ? el.value : (el.textContent || "");
+  if (!text.trim() || text.trim().startsWith("Build a pipeline")) {
+    flashBtn(btn, "✗ Nothing to copy", "err");
+    return;
+  }
+  navigator.clipboard.writeText(text).then(
+    () => flashBtn(btn, "✓ Copied!", "ok"),
+    () => flashBtn(btn, "✗ Copy failed", "err")
+  );
+}
+
+function copyDiagramSvg(btn) {
+  const container = document.getElementById("diagram-content");
+  const svg = container.querySelector("svg");
+  if (!svg) { flashBtn(btn, "✗ No diagram to copy", "err"); return; }
+  const serialized = new XMLSerializer().serializeToString(svg);
+  navigator.clipboard.writeText(serialized).then(
+    () => flashBtn(btn, "✓ SVG copied!", "ok"),
+    () => flashBtn(btn, "✗ Copy failed", "err")
+  );
+}
+
+function flashBtn(btn, text, kind) {
+  const originalText = btn.dataset.originalText || btn.textContent;
+  btn.dataset.originalText = originalText;
+  btn.textContent = text;
+  btn.style.color = kind === "ok" ? "var(--green-bright)" : "var(--node-7)";
+  setTimeout(() => {
+    btn.textContent = originalText;
+    btn.style.color = "";
+  }, 1400);
+}
+
+const LC_CONTENT = {
+  1: {
+    hint: {
+      r: `<strong>Hint:</strong> Build it as four steps: <br/>1. <code>edges</code> <br/>2. <code>%>%</code> + <code>left_join(nodes, by = c("from_id" = "node_id"))</code> <br/>3. <code>%>%</code> + the <strong>first-join rename chip</strong> (<code>rename(name_origin = name, ...)</code>) — this is the variant that handles the case where columns are still bare (no <code>.x</code> suffix because there's no collision yet) <br/>4. <code>%>%</code> + <code>filter(tier_origin == 3)</code> <br/>If you try to skip the rename, the filter will error because <code>tier_origin</code> doesn't exist yet — only <code>tier</code> does, and adding <code>filter(tier == 3)</code> would work after one join but creates a problem on the second join in LC 02.`,
+      py: `<strong>Hint:</strong> Build it as four steps: <br/>1. <code>edges_df</code> <br/>2. <code>merge(nodes_df, how='left', left_on="from_id", right_on="node_id")</code> <br/>3. The <strong>first-join rename chip</strong> (<code>rename(columns={"name": "name_origin", ...})</code>) — this variant handles the case where columns are still bare (no <code>_x</code> suffix because there's no collision yet) <br/>4. <code>query("tier_origin == 3")</code> <br/>If you try to skip the rename, the filter will error because <code>tier_origin</code> doesn't exist yet — only <code>tier</code> does, and adding <code>query("tier == 3")</code> would work after one join but creates a problem on the second join in LC 02.`
+    },
+    answer: {
+      r: `<strong>Answer: 16 rows.</strong> The pipeline is <code>edges %>% left_join(nodes, by = c("from_id" = "node_id")) %>% rename(name_origin = name, region_origin = region, tier_origin = tier, capacity_units_origin = capacity_units) %>% filter(tier_origin == 3)</code>. <br/><br/>Three crucial decisions: <br/>(1) <strong>The join key</strong> — edges' <code>from_id</code> matches nodes' <code>node_id</code>; <code>by = c("from_id" = "node_id")</code> says "match left to right." <br/>(2) <strong>The rename is your responsibility.</strong> After this single join, the node attributes show up as bare <code>name</code>, <code>region</code>, <code>tier</code>, <code>capacity_units</code> (no suffix yet because nothing collided). They <em>look</em> fine — but if you don't rename them now, the second join in LC 02 will silently collide them with the next set of <code>name</code>, <code>region</code>, etc. and dplyr will auto-suffix everything to <code>tier.x</code>/<code>tier.y</code>. Better to rename them now while their meaning is clear. <br/>(3) <strong>The first-join rename chip vs. the regular one.</strong> The regular rename (<code>rename(... = name.x, ...)</code>) expects <code>.x</code>-suffixed columns to already exist. The first-join chip expects bare columns. Use the right variant for the right point in your pipeline.`,
+      py: `<strong>Answer: 16 rows.</strong> The pipeline is <code>edges_df.merge(nodes_df, left_on="from_id", right_on="node_id", how="left").rename(columns={"name":"name_origin","region":"region_origin","tier":"tier_origin","capacity_units":"capacity_units_origin"}).query("tier_origin == 3")</code>. <br/><br/>Three crucial decisions: <br/>(1) <strong>The join key</strong> — edges_df's <code>from_id</code> matches nodes_df's <code>node_id</code>; <code>left_on</code>/<code>right_on</code> handles the name mismatch. <br/>(2) <strong>The rename is your responsibility.</strong> After this single merge, node attributes show up as bare <code>name</code>, <code>region</code>, <code>tier</code>, <code>capacity_units</code> (no suffix because nothing collided yet). They look fine — but if you don't rename them now, the second merge in LC 02 will silently collide them with the next batch and pandas will auto-suffix everything to <code>tier_x</code>/<code>tier_y</code>. <br/>(3) <strong>First-join vs. regular rename chip.</strong> The regular rename expects <code>_x</code>-suffixed columns to already exist. The first-join chip expects bare columns. Pick the right variant for where you are in the pipeline.`
+    }
+  },
+  2: {
+    hint: {
+      r: `<strong>Hint:</strong> The full chain is six pipeline steps after <code>edges</code>: <br/>1. <code>left_join(nodes, by = c("from_id" = "node_id"))</code> — origin join (columns become bare <code>name</code>, <code>tier</code>, etc.) <br/>2. <strong>first-join rename to <code>_origin</code></strong> — clear the names before the next collision <br/>3. <code>left_join(nodes, by = c("to_id" = "node_id"))</code> — destination join (now there's no collision because the origin columns were renamed away) <br/>4. <strong>first-join rename to <code>_dest</code></strong> — same logic <br/>5. <code>filter(tier_origin == 3)</code> + <code>filter(tier_dest == 1)</code> <br/>6. <code>summarise(total = sum(volume_units))</code>`,
+      py: `<strong>Hint:</strong> The full chain is six steps after <code>edges_df</code>: <br/>1. <code>merge(nodes_df, how='left', left_on="from_id", right_on="node_id")</code> — origin merge <br/>2. <strong>first-join rename to <code>_origin</code></strong> <br/>3. <code>merge(nodes_df, how='left', left_on="to_id", right_on="node_id")</code> — destination merge <br/>4. <strong>first-join rename to <code>_dest</code></strong> <br/>5. <code>query("tier_origin == 3")</code> + <code>query("tier_dest == 1")</code> <br/>6. <code>agg(total=("volume_units","sum"))</code>`
+    },
+    answer: {
+      r: `<strong>Answer: 1,847.</strong> The full pipeline (using the first-join rename twice) is: <code>edges %>% left_join(nodes, by = c("from_id" = "node_id")) %>% rename(name_origin = name, region_origin = region, tier_origin = tier, capacity_units_origin = capacity_units) %>% left_join(nodes, by = c("to_id" = "node_id")) %>% rename(name_dest = name, region_dest = region, tier_dest = tier, capacity_units_dest = capacity_units) %>% filter(tier_origin == 3) %>% filter(tier_dest == 1) %>% summarise(total = sum(volume_units))</code>. <br/><br/>The double-join-with-double-rename is the canonical pattern for "I need attributes from both endpoints." If you forget either rename, dplyr will auto-suffix the second join's columns to <code>.x</code>/<code>.y</code> and the filter chips that reference <code>tier_origin</code> / <code>tier_dest</code> will error. (Try it: drag in the joins without renames and see the error.) <br/><br/><strong>Alternative path:</strong> you could also do both joins first, then use the <em>regular</em> rename chips (<code>rename(... = tier.x, ...)</code> and <code>rename(... = tier.y, ...)</code>) to clean up after the auto-suffixing happens. That's how real pipelines often look in legacy code. The first-join-rename pattern is cleaner but requires foresight.`,
+      py: `<strong>Answer: 1,847.</strong> The full pipeline: <code>edges_df.merge(nodes_df, left_on="from_id", right_on="node_id", how="left").rename(columns={"name":"name_origin","region":"region_origin","tier":"tier_origin","capacity_units":"capacity_units_origin"}).merge(nodes_df, left_on="to_id", right_on="node_id", how="left").rename(columns={"name":"name_dest","region":"region_dest","tier":"tier_dest","capacity_units":"capacity_units_dest"}).query("tier_origin == 3 and tier_dest == 1")["volume_units"].sum()</code>. <br/><br/>The double-merge-with-double-rename is the canonical pattern for "I need attributes from both endpoints." If you forget either rename, pandas will auto-suffix the second merge's columns to <code>_x</code>/<code>_y</code> and your <code>query("tier_origin == ...")</code> calls will error with KeyError. (Try it.) <br/><br/><strong>Alternative path:</strong> you could also do both merges first, then use the <em>regular</em> rename chips (which expect <code>_x</code>/<code>_y</code>-suffixed columns) to clean up after the auto-suffixing. The first-join-rename pattern is cleaner but requires foresight.`
+    }
+  },
+  3: {
+    question: {
+      r: `Conceptual: your teammate just chained two joins back-to-back with no rename step between them, and now their <code>filter(tier_origin == 3)</code> errors with <code>"object 'tier_origin' not found"</code>. They ask you what columns the joined table <em>actually</em> contains. What's the most accurate answer?`,
+      py: `Conceptual: your teammate just chained two merges back-to-back with no rename step between them, and now their <code>.query("tier_origin == 3")</code> errors with a KeyError. They ask you what columns the merged DataFrame <em>actually</em> contains. What's the most accurate answer?`
+    },
+    options: {
+      A: {
+        r: `The join silently dropped the duplicated columns, so only <code>tier</code> from the second join exists. They need to redo the first join and capture the result separately, then bind them back together.`,
+        py: `The merge silently dropped the duplicated columns, so only <code>tier</code> from the second merge exists. They need to redo the first merge and capture the result separately, then concat them.`
+      },
+      B: {
+        r: `dplyr applied its default suffix to the collision: the table now contains <code>tier.x</code> (from the first join, the origin) and <code>tier.y</code> (from the second join, the destination), plus the same .x/.y pair for <code>name</code>, <code>region</code>, and <code>capacity_units</code>. The teammate needs either a rename step or to filter on <code>tier.x</code>/<code>tier.y</code> directly.`,
+        py: `pandas applied its default suffix to the collision: the table now contains <code>tier_x</code> (from the first merge, the origin) and <code>tier_y</code> (from the second merge, the destination), plus the same _x/_y pair for <code>name</code>, <code>region</code>, and <code>capacity_units</code>. The teammate needs either a rename step or to query on <code>tier_x</code>/<code>tier_y</code> directly.`
+      },
+      C: {
+        r: `R threw an error during the second join because dplyr never allows duplicate column names. They wouldn't have gotten to a filter step at all — their pipeline failed two lines earlier.`,
+        py: `pandas threw an error during the second merge because it never allows duplicate column names. They wouldn't have gotten to a query step at all — their pipeline failed two lines earlier.`
+      }
+    },
+    hint: {
+      r: `<strong>Hint:</strong> Reproduce the problem in the builder! Drag in <code>edges %>% left_join</code> on <code>from_id</code>, then <code>%>% left_join</code> on <code>to_id</code>, then a filter on <code>tier_origin</code>. Run it and read the error message — it tells you what columns <em>are</em> in the table.`,
+      py: `<strong>Hint:</strong> Reproduce the problem in the builder! Drag in <code>edges_df.merge</code> on from_id, then <code>.merge</code> on to_id, then a <code>query("tier_origin == 3")</code>. Run it and read the error message — it tells you what columns <em>are</em> in the table.`
+    },
+    answer: {
+      r: `<strong>Answer: B.</strong> dplyr's default behavior on a name collision is to suffix the colliding columns with <code>.x</code> (from the left table) and <code>.y</code> (from the right table). It doesn't drop columns (A) and it doesn't error (C). The behavior is silent — the pipeline runs, the table just has columns named in a way that doesn't match what the teammate expected. <br/><br/>This is why <strong>the rename step matters in network joins:</strong> you almost always join the same node table twice (once per endpoint) and you almost always need to distinguish origin from destination attributes. Without an explicit rename, you end up with <code>tier.x</code>/<code>tier.y</code> — which works syntactically but is dangerous because the meaning of <code>.x</code> vs <code>.y</code> depends on the order of joins, which can shift if someone refactors the pipeline. Renaming to <code>tier_origin</code>/<code>tier_dest</code> bakes the meaning into the column name and makes the pipeline robust.`,
+      py: `<strong>Answer: B.</strong> pandas's default behavior on a name collision is to suffix the colliding columns with <code>_x</code> (from the left frame) and <code>_y</code> (from the right frame). It doesn't drop columns (A) and it doesn't error (C). The behavior is silent — the merge runs, the DataFrame just has columns named in a way that doesn't match what the teammate expected. <br/><br/>This is why <strong>the rename step matters in network joins:</strong> you almost always merge the same node frame twice (once per endpoint) and you almost always need to distinguish origin from destination attributes. Without an explicit rename, you end up with <code>tier_x</code>/<code>tier_y</code> — which works syntactically but is dangerous because the meaning of <code>_x</code> vs <code>_y</code> depends on the order of merges, which can shift if someone refactors the pipeline. Renaming to <code>tier_origin</code>/<code>tier_dest</code> bakes the meaning into the column name and makes the pipeline robust. (You can also pass <code>suffixes=("_origin", "_dest")</code> directly to <code>merge()</code> as an inline shortcut — same effect.)`
+    }
+  }
+};
+
+function setLanguage(lang) {
+  currentLang = lang;
+  document.querySelectorAll(".lang-btn").forEach(b => b.classList.toggle("active", b.dataset.lang === lang));
+  document.querySelectorAll(".lang-r-only").forEach(el => el.classList.toggle("lang-hidden", lang !== "r"));
+  document.querySelectorAll(".lang-py-only").forEach(el => el.classList.toggle("lang-hidden", lang !== "py"));
+
+  const builderBadge = document.getElementById("builder-lang-badge");
+  builderBadge.textContent = lang === "r" ? "R · dplyr" : "Python · pandas";
+  builderBadge.className = "builder-lang-indicator " + (lang === "r" ? "lang-r" : "lang-py");
+
+  const genBadge = document.getElementById("gen-lang-badge");
+  genBadge.textContent = lang === "r" ? "R" : "Python";
+  genBadge.className = "builder-lang-indicator " + (lang === "r" ? "lang-r" : "lang-py");
+
+  renderWordBank();
+  renderPipeline();
+  scheduleAutoUpdates();
+  renderLCContent();
+}
+
+function renderLCContent() {
+  document.getElementById("lc1-hint").innerHTML = LC_CONTENT[1].hint[currentLang];
+  document.getElementById("lc1-answer").innerHTML = LC_CONTENT[1].answer[currentLang];
+  document.getElementById("lc2-hint").innerHTML = LC_CONTENT[2].hint[currentLang];
+  document.getElementById("lc2-answer").innerHTML = LC_CONTENT[2].answer[currentLang];
+  document.getElementById("lc3-question-text").innerHTML = LC_CONTENT[3].question[currentLang];
+  document.getElementById("lc3-opt-A").innerHTML = LC_CONTENT[3].options.A[currentLang];
+  document.getElementById("lc3-opt-B").innerHTML = LC_CONTENT[3].options.B[currentLang];
+  document.getElementById("lc3-opt-C").innerHTML = LC_CONTENT[3].options.C[currentLang];
+  document.getElementById("lc3-hint").innerHTML = LC_CONTENT[3].hint[currentLang];
+  document.getElementById("lc3-answer").innerHTML = LC_CONTENT[3].answer[currentLang];
+}
+
+document.querySelectorAll(".lang-btn").forEach(btn => {
+  btn.addEventListener("click", () => setLanguage(btn.dataset.lang));
+});
+
+const lcCorrect = { 1: 16, 2: 1847, 3: "B" };
+const lcMcAnswers = { 3: "B" };
+
+function checkNumeric(lc) {
+  const inp = document.getElementById(`lc${lc}-answer-input`);
+  const ind = document.getElementById(`lc${lc}-indicator`);
+  if (inp.value === "") { ind.className = "lc-result-indicator"; ind.textContent = ""; return; }
+  const val = parseFloat(inp.value);
+  if (isNaN(val)) { ind.className = "lc-result-indicator"; ind.textContent = ""; return; }
+  if (val === lcCorrect[lc]) { ind.className = "lc-result-indicator ok"; ind.textContent = "✓ correct"; }
+  else { ind.className = "lc-result-indicator err"; ind.textContent = "not quite — keep building"; }
+}
+
+function selectOption(lc, opt) {
+  const options = document.querySelectorAll(`#lc${lc}-options .lc-option`);
+  options.forEach((el, i) => {
+    el.classList.remove("correct", "incorrect");
+    const letter = String.fromCharCode(65 + i);
+    if (letter === opt) el.classList.add(letter === lcMcAnswers[lc] ? "correct" : "incorrect");
+  });
+}
+function showHint(lc) {
+  const el = document.getElementById(`lc${lc}-hint`);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+function showAnswer(lc) {
+  const el = document.getElementById(`lc${lc}-answer`);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+  if (el.style.display === "block" && lc === 3) {
+    const options = document.querySelectorAll(`#lc${lc}-options .lc-option`);
+    options.forEach((opt, i) => {
+      const letter = String.fromCharCode(65 + i);
+      if (letter === lcMcAnswers[lc]) opt.classList.add("revealed-correct");
+    });
+  }
+}
+
+renderWordBank();
+renderPipeline();
+scheduleAutoUpdates();
+renderLCContent();
+</script>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
