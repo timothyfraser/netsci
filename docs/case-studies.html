@@ -96,8 +96,8 @@
 
   <section class="hero">
     <p class="course-number">SYSEN 5470 · Case Studies</p>
-    <h1 class="hero-title">Eight Problems.<br>One <span>Network</span> Underneath.</h1>
-    <p class="hook">Every case study starts with a system that's already broken — supply chains, transit, evacuation, suppliers — and asks you to find what a traditional analysis would miss. Three labs are live. Five more coming as the course is built out.</p>
+    <h1 class="hero-title">Nine Problems.<br>One <span>Network</span> Underneath.</h1>
+    <p class="hook">Every case study starts with a system that's already broken — supply chains, transit, evacuation, suppliers — and asks you to find what a traditional analysis would miss. Five labs are live. Four more coming as the course is built out.</p>
   </section>
 
   <section class="section">
@@ -126,6 +126,32 @@
         <p class="desc">Remove a node. Rewire an edge. Recompute. Find out why the busiest node in your supply chain is rarely the most critical one to protect — and how degree centrality misleads you when betweenness is the real signal.</p>
         <div class="footer-row">
           <span class="reading">Barabási Ch. 8 · E&amp;K Ch. 19</span>
+          <span class="open-btn">Open Lab →</span>
+        </div>
+      </a>
+
+      <a class="case-card" href="case-studies/centrality.html" id="centrality">
+        <div class="head"><span class="ico">📊</span><h3>Centrality &amp; Criticality</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-measure">Measure</span>
+          <span class="status-tag">Live Lab</span>
+        </div>
+        <p class="desc">Riverdale Metro. Remove Union Terminal vs. remove Ironworks — see why the bridge node (low degree, high betweenness) is more critical to the network than the biggest hub. Click any station, watch APL and components shift in real time.</p>
+        <div class="footer-row">
+          <span class="reading">Barabási Ch. 8 · E&amp;K Ch. 3.6</span>
+          <span class="open-btn">Open Lab →</span>
+        </div>
+      </a>
+
+      <a class="case-card" href="case-studies/gnn-by-hand.html" id="gnn-by-hand">
+        <div class="head"><span class="ico">🧠</span><h3>GNN by Hand · Forward Pass</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-predict">Predict</span>
+          <span class="status-tag">Live Lab</span>
+        </div>
+        <p class="desc">Walk through every arithmetic step of a forward pass — plain NN first, then GNN — on a four-factory supply chain so small you can check it with a calculator. See exactly where graph structure enters the math.</p>
+        <div class="footer-row">
+          <span class="reading">Khan 2025 · Resce 2022</span>
           <span class="open-btn">Open Lab →</span>
         </div>
       </a>
@@ -159,19 +185,6 @@
         <p class="desc">Classify nodes, edges, direction, weighting, and the small-world phenomenon. Build your first graph from an edgelist and recognize when your problem is a graph problem.</p>
         <div class="footer-row">
           <span class="reading">Gladwell · Barabási Ch. 1–2</span>
-          <span class="open-btn">Coming Soon</span>
-        </div>
-      </div>
-
-      <div class="case-card soon" id="centrality">
-        <div class="head"><span class="ico">📊</span><h3>Centrality &amp; Criticality</h3></div>
-        <div class="meta-row">
-          <span class="skill-chip skill-measure">Measure</span>
-          <span class="status-tag status-soon">Coming Soon</span>
-        </div>
-        <p class="desc">Disaster stakeholder networks. Calculate centrality with tidygraph; bipartite networks; cascading failure modes. Find the hub that holds the whole thing together.</p>
-        <div class="footer-row">
-          <span class="reading">Barabási Ch. 8 &amp; 10</span>
           <span class="open-btn">Coming Soon</span>
         </div>
       </div>

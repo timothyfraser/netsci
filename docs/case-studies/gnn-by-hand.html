@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GNN by Hand · Forward Pass · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.lab-hero { margin-bottom: 32px; }
+.lab-hero .course-number { margin-bottom: 10px; }
+.lab-hero h1 {
+  font-family: var(--font-display); font-size: clamp(36px, 5.5vw, 56px);
+  line-height: 1.05; letter-spacing: 0.03em; color: var(--white); margin-bottom: 14px;
+}
+.lab-hero h1 em { color: var(--green-bright); font-style: normal; }
+.lab-hero p {
+  font-family: var(--font-body); font-size: 16px; font-weight: 300;
+  line-height: 1.55; color: var(--green-mint); max-width: 720px;
+  border-left: 3px solid var(--green-bright); padding-left: 18px;
+}
+
+.scenario {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-left: 3px solid var(--green-bright);
+  border-radius: var(--radius-lg); padding: 22px 28px; margin-bottom: 28px;
+  backdrop-filter: blur(8px);
+}
+.scenario h2 {
+  font-family: var(--font-display); font-size: 26px;
+  color: var(--green-bright); letter-spacing: 0.03em; margin-bottom: 10px;
+}
+.scenario p {
+  font-family: var(--font-body); font-size: 14.5px;
+  color: var(--green-mint); line-height: 1.6; margin-bottom: 8px;
+}
+.scenario p:last-child { margin-bottom: 0; }
+.scenario strong { color: var(--white); }
+
+.network-diagram {
+  background: rgba(5,46,22,0.4);
+  border: 1px solid var(--border-soft); border-radius: var(--radius-md);
+  padding: 22px; margin: 24px 0; text-align: center;
+}
+.network-diagram svg { max-width: 100%; }
+.network-diagram .legend {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--grey); margin-top: 10px; letter-spacing: 0.04em;
+}
+
+.part-header {
+  display: flex; align-items: center; gap: 14px;
+  margin: 48px 0 18px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.part-badge {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  background: rgba(5,46,22,0.45); border: 1px solid var(--border);
+  color: var(--green-bright); padding: 4px 11px;
+  border-radius: var(--radius-sm); white-space: nowrap;
+}
+.part-header h2 {
+  font-family: var(--font-display); font-size: 32px;
+  color: var(--white); letter-spacing: 0.03em; line-height: 1.05;
+}
+.part-header h2 em { color: var(--green-bright); font-style: normal; }
+
+.step {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); margin-bottom: 20px;
+  overflow: hidden; backdrop-filter: blur(8px);
+}
+.step-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 15px 22px; background: rgba(5,46,22,0.4);
+  border-bottom: 1px solid var(--border);
+}
+.step-num {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright);
+  background: rgba(57,255,20,0.08);
+  border: 1px solid rgba(57,255,20,0.3);
+  padding: 4px 10px; border-radius: var(--radius-sm);
+}
+.step-header h3 {
+  font-family: var(--font-body); font-size: 16px; font-weight: 500;
+  color: var(--white); letter-spacing: 0.01em;
+}
+.step-body { padding: 22px 26px; }
+.step-body p {
+  font-family: var(--font-body); font-size: 14.5px;
+  color: var(--green-mint); line-height: 1.65; margin-bottom: 12px;
+}
+.step-body p:last-child { margin-bottom: 0; }
+.step-body p strong { color: var(--white); }
+
+.math-block {
+  background: rgba(5,10,5,0.7); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 18px 22px;
+  font-family: var(--font-mono); font-size: 13px;
+  line-height: 2; margin: 14px 0; color: var(--white);
+  overflow-x: auto; white-space: pre;
+}
+.math-block .comment    { color: var(--grey); font-size: 12px; }
+.math-block .highlight  { color: var(--green-bright); font-weight: 500; }
+.math-block .highlight2 { color: var(--node-4); font-weight: 500; }
+.math-block .highlight3 { color: var(--node-3); }
+
+.weight-table {
+  width: 100%; border-collapse: collapse; margin: 14px 0;
+  font-family: var(--font-mono); font-size: 13px;
+}
+.weight-table th {
+  text-transform: uppercase; letter-spacing: 0.12em;
+  font-size: 10.5px; color: var(--grey);
+  background: rgba(5,46,22,0.45);
+  padding: 9px 14px; border: 1px solid var(--border-soft); text-align: left;
+}
+.weight-table td {
+  padding: 9px 14px; border: 1px solid var(--border-soft);
+  color: var(--green-mint);
+}
+.weight-table tr:hover td { background: rgba(57,255,20,0.04); }
+.weight-table .val-accent { color: var(--green-bright); font-weight: 500; }
+.weight-table .val-amber  { color: var(--node-4); font-weight: 500; }
+.weight-table .val-teal   { color: var(--node-3); font-weight: 500; }
+.weight-table .val-danger { color: var(--node-7); font-weight: 500; }
+
+/* Callouts */
+.callout {
+  border-radius: var(--radius-sm); padding: 14px 18px;
+  margin: 16px 0; font-family: var(--font-body);
+  font-size: 14px; line-height: 1.6;
+}
+.callout-info   { background: rgba(57,255,20,0.05); border: 1px solid rgba(57,255,20,0.2); color: var(--green-mint); }
+.callout-info strong   { color: var(--green-bright); }
+.callout-warn   { background: rgba(251,191,36,0.07); border: 1px solid rgba(251,191,36,0.3); color: var(--green-mint); }
+.callout-warn strong   { color: var(--node-4); }
+.callout-result { background: rgba(94,234,212,0.07); border: 1px solid rgba(94,234,212,0.3); color: var(--green-mint); }
+.callout-result strong { color: var(--node-3); }
+
+/* Learning checks */
+.lc-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px; margin-top: 20px;
+}
+.lc-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+.lc-card-header {
+  background: rgba(5,46,22,0.45); padding: 11px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.lc-badge {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--green-bright);
+  background: rgba(57,255,20,0.1);
+  border: 1px solid rgba(57,255,20,0.3);
+  padding: 3px 9px; border-radius: 3px;
+}
+.lc-card-header span:last-child {
+  font-family: var(--font-mono); font-size: 11.5px;
+  color: var(--grey); letter-spacing: 0.04em;
+}
+.lc-body { padding: 18px 20px; }
+.lc-question {
+  font-family: var(--font-display); font-size: 19px;
+  color: var(--white); letter-spacing: 0.02em;
+  margin-bottom: 14px; line-height: 1.3;
+}
+.lc-options { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+.lc-option {
+  background: rgba(5,46,22,0.4); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  cursor: pointer; font-family: var(--font-body);
+  font-size: 13.5px; color: var(--green-mint);
+  transition: all 0.15s; text-align: left;
+  display: flex; gap: 10px; align-items: flex-start;
+  user-select: none;
+}
+.lc-option:hover { border-color: var(--green-bright); color: var(--white); }
+.lc-option .opt-label {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--green-bright); font-weight: 700;
+  flex-shrink: 0; margin-top: 1px;
+}
+.lc-option.correct          { border-color: var(--green-bright); background: rgba(57,255,20,0.12); color: var(--white); }
+.lc-option.incorrect        { border-color: var(--node-7);       background: rgba(249,115,22,0.1); color: var(--white); }
+.lc-option.revealed-correct { border-color: var(--green-bright); background: rgba(57,255,20,0.12); color: var(--white); }
+.lc-buttons { display: flex; gap: 8px; }
+.btn {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 7px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); cursor: pointer;
+  transition: all 0.15s; background: transparent;
+}
+.btn-neutral { color: var(--grey); border-color: var(--border); }
+.btn-neutral:hover { border-color: var(--green-bright); color: var(--green-bright); }
+.lc-feedback {
+  display: none; margin-top: 12px;
+  padding: 12px 14px; background: rgba(5,46,22,0.4);
+  border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 13px;
+  color: var(--green-mint); line-height: 1.6;
+}
+.lc-feedback.hint-box   { border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.05); }
+.lc-feedback.answer-box { border-color: rgba(57,255,20,0.3); background: rgba(57,255,20,0.05); }
+.lc-feedback strong { color: var(--green-bright); }
+
+/* Comparison table */
+.compare-table {
+  width: 100%; border-collapse: collapse; margin: 20px 0;
+  font-family: var(--font-body); font-size: 14px;
+}
+.compare-table th {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--grey);
+  background: rgba(5,46,22,0.45);
+  padding: 11px 16px; border: 1px solid var(--border-soft); text-align: left;
+}
+.compare-table td {
+  padding: 11px 16px; border: 1px solid var(--border-soft);
+  color: var(--green-mint); vertical-align: top; line-height: 1.6;
+}
+.compare-table td strong { color: var(--white); }
+.compare-table tr:hover td { background: rgba(57,255,20,0.03); }
+
+.divider {
+  border: none; border-top: 1px solid var(--border); margin: 40px 0;
+}
+
+.sketchpad-box {
+  background: rgba(251,191,36,0.05);
+  border: 1px solid rgba(251,191,36,0.3);
+  border-left: 3px solid var(--node-4);
+  border-radius: var(--radius-lg); padding: 22px 28px;
+  margin-top: 36px; backdrop-filter: blur(8px);
+}
+.sketchpad-box h2 {
+  font-family: var(--font-display); font-size: 24px;
+  color: var(--node-4); letter-spacing: 0.03em; margin-bottom: 10px;
+}
+.sketchpad-box p {
+  font-family: var(--font-body); font-size: 14.5px;
+  color: var(--green-mint); line-height: 1.65; margin-bottom: 8px;
+}
+.sketchpad-box p:last-child { margin-bottom: 0; }
+.sketchpad-box strong { color: var(--white); }
+</style>
+</head>
+<body data-page="cases">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../readings.html"       data-page="readings">Readings</a>
+      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="../about.html"          data-page="about">About</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page-wide">
+
+  <section class="lab-hero">
+    <p class="course-number">SYSEN 5470 · Network Science · Interactive Lab · Skill: Predict</p>
+    <h1>Neural Networks by <em>Hand</em></h1>
+    <p>Walk through every arithmetic step of a forward pass — first as a plain neural network, then as a graph neural network — on a four-node supply chain so tiny you can check everything with a calculator.</p>
+  </section>
+
+  <div class="scenario">
+    <h2>🏭 The Supply Chain</h2>
+    <p>Four factories in a regional supply chain. Each factory has one feature: its <strong>average daily output</strong> (normalized 0–1). We want to predict whether each factory is a <strong>bottleneck risk</strong> (1 = yes, 0 = no).</p>
+    <p>We have ground-truth labels from last year's disruption data. The network edges represent <strong>direct material dependencies</strong> — Factory A ships to Factory C, for instance.</p>
+  </div>
+
+  <div class="network-diagram">
+    <svg width="460" height="220" viewBox="0 0 460 220">
+      <line x1="100" y1="110" x2="230" y2="55"  stroke="rgba(57,255,20,0.25)" stroke-width="2"/>
+      <line x1="100" y1="110" x2="230" y2="165" stroke="rgba(57,255,20,0.25)" stroke-width="2"/>
+      <line x1="230" y1="55"  x2="360" y2="110" stroke="rgba(57,255,20,0.25)" stroke-width="2"/>
+      <line x1="230" y1="165" x2="360" y2="110" stroke="rgba(57,255,20,0.25)" stroke-width="2"/>
+
+      <circle cx="100" cy="110" r="28" fill="#39FF14" opacity="0.85"/>
+      <circle cx="230" cy="55"  r="28" fill="#fbbf24" opacity="0.85"/>
+      <circle cx="230" cy="165" r="28" fill="#5eead4" opacity="0.85"/>
+      <circle cx="360" cy="110" r="28" fill="#f97316" opacity="0.85"/>
+
+      <text x="100" y="105" text-anchor="middle" font-family="Bebas Neue" font-size="18" fill="#050a05" font-weight="bold">A</text>
+      <text x="100" y="121" text-anchor="middle" font-family="Space Mono" font-size="9"  fill="#050a05">x=0.8</text>
+      <text x="230" y="50"  text-anchor="middle" font-family="Bebas Neue" font-size="18" fill="#050a05" font-weight="bold">B</text>
+      <text x="230" y="66"  text-anchor="middle" font-family="Space Mono" font-size="9"  fill="#050a05">x=0.3</text>
+      <text x="230" y="160" text-anchor="middle" font-family="Bebas Neue" font-size="18" fill="#050a05" font-weight="bold">C</text>
+      <text x="230" y="176" text-anchor="middle" font-family="Space Mono" font-size="9"  fill="#050a05">x=0.6</text>
+      <text x="360" y="105" text-anchor="middle" font-family="Bebas Neue" font-size="18" fill="#050a05" font-weight="bold">D</text>
+      <text x="360" y="121" text-anchor="middle" font-family="Space Mono" font-size="9"  fill="#050a05">x=0.9</text>
+
+      <text x="162" y="72"  font-family="Space Mono" font-size="10" fill="#a3b8a3">A→B</text>
+      <text x="155" y="152" font-family="Space Mono" font-size="10" fill="#a3b8a3">A→C</text>
+      <text x="292" y="72"  font-family="Space Mono" font-size="10" fill="#a3b8a3">B→D</text>
+      <text x="285" y="155" font-family="Space Mono" font-size="10" fill="#a3b8a3">C→D</text>
+    </svg>
+    <p class="legend">
+      <span style="color: #39FF14">■ A</span> &nbsp;
+      <span style="color: #fbbf24">■ B</span> &nbsp;
+      <span style="color: #5eead4">■ C</span> &nbsp;
+      <span style="color: #f97316">■ D</span>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      Feature x = normalized daily output &nbsp;|&nbsp;&nbsp; Edges = material dependency
+    </p>
+  </div>
+
+  <!-- DATA TABLE -->
+  <div class="step">
+    <div class="step-header">
+      <span class="step-num">Setup</span>
+      <h3>Our data: features and ground-truth labels</h3>
+    </div>
+    <div class="step-body">
+      <table class="weight-table">
+        <thead>
+          <tr><th>Factory</th><th>Input feature x</th><th>True label y (bottleneck?)</th><th>Neighbors (ships to)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="val-accent">A</td><td>0.8</td><td>1 (yes)</td><td>B, C</td></tr>
+          <tr><td class="val-amber">B</td><td>0.3</td><td>0 (no)</td><td>D</td></tr>
+          <tr><td class="val-teal">C</td><td>0.6</td><td>0 (no)</td><td>D</td></tr>
+          <tr><td class="val-danger">D</td><td>0.9</td><td>1 (yes)</td><td>—</td></tr>
+        </tbody>
+      </table>
+      <div class="callout callout-info">
+        <strong>Starter weights (random, chosen for easy arithmetic):</strong><br>
+        One hidden neuron, one output neuron. Three weights total:<br>
+        <strong>w₁ = 0.5</strong> (input → hidden), &nbsp;
+        <strong>w₂ = 0.4</strong> (hidden → output), &nbsp;
+        <strong>b = 0.1</strong> (bias on hidden neuron).<br>
+        ReLU on the hidden layer, Sigmoid on the output.
+      </div>
+    </div>
+  </div>
+
+  <!-- PART 1 -->
+  <div class="part-header">
+    <span class="part-badge">Part 1</span>
+    <h2>Plain Neural Network — <em>no graph structure</em></h2>
+  </div>
+
+  <p style="font-family: var(--font-body); font-size: 14.5px; color: var(--green-mint); line-height: 1.65; margin-bottom: 24px;">
+    A standard neural network treats each node as an independent row in a table. It cannot see the edges. We'll run each factory through the same tiny network — one hidden neuron, one output — and compute a bottleneck prediction.
+  </p>
+
+  <div class="step">
+    <div class="step-header"><span class="step-num">Step 1</span><h3>Compute the hidden neuron's weighted sum z for each factory</h3></div>
+    <div class="step-body">
+      <p>The formula for a single neuron's pre-activation sum is:</p>
+      <div class="math-block">z = w₁ · x + b
+  <span class="comment">= (input weight) × (factory's feature) + (bias)</span>
+  <span class="comment">= 0.5 × x + 0.1</span></div>
+      <p>Apply this to all four factories:</p>
+      <div class="math-block">z_A = 0.5 × <span class="highlight">0.8</span> + 0.1 = 0.40 + 0.10 = <span class="highlight">0.50</span>
+z_B = 0.5 × <span class="highlight2">0.3</span> + 0.1 = 0.15 + 0.10 = <span class="highlight2">0.25</span>
+z_C = 0.5 × <span class="highlight3">0.6</span> + 0.1 = 0.30 + 0.10 = <span class="highlight3">0.40</span>
+z_D = 0.5 × <span style="color: var(--node-7)">0.9</span> + 0.1 = 0.45 + 0.10 = <span style="color: var(--node-7)">0.55</span></div>
+
+      <div class="lc-grid">
+        <div class="lc-card">
+          <div class="lc-card-header"><span class="lc-badge">LC 01</span><span>Weighted sum</span></div>
+          <div class="lc-body">
+            <p class="lc-question">If we added a fifth factory E with x = 0.0 (completely offline), what would z_E be?</p>
+            <div class="lc-options">
+              <button class="lc-option" onclick="selectOption(1,'A',false)"><span class="opt-label">A</span> z_E = 0.0, because the feature is zero</button>
+              <button class="lc-option" onclick="selectOption(1,'B',true)"><span class="opt-label">B</span> z_E = 0.1, because the bias still adds even when x = 0</button>
+              <button class="lc-option" onclick="selectOption(1,'C',false)"><span class="opt-label">C</span> z_E = −0.1, because the weights pull it negative</button>
+            </div>
+            <div class="lc-buttons">
+              <button class="btn btn-neutral" onclick="toggleFeedback('lc1-hint')">Hint</button>
+              <button class="btn btn-neutral" onclick="toggleFeedback('lc1-answer')">Reveal Answer</button>
+            </div>
+            <div class="lc-feedback hint-box" id="lc1-hint">💡 Plug x = 0 into the formula z = 0.5 × x + 0.1 and evaluate each term separately.</div>
+            <div class="lc-feedback answer-box" id="lc1-answer"><strong>B is correct.</strong> z = 0.5 × 0 + 0.1 = 0 + 0.1 = 0.1. The bias term b = 0.1 fires regardless of the input — it's a baseline shift. A is wrong because it ignores the bias. C is wrong because no negative weights are in play here.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><span class="step-num">Step 2</span><h3>Apply the ReLU activation to get hidden layer output h</h3></div>
+    <div class="step-body">
+      <p>ReLU is <code style="font-family: var(--font-mono); color: var(--green-bright); background: rgba(57,255,20,0.08); padding: 1px 5px; border-radius: 3px;">max(0, z)</code> — it passes positive values through unchanged and kills negative ones.</p>
+      <div class="math-block">h = ReLU(z) = max(0, z)
+
+h_A = max(0, <span class="highlight">0.50</span>) = <span class="highlight">0.50</span>
+h_B = max(0, <span class="highlight2">0.25</span>) = <span class="highlight2">0.25</span>
+h_C = max(0, <span class="highlight3">0.40</span>) = <span class="highlight3">0.40</span>
+h_D = max(0, <span style="color: var(--node-7)">0.55</span>) = <span style="color: var(--node-7)">0.55</span></div>
+      <div class="callout callout-info">
+        <strong>Why ReLU?</strong> All z values here happen to be positive, so ReLU passes them through unchanged. But if a neuron got a negative z — say from a large negative weight — ReLU would zero it out, effectively "switching that neuron off." This is what lets deep networks ignore irrelevant patterns.
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><span class="step-num">Step 3</span><h3>Compute the output neuron: apply w₂, then Sigmoid</h3></div>
+    <div class="step-body">
+      <p>The output neuron multiplies the hidden output by w₂, then passes it through Sigmoid to squash it to a probability between 0 and 1.</p>
+      <div class="math-block">output_raw = w₂ · h      <span class="comment">← no bias on output neuron here</span>
+
+ŷ = σ(output_raw) = 1 / (1 + e^(−output_raw))
+
+<span class="comment">── Factory A ──────────────────────────────────</span>
+output_raw_A = 0.4 × <span class="highlight">0.50</span> = <span class="highlight">0.20</span>
+ŷ_A = 1 / (1 + e^(−0.20)) = 1 / (1 + 0.819) = <span class="highlight">0.550</span>
+
+<span class="comment">── Factory B ──────────────────────────────────</span>
+output_raw_B = 0.4 × <span class="highlight2">0.25</span> = <span class="highlight2">0.10</span>
+ŷ_B = 1 / (1 + e^(−0.10)) = 1 / (1 + 0.905) = <span class="highlight2">0.525</span>
+
+<span class="comment">── Factory C ──────────────────────────────────</span>
+output_raw_C = 0.4 × <span class="highlight3">0.40</span> = <span class="highlight3">0.16</span>
+ŷ_C = 1 / (1 + e^(−0.16)) = 1 / (1 + 0.852) = <span class="highlight3">0.540</span>
+
+<span class="comment">── Factory D ──────────────────────────────────</span>
+output_raw_D = 0.4 × <span style="color: var(--node-7)">0.55</span> = <span style="color: var(--node-7)">0.22</span>
+ŷ_D = 1 / (1 + e^(−0.22)) = 1 / (1 + 0.803) = <span style="color: var(--node-7)">0.555</span></div>
+
+      <div class="lc-grid">
+        <div class="lc-card">
+          <div class="lc-card-header"><span class="lc-badge">LC 02</span><span>Sigmoid intuition</span></div>
+          <div class="lc-body">
+            <p class="lc-question">All four predictions are clustered around 0.53. Why are they so similar, and so close to 0.5?</p>
+            <div class="lc-options">
+              <button class="lc-option" onclick="selectOption(2,'A',false)"><span class="opt-label">A</span> Because the features are all similar values</button>
+              <button class="lc-option" onclick="selectOption(2,'B',false)"><span class="opt-label">B</span> Because the sigmoid function is broken for small inputs</button>
+              <button class="lc-option" onclick="selectOption(2,'C',true)"><span class="opt-label">C</span> Because the weights are small and random — the network hasn't learned anything yet</button>
+            </div>
+            <div class="lc-buttons">
+              <button class="btn btn-neutral" onclick="toggleFeedback('lc2-hint')">Hint</button>
+              <button class="btn btn-neutral" onclick="toggleFeedback('lc2-answer')">Reveal Answer</button>
+            </div>
+            <div class="lc-feedback hint-box" id="lc2-hint">💡 Sigmoid(0) = exactly 0.5. What happens to the sigmoid output when its input is a small positive number close to zero?</div>
+            <div class="lc-feedback answer-box" id="lc2-answer"><strong>C is correct.</strong> Our small, random starter weights produce tiny output_raw values (0.10–0.22), and σ(small number ≈ 0) ≈ 0.5. The network is essentially guessing 50/50 — it hasn't learned yet. Training will push the weights in directions that separate predictions for bottlenecks vs. non-bottlenecks.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><span class="step-num">Step 4</span><h3>Compute Mean Absolute Error (MAE)</h3></div>
+    <div class="step-body">
+      <p>MAE measures how wrong our predictions are on average. For each node, we compute |ŷ − y|, then average across all nodes.</p>
+      <div class="math-block">MAE = (1/N) × Σ |ŷᵢ − yᵢ|
+
+<span class="comment">── Errors per node ────────────────────────────</span>
+|ŷ_A − y_A| = |<span class="highlight">0.550</span> − 1| = <span class="highlight">0.450</span>   <span class="comment">← predicted 0.55, truth is 1</span>
+|ŷ_B − y_B| = |<span class="highlight2">0.525</span> − 0| = <span class="highlight2">0.525</span>   <span class="comment">← predicted 0.53, truth is 0</span>
+|ŷ_C − y_C| = |<span class="highlight3">0.540</span> − 0| = <span class="highlight3">0.540</span>   <span class="comment">← predicted 0.54, truth is 0</span>
+|ŷ_D − y_D| = |<span style="color: var(--node-7)">0.555</span> − 1| = <span style="color: var(--node-7)">0.445</span>   <span class="comment">← predicted 0.56, truth is 1</span>
+
+<span class="comment">── Average ─────────────────────────────────────</span>
+MAE = (0.450 + 0.525 + 0.540 + 0.445) / 4
+    = 1.960 / 4
+    = <span class="highlight">0.490</span></div>
+      <div class="callout callout-warn">
+        <strong>MAE = 0.490.</strong> That's nearly as bad as random guessing. On a 0/1 classification problem, a perfectly random model averages MAE ≈ 0.5. Our untrained network is barely better than a coin flip — expected, since the weights are random. Training will reduce this.
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><span class="step-num">Step 5</span><h3>Nudge one weight — does MAE go down?</h3></div>
+    <div class="step-body">
+      <p>Training is the process of nudging weights to reduce MAE. Let's demonstrate by manually increasing <strong>w₁ from 0.5 → 0.9</strong> and recomputing everything.</p>
+      <p>Intuition: our bottleneck nodes (A and D) both have high x values (0.8 and 0.9). A larger w₁ will amplify high-x signals and push their predictions closer to 1.</p>
+      <div class="math-block"><span class="comment">── New w₁ = 0.9, w₂ = 0.4, b = 0.1 (unchanged) ──</span>
+
+z_A = 0.9 × 0.8 + 0.1 = 0.72 + 0.1 = <span class="highlight">0.82</span>
+z_B = 0.9 × 0.3 + 0.1 = 0.27 + 0.1 = <span class="highlight2">0.37</span>
+z_C = 0.9 × 0.6 + 0.1 = 0.54 + 0.1 = <span class="highlight3">0.64</span>
+z_D = 0.9 × 0.9 + 0.1 = 0.81 + 0.1 = <span style="color: var(--node-7)">0.91</span>
+
+h = ReLU(z) → same values (all positive, pass through)
+
+output_raw_A = 0.4 × 0.82 = <span class="highlight">0.328</span>
+output_raw_B = 0.4 × 0.37 = <span class="highlight2">0.148</span>
+output_raw_C = 0.4 × 0.64 = <span class="highlight3">0.256</span>
+output_raw_D = 0.4 × 0.91 = <span style="color: var(--node-7)">0.364</span>
+
+ŷ_A = σ(0.328) = <span class="highlight">0.581</span>
+ŷ_B = σ(0.148) = <span class="highlight2">0.537</span>
+ŷ_C = σ(0.256) = <span class="highlight3">0.564</span>
+ŷ_D = σ(0.364) = <span style="color: var(--node-7)">0.590</span></div>
+      <div class="math-block"><span class="comment">── New MAE ─────────────────────────────────────</span>
+|0.581 − 1| = <span class="highlight">0.419</span>
+|0.537 − 0| = <span class="highlight2">0.537</span>
+|0.564 − 0| = <span class="highlight3">0.564</span>
+|0.590 − 1| = <span style="color: var(--node-7)">0.410</span>
+
+MAE = (0.419 + 0.537 + 0.564 + 0.410) / 4 = 1.930 / 4 = <span class="highlight">0.483</span></div>
+      <div class="callout callout-result">
+        <strong>MAE dropped from 0.490 → 0.483.</strong> A small improvement — our nudge helped a little. Factories A and D (true bottlenecks) got higher predictions; B and C also got slightly higher, which hurts. A good optimizer would find the weight that moves A and D up <em>without</em> also moving B and C.
+      </div>
+
+      <div class="lc-grid">
+        <div class="lc-card">
+          <div class="lc-card-header"><span class="lc-badge">LC 03</span><span>Training logic</span></div>
+          <div class="lc-body">
+            <p class="lc-question">Why didn't MAE drop more when we increased w₁? What's the fundamental limitation?</p>
+            <div class="lc-options">
+              <button class="lc-option" onclick="selectOption(3,'A',false)"><span class="opt-label">A</span> We didn't increase w₁ enough — a larger change would fix it</button>
+              <button class="lc-option" onclick="selectOption(3,'B',true)"><span class="opt-label">B</span> A single weight controls all nodes equally — we can't push A and D up without also pushing B and C up</button>
+              <button class="lc-option" onclick="selectOption(3,'C',false)"><span class="opt-label">C</span> MAE is the wrong loss function for this problem</button>
+            </div>
+            <div class="lc-buttons">
+              <button class="btn btn-neutral" onclick="toggleFeedback('lc3-hint')">Hint</button>
+              <button class="btn btn-neutral" onclick="toggleFeedback('lc3-answer')">Reveal Answer</button>
+            </div>
+            <div class="lc-feedback hint-box" id="lc3-hint">💡 Look at the errors for B and C after the weight nudge. Did they get better or worse? Why might a single shared weight struggle to separate high-x bottlenecks from high-x non-bottlenecks?</div>
+            <div class="lc-feedback answer-box" id="lc3-answer"><strong>B is correct.</strong> w₁ multiplies every node's feature — so increasing it raises all predictions proportionally. Factory C has x = 0.6, which is nearly as high as Factory A (x = 0.8), so it also gets a higher prediction even though it's not a bottleneck. A single-feature, single-hidden-neuron network has very limited expressive power. This is exactly why deeper networks with more neurons — and why GNNs that also use structural information — perform better.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- PART 2 -->
+  <div class="part-header">
+    <span class="part-badge">Part 2</span>
+    <h2>Graph Neural Network — <em>neighbors talk to each other</em></h2>
+  </div>
+
+  <p style="font-family: var(--font-body); font-size: 14.5px; color: var(--green-mint); line-height: 1.65; margin-bottom: 24px;">
+    Now we add the graph structure. Before the neural network runs, each node <em>aggregates messages from its neighbors</em>. This enriched input — the node's own feature <em>plus</em> a summary of its neighbors' features — becomes the input to the neural network. Same weights, new inputs.
+  </p>
+
+  <div class="network-diagram">
+    <svg width="460" height="240" viewBox="0 0 460 240">
+      <line x1="100" y1="110" x2="225" y2="60"  stroke="#39FF14" stroke-width="2" stroke-dasharray="5,3" opacity="0.6"/>
+      <line x1="100" y1="110" x2="225" y2="160" stroke="#39FF14" stroke-width="2" stroke-dasharray="5,3" opacity="0.6"/>
+      <line x1="225" y1="60"  x2="355" y2="110" stroke="#39FF14" stroke-width="2" stroke-dasharray="5,3" opacity="0.6"/>
+      <line x1="225" y1="160" x2="355" y2="110" stroke="#39FF14" stroke-width="2" stroke-dasharray="5,3" opacity="0.6"/>
+
+      <circle cx="100" cy="110" r="28" fill="#39FF14" opacity="0.85"/>
+      <circle cx="230" cy="55"  r="28" fill="#fbbf24" opacity="0.85"/>
+      <circle cx="230" cy="165" r="28" fill="#5eead4" opacity="0.85"/>
+      <circle cx="360" cy="110" r="28" fill="#f97316" opacity="0.85"/>
+
+      <text x="100" y="104" text-anchor="middle" font-family="Bebas Neue" font-size="18" fill="#050a05" font-weight="bold">A</text>
+      <text x="100" y="119" text-anchor="middle" font-family="Space Mono" font-size="8.5" fill="#050a05">x=0.8</text>
+      <text x="230" y="49"  text-anchor="middle" font-family="Bebas Neue" font-size="18" fill="#050a05" font-weight="bold">B</text>
+      <text x="230" y="64"  text-anchor="middle" font-family="Space Mono" font-size="8.5" fill="#050a05">x=0.3</text>
+      <text x="230" y="159" text-anchor="middle" font-family="Bebas Neue" font-size="18" fill="#050a05" font-weight="bold">C</text>
+      <text x="230" y="174" text-anchor="middle" font-family="Space Mono" font-size="8.5" fill="#050a05">x=0.6</text>
+      <text x="360" y="104" text-anchor="middle" font-family="Bebas Neue" font-size="18" fill="#050a05" font-weight="bold">D</text>
+      <text x="360" y="119" text-anchor="middle" font-family="Space Mono" font-size="8.5" fill="#050a05">x=0.9</text>
+
+      <text x="152" y="70"  font-family="Space Mono" font-size="9" fill="#39FF14">msg A→B</text>
+      <text x="148" y="155" font-family="Space Mono" font-size="9" fill="#39FF14">msg A→C</text>
+      <text x="283" y="71"  font-family="Space Mono" font-size="9" fill="#39FF14">msg B→D</text>
+      <text x="280" y="154" font-family="Space Mono" font-size="9" fill="#39FF14">msg C→D</text>
+
+      <line x1="30" y1="218" x2="55" y2="218" stroke="#39FF14" stroke-width="2" stroke-dasharray="5,3" opacity="0.7"/>
+      <text x="62" y="222" font-family="Space Mono" font-size="10" fill="#a3b8a3">message passing (GNN step)</text>
+    </svg>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><span class="step-num">Step 6</span><h3>Aggregate neighbor messages — compute each node's enriched input x̃</h3></div>
+    <div class="step-body">
+      <p>Each node's new input is: <strong>its own feature + the mean of its neighbors' features</strong>. This is the "mean aggregation" rule, one of the simplest GNN aggregation strategies.</p>
+      <div class="math-block">x̃ᵢ = xᵢ + mean(x of neighbors of i)
+
+<span class="comment">── Factory A (neighbors: none — A has no in-neighbors) ──</span>
+x̃_A = 0.8 + 0 = <span class="highlight">0.80</span>
+  <span class="comment">(A has no incoming edges in our directed graph)</span>
+
+<span class="comment">── Factory B (in-neighbor: A) ─────────────────────────</span>
+x̃_B = 0.3 + mean(x_A) = 0.3 + 0.8 = <span class="highlight2">1.10</span>
+  <span class="comment">(B receives a shipment from A)</span>
+
+<span class="comment">── Factory C (in-neighbor: A) ─────────────────────────</span>
+x̃_C = 0.6 + mean(x_A) = 0.6 + 0.8 = <span class="highlight3">1.40</span>
+  <span class="comment">(C also receives from A)</span>
+
+<span class="comment">── Factory D (in-neighbors: B and C) ──────────────────</span>
+x̃_D = 0.9 + mean(x_B, x_C) = 0.9 + mean(0.3, 0.6) = 0.9 + 0.45 = <span style="color: var(--node-7)">1.35</span>
+  <span class="comment">(D receives from both B and C)</span></div>
+      <div class="callout callout-warn">
+        <strong>Notice:</strong> x̃ values can now exceed 1.0 — that's fine, the activation function will handle it. More importantly, D now has a different x̃ than B or C, reflecting its position as a convergence point in the supply chain. The <em>structure</em> is now part of the input.
+      </div>
+
+      <div class="lc-grid">
+        <div class="lc-card">
+          <div class="lc-card-header"><span class="lc-badge">LC 04</span><span>Message passing</span></div>
+          <div class="lc-body">
+            <p class="lc-question">Factory D has the highest x̃ = 1.35, yet its own feature (x = 0.9) is only slightly higher than A's (x = 0.8). Why did D end up with such a high enriched input?</p>
+            <div class="lc-options">
+              <button class="lc-option" onclick="selectOption(4,'A',false)"><span class="opt-label">A</span> Because D has the highest raw output feature</button>
+              <button class="lc-option" onclick="selectOption(4,'B',true)"><span class="opt-label">B</span> Because D receives inputs from two neighbors, amplifying the neighborhood signal</button>
+              <button class="lc-option" onclick="selectOption(4,'C',false)"><span class="opt-label">C</span> Because the GNN weights are larger for D</button>
+            </div>
+            <div class="lc-buttons">
+              <button class="btn btn-neutral" onclick="toggleFeedback('lc4-hint')">Hint</button>
+              <button class="btn btn-neutral" onclick="toggleFeedback('lc4-answer')">Reveal Answer</button>
+            </div>
+            <div class="lc-feedback hint-box" id="lc4-hint">💡 Compare x̃_A and x̃_D. A also has a high raw feature. What does D have that A doesn't?</div>
+            <div class="lc-feedback answer-box" id="lc4-answer"><strong>B is correct.</strong> D sits at the convergence of two upstream factories (B and C). Their average feature value (0.45) adds on top of D's own value (0.9). A, despite high output, has no incoming dependencies — it's the chain's source. The GNN captures this structural difference. The weights are shared across all nodes — C is wrong.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><span class="step-num">Step 7</span><h3>Run the same neural network — now on x̃ instead of x</h3></div>
+    <div class="step-body">
+      <p>Same weights as Part 1 (w₁ = 0.5, w₂ = 0.4, b = 0.1). Same formulas. But now x̃ is the input.</p>
+      <div class="math-block"><span class="comment">── Step 7a: weighted sum z ─────────────────────────────</span>
+z_A = 0.5 × <span class="highlight">0.80</span> + 0.1 = 0.40 + 0.10 = <span class="highlight">0.50</span>
+z_B = 0.5 × <span class="highlight2">1.10</span> + 0.1 = 0.55 + 0.10 = <span class="highlight2">0.65</span>
+z_C = 0.5 × <span class="highlight3">1.40</span> + 0.1 = 0.70 + 0.10 = <span class="highlight3">0.80</span>
+z_D = 0.5 × <span style="color: var(--node-7)">1.35</span> + 0.1 = 0.68 + 0.10 = <span style="color: var(--node-7)">0.78</span>
+
+<span class="comment">── Step 7b: ReLU (all positive → pass through) ─────────</span>
+h_A = <span class="highlight">0.50</span>,  h_B = <span class="highlight2">0.65</span>,  h_C = <span class="highlight3">0.80</span>,  h_D = <span style="color: var(--node-7)">0.78</span>
+
+<span class="comment">── Step 7c: output layer ────────────────────────────────</span>
+output_raw_A = 0.4 × 0.50 = <span class="highlight">0.200</span>  →  ŷ_A = σ(0.200) = <span class="highlight">0.550</span>
+output_raw_B = 0.4 × 0.65 = <span class="highlight2">0.260</span>  →  ŷ_B = σ(0.260) = <span class="highlight2">0.565</span>
+output_raw_C = 0.4 × 0.80 = <span class="highlight3">0.320</span>  →  ŷ_C = σ(0.320) = <span class="highlight3">0.579</span>
+output_raw_D = 0.4 × 0.78 = <span style="color: var(--node-7)">0.312</span>  →  ŷ_D = σ(0.312) = <span style="color: var(--node-7)">0.577</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><span class="step-num">Step 8</span><h3>Compute GNN MAE and compare to Part 1</h3></div>
+    <div class="step-body">
+      <div class="math-block"><span class="comment">── GNN errors ──────────────────────────────────────────</span>
+|ŷ_A − y_A| = |<span class="highlight">0.550</span> − 1| = <span class="highlight">0.450</span>
+|ŷ_B − y_B| = |<span class="highlight2">0.565</span> − 0| = <span class="highlight2">0.565</span>
+|ŷ_C − y_C| = |<span class="highlight3">0.579</span> − 0| = <span class="highlight3">0.579</span>
+|ŷ_D − y_D| = |<span style="color: var(--node-7)">0.577</span> − 1| = <span style="color: var(--node-7)">0.423</span>
+
+GNN MAE = (0.450 + 0.565 + 0.579 + 0.423) / 4 = 2.017 / 4 = <span style="color: var(--node-7)">0.504</span></div>
+      <div class="callout callout-warn">
+        <strong>The GNN MAE (0.504) is slightly worse than the plain NN (0.490) with these random starter weights.</strong> This is normal and expected — untrained GNNs don't magically outperform plain NNs with the same random weights. The GNN's advantage emerges after training, because it has access to more information (structure + features). With random weights, the neighborhood aggregation actually adds noise.
+      </div>
+
+      <div class="lc-grid">
+        <div class="lc-card">
+          <div class="lc-card-header"><span class="lc-badge">LC 05</span><span>GNN vs NN</span></div>
+          <div class="lc-body">
+            <p class="lc-question">The GNN MAE is slightly worse than the plain NN. Does this mean GNNs are worse models for this problem?</p>
+            <div class="lc-options">
+              <button class="lc-option" onclick="selectOption(5,'A',false)"><span class="opt-label">A</span> Yes — if GNN starts worse, it will always perform worse after training</button>
+              <button class="lc-option" onclick="selectOption(5,'B',false)"><span class="opt-label">B</span> Yes — GNNs are only useful when the graph has hundreds of nodes</button>
+              <button class="lc-option" onclick="selectOption(5,'C',true)"><span class="opt-label">C</span> No — untrained GNNs use random weights on richer inputs; after training, the graph structure provides signal the plain NN can never access</button>
+            </div>
+            <div class="lc-buttons">
+              <button class="btn btn-neutral" onclick="toggleFeedback('lc5-hint')">Hint</button>
+              <button class="btn btn-neutral" onclick="toggleFeedback('lc5-answer')">Reveal Answer</button>
+            </div>
+            <div class="lc-feedback hint-box" id="lc5-hint">💡 Think about what information is available to each model. The plain NN only sees x. The GNN sees x plus neighborhood structure. After training, which model has more to work with?</div>
+            <div class="lc-feedback answer-box" id="lc5-answer"><strong>C is correct.</strong> Random weight initialization is a red herring — both models start from roughly random performance. What matters is the information available after training. The GNN can learn that "high-output nodes that are also downstream convergence points are high-risk" (Factory D). The plain NN can only learn "high-output nodes are high-risk," which incorrectly flags Factory C's neighbor A while missing D's structural role.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="part-header">
+    <span class="part-badge">Summary</span>
+    <h2>Side-by-Side <em>Comparison</em></h2>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Quantity</th><th>Plain Neural Network</th><th>Graph Neural Network</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Input to network</strong></td><td>x (own feature only)</td><td>x̃ = own feature + mean neighbor feature</td></tr>
+      <tr><td><strong>Weights used</strong></td><td>w₁=0.5, w₂=0.4, b=0.1</td><td>Same — no extra weights needed for aggregation</td></tr>
+      <tr><td><strong>ŷ_A</strong> (true: 1)</td><td>0.550</td><td>0.550</td></tr>
+      <tr><td><strong>ŷ_B</strong> (true: 0)</td><td>0.525</td><td>0.565 ↑</td></tr>
+      <tr><td><strong>ŷ_C</strong> (true: 0)</td><td>0.540</td><td>0.579 ↑</td></tr>
+      <tr><td><strong>ŷ_D</strong> (true: 1)</td><td>0.555</td><td>0.577 ↑</td></tr>
+      <tr><td><strong>MAE (starter weights)</strong></td><td>0.490</td><td>0.504 (slightly worse)</td></tr>
+      <tr><td><strong>What it can learn</strong></td><td>Patterns in individual node features</td><td>Patterns in features <em>and</em> network position</td></tr>
+      <tr><td><strong>After training: expected advantage</strong></td><td>Cannot detect convergence-point risk</td><td>Can detect that D is a downstream bottleneck</td></tr>
+    </tbody>
+  </table>
+
+  <div class="lc-grid" style="margin-top: 24px;">
+    <div class="lc-card">
+      <div class="lc-card-header"><span class="lc-badge">LC 06</span><span>Concept transfer</span></div>
+      <div class="lc-body">
+        <p class="lc-question">In a real supply chain with 500 factories, which structural pattern would a trained GNN be best at detecting — compared to a plain NN?</p>
+        <div class="lc-options">
+          <button class="lc-option" onclick="selectOption(6,'A',false)"><span class="opt-label">A</span> Factories with unusually high output features</button>
+          <button class="lc-option" onclick="selectOption(6,'B',true)"><span class="opt-label">B</span> Factories that aggregate inputs from many high-output suppliers — structural bottlenecks invisible in node features alone</button>
+          <button class="lc-option" onclick="selectOption(6,'C',false)"><span class="opt-label">C</span> Factories with the most years of operating data</button>
+        </div>
+        <div class="lc-buttons">
+          <button class="btn btn-neutral" onclick="toggleFeedback('lc6-hint')">Hint</button>
+          <button class="btn btn-neutral" onclick="toggleFeedback('lc6-answer')">Reveal Answer</button>
+        </div>
+        <div class="lc-feedback hint-box" id="lc6-hint">💡 Think about what extra information x̃ encodes that x doesn't. What structural role did Factory D play that wasn't visible in its raw feature alone?</div>
+        <div class="lc-feedback answer-box" id="lc6-answer"><strong>B is correct.</strong> A plain NN can detect "this factory has high output" — which is just reading the feature. A GNN can additionally detect "this factory sits at the confluence of many high-output upstream nodes" — a structural bottleneck whose risk isn't encoded in its own feature. In supply chain risk, these convergence nodes are often the most dangerous single points of failure, and they're exactly what graph structure reveals.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sketchpad-box">
+    <h2>✏️ Sketchpad Prompt</h2>
+    <p>Put down the keyboard. On your sketchpad, draw a six-node supply chain of your own design. Label each node with an x value between 0 and 1. Choose which nodes are true bottlenecks (label them y = 1) and which aren't (y = 0).</p>
+    <p>Now trace one message-passing step by hand: for each node, write down x̃ = x + mean(neighbors' x). Circle the node where x̃ is highest. Is that node a true bottleneck? Does the GNN have a chance of getting it right with appropriate trained weights? Why or why not?</p>
+  </div>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · AI &amp; ML · GNN Forward Pass by Hand</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script>
+const correctAnswers = { 1: 'B', 2: 'C', 3: 'B', 4: 'B', 5: 'C', 6: 'B' };
+function selectOption(lcNum, opt, isCorrect) {
+  const card = document.querySelectorAll('.lc-card')[lcNum - 1];
+  const options = card.querySelectorAll('.lc-option');
+  options.forEach(o => o.classList.remove('correct', 'incorrect'));
+  const clicked = Array.from(options).find(o => o.querySelector('.opt-label').textContent === opt);
+  if (clicked) clicked.classList.add(isCorrect ? 'correct' : 'incorrect');
+}
+function toggleFeedback(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+</script>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
