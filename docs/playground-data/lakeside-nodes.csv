@@ -1,0 +1,16 @@
+id,label,zone,type
+market_sq,Market Square,downtown,hub
+central_stn,Central Station,downtown,hub
+city_hall,City Hall,downtown,normal
+midtown,Midtown,downtown,normal
+campus_w,Campus West,campus,normal
+campus_n,Campus North,campus,hub
+campus_e,Campus East,campus,normal
+riverwalk,Riverwalk,campus,bridge
+harbor_view,Harbor View,waterfront,normal
+pier_seven,Pier 7,waterfront,normal
+boardwalk,Boardwalk,waterfront,hub
+marina,Marina,waterfront,normal
+westend,West End,downtown,normal
+north_hill,North Hill,downtown,normal
+east_meadow,East Meadow,campus,normal

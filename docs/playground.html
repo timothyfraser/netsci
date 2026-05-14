@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coding Playground · SYSEN 5470</title>
+<link rel="stylesheet" href="assets/design.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .pick-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+    margin-top: 12px;
+  }
+  @media (max-width: 800px) { .pick-grid { grid-template-columns: 1fr; } }
+
+  .pick-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 26px 28px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    display: flex; flex-direction: column; gap: 14px;
+    transition: border-color .25s, transform .2s;
+    text-decoration: none;
+  }
+  .pick-card:hover { border-color: var(--green-bright); transform: translateY(-3px); }
+  .pick-card .lang-ico { font-size: 48px; line-height: 1; }
+  .pick-card h2 {
+    font-family: var(--font-display); font-size: 34px;
+    color: var(--white); letter-spacing: 0.03em; line-height: 1;
+  }
+  .pick-card h2 .runtime {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--green-bright); letter-spacing: 0.16em;
+    text-transform: uppercase; display: block; margin-top: 8px;
+  }
+  .pick-card .pitch {
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.6;
+  }
+  .pick-card .pkg-list {
+    font-family: var(--font-mono); font-size: 11.5px;
+    color: var(--grey); line-height: 1.6; letter-spacing: 0.02em;
+  }
+  .pick-card .pkg-list strong { color: var(--white); font-weight: 500; }
+  .pick-card .open-btn {
+    align-self: flex-start; margin-top: 4px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 10px 16px; border-radius: var(--radius-sm);
+    background: var(--green-bright); color: var(--black);
+  }
+
+  .why-block {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 18px 22px;
+    backdrop-filter: blur(8px);
+    margin-top: 22px;
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.65;
+  }
+  .why-block strong { color: var(--white); }
+  .why-block code {
+    font-family: var(--font-mono); font-size: 12.5px;
+    background: rgba(57,255,20,0.08);
+    border: 1px solid rgba(57,255,20,0.18);
+    border-radius: 3px; padding: 1px 6px;
+    color: var(--green-laser);
+  }
+
+  .limit-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px; margin-top: 12px;
+  }
+  .limit-card {
+    background: rgba(5,46,22,0.45); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md); padding: 16px 18px;
+  }
+  .limit-card .limit-icon { font-size: 22px; margin-bottom: 6px; }
+  .limit-card h4 {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--green-bright); margin-bottom: 6px;
+  }
+  .limit-card p {
+    font-family: var(--font-body); font-size: 13px;
+    color: var(--green-mint); line-height: 1.55;
+  }
+  .limit-card p strong { color: var(--white); }
+</style>
+</head>
+<body data-page="playground">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="index.html"          data-page="home">Overview</a>
+      <a href="syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="materials.html"      data-page="materials">Materials</a>
+      <a href="case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="playground.html"     data-page="playground">Playground</a>
+      <a href="readings.html"       data-page="readings">Readings</a>
+      <a href="sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="about.html"          data-page="about">About</a>
+    </div>
+    <a href="index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Coding Playground</p>
+    <h1 class="hero-title">Run Real Code.<br>In the <span>Browser</span>.</h1>
+    <p class="hook">No install. No login. No server. The playground runs a full R or Python interpreter inside the browser tab via WebAssembly — and saves your code to your own browser so it's still there when you come back tomorrow. Pick a language to start.</p>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Pick a Language</div>
+    <div class="pick-grid">
+
+      <a class="pick-card" href="playground-r.html">
+        <div class="lang-ico">📊</div>
+        <h2>R Playground<span class="runtime">Powered by WebR</span></h2>
+        <p class="pitch">A full R interpreter, compiled to WebAssembly. Tidyverse-flavored, network-science-ready.</p>
+        <p class="pkg-list">
+          <strong>Pre-installed:</strong> dplyr · tidyr · ggplot2 · readr · igraph · tidygraph · DBI · RSQLite
+        </p>
+        <span class="open-btn">Open R Playground →</span>
+      </a>
+
+      <a class="pick-card" href="playground-py.html">
+        <div class="lang-ico">🐍</div>
+        <h2>Python Playground<span class="runtime">Powered by Pyodide</span></h2>
+        <p class="pitch">CPython compiled to WebAssembly. Scientific Python's core packages, ready to go.</p>
+        <p class="pkg-list">
+          <strong>Pre-installed:</strong> numpy · pandas · networkx · matplotlib · scipy · scikit-learn
+        </p>
+        <span class="open-btn">Open Python Playground →</span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Why two playgrounds?</div>
+    <div class="why-block">
+      <p>Each language ships its own ~30MB WebAssembly bundle on first visit (then it's cached). Loading both at once would double the wait. So we keep them on separate pages: pick the one you need, and stick with it for your session. <strong>Your code is auto-saved to your own browser</strong> (<code>localStorage</code>), so it's still there when you come back. <strong>Any CSV files you upload are saved to your browser too</strong> (<code>IndexedDB</code>), so they survive a refresh — but they live on your device, never on our server.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Be aware of the limits</div>
+    <div class="limit-grid">
+
+      <div class="limit-card">
+        <div class="limit-icon">⏳</div>
+        <h4>First load</h4>
+        <p>~30MB download the first time you open a playground. After that the browser caches it. Bring patience to the first visit; subsequent visits start in a second or two.</p>
+      </div>
+
+      <div class="limit-card">
+        <div class="limit-icon">💾</div>
+        <h4>Memory ceiling</h4>
+        <p>Browser tabs cap at ~2–4 GB. Plenty for any course dataset but <strong>not</strong> enough to load a million-row CSV at full resolution. Pre-aggregate or sample first.</p>
+      </div>
+
+      <div class="limit-card">
+        <div class="limit-icon">📦</div>
+        <h4>Curated packages</h4>
+        <p>Only packages compiled for WebAssembly work. The pre-installed lists above cover the course. Things needing system libraries (e.g. PyTorch, TensorFlow, heavy GIS stacks) won't install.</p>
+      </div>
+
+      <div class="limit-card">
+        <div class="limit-icon">🔌</div>
+        <h4>Limited networking</h4>
+        <p>HTTP fetches work (CORS permitting); raw sockets and remote-database connections don't. Load files from URLs or upload them directly.</p>
+      </div>
+
+      <div class="limit-card">
+        <div class="limit-icon">💡</div>
+        <h4>Built for labs, not training jobs</h4>
+        <p>Great for wrangling, visualization, stats, and graph algorithms on small-to-medium networks. For training large neural networks, use a real laptop or Posit Cloud.</p>
+      </div>
+
+      <div class="limit-card">
+        <div class="limit-icon">🔒</div>
+        <h4>Private to you</h4>
+        <p>Everything runs in your browser tab. We never see your code or your data. Same goes for the files you upload — they go straight to your browser's local storage.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Coding Playground</strong><br>
+    Cornell Engineering · Summer 2026 · WebR + Pyodide · 100% client-side · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script src="assets/network-bg.js" defer></script>
+<script src="assets/site.js" defer></script>
+</body>
+</html>
