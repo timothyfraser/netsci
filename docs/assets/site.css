@@ -212,6 +212,11 @@ h1.hero-title span { color: var(--green-bright); }
   color: var(--grey); line-height: 1.45;
 }
 
+/* Four-up topics row: 4 per row on desktop, 2x2 on tablet, 1 per row on mobile */
+.topics.topics-four { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 900px) { .topics.topics-four { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { .topics.topics-four { grid-template-columns: 1fr; } }
+
 /* ── Chips ────────────────────────────────────────────────── */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
@@ -302,6 +307,7 @@ a.chip { text-decoration: none; }
   box-shadow: 0 0 24px rgba(57, 255, 20, 0.35);
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-display); font-size: 36px; color: var(--black);
+  object-fit: cover;
 }
 .instructor h3 {
   font-family: var(--font-display); font-size: 28px;

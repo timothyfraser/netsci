@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aggregation as Visualization · SYSEN 5470</title>
+<title>Network Aggregation for Visualization · SYSEN 5470</title>
 <link rel="stylesheet" href="../assets/design.css">
 <link rel="stylesheet" href="../assets/site.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
@@ -19,6 +19,12 @@
   font-family: var(--font-body); font-size: 16px; font-weight: 300;
   line-height: 1.55; color: var(--green-mint); max-width: 760px;
   border-left: 3px solid var(--green-bright); padding-left: 18px;
+}
+.lab-hero p.subtitle {
+  font-family: var(--font-display); font-size: 18px; font-weight: 400;
+  font-style: italic; color: var(--grey); border-left: none; padding-left: 0;
+  margin-top: -4px; margin-bottom: 14px; letter-spacing: 0.02em;
+  max-width: none;
 }
 .synthetic-flag {
   display: inline-block; margin-top: 14px; padding: 4px 10px;
@@ -275,6 +281,7 @@ tbody tr:hover { background: rgba(57,255,20,0.04); }
     <div class="nav-links">
       <a href="../index.html"          data-page="home">Overview</a>
       <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../materials.html"      data-page="materials">Materials</a>
       <a href="../case-studies.html"   data-page="cases">Case Studies</a>
       <a href="../visualizer.html"     data-page="viz">Visualizer</a>
       <a href="../readings.html"       data-page="readings">Readings</a>
@@ -291,7 +298,8 @@ tbody tr:hover { background: rgba(57,255,20,0.04); }
 
   <section class="lab-hero">
     <p class="course-number">SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify</p>
-    <h1>When the Network is <em>Gobbledygook</em>: Aggregation as a Visualization Strategy</h1>
+    <h1>Network <em>Aggregation</em> for Visualization</h1>
+    <p class="subtitle">When the network is gobbledygook — zoom out.</p>
     <p>A raw bike-share network with 40 stations and hundreds of edges hides more than it reveals. Aggregate up to neighborhoods, then to income quintiles, and watch a clear socioeconomic flow pattern emerge. The lesson: <strong>losing detail can increase insight.</strong></p>
     <div class="synthetic-flag">⚠ Synthetic data — Boston-flavored but not real Bluebikes records</div>
   </section>
@@ -438,7 +446,7 @@ tbody tr:hover { background: rgba(57,255,20,0.04); }
   </div>
 
   <p class="site-footer">
-    <strong>SYSEN 5470 · Visualization · Aggregation as a Visualization Strategy</strong><br>
+    <strong>SYSEN 5470 · Visualization · Network Aggregation for Visualization</strong><br>
     Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
   </p>
 
@@ -556,12 +564,13 @@ const neighborhoodMap = new Map(neighborhoods.map(n => [n.id, n]));
 const neighborhoodRides = aggregateBy(stationRides, stationMap, s => s.neighborhood);
 const neighborhoodSelfLoops = aggregateSelfLoops(stationRides, stationMap, s => s.neighborhood);
 
+// Pentagon layout: 5 quintiles arranged on a regular pentagon, Q1 at top, going clockwise.
 const quintiles = [
-  { id: "Q1", label: "Q1 (Lowest)",  x: 150, y: 250, color: "#f472b6" },
-  { id: "Q2", label: "Q2",           x: 290, y: 250, color: "#f97316" },
-  { id: "Q3", label: "Q3",           x: 430, y: 250, color: "#fbbf24" },
-  { id: "Q4", label: "Q4",           x: 570, y: 250, color: "#86efac" },
-  { id: "Q5", label: "Q5 (Highest)", x: 710, y: 250, color: "#39FF14" }
+  { id: "Q1", label: "Q1 (Lowest)",  x: 430, y: 60,  color: "#f472b6" },
+  { id: "Q2", label: "Q2",           x: 601, y: 184, color: "#f97316" },
+  { id: "Q3", label: "Q3",           x: 536, y: 386, color: "#fbbf24" },
+  { id: "Q4", label: "Q4",           x: 324, y: 386, color: "#86efac" },
+  { id: "Q5", label: "Q5 (Highest)", x: 259, y: 184, color: "#39FF14" }
 ];
 const quintileMap = new Map(quintiles.map(q => [q.id, q]));
 

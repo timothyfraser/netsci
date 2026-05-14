@@ -313,7 +313,7 @@
       if (!state.showDrift) sim.alphaDecay(0.05); else sim.alphaDecay(0.018);
       state.simulation = sim;
     } else if (state.layout === 'radial') {
-      // Group by component, place each component as concentric ring
+      // Group by component, place each component as a hub-and-spoke (highest-degree node at center)
       const comps = {};
       nodes.forEach((n) => { (comps[state.metrics[n.id].component] ||= []).push(n); });
       const compIds = Object.keys(comps);
@@ -324,34 +324,81 @@
         const cy = H / 2;
         const R = Math.min(W / (compIds.length * 2.2), H / 2.4);
         arr.forEach((n, i) => {
-          if (i === 0) { n.fx = cx; n.fy = cy; }
+          if (i === 0) { n.x = n.fx = cx; n.y = n.fy = cy; }
           else {
             const ang = ((i - 1) / Math.max(1, arr.length - 1)) * 2 * Math.PI;
-            n.fx = cx + Math.cos(ang) * R;
-            n.fy = cy + Math.sin(ang) * R;
+            n.x = n.fx = cx + Math.cos(ang) * R;
+            n.y = n.fy = cy + Math.sin(ang) * R;
           }
         });
       });
-      const sim = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(links).id((d) => d.id).distance(50).strength(0.2));
-      sim.on('tick', render);
-      sim.alphaDecay(0.1);
-      state.simulation = sim;
-    } else {
-      // Hierarchical — layered by component then by degree desc
+      render();
+    } else if (state.layout === 'circle') {
+      // Single circle per component — all nodes on the perimeter, no center hub
       const comps = {};
       nodes.forEach((n) => { (comps[state.metrics[n.id].component] ||= []).push(n); });
       const compIds = Object.keys(comps);
       compIds.forEach((cid, ci) => {
-        const arr = comps[cid].slice().sort((a, b) => b.deg - a.deg);
+        const arr = comps[cid];
+        arr.sort((a, b) => b.deg - a.deg);
         const cx = W * ((ci + 0.5) / compIds.length);
-        const layers = Math.min(6, Math.ceil(Math.sqrt(arr.length)));
+        const cy = H / 2;
+        const R = Math.min(W / (compIds.length * 2.2), H / 2.4);
+        const n0 = arr.length;
         arr.forEach((n, i) => {
-          const layer = i % layers;
-          const colIdx = Math.floor(i / layers);
-          const cols = Math.ceil(arr.length / layers);
-          n.fx = cx + (colIdx - cols / 2) * 32;
-          n.fy = 60 + layer * ((H - 120) / Math.max(1, layers - 1));
+          const ang = (i / Math.max(1, n0)) * 2 * Math.PI - Math.PI / 2;
+          n.x = n.fx = cx + Math.cos(ang) * R;
+          n.y = n.fy = cy + Math.sin(ang) * R;
+        });
+      });
+      render();
+    } else {
+      // Hierarchical — layered top-to-bottom by BFS depth from highest-degree root per component
+      const adj = {};
+      nodes.forEach((n) => { adj[n.id] = []; });
+      links.forEach((l) => {
+        const s = typeof l.source === 'object' ? l.source.id : l.source;
+        const t = typeof l.target === 'object' ? l.target.id : l.target;
+        adj[s].push(t); adj[t].push(s);
+      });
+      const comps = {};
+      nodes.forEach((n) => { (comps[state.metrics[n.id].component] ||= []).push(n); });
+      const compIds = Object.keys(comps);
+      const margin = 60;
+      compIds.forEach((cid, ci) => {
+        const arr = comps[cid].slice().sort((a, b) => b.deg - a.deg);
+        const root = arr[0].id;
+        // BFS depth from root
+        const depth = { [root]: 0 };
+        const queue = [root];
+        while (queue.length) {
+          const u = queue.shift();
+          (adj[u] || []).forEach((v) => {
+            if (depth[v] === undefined) { depth[v] = depth[u] + 1; queue.push(v); }
+          });
+        }
+        // Group by depth layer
+        const layers = {};
+        arr.forEach((n) => {
+          const d = depth[n.id] ?? 0;
+          (layers[d] ||= []).push(n);
+        });
+        const layerKeys = Object.keys(layers).map(Number).sort((a, b) => a - b);
+        const colW = W / compIds.length;
+        const cx = colW * ci + colW / 2;
+        const usableH = Math.max(120, H - margin * 2);
+        const layerGap = layerKeys.length > 1 ? usableH / (layerKeys.length - 1) : 0;
+        layerKeys.forEach((d, li) => {
+          const row = layers[d];
+          const rowCount = row.length;
+          const y = margin + li * layerGap;
+          row.forEach((n, i) => {
+            const slot = (i - (rowCount - 1) / 2);
+            const spread = Math.min(colW * 0.85, Math.max(60, rowCount * 60));
+            const step = rowCount > 1 ? spread / (rowCount - 1) : 0;
+            n.x = n.fx = cx + slot * step;
+            n.y = n.fy = y;
+          });
         });
       });
       render();
@@ -638,24 +685,60 @@
   }
 
   // ── Sample / demo graph ─────────────────────────────────────
+  function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  function generateSampleGraph() {
+    // Build a randomized 3-tier supply-chain-like network.
+    // Tiers: Suppliers → Hubs/Consolidators → Distribution Centers → Retailers.
+    const nSuppliers  = randInt(4, 8);
+    const nHubs       = randInt(1, 3);
+    const nDCs        = randInt(2, 4);
+    const nRetailers  = randInt(4, 9);
+
+    const suppliers = Array.from({ length: nSuppliers }, (_, i) => `Supplier_${String.fromCharCode(65 + i)}`);
+    const hubs      = Array.from({ length: nHubs },      (_, i) => nHubs === 1 ? 'Hub_Central' : `Hub_${i + 1}`);
+    const dcs       = Array.from({ length: nDCs },       (_, i) => `DC_${['North','South','East','West'][i] || (i + 1)}`);
+    const retailers = Array.from({ length: nRetailers }, (_, i) => `Retailer_${i + 1}`);
+
+    const tMax = randInt(4, 7);
+    const edges = [];
+
+    // Each supplier connects to 1–2 hubs
+    suppliers.forEach((s) => {
+      const hs = new Set();
+      const k = randInt(1, Math.min(2, hubs.length));
+      while (hs.size < k) hs.add(pick(hubs));
+      hs.forEach((h) => edges.push({ from: s, to: h, weight: randInt(2, 8), time: randInt(1, Math.max(1, Math.floor(tMax / 2))) }));
+    });
+
+    // Each hub connects to most DCs
+    hubs.forEach((h) => {
+      dcs.forEach((d) => {
+        if (Math.random() < 0.75) edges.push({ from: h, to: d, weight: randInt(3, 9), time: randInt(1, tMax) });
+      });
+    });
+
+    // Each retailer pulls from 1–2 DCs
+    retailers.forEach((r) => {
+      const ds = new Set();
+      const k = randInt(1, Math.min(2, dcs.length));
+      while (ds.size < k) ds.add(pick(dcs));
+      ds.forEach((d) => edges.push({ from: d, to: r, weight: randInt(1, 5), time: randInt(2, tMax) }));
+    });
+
+    // A few sideways retailer-to-retailer links
+    const sideways = randInt(0, Math.max(0, Math.floor(nRetailers / 3)));
+    for (let i = 0; i < sideways; i++) {
+      const a = pick(retailers), b = pick(retailers);
+      if (a !== b) edges.push({ from: a, to: b, weight: 1, time: randInt(3, tMax) });
+    }
+
+    return edges;
+  }
+
   function loadSampleGraph() {
-    // Simple toy supply-chain inspired by the lab data
-    const edgeCsv = [
-      { from: 'Supplier_A', to: 'Hub_Central', weight: 5, time: 1 },
-      { from: 'Supplier_B', to: 'Hub_Central', weight: 4, time: 1 },
-      { from: 'Supplier_C', to: 'Hub_Central', weight: 3, time: 2 },
-      { from: 'Hub_Central', to: 'DC_North', weight: 7, time: 2 },
-      { from: 'Hub_Central', to: 'DC_South', weight: 6, time: 3 },
-      { from: 'DC_North',  to: 'Retailer_1', weight: 3, time: 3 },
-      { from: 'DC_North',  to: 'Retailer_2', weight: 2, time: 3 },
-      { from: 'DC_South',  to: 'Retailer_3', weight: 4, time: 4 },
-      { from: 'DC_South',  to: 'Retailer_4', weight: 3, time: 4 },
-      { from: 'Mesa_Consolidator', to: 'DC_North', weight: 4, time: 2 },
-      { from: 'Mesa_Consolidator', to: 'Retailer_5', weight: 2, time: 5 },
-      { from: 'Supplier_D', to: 'Mesa_Consolidator', weight: 4, time: 1 },
-      { from: 'Supplier_E', to: 'Mesa_Consolidator', weight: 3, time: 2 },
-      { from: 'Retailer_2', to: 'Retailer_3', weight: 1, time: 5 }
-    ];
+    const edgeCsv = generateSampleGraph();
     state.edgeCsv = edgeCsv;
     state.edgeCols = ['from', 'to', 'weight', 'time'];
     state.nodeCsv = null;
