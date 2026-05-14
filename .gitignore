@@ -1,0 +1,8 @@
+build/
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+.env
+__pycache__/
+*.pyc
