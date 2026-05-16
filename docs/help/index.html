@@ -76,19 +76,38 @@
   <div class="nav-inner">
     <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
     <div class="nav-links">
-      <a href="../index.html"          data-page="home">Overview</a>
-      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
-      <a href="../materials.html"      data-page="materials">Materials</a>
-      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
-      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
-      <a href="../playground.html"     data-page="playground">Playground</a>
-      <a href="../readings.html"       data-page="readings">Readings</a>
-      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
-      <a href="../assignments.html"    data-page="assignments">Assignments</a>
-      <a href="index.html"             data-page="help">Help</a>
-      <a href="../about.html"          data-page="about">About</a>
-    </div>
-    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+      <a href="../index.html" data-page="home">Overview</a>
+      <div class="nav-dropdown" data-group="course">
+        <button type="button" class="nav-trigger" aria-haspopup="true" aria-expanded="false">Course</button>
+        <div class="nav-menu" role="menu">
+          <a href="../syllabus.html"     data-page="syllabus"    role="menuitem">Syllabus</a>
+          <a href="../materials.html"    data-page="materials"   role="menuitem">Materials</a>
+          <a href="../case-studies.html" data-page="cases"       role="menuitem">Case Studies</a>
+          <a href="../readings.html"     data-page="readings"    role="menuitem">Readings</a>
+          <a href="../sketchpad.html"    data-page="sketch"      role="menuitem">Sketches</a>
+          <a href="../assignments.html"  data-page="assignments" role="menuitem">Assignments</a>
+        </div>
+      </div>
+      <a href="../visualizer.html" data-page="viz">Visualizer</a>
+      <a href="../playground.html" data-page="playground">Playground</a>
+      <div class="nav-dropdown" data-group="help">
+        <button type="button" class="nav-trigger" aria-haspopup="true" aria-expanded="false">Help</button>
+        <div class="nav-menu" role="menu">
+          <a href="../help/index.html"         data-page="help"          role="menuitem">Help Hub</a>
+          <a href="../help/glossary.html"      data-page="glossary"      role="menuitem">Glossary</a>
+          <a href="../help/faq.html"           data-page="faq"           role="menuitem">FAQ &amp; Troubleshooting</a>
+          <a href="../help/ai-policy.html"     data-page="ai-policy"     role="menuitem">AI Use Policy</a>
+          <a href="../help/office-hours.html"  data-page="office-hours"  role="menuitem">Office Hours</a>
+          <a href="../calendar.html"           data-page="calendar"      role="menuitem">Calendar</a>
+          <div class="nav-sep" role="separator"></div>
+          <a href="../help/setup.html"         data-page="setup"         role="menuitem">Environment Setup</a>
+          <a href="../help/quickstart-r.html"  data-page="quickstart-r"  role="menuitem">R Quickstart</a>
+          <a href="../help/quickstart-py.html" data-page="quickstart-py" role="menuitem">Python Quickstart</a>
+          <a href="../help/github-setup.html"  data-page="github-setup"  role="menuitem">GitHub Setup</a>
+        </div>
+      </div>
+      <a href="../about.html" data-page="about">About</a>
+    </div><a href="../index.html#enroll" class="nav-cta">Enroll</a>
   </div>
 </nav>
 
@@ -145,6 +164,13 @@
         <span class="arrow">Open →</span>
       </a>
 
+      <a class="help-card" href="../calendar.html">
+        <span class="ico">🗓</span>
+        <h3>Course Calendar</h3>
+        <p>Day-by-day timeline of all three weeks — which labs land when, weekend rest days, Monday 9 AM submissions, final due date.</p>
+        <span class="arrow">Open →</span>
+      </a>
+
     </div>
   </section>
 
@@ -152,33 +178,33 @@
     <div class="sec-label">Setup &amp; Getting Started</div>
     <div class="help-grid">
 
-      <div class="help-card coming">
+      <a class="help-card" href="setup.html">
         <span class="ico">🛠</span>
-        <h3>Environment Setup <span class="opt-tag">Coming Tier 2</span></h3>
-        <p>Walks you through installing Positron (or RStudio / VS Code), R or Python, and the course packages. Verifies the install with a "hello network" snippet.</p>
-        <span class="arrow">Coming before the course starts — bookmark this page</span>
-      </div>
+        <h3>Environment Setup</h3>
+        <p>Install Positron (or RStudio / VS Code), R or Python, and the course packages. Verifies with a three-line "hello network" snippet. ~30 minutes.</p>
+        <span class="arrow">Open →</span>
+      </a>
 
-      <div class="help-card coming">
+      <a class="help-card" href="quickstart-r.html">
         <span class="ico">📊</span>
-        <h3>R Quickstart <span class="opt-tag">Coming Tier 2</span></h3>
-        <p>30 minutes from "I've never used R" to your first centrality calculation. Tidyverse-flavored, mobile-readable.</p>
-        <span class="arrow">Coming before the course starts — bookmark this page</span>
-      </div>
+        <h3>R Quickstart</h3>
+        <p>30 minutes from "I've never used R" to your first centrality calculation. Tidyverse-flavored with the <code style="background: rgba(57,255,20,0.08); padding: 0 4px; border-radius: 3px; color: var(--green-laser);">|&gt;</code> pipe. Mobile-readable.</p>
+        <span class="arrow">Open →</span>
+      </a>
 
-      <div class="help-card coming">
+      <a class="help-card" href="quickstart-py.html">
         <span class="ico">🐍</span>
-        <h3>Python Quickstart <span class="opt-tag">Coming Tier 2</span></h3>
+        <h3>Python Quickstart</h3>
         <p>Same 30-minute path in Python — networkx + pandas + matplotlib. Cross-references the R version step-by-step.</p>
-        <span class="arrow">Coming before the course starts — bookmark this page</span>
-      </div>
+        <span class="arrow">Open →</span>
+      </a>
 
-      <div class="help-card coming">
+      <a class="help-card" href="github-setup.html">
         <span class="ico">🐙</span>
-        <h3>GitHub Setup <span class="opt-tag">Coming Tier 2</span></h3>
+        <h3>GitHub Setup</h3>
         <p>Clone the course repo, make your own project repo, and the minimum add/commit/push you need to keep your project work safe.</p>
-        <span class="arrow">Coming before the course starts — bookmark this page</span>
-      </div>
+        <span class="arrow">Open →</span>
+      </a>
 
     </div>
   </section>

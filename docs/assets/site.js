@@ -1,11 +1,49 @@
-// Highlight active nav link based on body.dataset.page
+// Highlight active nav link based on body.dataset.page; mark dropdown parents
 (function () {
   var page = (document.body && document.body.dataset && document.body.dataset.page) || '';
-  if (!page) return;
-  var links = document.querySelectorAll('.nav-links a[data-page]');
-  links.forEach(function (a) {
-    if (a.dataset.page === page) a.classList.add('active');
-    else a.classList.remove('active');
+  if (page) {
+    var links = document.querySelectorAll('.nav-links a[data-page]');
+    links.forEach(function (a) {
+      if (a.dataset.page === page) a.classList.add('active');
+      else a.classList.remove('active');
+    });
+    document.querySelectorAll('.nav-dropdown').forEach(function (dd) {
+      if (dd.querySelector('a.active')) dd.classList.add('has-active');
+    });
+  }
+})();
+
+// Dropdown menus: click-toggle, click-outside to close, Escape to close
+(function () {
+  var dropdowns = document.querySelectorAll('.nav-dropdown');
+  if (!dropdowns.length) return;
+  function closeAll(except) {
+    dropdowns.forEach(function (dd) {
+      if (dd !== except) {
+        dd.classList.remove('open');
+        var btn = dd.querySelector('.nav-trigger');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+  dropdowns.forEach(function (dd) {
+    var btn = dd.querySelector('.nav-trigger');
+    if (!btn) return;
+    btn.setAttribute('aria-expanded', 'false');
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var willOpen = !dd.classList.contains('open');
+      closeAll(dd);
+      dd.classList.toggle('open', willOpen);
+      btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    });
+  });
+  document.addEventListener('click', function (e) {
+    var inside = e.target.closest && e.target.closest('.nav-dropdown');
+    if (!inside) closeAll(null);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAll(null);
   });
 })();
 

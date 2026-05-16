@@ -62,19 +62,38 @@
   <div class="nav-inner">
     <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
     <div class="nav-links">
-      <a href="index.html"          data-page="home">Overview</a>
-      <a href="syllabus.html"       data-page="syllabus">Syllabus</a>
-      <a href="materials.html"      data-page="materials">Materials</a>
-      <a href="case-studies.html"   data-page="cases">Case Studies</a>
-      <a href="visualizer.html"     data-page="viz">Visualizer</a>
-      <a href="playground.html"     data-page="playground">Playground</a>
-      <a href="readings.html"       data-page="readings">Readings</a>
-      <a href="sketchpad.html"      data-page="sketch">Sketches</a>
-      <a href="assignments.html"   data-page="assignments">Assignments</a>
-      <a href="help/index.html"     data-page="help">Help</a>
-      <a href="about.html"          data-page="about">About</a>
-    </div>
-    <a href="index.html#enroll" class="nav-cta">Enroll</a>
+      <a href="index.html" data-page="home">Overview</a>
+      <div class="nav-dropdown" data-group="course">
+        <button type="button" class="nav-trigger" aria-haspopup="true" aria-expanded="false">Course</button>
+        <div class="nav-menu" role="menu">
+          <a href="syllabus.html"     data-page="syllabus"    role="menuitem">Syllabus</a>
+          <a href="materials.html"    data-page="materials"   role="menuitem">Materials</a>
+          <a href="case-studies.html" data-page="cases"       role="menuitem">Case Studies</a>
+          <a href="readings.html"     data-page="readings"    role="menuitem">Readings</a>
+          <a href="sketchpad.html"    data-page="sketch"      role="menuitem">Sketches</a>
+          <a href="assignments.html"  data-page="assignments" role="menuitem">Assignments</a>
+        </div>
+      </div>
+      <a href="visualizer.html" data-page="viz">Visualizer</a>
+      <a href="playground.html" data-page="playground">Playground</a>
+      <div class="nav-dropdown" data-group="help">
+        <button type="button" class="nav-trigger" aria-haspopup="true" aria-expanded="false">Help</button>
+        <div class="nav-menu" role="menu">
+          <a href="help/index.html"         data-page="help"          role="menuitem">Help Hub</a>
+          <a href="help/glossary.html"      data-page="glossary"      role="menuitem">Glossary</a>
+          <a href="help/faq.html"           data-page="faq"           role="menuitem">FAQ &amp; Troubleshooting</a>
+          <a href="help/ai-policy.html"     data-page="ai-policy"     role="menuitem">AI Use Policy</a>
+          <a href="help/office-hours.html"  data-page="office-hours"  role="menuitem">Office Hours</a>
+          <a href="calendar.html"           data-page="calendar"      role="menuitem">Calendar</a>
+          <div class="nav-sep" role="separator"></div>
+          <a href="help/setup.html"         data-page="setup"         role="menuitem">Environment Setup</a>
+          <a href="help/quickstart-r.html"  data-page="quickstart-r"  role="menuitem">R Quickstart</a>
+          <a href="help/quickstart-py.html" data-page="quickstart-py" role="menuitem">Python Quickstart</a>
+          <a href="help/github-setup.html"  data-page="github-setup"  role="menuitem">GitHub Setup</a>
+        </div>
+      </div>
+      <a href="about.html" data-page="about">About</a>
+    </div><a href="index.html#enroll" class="nav-cta">Enroll</a>
   </div>
 </nav>
 
@@ -83,8 +102,7 @@
   <section class="hero">
     <p class="course-number">SYSEN 5470 · Course Materials</p>
     <h1 class="hero-title">What to <span>Bring</span>.</h1>
-    <span class="placeholder-flag">⚠ Placeholder · Subject to update before the course</span>
-    <p class="hook">Short list, on purpose. The course leans on hand-sketching, your own working data, and free open-source software. Here's what to have on day one.</p>
+    <p class="hook">Short list, on purpose. The course leans on hand-sketching, your own working data, and free open-source software. Here's what to have on day one — and the one-page <a href="help/setup.html" style="color: var(--green-bright);">Environment Setup</a> walks you through getting it all installed.</p>
   </section>
 
   <section class="section">
@@ -162,10 +180,36 @@
       <div class="mat-card optional">
         <div class="num">5</div>
         <div>
-          <h3>Software · TBD <span class="opt-tag">Bring your own IDE</span></h3>
-          <p>Students are welcome to use their preferred development environment.</p>
-          <p><strong>Suggested:</strong> <a href="https://positron.posit.co/" target="_blank" rel="noopener">Positron</a> for data-science work in R and Python — same Posit folks who make RStudio, but multi-language and AI-aware. For broader systems work, <a href="https://code.visualstudio.com/" target="_blank" rel="noopener">VS Code</a> + <a href="https://www.cursor.com/" target="_blank" rel="noopener">Cursor</a> are both solid options.</p>
-          <p>A specific software list and setup guide will be posted before the course starts.</p>
+          <h3>An editor / IDE <span class="opt-tag">Pick one</span></h3>
+          <p><strong>Recommended:</strong> <a href="https://positron.posit.co/" target="_blank" rel="noopener">Positron</a> — same Posit folks who built RStudio, multi-language (R + Python), AI-aware. One install, works for both course tracks.</p>
+          <p><strong>Other fine choices:</strong> <a href="https://posit.co/download/rstudio-desktop/" target="_blank" rel="noopener">RStudio</a> if you already love it (R only). <a href="https://code.visualstudio.com/" target="_blank" rel="noopener">VS Code</a> + <a href="https://www.cursor.com/" target="_blank" rel="noopener">Cursor</a> if you live in VS Code already. Whatever you pick, the <a href="help/setup.html">Environment Setup page</a> walks through installing R or Python and the course packages.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Setup</div>
+    <div class="materials-list">
+
+      <div class="mat-card">
+        <div class="num">6</div>
+        <div>
+          <h3>Set up your environment <span class="opt-tag">~30 min, once</span></h3>
+          <p>Install Positron (or your editor of choice), then install R or Python and the course packages. The <a href="help/setup.html">Environment Setup page</a> is a single-page walkthrough — pick your language, run one install command, run the "hello network" verification snippet. If something fails, the page has the common fixes.</p>
+          <p>If you can't or don't want to install software locally, the <a href="playground.html">in-browser Playground</a> runs both R and Python with the course packages pre-loaded. Every lab works there.</p>
+        </div>
+      </div>
+
+      <div class="mat-card">
+        <div class="num">7</div>
+        <div>
+          <h3>Clone the course repo <span class="opt-tag">~5 min</span></h3>
+          <p>Once Git is installed, pull down a local copy of the course repository so you can re-read materials offline and follow along with code:</p>
+          <pre style="font-family: var(--font-mono); font-size: 12.5px; background: rgba(5,10,5,0.6); border: 1px solid var(--border-soft); border-left: 3px solid var(--green-bright); border-radius: var(--radius-sm); padding: 12px 16px; color: var(--white); overflow-x: auto;">git clone https://github.com/timothyfraser/netsci.git
+cd netsci</pre>
+          <p>The <a href="help/github-setup.html">GitHub Setup page</a> covers the rest — installing Git, making a GitHub account, and creating your own project repo for the three project case studies.</p>
         </div>
       </div>
 
@@ -185,7 +229,7 @@
 
   <p class="site-footer">
     <strong>SYSEN 5470 · Course Materials</strong><br>
-    Cornell Engineering · Summer 2026 · This page is a placeholder and will be updated before the course begins.
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
   </p>
 
 </div>

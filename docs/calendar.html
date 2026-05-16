@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendar · SYSEN 5470</title>
+<link rel="stylesheet" href="assets/design.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .week-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 22px; backdrop-filter: blur(8px);
+    overflow: hidden;
+  }
+  .week-card .week-head {
+    padding: 18px 24px;
+    background: rgba(5,46,22,0.6);
+    border-bottom: 1px solid var(--border-soft);
+    display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+  }
+  .week-card .week-head .week-num {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--green-bright);
+  }
+  .week-card .week-head h2 {
+    font-family: var(--font-display); font-size: 26px;
+    color: var(--white); letter-spacing: 0.03em; line-height: 1.05;
+  }
+  .week-card .week-head .dates {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--grey); letter-spacing: 0.08em;
+  }
+  .week-card .week-head .theme {
+    font-family: var(--font-body); font-size: 13.5px;
+    color: var(--green-mint); font-style: italic;
+    flex-basis: 100%; margin-top: 4px;
+  }
+
+  .day-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 14px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .day-row:last-child { border-bottom: none; }
+  .day-row.weekend { background: rgba(57,255,20,0.04); }
+  .day-row.deadline { background: rgba(251,191,36,0.06); }
+  .day-row .day-label {
+    font-family: var(--font-mono); font-size: 11.5px;
+    letter-spacing: 0.06em;
+    color: var(--grey);
+  }
+  .day-row .day-label .dow {
+    display: block;
+    color: var(--green-bright);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .day-row.weekend .day-label .dow { color: var(--node-3); }
+  .day-row.deadline .day-label .dow { color: var(--node-4); }
+  .day-row .day-content {
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.55;
+  }
+  .day-row .day-content strong { color: var(--white); font-weight: 500; }
+  .day-row .day-content em { color: var(--node-3); font-style: italic; }
+  .day-row .day-content a { color: var(--green-bright); }
+  .day-row .day-content .deadline-flag {
+    display: inline-block;
+    font-family: var(--font-mono); font-size: 10px;
+    background: var(--node-4); color: var(--black);
+    padding: 2px 8px; border-radius: 3px;
+    letter-spacing: 0.12em; margin-right: 8px;
+    text-transform: uppercase; font-weight: 700;
+  }
+  .day-row .day-content .weekend-flag {
+    display: inline-block;
+    font-family: var(--font-mono); font-size: 10px;
+    background: var(--node-3); color: var(--black);
+    padding: 2px 8px; border-radius: 3px;
+    letter-spacing: 0.12em; margin-right: 8px;
+    text-transform: uppercase; font-weight: 700;
+  }
+  .day-row .lab-tag {
+    display: inline-block;
+    font-family: var(--font-mono); font-size: 9.5px;
+    background: rgba(57,255,20,0.1); color: var(--green-bright);
+    border: 1px solid rgba(57,255,20,0.3);
+    padding: 1px 7px; border-radius: 3px;
+    letter-spacing: 0.08em; margin-right: 4px;
+    text-transform: none;
+  }
+
+  .legend {
+    background: rgba(5,46,22,0.5);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
+    margin-bottom: 22px;
+    font-family: var(--font-body); font-size: 13px;
+    color: var(--green-mint); line-height: 1.7;
+    display: flex; flex-wrap: wrap; gap: 22px;
+  }
+  .legend .item {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .legend .swatch {
+    width: 18px; height: 18px;
+    border: 1px solid var(--border-soft);
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .legend .swatch.weekend { background: rgba(57,255,20,0.18); }
+  .legend .swatch.deadline { background: rgba(251,191,36,0.25); }
+  .legend .swatch.normal { background: rgba(5,46,22,0.5); }
+
+  @media (max-width: 600px) {
+    .day-row { grid-template-columns: 72px 1fr; gap: 10px; padding: 12px 16px; }
+    .day-row .day-label { font-size: 11px; }
+    .week-card .week-head { padding: 14px 16px; }
+    .week-card .week-head h2 { font-size: 22px; }
+  }
+</style>
+</head>
+<body data-page="calendar">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="index.html" data-page="home">Overview</a>
+      <div class="nav-dropdown" data-group="course">
+        <button type="button" class="nav-trigger" aria-haspopup="true" aria-expanded="false">Course</button>
+        <div class="nav-menu" role="menu">
+          <a href="syllabus.html"     data-page="syllabus"    role="menuitem">Syllabus</a>
+          <a href="materials.html"    data-page="materials"   role="menuitem">Materials</a>
+          <a href="case-studies.html" data-page="cases"       role="menuitem">Case Studies</a>
+          <a href="readings.html"     data-page="readings"    role="menuitem">Readings</a>
+          <a href="sketchpad.html"    data-page="sketch"      role="menuitem">Sketches</a>
+          <a href="assignments.html"  data-page="assignments" role="menuitem">Assignments</a>
+        </div>
+      </div>
+      <a href="visualizer.html" data-page="viz">Visualizer</a>
+      <a href="playground.html" data-page="playground">Playground</a>
+      <div class="nav-dropdown" data-group="help">
+        <button type="button" class="nav-trigger" aria-haspopup="true" aria-expanded="false">Help</button>
+        <div class="nav-menu" role="menu">
+          <a href="help/index.html"         data-page="help"          role="menuitem">Help Hub</a>
+          <a href="help/glossary.html"      data-page="glossary"      role="menuitem">Glossary</a>
+          <a href="help/faq.html"           data-page="faq"           role="menuitem">FAQ &amp; Troubleshooting</a>
+          <a href="help/ai-policy.html"     data-page="ai-policy"     role="menuitem">AI Use Policy</a>
+          <a href="help/office-hours.html"  data-page="office-hours"  role="menuitem">Office Hours</a>
+          <a href="calendar.html"           data-page="calendar"      role="menuitem">Calendar</a>
+          <div class="nav-sep" role="separator"></div>
+          <a href="help/setup.html"         data-page="setup"         role="menuitem">Environment Setup</a>
+          <a href="help/quickstart-r.html"  data-page="quickstart-r"  role="menuitem">R Quickstart</a>
+          <a href="help/quickstart-py.html" data-page="quickstart-py" role="menuitem">Python Quickstart</a>
+          <a href="help/github-setup.html"  data-page="github-setup"  role="menuitem">GitHub Setup</a>
+        </div>
+      </div>
+      <a href="about.html" data-page="about">About</a>
+    </div><a href="#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · June 22 – July 10, 2026</p>
+    <h1 class="hero-title">Day-by-Day<br><span>Pacing</span>.</h1>
+    <p class="hook">The syllabus tells you what the course covers. This page tells you when to do it. Built around the rhythm a full-time-working student actually uses: a long weekend block for each lab, with the Monday-9am submission at the end of every week. <strong>The weekend blocks are when most of the work happens</strong> — protect them.</p>
+  </section>
+
+  <section class="section">
+
+    <div class="legend">
+      <div class="item"><span class="swatch normal"></span><span>Weekday — short evening touch</span></div>
+      <div class="item"><span class="swatch weekend"></span><span>Weekend — the main work block</span></div>
+      <div class="item"><span class="swatch deadline"></span><span>Monday 9 AM — week's submission due</span></div>
+    </div>
+
+    <!-- ─────────── WEEK 1 ─────────── -->
+    <div class="week-card">
+      <div class="week-head">
+        <span class="week-num">Week 01</span>
+        <h2>Think Like a Graph</h2>
+        <span class="dates">Jun 22 – Jun 28, 2026</span>
+        <span class="theme">Nodes, edges, small-world phenomena. Three labs: Build-a-Network, Network Statistics, Centrality.</span>
+      </div>
+
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Mon Jun 22</span>day 1</div>
+        <div class="day-content">
+          <strong>Course opens.</strong> Read the <a href="syllabus.html">syllabus</a>, skim the <a href="help/index.html">Help hub</a>, run <a href="help/setup.html">Setup</a> if you haven't. ~30 min total.
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Tue Jun 23</span>day 2</div>
+        <div class="day-content">
+          <span class="lab-tag">🕸️ Build-a-Network</span> Watch the lab video, read Barabási Ch. 1–2. ~45 min.
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Wed Jun 24</span>day 3</div>
+        <div class="day-content">
+          <strong>Sketch 01 · Map your network.</strong> 20 min sketchpad, no keyboard. <a href="sketchpad.html#sketch-01">Open the prompt →</a>
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Thu Jun 25</span>day 4</div>
+        <div class="day-content">
+          <span class="lab-tag">📐 Network Statistics</span> Read Farine 2017 (null models). Skim Bluebikes lab intro. ~30 min.
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Fri Jun 26</span>day 5</div>
+        <div class="day-content">
+          <span class="lab-tag">📊 Centrality</span> Read Barabási Ch. 3 and Ch. 8. ~30 min. Light evening — protect Saturday.
+        </div>
+      </div>
+      <div class="day-row weekend">
+        <div class="day-label"><span class="dow">Sat Jun 27</span>day 6</div>
+        <div class="day-content">
+          <span class="weekend-flag">Weekend block</span><strong>Run the three labs.</strong> Plan ~4 hours. Open the <a href="case-studies/build-a-network.html">Build-a-Network lab</a> first, then <a href="case-studies/permutation.html">Network Statistics</a>, then <a href="case-studies/centrality.html">Centrality</a>. Sketch 02 + 03a in between.
+        </div>
+      </div>
+      <div class="day-row weekend">
+        <div class="day-label"><span class="dow">Sun Jun 28</span>day 7</div>
+        <div class="day-content">
+          <span class="weekend-flag">Weekend block</span>Write your three Learning Check answers and the one-page reflection. Photograph your sketches. <strong>Stage the Monday submission.</strong>
+        </div>
+      </div>
+
+      <div class="day-row deadline">
+        <div class="day-label"><span class="dow">Mon Jun 29</span>9 AM</div>
+        <div class="day-content">
+          <span class="deadline-flag">Due 9 AM</span><strong>Week 1 submission.</strong> Three sketch photos · three LC answers · one reflection. See <a href="assignments.html">Assignments</a> for the exact spec.
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────── WEEK 2 ─────────── -->
+    <div class="week-card">
+      <div class="week-head">
+        <span class="week-num">Week 02</span>
+        <h2>Find What Matters</h2>
+        <span class="dates">Jun 29 – Jul 5, 2026</span>
+        <span class="theme">Critical structure. Four labs: Supply Chain, Routing, Clustering, Aggregation.</span>
+      </div>
+
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Mon Jun 29</span>day 8</div>
+        <div class="day-content">
+          Submission done. Read this week's syllabus block, watch the supply-chain video. ~30 min.
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Tue Jun 30</span>day 9</div>
+        <div class="day-content">
+          <span class="lab-tag">📦 Supply Chain</span> Read Barabási Ch. 10 (cascades). ~30 min.
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Wed Jul 01</span>day 10</div>
+        <div class="day-content">
+          <span class="lab-tag">🚦 Routing</span> Skim Bertsekas reference chapter. <strong>Sketch 04 · Pick where to add a road.</strong>
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Thu Jul 02</span>day 11</div>
+        <div class="day-content">
+          <span class="lab-tag">🧩 Clustering</span> Read Barabási Ch. 9 (communities). <strong>Sketch 05 · Draw the seams.</strong>
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Fri Jul 03</span>day 12</div>
+        <div class="day-content">
+          <span class="lab-tag">🗺️ Aggregation</span> Read Bellantuono 2025 (accessibility via transit). <strong>Sketch 11 · Lose detail to gain insight.</strong> Light evening.
+        </div>
+      </div>
+      <div class="day-row weekend">
+        <div class="day-label"><span class="dow">Sat Jul 04</span>day 13</div>
+        <div class="day-content">
+          <span class="weekend-flag">Weekend block</span><strong>Run the four labs.</strong> Heavier than week 1 — plan ~5 hours. Bring tea. Holiday in the US; some students prefer to start Friday evening and finish Sunday.
+        </div>
+      </div>
+      <div class="day-row weekend">
+        <div class="day-label"><span class="dow">Sun Jul 05</span>day 14</div>
+        <div class="day-content">
+          <span class="weekend-flag">Weekend block</span>Write LC answers, reflection, and (if you picked one of these for the project) your <em>first project case study</em> — code + 2-page report.
+        </div>
+      </div>
+
+      <div class="day-row deadline">
+        <div class="day-label"><span class="dow">Mon Jul 06</span>9 AM</div>
+        <div class="day-content">
+          <span class="deadline-flag">Due 9 AM</span><strong>Week 2 submission.</strong> Four sketch photos · four LC answers · one reflection · <em>(if applicable)</em> your first project case study.
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────── WEEK 3 ─────────── -->
+    <div class="week-card">
+      <div class="week-head">
+        <span class="week-num">Week 03</span>
+        <h2>Move &amp; Predict</h2>
+        <span class="dates">Jul 06 – Jul 10, 2026</span>
+        <span class="theme">Forecasting and big data. Four labs: GNN by Hand, GNN + XGBoost, Sampling, Joins. Plus the final project submission.</span>
+      </div>
+
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Mon Jul 06</span>day 15</div>
+        <div class="day-content">
+          Submission done. Watch this week's intro video. <span class="lab-tag">🧠 GNN by Hand</span>
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Tue Jul 07</span>day 16</div>
+        <div class="day-content">
+          <span class="lab-tag">🤖 GNN + XGBoost</span> Read Khan 2025 (ML for network inference). ~30 min.
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Wed Jul 08</span>day 17</div>
+        <div class="day-content">
+          <span class="lab-tag">🗄️ Sampling</span> Skim Easley &amp; Kleinberg §2.4 (network datasets). <strong>Sketch 09 · Trace a forward pass</strong> for the GNN labs.
+        </div>
+      </div>
+      <div class="day-row">
+        <div class="day-label"><span class="dow">Thu Jul 09</span>day 18</div>
+        <div class="day-content">
+          <span class="lab-tag">🔗 Joins</span> <strong>Sketch 10 · Sketch the pipeline.</strong> Light evening — final crunch starts tomorrow.
+        </div>
+      </div>
+      <div class="day-row weekend">
+        <div class="day-label"><span class="dow">Fri Jul 10</span>day 19</div>
+        <div class="day-content">
+          <span class="weekend-flag">Final-week block</span>Last labs (GNN by Hand, GNN + XGBoost, Sampling, Joins). Wrap your final project case study or two. <strong>Final presentations</strong> happen this day for cohort members who attend — see <a href="assignments.html">Assignments</a>.
+        </div>
+      </div>
+
+      <div class="day-row deadline">
+        <div class="day-label"><span class="dow">Mon Jul 13</span>9 AM</div>
+        <div class="day-content">
+          <span class="deadline-flag">Final due 9 AM</span><strong>Week 3 + final project submission.</strong> Remaining sketches and LCs · two reflections (this week and a course-level retrospective) · your <em>two remaining project case studies</em> with reports. Grades close out the week after.
+        </div>
+      </div>
+    </div>
+
+    <section class="section">
+      <p style="font-family: var(--font-body); font-size: 14px; color: var(--green-mint); line-height: 1.65; max-width: 760px;">
+        <strong>Extensions for SYSEN 5940 in-person students:</strong> if you're juggling 5940 in the same week, email Tim before the Monday deadline and we'll work out a revised due date. The async structure makes this easy; just communicate early.
+      </p>
+    </section>
+
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Calendar</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script src="assets/network-bg.js" defer></script>
+<script src="assets/site.js" defer></script>
+<script src="assets/notebooklm-bubble.js" defer></script>
+</body>
+</html>

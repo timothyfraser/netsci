@@ -61,8 +61,56 @@ a:hover { color: var(--green-laser); }
   font-family: var(--font-mono); font-size: 10px;
   letter-spacing: 0.18em; text-transform: uppercase;
 }
-.nav-links a { color: var(--grey); transition: color .2s; }
-.nav-links a:hover, .nav-links a.active { color: var(--green-bright); }
+.nav-links > a { color: var(--grey); transition: color .2s; }
+.nav-links > a:hover, .nav-links > a.active { color: var(--green-bright); }
+
+/* ── Nav dropdowns ─────────────────────────────────────────── */
+.nav-dropdown { position: relative; }
+.nav-trigger {
+  background: transparent; border: 0; padding: 0;
+  font-family: inherit; font-size: inherit;
+  letter-spacing: inherit; text-transform: inherit;
+  color: var(--grey); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px;
+  transition: color .2s;
+}
+.nav-trigger::after {
+  content: '\25BE'; font-size: 9px; line-height: 1;
+  transition: transform .2s; opacity: 0.8;
+}
+.nav-trigger:hover,
+.nav-dropdown.open .nav-trigger,
+.nav-dropdown.has-active .nav-trigger { color: var(--green-bright); }
+.nav-dropdown.open .nav-trigger::after { transform: rotate(180deg); }
+
+.nav-menu {
+  display: none; position: absolute;
+  top: calc(100% + 10px); left: -8px;
+  min-width: 200px;
+  background: rgba(5, 10, 5, 0.95);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 8px 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  z-index: 11;
+}
+.nav-dropdown.open .nav-menu { display: block; }
+.nav-menu a {
+  display: block; padding: 9px 18px;
+  color: var(--grey); transition: color .15s, background .15s;
+}
+.nav-menu a:hover { color: var(--green-bright); background: rgba(57,255,20,0.06); }
+.nav-menu a.active { color: var(--green-bright); }
+.nav-menu .nav-sep {
+  height: 1px; margin: 6px 14px;
+  background: var(--border-soft);
+}
+
+@media (max-width: 720px) {
+  .nav-menu { left: auto; right: -8px; }
+}
 
 .nav-cta {
   font-family: var(--font-mono); font-size: 10px;

@@ -6,49 +6,9 @@
 <title>Python Quickstart · SYSEN 5470</title>
 <link rel="stylesheet" href="../assets/design.css">
 <link rel="stylesheet" href="../assets/site.css">
-<style>
-  .placeholder-card {
-    background: rgba(251,191,36,0.06);
-    border: 1px dashed rgba(251,191,36,0.5);
-    border-radius: var(--radius-lg);
-    padding: 28px 32px;
-    backdrop-filter: blur(8px);
-    text-align: center;
-  }
-  .placeholder-card .ico {
-    font-size: 56px; line-height: 1; margin-bottom: 14px;
-  }
-  .placeholder-card .flag {
-    display: inline-block; padding: 4px 12px; margin-bottom: 18px;
-    background: rgba(251,191,36,0.14); border: 1px solid var(--node-4);
-    border-radius: var(--radius-sm);
-    font-family: var(--font-mono); font-size: 10.5px;
-    color: var(--node-4); letter-spacing: 0.16em; text-transform: uppercase;
-  }
-  .placeholder-card h2 {
-    font-family: var(--font-display); font-size: 32px;
-    color: var(--white); letter-spacing: 0.03em; margin-bottom: 12px;
-  }
-  .placeholder-card p {
-    font-family: var(--font-body); font-size: 15px;
-    color: var(--green-mint); line-height: 1.65; max-width: 600px;
-    margin: 0 auto 12px;
-  }
-  .placeholder-card .back-link {
-    margin-top: 18px;
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    padding: 10px 18px; border-radius: var(--radius-sm);
-    background: transparent; color: var(--green-bright);
-    border: 1px solid var(--green-bright); text-decoration: none;
-    display: inline-block;
-  }
-  .placeholder-card .back-link:hover {
-    background: rgba(57,255,20,0.08);
-  }
-</style>
+<link rel="stylesheet" href="../assets/quickstart.css">
 </head>
-<body data-page="help">
+<body data-page="quickstart-py">
 
 <canvas id="bg-canvas"></canvas>
 
@@ -56,19 +16,38 @@
   <div class="nav-inner">
     <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
     <div class="nav-links">
-      <a href="../index.html"          data-page="home">Overview</a>
-      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
-      <a href="../materials.html"      data-page="materials">Materials</a>
-      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
-      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
-      <a href="../playground.html"     data-page="playground">Playground</a>
-      <a href="../readings.html"       data-page="readings">Readings</a>
-      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
-      <a href="../assignments.html"    data-page="assignments">Assignments</a>
-      <a href="index.html"             data-page="help">Help</a>
-      <a href="../about.html"          data-page="about">About</a>
-    </div>
-    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+      <a href="../index.html" data-page="home">Overview</a>
+      <div class="nav-dropdown" data-group="course">
+        <button type="button" class="nav-trigger" aria-haspopup="true" aria-expanded="false">Course</button>
+        <div class="nav-menu" role="menu">
+          <a href="../syllabus.html"     data-page="syllabus"    role="menuitem">Syllabus</a>
+          <a href="../materials.html"    data-page="materials"   role="menuitem">Materials</a>
+          <a href="../case-studies.html" data-page="cases"       role="menuitem">Case Studies</a>
+          <a href="../readings.html"     data-page="readings"    role="menuitem">Readings</a>
+          <a href="../sketchpad.html"    data-page="sketch"      role="menuitem">Sketches</a>
+          <a href="../assignments.html"  data-page="assignments" role="menuitem">Assignments</a>
+        </div>
+      </div>
+      <a href="../visualizer.html" data-page="viz">Visualizer</a>
+      <a href="../playground.html" data-page="playground">Playground</a>
+      <div class="nav-dropdown" data-group="help">
+        <button type="button" class="nav-trigger" aria-haspopup="true" aria-expanded="false">Help</button>
+        <div class="nav-menu" role="menu">
+          <a href="../help/index.html"         data-page="help"          role="menuitem">Help Hub</a>
+          <a href="../help/glossary.html"      data-page="glossary"      role="menuitem">Glossary</a>
+          <a href="../help/faq.html"           data-page="faq"           role="menuitem">FAQ &amp; Troubleshooting</a>
+          <a href="../help/ai-policy.html"     data-page="ai-policy"     role="menuitem">AI Use Policy</a>
+          <a href="../help/office-hours.html"  data-page="office-hours"  role="menuitem">Office Hours</a>
+          <a href="../calendar.html"           data-page="calendar"      role="menuitem">Calendar</a>
+          <div class="nav-sep" role="separator"></div>
+          <a href="../help/setup.html"         data-page="setup"         role="menuitem">Environment Setup</a>
+          <a href="../help/quickstart-r.html"  data-page="quickstart-r"  role="menuitem">R Quickstart</a>
+          <a href="../help/quickstart-py.html" data-page="quickstart-py" role="menuitem">Python Quickstart</a>
+          <a href="../help/github-setup.html"  data-page="github-setup"  role="menuitem">GitHub Setup</a>
+        </div>
+      </div>
+      <a href="../about.html" data-page="about">About</a>
+    </div><a href="../index.html#enroll" class="nav-cta">Enroll</a>
   </div>
 </nav>
 
@@ -76,19 +55,148 @@
 
   <section class="hero">
     <p class="course-number">SYSEN 5470 · Help · Python Quickstart</p>
-    <h1 class="hero-title">Python Quickstart<br><span>Coming Soon.</span></h1>
-    <p class="hook">Same 30-minute path in Python. networkx + pandas + matplotlib. Cross-references the R quickstart step-by-step so language is the only thing that changes.</p>
+    <h1 class="hero-title">From Zero<br>to <span>Your First Centrality</span>.</h1>
+    <p class="hook">A 30-minute path from "I haven't used Python in a while" to a working centrality calculation on a tiny network you built by hand. No prior network-analysis experience assumed. The four-node example mirrors the <a href="quickstart-r.html" style="color: var(--green-bright);">R quickstart</a> step-for-step, so you can cross-reference.</p>
+    <a class="alt-lang" href="quickstart-r.html">→ Prefer R? Switch to the R quickstart</a>
   </section>
 
   <section class="section">
-    <div class="placeholder-card">
-      <div class="ico">🐍</div>
-      <span class="flag">⏳ Coming before the course starts</span>
-      <h2>Bookmark this page.</h2>
-      <p>This page will be filled in before the course begins. It's listed in the nav now so the structure is complete and links work from the Help hub.</p>
-      <p>If you have questions in the meantime, the <a href="ai-policy.html" style="color: var(--green-bright);">Course Companion</a> and <a href="faq.html" style="color: var(--green-bright);">FAQ</a> are both live.</p>
-      <a class="back-link" href="index.html">← Back to Help hub</a>
+
+    <div class="qs-toc">
+      <div class="label">Seven steps · about 30 minutes</div>
+      <ol>
+        <li><span class="num">1</span><a href="#step-1">What you'll do</a></li>
+        <li><span class="num">2</span><a href="#step-2">Install Python + Positron</a></li>
+        <li><span class="num">3</span><a href="#step-3">Install course packages</a></li>
+        <li><span class="num">4</span><a href="#step-4">Your first network</a></li>
+        <li><span class="num">5</span><a href="#step-5">Your first centrality</a></li>
+        <li><span class="num">6</span><a href="#step-6">Try it live in the playground</a></li>
+        <li><span class="num">7</span><a href="#step-7">What's next</a></li>
+      </ol>
     </div>
+
+    <section class="qs-section" id="step-1">
+      <h2><span class="num">1.</span>What you'll do</h2>
+      <p>By the end of this page you will have:</p>
+      <ul>
+        <li>A working Python 3.10+ install with Positron (or VS Code, or your existing setup).</li>
+        <li>The course's Python packages installed: <code>networkx</code>, <code>pandas</code>, <code>matplotlib</code>, <code>numpy</code>, <code>scipy</code>, <code>scikit-learn</code>.</li>
+        <li>Built a 4-node directed network by hand and computed degree and betweenness centrality on it.</li>
+        <li>Re-run the exact same code in the browser-based <a href="../playground-py.html">Python Playground</a> as a sanity check.</li>
+      </ul>
+      <p>The goal isn't to teach Python or networkx thoroughly — that's what the labs are for. It's to make sure your environment works and you've seen the basic shape of a network-analysis pipeline before you start the first real lab.</p>
+    </section>
+
+    <section class="qs-section" id="step-2">
+      <h2><span class="num">2.</span>Install Python + Positron</h2>
+      <p>You need Python 3.10 or newer. <strong>Positron</strong> is the editor we recommend — same Posit folks who built RStudio, multi-language, AI-aware. <strong>VS Code</strong> + the Python extension is the close runner-up. If you already have a Python workflow you like, keep it.</p>
+      <p>The condensed install lives on the <a href="setup.html">Environment Setup page →</a> with screenshots and OS-specific notes.</p>
+      <p>If you don't want to install anything yet, the <a href="../playground-py.html">Python Playground</a> runs everything in your browser. Same packages, no install. You can do this entire quickstart in the playground.</p>
+      <div class="callout amber"><strong>Locked-down work laptop?</strong> Use the playground for the full course. Every lab and the project can be done in-browser.</div>
+    </section>
+
+    <section class="qs-section" id="step-3">
+      <h2><span class="num">3.</span>Install course packages</h2>
+      <p>One command, run in your terminal (not in Python):</p>
+      <div class="code-block"><span class="cm"># in your terminal, after Python is installed</span>
+pip install networkx pandas matplotlib numpy scipy scikit-learn</div>
+      <p>If you prefer the modern resolver, <a href="https://github.com/astral-sh/uv" target="_blank" rel="noopener">uv</a> is faster:</p>
+      <div class="code-block">uv pip install networkx pandas matplotlib numpy scipy scikit-learn</div>
+      <p>Then in your Python script or notebook:</p>
+      <div class="code-block"><span class="kw">import</span> networkx <span class="kw">as</span> nx
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt</div>
+    </section>
+
+    <section class="qs-section" id="step-4">
+      <h2><span class="num">4.</span>Your first network — typed by hand</h2>
+      <p>Build a tiny 4-node directed supply chain: Factory <strong>A</strong> ships to <strong>B</strong> and <strong>C</strong>; both ship to <strong>D</strong>. Same network as the R quickstart, step by step.</p>
+      <div class="code-block"><span class="cm"># nodes: an id and an attribute</span>
+nodes = pd.DataFrame({
+    <span class="st">"name"</span>: [<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"D"</span>],
+    <span class="st">"tier"</span>: [<span class="st">"raw"</span>, <span class="st">"sub"</span>, <span class="st">"sub"</span>, <span class="st">"final"</span>],
+})
+
+<span class="cm"># edges: from -&gt; to plus a weight</span>
+edges = pd.DataFrame({
+    <span class="st">"from"</span>:   [<span class="st">"A"</span>, <span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>],
+    <span class="st">"to"</span>:     [<span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"D"</span>, <span class="st">"D"</span>],
+    <span class="st">"weight"</span>: [  <span class="nm">10</span>,   <span class="nm">8</span>,    <span class="nm">7</span>,    <span class="nm">9</span>],
+})
+
+<span class="cm"># assemble into a networkx DiGraph and check:</span>
+G = nx.from_pandas_edgelist(
+    edges, source=<span class="st">"from"</span>, target=<span class="st">"to"</span>,
+    edge_attr=<span class="st">"weight"</span>, create_using=nx.DiGraph,
+)
+<span class="kw">for</span> _, row <span class="kw">in</span> nodes.iterrows():
+    G.nodes[row[<span class="st">"name"</span>]][<span class="st">"tier"</span>] = row[<span class="st">"tier"</span>]
+
+<span class="fn">print</span>(G)
+<span class="fn">print</span>(<span class="st">"nodes:"</span>, G.number_of_nodes(), <span class="st">"edges:"</span>, G.number_of_edges())</div>
+      <p>You should see something like:</p>
+      <div class="output-block">DiGraph with 4 nodes and 4 edges
+nodes: 4 edges: 4</div>
+      <p>Quick sanity plot — won't be pretty, but confirms the graph is what you think it is:</p>
+      <div class="code-block">pos = nx.spring_layout(G, seed=<span class="nm">42</span>)
+nx.draw(G, pos, with_labels=<span class="kw">True</span>, node_size=<span class="nm">800</span>,
+        node_color=<span class="st">"#39FF14"</span>, edge_color=<span class="st">"#86efac"</span>, arrowsize=<span class="nm">18</span>)
+plt.show()</div>
+      <div class="callout"><strong>What just happened?</strong> A network is its node list and its edge list. Everything else — the picture, the centrality numbers, the analytics — is derived from those two tables. That's the whole conceptual foundation of the course.</div>
+    </section>
+
+    <section class="qs-section" id="step-5">
+      <h2><span class="num">5.</span>Your first centrality</h2>
+      <p>networkx exposes centrality as functions that return <code>{node: value}</code> dicts. Stack them onto your nodes DataFrame:</p>
+      <div class="code-block"><span class="cm"># raw counts (not normalized) for a tiny graph:</span>
+deg_raw = <span class="fn">dict</span>(G.to_undirected().degree())
+btw_raw = nx.betweenness_centrality(G, normalized=<span class="kw">False</span>)
+
+nodes_out = nodes.assign(
+    degree      = nodes[<span class="st">"name"</span>].map(deg_raw),
+    betweenness = nodes[<span class="st">"name"</span>].map(btw_raw),
+)
+<span class="fn">print</span>(nodes_out)</div>
+      <div class="output-block">  name   tier  degree  betweenness
+0    A    raw       2          0.0
+1    B    sub       2          1.0
+2    C    sub       2          1.0
+3    D  final       2          0.0</div>
+      <p>What this tells you in one sentence each:</p>
+      <ul>
+        <li><strong>Degree centrality</strong> counts a node's direct connections. All four nodes have degree 2 here — the network is too symmetric for degree to distinguish them.</li>
+        <li><strong>Betweenness centrality</strong> counts shortest paths that pass <em>through</em> a node. B and C each sit on the one path from A to D, so they each get a 1; A and D never sit in the middle of anything, so they get 0.</li>
+      </ul>
+      <p>This is the punchline of the <a href="../case-studies/centrality.html">Centrality &amp; Criticality</a> lab in miniature: <strong>degree and betweenness measure different things, and the "busiest" node by degree is often not the most critical by betweenness.</strong></p>
+    </section>
+
+    <section class="qs-section" id="step-6">
+      <h2><span class="num">6.</span>Try it live in the playground</h2>
+      <p>You can run the exact code above in your browser — no install needed — to sanity-check your local setup:</p>
+      <div class="next-card">
+        <div class="ico">🐍</div>
+        <div>
+          <h4>Python Playground</h4>
+          <p>Paste the snippets from steps 4 and 5 into the editor, hit Run. You should see the same output. If your local Python produces something different, the playground tells you whether the issue is your environment or the code.</p>
+          <a href="../playground-py.html">Open Python Playground →</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="qs-section" id="step-7">
+      <h2><span class="num">7.</span>What's next</h2>
+      <p>You've earned the first lab. <a href="../case-studies/build-a-network.html">Build a Network</a> takes the "a network is its edge list and its node list" idea and lets you construct networks from prose — same toolbox, more interesting examples.</p>
+      <div class="next-card">
+        <div class="ico">🕸️</div>
+        <div>
+          <h4>Lab 1 — Build a Network</h4>
+          <p>Three sketchpad scenarios (emergency operations center, transit network, supply chain) and a playground for constructing networks from English text. About 45 minutes.</p>
+          <a href="../case-studies/build-a-network.html">Open the lab →</a>
+        </div>
+      </div>
+      <p style="margin-top: 16px;">If you got stuck on any step above, the <a href="faq.html">FAQ</a> covers the common environment and install issues. If a concept didn't land, the <a href="glossary.html">Glossary</a> has one-line definitions of everything used here.</p>
+    </section>
+
   </section>
 
   <p class="site-footer">

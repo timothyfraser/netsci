@@ -6,49 +6,9 @@
 <title>GitHub Setup · SYSEN 5470</title>
 <link rel="stylesheet" href="../assets/design.css">
 <link rel="stylesheet" href="../assets/site.css">
-<style>
-  .placeholder-card {
-    background: rgba(251,191,36,0.06);
-    border: 1px dashed rgba(251,191,36,0.5);
-    border-radius: var(--radius-lg);
-    padding: 28px 32px;
-    backdrop-filter: blur(8px);
-    text-align: center;
-  }
-  .placeholder-card .ico {
-    font-size: 56px; line-height: 1; margin-bottom: 14px;
-  }
-  .placeholder-card .flag {
-    display: inline-block; padding: 4px 12px; margin-bottom: 18px;
-    background: rgba(251,191,36,0.14); border: 1px solid var(--node-4);
-    border-radius: var(--radius-sm);
-    font-family: var(--font-mono); font-size: 10.5px;
-    color: var(--node-4); letter-spacing: 0.16em; text-transform: uppercase;
-  }
-  .placeholder-card h2 {
-    font-family: var(--font-display); font-size: 32px;
-    color: var(--white); letter-spacing: 0.03em; margin-bottom: 12px;
-  }
-  .placeholder-card p {
-    font-family: var(--font-body); font-size: 15px;
-    color: var(--green-mint); line-height: 1.65; max-width: 600px;
-    margin: 0 auto 12px;
-  }
-  .placeholder-card .back-link {
-    margin-top: 18px;
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    padding: 10px 18px; border-radius: var(--radius-sm);
-    background: transparent; color: var(--green-bright);
-    border: 1px solid var(--green-bright); text-decoration: none;
-    display: inline-block;
-  }
-  .placeholder-card .back-link:hover {
-    background: rgba(57,255,20,0.08);
-  }
-</style>
+<link rel="stylesheet" href="../assets/quickstart.css">
 </head>
-<body data-page="help">
+<body data-page="github-setup">
 
 <canvas id="bg-canvas"></canvas>
 
@@ -56,19 +16,38 @@
   <div class="nav-inner">
     <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
     <div class="nav-links">
-      <a href="../index.html"          data-page="home">Overview</a>
-      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
-      <a href="../materials.html"      data-page="materials">Materials</a>
-      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
-      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
-      <a href="../playground.html"     data-page="playground">Playground</a>
-      <a href="../readings.html"       data-page="readings">Readings</a>
-      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
-      <a href="../assignments.html"    data-page="assignments">Assignments</a>
-      <a href="index.html"             data-page="help">Help</a>
-      <a href="../about.html"          data-page="about">About</a>
-    </div>
-    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+      <a href="../index.html" data-page="home">Overview</a>
+      <div class="nav-dropdown" data-group="course">
+        <button type="button" class="nav-trigger" aria-haspopup="true" aria-expanded="false">Course</button>
+        <div class="nav-menu" role="menu">
+          <a href="../syllabus.html"     data-page="syllabus"    role="menuitem">Syllabus</a>
+          <a href="../materials.html"    data-page="materials"   role="menuitem">Materials</a>
+          <a href="../case-studies.html" data-page="cases"       role="menuitem">Case Studies</a>
+          <a href="../readings.html"     data-page="readings"    role="menuitem">Readings</a>
+          <a href="../sketchpad.html"    data-page="sketch"      role="menuitem">Sketches</a>
+          <a href="../assignments.html"  data-page="assignments" role="menuitem">Assignments</a>
+        </div>
+      </div>
+      <a href="../visualizer.html" data-page="viz">Visualizer</a>
+      <a href="../playground.html" data-page="playground">Playground</a>
+      <div class="nav-dropdown" data-group="help">
+        <button type="button" class="nav-trigger" aria-haspopup="true" aria-expanded="false">Help</button>
+        <div class="nav-menu" role="menu">
+          <a href="../help/index.html"         data-page="help"          role="menuitem">Help Hub</a>
+          <a href="../help/glossary.html"      data-page="glossary"      role="menuitem">Glossary</a>
+          <a href="../help/faq.html"           data-page="faq"           role="menuitem">FAQ &amp; Troubleshooting</a>
+          <a href="../help/ai-policy.html"     data-page="ai-policy"     role="menuitem">AI Use Policy</a>
+          <a href="../help/office-hours.html"  data-page="office-hours"  role="menuitem">Office Hours</a>
+          <a href="../calendar.html"           data-page="calendar"      role="menuitem">Calendar</a>
+          <div class="nav-sep" role="separator"></div>
+          <a href="../help/setup.html"         data-page="setup"         role="menuitem">Environment Setup</a>
+          <a href="../help/quickstart-r.html"  data-page="quickstart-r"  role="menuitem">R Quickstart</a>
+          <a href="../help/quickstart-py.html" data-page="quickstart-py" role="menuitem">Python Quickstart</a>
+          <a href="../help/github-setup.html"  data-page="github-setup"  role="menuitem">GitHub Setup</a>
+        </div>
+      </div>
+      <a href="../about.html" data-page="about">About</a>
+    </div><a href="../index.html#enroll" class="nav-cta">Enroll</a>
   </div>
 </nav>
 
@@ -76,19 +55,202 @@
 
   <section class="hero">
     <p class="course-number">SYSEN 5470 · Help · GitHub Setup</p>
-    <h1 class="hero-title">GitHub Setup<br><span>Coming Soon.</span></h1>
-    <p class="hook">Clone the course repo, make your own project repo, and the minimum add/commit/push workflow you need to keep your project work safe. Mirrors timothyfraser/dsai/00_quickstart.</p>
+    <h1 class="hero-title">Clone, Commit,<br><span>Push</span>.</h1>
+    <p class="hook">From "I've never used Git" to (a) a local copy of the course repo and (b) your own private repo for the project case studies. Plan on 30 minutes the first time, two minutes per week after that. If Git is already in your toolkit, skip to step 4.</p>
   </section>
 
   <section class="section">
-    <div class="placeholder-card">
-      <div class="ico">🐙</div>
-      <span class="flag">⏳ Coming before the course starts</span>
-      <h2>Bookmark this page.</h2>
-      <p>This page will be filled in before the course begins. It's listed in the nav now so the structure is complete and links work from the Help hub.</p>
-      <p>If you have questions in the meantime, the <a href="ai-policy.html" style="color: var(--green-bright);">Course Companion</a> and <a href="faq.html" style="color: var(--green-bright);">FAQ</a> are both live.</p>
-      <a class="back-link" href="index.html">← Back to Help hub</a>
+
+    <div class="qs-toc">
+      <div class="label">Six steps</div>
+      <ol>
+        <li><span class="num">1</span><a href="#step-1">Install Git</a></li>
+        <li><span class="num">2</span><a href="#step-2">Make a GitHub account</a></li>
+        <li><span class="num">3</span><a href="#step-3">Clone the course repo</a></li>
+        <li><span class="num">4</span><a href="#step-4">Make your project repo</a></li>
+        <li><span class="num">5</span><a href="#step-5">Basic add / commit / push</a></li>
+        <li><span class="num">6</span><a href="#step-6">Troubleshooting</a></li>
+      </ol>
     </div>
+
+    <section class="qs-section" id="step-1">
+      <h2><span class="num">1.</span>Install Git</h2>
+      <p>Git is the command-line tool. GitHub is the hosting service. You need Git locally before GitHub becomes useful.</p>
+      <ul>
+        <li><strong>macOS:</strong> open Terminal and run <code>git --version</code>. If it prompts you to install Xcode command-line tools, accept. Otherwise you already have it.</li>
+        <li><strong>Windows:</strong> install <a href="https://git-scm.com/download/win" target="_blank" rel="noopener">Git for Windows</a>. Includes Git Bash, which gives you a Unix-style terminal — keep this checked.</li>
+        <li><strong>Linux:</strong> <code>sudo apt install git</code> (Debian/Ubuntu) or your distro's equivalent.</li>
+      </ul>
+      <p>Verify:</p>
+      <div class="code-block">git --version
+<span class="cm"># → git version 2.43.0  (any 2.x is fine)</span></div>
+      <p>Tell Git who you are. Do this once per machine:</p>
+      <div class="code-block">git config --global user.name <span class="st">"Your Name"</span>
+git config --global user.email <span class="st">"you@example.com"</span>
+git config --global init.defaultBranch main</div>
+    </section>
+
+    <section class="qs-section" id="step-2">
+      <h2><span class="num">2.</span>Make a GitHub account</h2>
+      <p>If you already have one, skip. If not:</p>
+      <ul>
+        <li>Sign up at <a href="https://github.com/signup" target="_blank" rel="noopener">github.com/signup</a>. The free tier is plenty for this course.</li>
+        <li><strong>Use github.com, not a GitHub Enterprise instance</strong> (like <code>github.coecis.cornell.edu</code>). The course tools assume public github.com.</li>
+        <li>Use the same email you'll use with Git in step 1, or add it as a secondary email under Settings → Emails.</li>
+        <li>Pick a username that's recognizably you (real name or close to it). Customize your profile (name + photo) so classmates and Tim can find you.</li>
+      </ul>
+
+      <h3>Generate a Personal Access Token (PAT)</h3>
+      <p>You'll need a PAT to push code from the command line. Go to <strong>Settings → Developer settings → Personal access tokens</strong>. You'll see two options:</p>
+      <ul>
+        <li><strong>Classic token</strong> — covers all your repos. Quick. Pick the <code>repo</code> scope (and <code>public_repo</code> if you'll work with public repos too).</li>
+        <li><strong>Fine-grained token</strong> — scoped to specific repositories. More surgical. Under <strong>Permissions → Repository → Contents</strong> set <em>Read and Write</em>. This auto-adds the Metadata permission.</li>
+      </ul>
+      <p>Either works for the course. Pick an <strong>expiration date after July 13, 2026</strong>. <strong>Save the token in your password manager</strong> the moment you see it — GitHub only shows it once.</p>
+      <p>When you push code for the first time, Git will prompt for a username and password. Use your GitHub username and paste the PAT as the password. Most systems then cache the credential.</p>
+      <div class="callout amber"><strong>SSH alternative:</strong> if you'd rather use SSH keys than PATs, follow GitHub's <a href="https://docs.github.com/en/authentication/connecting-to-github-with-ssh" target="_blank" rel="noopener">SSH key guide</a>. The course doesn't care which you pick.</div>
+    </section>
+
+    <section class="qs-section" id="step-3">
+      <h2><span class="num">3.</span>Clone the course repo</h2>
+      <p>The course materials live at <a href="https://github.com/timothyfraser/netsci" target="_blank" rel="noopener">github.com/timothyfraser/netsci</a>. Cloning makes a local copy you can update with <code>git pull</code>.</p>
+      <p>Pick a folder where you keep code (commonly <code>~/code/</code> or <code>~/projects/</code>) and run:</p>
+      <div class="code-block"><span class="cm"># navigate to your code folder, then:</span>
+git clone https://github.com/timothyfraser/netsci.git
+cd netsci
+ls</div>
+      <p>You should see folders like <code>docs/</code>, <code>code/</code>, and a top-level <code>README.md</code>. To pull the latest updates each week:</p>
+      <div class="code-block">cd netsci
+git pull</div>
+      <div class="callout"><strong>You won't push to this repo</strong> — it's read-only for students. The course pushes <em>to</em> you; you push your own work to a separate repo (step 4).</div>
+    </section>
+
+    <section class="qs-section" id="step-4">
+      <h2><span class="num">4.</span>Make your project repo</h2>
+      <p>Your project case studies live in your own private GitHub repo. Setup, in order:</p>
+      <ol>
+        <li>On GitHub, click <strong>New repository</strong>. Name it something like <code>netsci-project</code>. Set it to <strong>Private</strong>. Don't bother adding a README from the web UI — we'll create one locally.</li>
+        <li>On your laptop, in a folder you control:</li>
+      </ol>
+      <div class="code-block"><span class="cm"># initialize and create the basic structure</span>
+mkdir netsci-project
+cd netsci-project
+git init
+mkdir code data report
+
+<span class="cm"># a starter README</span>
+echo <span class="st">"# My SYSEN 5470 Project"</span> &gt; README.md
+echo <span class="st">"3 project case studies. Each lives under code/."</span> &gt;&gt; README.md
+
+<span class="cm"># first commit</span>
+git add .
+git commit -m <span class="st">"Initial commit"</span>
+
+<span class="cm"># connect to your empty GitHub repo (replace USERNAME)</span>
+git remote add origin https://github.com/USERNAME/netsci-project.git
+git branch -M main
+git push -u origin main</div>
+      <p>Now your project repo exists on GitHub.</p>
+      <h3>Add Tim as a collaborator (important)</h3>
+      <p>Since the repo is private, Tim can't see it until you invite him:</p>
+      <ol>
+        <li>Open your repo on GitHub → <strong>Settings</strong> → <strong>Collaborators</strong>.</li>
+        <li>Click <strong>Add people</strong>, type <code>timothyfraser</code>, send the invite.</li>
+        <li>You're done — Tim doesn't need to accept before you submit. Take a screenshot of the Collaborators page for your records.</li>
+      </ol>
+      <h3>Suggested layout</h3>
+      <div class="code-block">netsci-project/
+├── README.md          <span class="cm"># short overview + which 3 case studies you picked</span>
+├── code/
+│   ├── 01-centrality/  <span class="cm"># your first project case study</span>
+│   │   ├── project.R     <span class="cm"># OR project.py</span>
+│   │   └── report.pdf
+│   ├── 02-clustering/
+│   └── 03-routing/
+├── data/              <span class="cm"># raw inputs (CSVs, edgelists)</span>
+└── notes/             <span class="cm"># scratch, sketches, anything</span></div>
+    </section>
+
+    <section class="qs-section" id="step-5">
+      <h2><span class="num">5.</span>Basic add / commit / push</h2>
+      <p>The minimum workflow you need to keep your work safe. After every meaningful chunk of work:</p>
+      <div class="code-block"><span class="cm"># 1. see what's changed</span>
+git status
+
+<span class="cm"># 2. stage the changes you want to commit</span>
+git add code/01-centrality/project.R
+<span class="cm"># or stage everything modified:</span>
+git add .
+
+<span class="cm"># 3. record the change with a short message</span>
+git commit -m <span class="st">"Centrality: first pass, top-10 nodes by betweenness"</span>
+
+<span class="cm"># 4. push to GitHub</span>
+git push</div>
+      <p>That's the whole loop. <strong>Commit often, in small chunks, with short messages.</strong> Commit messages don't need to be poetic — "wip" and "fix off-by-one in degree calc" are both fine. The point is to leave breadcrumbs so a future you (or Tim reviewing) can trace what changed and when.</p>
+      <h3>Pull other people's changes before you push</h3>
+      <div class="code-block">git pull <span class="cm"># pull down anything new (rare on your own private repo, but a good habit)</span>
+git push <span class="cm"># then send yours up</span></div>
+      <div class="callout"><strong>Heads-up — what NOT to commit:</strong> large datasets (over ~50MB), credentials (<code>.env</code> files, API keys), or anything from inside a <code>node_modules/</code> or <code>.Rproj.user/</code> directory. Add a <code>.gitignore</code> to the repo with the common patterns (<a href="https://github.com/github/gitignore" target="_blank" rel="noopener">github/gitignore</a> has templates).</div>
+
+      <h3>Same loop from inside R / Positron</h3>
+      <p>If you'd rather not leave your IDE, three R packages handle Git for you. Install once:</p>
+      <div class="code-block">install.packages(<span class="st">c(</span><span class="st">"usethis"</span><span class="st">,</span> <span class="st">"gert"</span><span class="st">,</span> <span class="st">"credentials"</span><span class="st">)</span><span class="st">)</span></div>
+      <p>Then, once per machine, hand R your PAT and protect against accidental commits of secrets:</p>
+      <div class="code-block"><span class="kw">library</span>(usethis)
+<span class="kw">library</span>(gert)
+<span class="kw">library</span>(credentials)
+
+<span class="cm"># Store your PAT in the OS keychain so R can find it</span>
+credentials<span class="cm">::</span>set_github_pat()
+
+<span class="cm"># Globally vaccinate against committing .env, .Rhistory, .DS_Store, etc.</span>
+usethis<span class="cm">::</span>git_vaccinate()</div>
+      <p>After that, the per-commit loop is three lines:</p>
+      <div class="code-block">gert<span class="cm">::</span>git_pull()
+gert<span class="cm">::</span>git_add(<span class="kw">dir</span>(all.files = <span class="kw">TRUE</span>))
+gert<span class="cm">::</span>git_commit_all(<span class="st">"Centrality: first pass"</span>)
+gert<span class="cm">::</span>git_push()</div>
+      <div class="callout"><strong>From Python:</strong> there's no Pythonic equivalent that's worth recommending — open a terminal in Positron / VS Code and run the <code>git</code> commands above. That's what most working scientists do regardless of language.</div>
+    </section>
+
+    <section class="qs-section" id="step-6">
+      <h2><span class="num">6.</span>Troubleshooting</h2>
+
+      <h3><code>fatal: not a git repository</code></h3>
+      <p>You're running Git from a folder that hasn't been initialized. <code>cd</code> into the folder that has the <code>.git</code> directory, or run <code>git init</code> if you intended to start one here.</p>
+
+      <h3><code>Please enter the commit message…</code> stuck in vim</h3>
+      <p>Press <code>Esc</code>, type <code>:wq</code>, press <code>Enter</code>. Or use <code>git commit -m "your message"</code> next time to skip the editor entirely.</p>
+
+      <h3><code>Updates were rejected because the tip of your branch is behind</code></h3>
+      <p>Someone (probably another machine you also use) pushed before you did.</p>
+      <div class="code-block">git pull --rebase
+git push</div>
+
+      <h3><code>Permission denied (publickey)</code></h3>
+      <p>You're using SSH but your key isn't registered with GitHub. Either set up the SSH key (<a href="https://docs.github.com/en/authentication/connecting-to-github-with-ssh" target="_blank" rel="noopener">GitHub's SSH guide</a>) or switch the remote to HTTPS:</p>
+      <div class="code-block">git remote set-url origin https://github.com/USERNAME/netsci-project.git</div>
+
+      <h3>I accidentally committed a big file / a secret</h3>
+      <p>If you haven't pushed yet:</p>
+      <div class="code-block">git reset HEAD~  <span class="cm"># undo the last commit, keep the file changes</span>
+<span class="cm"># then add the file to .gitignore and recommit</span></div>
+      <p>If you already pushed a secret: <strong>rotate it.</strong> Git history doesn't forgive — the secret is in the repo's history even if you delete the file in a new commit. Treat it as compromised, generate a new one, and update the upstream service.</p>
+
+      <h3>Still stuck</h3>
+      <p>The Course Companion (bubble bottom-right) knows GitHub basics. The <a href="faq.html">FAQ</a> covers a few more cases. If you're under deadline pressure, the playground saves work in your browser without Git — push your project repo on a calmer day.</p>
+    </section>
+
+    <div class="next-card">
+      <div class="ico">🐙</div>
+      <div>
+        <h4>Repo also mirrored in the course materials</h4>
+        <p>A trimmed copy of this page lives at <code>quickstart/README.md</code> in the course repo for students who land there first.</p>
+        <a href="https://github.com/timothyfraser/netsci/tree/main/quickstart" target="_blank" rel="noopener">View on GitHub →</a>
+      </div>
+    </div>
+
   </section>
 
   <p class="site-footer">
