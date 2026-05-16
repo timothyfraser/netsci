@@ -1,6 +1,10 @@
 """Concatenate visible text from docs/ into one Markdown file for NotebookLM.
 
-Output: build/notebooklm-source.md
+Output: .notebook/website.md
+
+The file is committed to the repo by the GitHub Actions workflow so the latest
+version is always one click away on GitHub (open the file, click "Raw", paste
+into NotebookLM).
 
 Run locally with:
     pip install beautifulsoup4 markdownify
@@ -18,7 +22,7 @@ from markdownify import markdownify
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DOCS = REPO_ROOT / "docs"
-OUT = REPO_ROOT / "build" / "notebooklm-source.md"
+OUT = REPO_ROOT / ".notebook" / "website.md"
 
 COURSE_TITLE = "SYSEN 5470 — Network Science for Systems Engineering"
 
@@ -140,9 +144,9 @@ def main() -> int:
     parts: list[str] = [
         f"# {COURSE_TITLE}\n\n",
         f"_Auto-generated NotebookLM source · {timestamp}_\n\n",
-        "This document is the concatenated visible text of the course site at "
-        "https://github.com/timothyfraser/netsci . It refreshes automatically "
-        "whenever the site changes.\n\n---\n\n",
+        "This document is the concatenated visible text of the course website. "
+        "It refreshes automatically whenever the site changes. "
+        "Paste this file into NotebookLM as a source.\n\n---\n\n",
     ]
 
     for path in files:
