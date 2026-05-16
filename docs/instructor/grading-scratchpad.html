@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Grading Scratchpad · Instructor · SYSEN 5470</title>
+<meta name="description" content="Per-student grading scratchpad — pick rubric tiers, add a comment, export a paste-able markdown feedback block.">
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/print.css" media="print">
+<style>
+  body[data-page="grading"] { --green-bright: #a0e090; }
+  .gs-row {
+    display: grid; grid-template-columns: 200px 1fr;
+    gap: 16px; align-items: start;
+    margin-bottom: 18px;
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 18px 22px;
+    backdrop-filter: blur(8px);
+  }
+  .gs-row label.head {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: #a0e090; padding-top: 4px;
+  }
+  .gs-row input[type="text"],
+  .gs-row select,
+  .gs-row textarea {
+    font-family: var(--font-body); font-size: 14px;
+    background: rgba(255,255,255,0.04); color: var(--white);
+    border: 1px solid var(--border); padding: 8px 12px;
+    border-radius: var(--radius-sm); width: 100%; box-sizing: border-box;
+  }
+  .gs-row textarea { min-height: 90px; resize: vertical; }
+  .gs-tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .gs-tier-grid > div { display: flex; flex-direction: column; gap: 4px; }
+  .gs-tier-grid label.skill {
+    font-family: var(--font-display); font-size: 14px;
+    color: var(--white); letter-spacing: 0.03em;
+  }
+  .gs-export {
+    background: rgba(160,224,144,0.04);
+    border: 1px solid rgba(160,224,144,0.3);
+    border-left: 3px solid #a0e090;
+    border-radius: var(--radius-lg); padding: 20px 24px;
+    backdrop-filter: blur(8px);
+  }
+  .gs-export h3 {
+    font-family: var(--font-display); font-size: 20px;
+    color: var(--white); letter-spacing: 0.03em; margin: 0 0 10px;
+  }
+  .gs-export pre {
+    background: rgba(5,10,5,0.7); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm); padding: 14px 18px;
+    margin: 0 0 12px; min-height: 120px;
+    font-family: var(--font-mono); font-size: 12.5px;
+    color: var(--white); line-height: 1.55;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .gs-actions { display: flex; gap: 12px; align-items: center; }
+  .gs-btn {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    background: #a0e090; color: var(--black);
+    border: 1px solid #a0e090;
+    padding: 9px 16px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .gs-btn.ghost {
+    background: transparent; color: #a0e090;
+  }
+  .gs-btn:hover { background: #c0f0a0; border-color: #c0f0a0; }
+  .gs-btn.ghost:hover { background: rgba(160,224,144,0.08); }
+  .gs-feedback {
+    font-family: var(--font-mono); font-size: 11px;
+    color: #a0e090; letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body data-page="grading">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Instructor</a>
+    <div class="nav-links">
+      <a href="index.html">Hub</a>
+      <a href="launch-checklist.html">Launch checks</a>
+      <a href="announcements.html">Announcements</a>
+      <a href="grading-scratchpad.html" class="active">Grading</a>
+      <a href="screencast-prompts.html">Screencasts</a>
+      <a href="sketch-lc-map.html">Sketch↔LC</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page" id="main" tabindex="-1">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Instructor · Grading</p>
+    <h1 class="hero-title">One Student,<br><span>One Markdown Block</span>.</h1>
+    <p class="hook">Fill in the rubric tiers and a one-paragraph comment. The export below updates live. When you're happy with it, click Copy and paste into Canvas Speedgrader. Session-only — refreshing the page wipes the form.</p>
+  </section>
+
+  <section class="section">
+
+    <div class="gs-row">
+      <label class="head" for="gs-student">Student name</label>
+      <input type="text" id="gs-student" placeholder="Last, First">
+    </div>
+
+    <div class="gs-row">
+      <label class="head" for="gs-case">Case study</label>
+      <select id="gs-case">
+        <option value="">— Pick —</option>
+        <option value="build-a-network">01 · Build a Network</option>
+        <option value="joins">02 · Network Joins</option>
+        <option value="aggregation">03 · Aggregation</option>
+        <option value="centrality">04 · Centrality &amp; Criticality</option>
+        <option value="supply-chain">05 · Supply Chain Resilience</option>
+        <option value="dsm-clustering">06 · DSM Clustering</option>
+        <option value="permutation">07 · Network Permutation</option>
+        <option value="sampling">08 · Sampling Big Networks</option>
+        <option value="counterfactual">09 · Counterfactual Monte Carlo</option>
+        <option value="gnn-by-hand">10 · GNN by Hand</option>
+        <option value="gnn-xgboost">11 · GNN + XGBoost</option>
+      </select>
+    </div>
+
+    <div class="gs-row">
+      <label class="head">Rubric tiers</label>
+      <div class="gs-tier-grid">
+        <div>
+          <label class="skill">Identify</label>
+          <select id="gs-identify">
+            <option value="">—</option>
+            <option>Not yet</option>
+            <option>Approaching</option>
+            <option>Meets</option>
+            <option>Exceeds</option>
+          </select>
+        </div>
+        <div>
+          <label class="skill">Measure</label>
+          <select id="gs-measure">
+            <option value="">—</option>
+            <option>Not yet</option>
+            <option>Approaching</option>
+            <option>Meets</option>
+            <option>Exceeds</option>
+          </select>
+        </div>
+        <div>
+          <label class="skill">Infer</label>
+          <select id="gs-infer">
+            <option value="">—</option>
+            <option>Not yet</option>
+            <option>Approaching</option>
+            <option>Meets</option>
+            <option>Exceeds</option>
+          </select>
+        </div>
+        <div>
+          <label class="skill">Predict</label>
+          <select id="gs-predict">
+            <option value="">—</option>
+            <option>Not yet</option>
+            <option>Approaching</option>
+            <option>Meets</option>
+            <option>Exceeds</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="gs-row">
+      <label class="head" for="gs-comment">Comment</label>
+      <textarea id="gs-comment" placeholder="One short paragraph. What worked, what to push on next time."></textarea>
+    </div>
+
+    <div class="gs-export">
+      <h3>Paste-able feedback</h3>
+      <pre id="gs-output">Fill in the fields above to generate feedback.</pre>
+      <div class="gs-actions">
+        <button class="gs-btn" id="gs-copy">⧉ Copy markdown</button>
+        <button class="gs-btn ghost" id="gs-reset">Reset</button>
+        <span class="gs-feedback" id="gs-feedback" aria-live="polite"></span>
+      </div>
+    </div>
+
+  </section>
+
+  <p class="site-footer"><strong>SYSEN 5470 · Instructor · Grading</strong><br>
+  Internal only. Not for distribution.</p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+<script src="../assets/instructor.js" defer></script>
+<script>
+(function () {
+  var els = {
+    student:  document.getElementById('gs-student'),
+    cas:      document.getElementById('gs-case'),
+    identify: document.getElementById('gs-identify'),
+    measure:  document.getElementById('gs-measure'),
+    infer:    document.getElementById('gs-infer'),
+    predict:  document.getElementById('gs-predict'),
+    comment:  document.getElementById('gs-comment'),
+    out:      document.getElementById('gs-output'),
+    copy:     document.getElementById('gs-copy'),
+    reset:    document.getElementById('gs-reset'),
+    fb:       document.getElementById('gs-feedback')
+  };
+
+  function render() {
+    var any = els.student.value || els.cas.value ||
+              els.identify.value || els.measure.value ||
+              els.infer.value || els.predict.value ||
+              els.comment.value.trim();
+    if (!any) {
+      els.out.textContent = 'Fill in the fields above to generate feedback.';
+      return;
+    }
+    var caseLabel = els.cas.options[els.cas.selectedIndex].text;
+    if (caseLabel.startsWith('—')) caseLabel = '_unspecified_';
+    var lines = [];
+    lines.push('### Feedback — ' + (els.student.value || '_student_'));
+    lines.push('');
+    lines.push('**Case study:** ' + caseLabel);
+    lines.push('');
+    lines.push('**Rubric**');
+    function row(skill, val) { lines.push('- ' + skill + ': ' + (val || '_not assessed_')); }
+    row('Identify', els.identify.value);
+    row('Measure',  els.measure.value);
+    row('Infer',    els.infer.value);
+    row('Predict',  els.predict.value);
+    if (els.comment.value.trim()) {
+      lines.push('');
+      lines.push('**Notes**');
+      lines.push('');
+      lines.push(els.comment.value.trim());
+    }
+    els.out.textContent = lines.join('\n');
+  }
+
+  ['input', 'change'].forEach(function (ev) {
+    Object.values(els).forEach(function (el) {
+      if (el && el.addEventListener && el !== els.out && el !== els.copy && el !== els.reset && el !== els.fb) {
+        el.addEventListener(ev, render);
+      }
+    });
+  });
+
+  els.copy.addEventListener('click', function () {
+    if (!window.instructor || !window.instructor.copy) return;
+    window.instructor.copy(els.out.textContent).then(function () {
+      els.fb.textContent = 'Copied — paste into Canvas Speedgrader.';
+      setTimeout(function () { els.fb.textContent = ''; }, 3500);
+    });
+  });
+
+  els.reset.addEventListener('click', function () {
+    if (!confirm('Clear all fields?')) return;
+    els.student.value = '';
+    els.cas.selectedIndex = 0;
+    ['identify','measure','infer','predict'].forEach(function (k) { els[k].selectedIndex = 0; });
+    els.comment.value = '';
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

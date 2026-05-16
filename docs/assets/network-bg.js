@@ -53,6 +53,26 @@
     });
     requestAnimationFrame(tick);
   }
-  resize(); init(); tick();
+  function start() { resize(); init(); tick(); }
+
+  // Defer the animation until the browser is idle so it doesn't block FCP.
+  if (window.requestIdleCallback) {
+    window.requestIdleCallback(start, { timeout: 1500 });
+  } else {
+    setTimeout(start, 200);
+  }
   window.addEventListener('resize', function () { resize(); init(); });
+
+  // Respect reduced-motion preference — render one frame and stop.
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    tick = function () {
+      ctx.clearRect(0, 0, W, H);
+      nodes.forEach(function (n) {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(57,255,20,0.5)';
+        ctx.fill();
+      });
+    };
+  }
 })();

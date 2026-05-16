@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Instructor · SYSEN 5470</title>
+<meta name="description" content="Instructor authoring tooling for SYSEN 5470 — launch checklists, announcement templates, grading scratchpad, screencast prompts, sketch↔LC map.">
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/print.css" media="print">
+<style>
+  body[data-page="instructor"] { --green-bright: #a0e090; }
+  .instr-banner {
+    background: rgba(160,224,144,0.06);
+    border: 1px solid rgba(160,224,144,0.3);
+    border-left: 3px solid #a0e090;
+    border-radius: var(--radius-sm);
+    padding: 12px 18px; margin-bottom: 24px;
+    font-family: var(--font-mono); font-size: 11.5px;
+    color: var(--green-mint); letter-spacing: 0.04em;
+  }
+  .instr-banner strong { color: #fff; letter-spacing: 0.1em; text-transform: uppercase; }
+  .instr-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .instr-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 22px 24px;
+    backdrop-filter: blur(8px); text-decoration: none; color: inherit;
+    transition: border-color .2s, transform .15s;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .instr-card:hover { border-color: #a0e090; transform: translateY(-2px); }
+  .instr-card .ico { font-size: 28px; line-height: 1; }
+  .instr-card h3 {
+    font-family: var(--font-display); font-size: 20px;
+    color: var(--white); letter-spacing: 0.03em; line-height: 1.1;
+  }
+  .instr-card p {
+    font-family: var(--font-body); font-size: 13.5px;
+    color: var(--green-mint); line-height: 1.55;
+  }
+  .instr-card .arrow {
+    font-family: var(--font-mono); font-size: 11px;
+    color: #a0e090; letter-spacing: 0.12em;
+    text-transform: uppercase; margin-top: 4px;
+  }
+</style>
+</head>
+<body data-page="instructor">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html" data-page="home">Overview</a>
+      <a href="../assignments.html" data-page="assignments">Assignments</a>
+      <a href="../about.html" data-page="about">About</a>
+    </div>
+    <span style="font-family: var(--font-mono); font-size: 11px; color: #a0e090; letter-spacing: 0.12em; text-transform: uppercase;">Back of house</span>
+  </div>
+</nav>
+
+<div class="page" id="main" tabindex="-1">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Instructor</p>
+    <h1 class="hero-title">Back of <span>House</span>.</h1>
+    <p class="hook">Five tools for running the course week-to-week. Not linked from public nav; <code>robots.txt</code> excludes this directory; pages set <code>noindex,nofollow</code>. Bookmark this page and treat it as your dashboard.</p>
+  </section>
+
+  <section class="section">
+    <div class="instr-banner"><strong>Heads-up</strong> · this subtree is not student-facing. Don't paste links from here into Canvas or office hours.</div>
+
+    <div class="instr-grid">
+      <a class="instr-card" href="launch-checklist.html">
+        <span class="ico">🚦</span>
+        <h3>Per-case-study launch checklist</h3>
+        <p>The Friday-before-Monday pre-flight check for each of the 11 case studies. Eleven collapsible cards.</p>
+        <span class="arrow">Open →</span>
+      </a>
+
+      <a class="instr-card" href="announcements.html">
+        <span class="ico">📣</span>
+        <h3>Announcement templates</h3>
+        <p>Pre-written Canvas announcements with copy-to-clipboard buttons. Fill in week and date, paste, send.</p>
+        <span class="arrow">Open →</span>
+      </a>
+
+      <a class="instr-card" href="grading-scratchpad.html">
+        <span class="ico">📝</span>
+        <h3>Grading scratchpad</h3>
+        <p>Per-student rubric: pick the case study, fill in tiers and a comment, export a paste-able markdown feedback block.</p>
+        <span class="arrow">Open →</span>
+      </a>
+
+      <a class="instr-card" href="screencast-prompts.html">
+        <span class="ico">🎬</span>
+        <h3>Screencast prompt library</h3>
+        <p>One-paragraph scripts for the screencasts you'll record. Time-boxed: 30s / 60s / 90s.</p>
+        <span class="arrow">Open →</span>
+      </a>
+
+      <a class="instr-card" href="sketch-lc-map.html">
+        <span class="ico">🧭</span>
+        <h3>Sketch ↔ LC alignment</h3>
+        <p>Every sketchpad prompt mapped to the Learning Check it primes. The course's pedagogical wiring diagram.</p>
+        <span class="arrow">Open →</span>
+      </a>
+    </div>
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Instructor</strong><br>
+    Cornell Engineering · Summer 2026 · Internal only. Not for distribution.
+  </p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

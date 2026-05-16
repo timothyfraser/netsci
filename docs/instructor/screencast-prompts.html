@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Screencast Prompts · Instructor · SYSEN 5470</title>
+<meta name="description" content="Screencast prompt library for SYSEN 5470 — one-paragraph scripts per case study and general topic, time-boxed to 30s / 60s / 90s.">
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/print.css" media="print">
+<style>
+  body[data-page="screencasts"] { --green-bright: #a0e090; }
+  .sc-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 18px 22px;
+    margin-bottom: 14px; backdrop-filter: blur(8px);
+  }
+  .sc-card .head {
+    display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .sc-card h3 {
+    font-family: var(--font-display); font-size: 18px;
+    color: var(--white); letter-spacing: 0.03em; margin: 0;
+  }
+  .sc-card .time {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 3px;
+    background: rgba(160,224,144,0.12); color: #a0e090;
+  }
+  .sc-card .tag {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--node-4);
+  }
+  .sc-card p {
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.6; margin: 0;
+  }
+  .sc-group-label {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: #a0e090; margin: 22px 0 8px;
+  }
+</style>
+</head>
+<body data-page="screencasts">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Instructor</a>
+    <div class="nav-links">
+      <a href="index.html">Hub</a>
+      <a href="launch-checklist.html">Launch checks</a>
+      <a href="announcements.html">Announcements</a>
+      <a href="grading-scratchpad.html">Grading</a>
+      <a href="screencast-prompts.html" class="active">Screencasts</a>
+      <a href="sketch-lc-map.html">Sketch↔LC</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page" id="main" tabindex="-1">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Instructor · Screencasts</p>
+    <h1 class="hero-title">Short Scripts,<br><span>Time-Boxed</span>.</h1>
+    <p class="hook">Eighteen one-paragraph screencast scripts you can record in a single take. Each one is timed for 30s, 60s, or 90s — keep the energy tight. Don't read these verbatim; use them as the spine.</p>
+  </section>
+
+  <section class="section">
+
+    <div class="sc-group-label">General — pre-term</div>
+
+    <div class="sc-card">
+      <div class="head">
+        <h3>Welcome to the course</h3>
+        <span class="time">60s</span>
+        <span class="tag">Day 1</span>
+      </div>
+      <p>"Welcome to SYSEN 5470. The next three weeks you'll do eleven case studies on real networks — yours and mine. Every Monday at 9 AM you submit four things: a sketch, two learning checks, and your project case study. Three weeks, three reports, one network you'll know inside out. The whole syllabus is at sysen5470 dot com slash syllabus — read it once, then come back here."</p>
+    </div>
+
+    <div class="sc-card">
+      <div class="head">
+        <h3>How to pick your project network</h3>
+        <span class="time">90s</span>
+        <span class="tag">Day 1–2</span>
+      </div>
+      <p>"You need a network you'll be happy with for three weeks. Three rules: at least 100 nodes, ideally 1000+; something you can defend operationalizing — node, edge, weight; and a question you actually care about. Two failure modes: a synthetic dataset where everything is too clean, or a 'famous' network like karate where you can't say anything new. If by Friday of week 1 you don't have one, email me — I'll manufacture one to fit your field."</p>
+    </div>
+
+    <div class="sc-card">
+      <div class="head">
+        <h3>What "numbers in prose" means</h3>
+        <span class="time">60s</span>
+        <span class="tag">Day 2</span>
+      </div>
+      <p>"Numbers in prose means: don't dump a table and call it a result. Write 'the top-five betweenness stations are X, Y, Z, accounting for 38% of all shortest paths' — sentence first, number embedded, units explicit. Open the sample report linked on the Assignments page and read it once before you start. The shape matters more than the topic."</p>
+    </div>
+
+    <div class="sc-card">
+      <div class="head">
+        <h3>The AI policy in 30 seconds</h3>
+        <span class="time">30s</span>
+        <span class="tag">Day 2</span>
+      </div>
+      <p>"AI for syntax and debugging — yes, every day. AI to write your report prose or answer Learning Checks — no. The course is about your thinking. The Course Companion bubble on every page is the recommended AI; it's grounded in our materials and won't write your report for you, by design."</p>
+    </div>
+
+    <div class="sc-group-label">Case studies — one per</div>
+
+    <div class="sc-card">
+      <div class="head"><h3>01 · Build a Network</h3><span class="time">60s</span></div>
+      <p>"Before you can analyze a network you have to build one. This lab asks the harder question: what's a node, what's an edge, what's an edge weight? You'll work through three examples — a social network, a supply chain, and a bipartite affiliation network — and you'll see that the same data can be three different graphs with three different conclusions. Sketch first, code second."</p>
+    </div>
+
+    <div class="sc-card">
+      <div class="head"><h3>04 · Centrality &amp; Criticality</h3><span class="time">90s</span></div>
+      <p>"Centrality is plural, not singular. Degree, betweenness, eigenvector, closeness — they're different questions about the same network. The lab walks through when each one picks the right node. Pay attention to the bridges-vs-hubs distinction: a bridge has low degree but high betweenness, and removing it costs you more than removing the busiest hub. The Bluebikes sample report shows exactly this on a real network."</p>
+    </div>
+
+    <div class="sc-card">
+      <div class="head"><h3>05 · Supply Chain Resilience</h3><span class="time">60s</span></div>
+      <p>"Resilience isn't a property of a network — it's a property of how the network responds to attack. This lab runs targeted-attack simulations and lets you compare strategies. The point is to develop intuition for when targeted removal is much worse than random, and when it isn't. Most supply chains are surprisingly random-resilient and surprisingly targeted-fragile."</p>
+    </div>
+
+    <div class="sc-card">
+      <div class="head"><h3>06 · DSM Clustering</h3><span class="time">60s</span></div>
+      <p>"Modularity is the question: are there subgroups in this network that are tighter than the average? Louvain answers it greedily; Leiden and walktrap answer it differently. Run two algorithms and look at where they disagree — those are the structurally ambiguous nodes, the ones with split allegiances. That's where the interesting questions live."</p>
+    </div>
+
+    <div class="sc-card">
+      <div class="head"><h3>07 · Network Permutation</h3><span class="time">90s</span></div>
+      <p>"Permutation tests are how you do inference on a single network. You permute the node labels, recompute your statistic, and compare. The trap: an unblocked permutation often gives you a tiny p-value because almost any structure is unusual against pure random. Use a block-permutation null where the blocks match the structure you'd expect by chance. The lab shows the difference on the same network."</p>
+    </div>
+
+    <div class="sc-card">
+      <div class="head"><h3>09 · Counterfactual Monte Carlo</h3><span class="time">60s</span></div>
+      <p>"Want to know if adding a connection between two firms would actually help resilience? Don't argue — simulate. Counterfactual Monte Carlo replicates your intervention thousands of times under reasonable variation and gives you a CI on the effect. The lab walks through one intervention and one metric. The take-home is that 95% CI's on network statistics are wider than you'd guess."</p>
+    </div>
+
+    <div class="sc-card">
+      <div class="head"><h3>10 · GNN by Hand</h3><span class="time">90s</span></div>
+      <p>"Graph neural networks are 'just' matrix multiplications with the adjacency matrix as the propagation step. This lab makes that concrete — we run a 1-layer GCN by hand, then 2-layer, then 3-layer, and you watch the receptive field grow. By the end you should be able to look at a GCN paper and see what's happening under the buzzwords. Heavy lab; budget two hours."</p>
+    </div>
+
+    <div class="sc-card">
+      <div class="head"><h3>11 · GNN + XGBoost</h3><span class="time">90s</span></div>
+      <p>"The capstone. We embed nodes with a small GCN, hand those embeddings to XGBoost alongside raw features, and predict an outcome. The interesting question isn't 'does it work' — it's 'how much does network position add beyond raw features and time-lag?' Some networks: a lot. Others: nothing. Your project case study answers it for your network."</p>
+    </div>
+
+    <div class="sc-group-label">Closing — late-term</div>
+
+    <div class="sc-card">
+      <div class="head">
+        <h3>How to pick your strongest project for the final</h3>
+        <span class="time">60s</span>
+        <span class="tag">Week 3</span>
+      </div>
+      <p>"You'll present your strongest of three project case studies. Strongest doesn't mean fanciest method — it means clearest thinking. Pick the report where you could defend every choice in two sentences: the network operationalization, the metric, the null, the result. That's what your cohort will learn the most from."</p>
+    </div>
+
+  </section>
+
+  <p class="site-footer"><strong>SYSEN 5470 · Instructor · Screencasts</strong><br>
+  Internal only. Not for distribution.</p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

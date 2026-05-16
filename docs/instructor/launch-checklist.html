@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Launch Checklist · Instructor · SYSEN 5470</title>
+<meta name="description" content="Per-case-study pre-launch checklist for SYSEN 5470 — what to verify on the Friday before each Monday.">
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/print.css" media="print">
+<style>
+  body[data-page="launch-checklist"] { --green-bright: #a0e090; }
+  .lc-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 14px 22px;
+    margin-bottom: 8px; backdrop-filter: blur(8px);
+  }
+  .lc-card[open] { padding-bottom: 18px; }
+  .lc-card summary {
+    cursor: pointer; padding: 10px 0;
+    font-family: var(--font-display); font-size: 18px;
+    color: var(--white); letter-spacing: 0.03em;
+    list-style: none; display: flex; align-items: center; gap: 12px;
+  }
+  .lc-card summary::before {
+    content: '▸'; color: #a0e090; font-family: var(--font-mono); font-size: 14px;
+    transition: transform .15s;
+  }
+  .lc-card[open] summary::before { transform: rotate(90deg); }
+  .lc-card summary .num {
+    font-family: var(--font-mono); font-size: 12px; color: #a0e090;
+    letter-spacing: 0.1em; min-width: 28px;
+  }
+  .lc-card ul {
+    list-style: none; padding: 0; margin: 10px 0 0;
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.65;
+  }
+  .lc-card li { padding: 4px 0; display: flex; gap: 10px; }
+  .lc-card input[type="checkbox"] {
+    accent-color: #a0e090; margin-top: 4px;
+    width: 14px; height: 14px; flex-shrink: 0;
+  }
+  .lc-card .links {
+    margin-top: 12px; display: flex; gap: 12px; flex-wrap: wrap;
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .lc-card .links a { color: #a0e090; text-decoration: none; }
+  .lc-card .links a:hover { text-decoration: underline; }
+</style>
+</head>
+<body data-page="launch-checklist">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Instructor</a>
+    <div class="nav-links">
+      <a href="index.html">Hub</a>
+      <a href="launch-checklist.html" class="active">Launch checks</a>
+      <a href="announcements.html">Announcements</a>
+      <a href="grading-scratchpad.html">Grading</a>
+      <a href="screencast-prompts.html">Screencasts</a>
+      <a href="sketch-lc-map.html">Sketch↔LC</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page" id="main" tabindex="-1">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Instructor · Launch</p>
+    <h1 class="hero-title">Friday <span>Pre-flight</span>.</h1>
+    <p class="hook">Run this for each of the 11 case studies, two days before its Monday goes live. The checklists are intentionally short — they catch the failure modes that hurt students, not all conceivable ones.</p>
+  </section>
+
+  <section class="section">
+    <details class="lc-card">
+      <summary><span class="num">01</span>Build a Network</summary>
+      <ul>
+        <li><input type="checkbox"> Lab loads in a cold-cache browser; D3 SVG renders</li>
+        <li><input type="checkbox"> <code>code/01_build-a-network/example.R</code> runs end-to-end</li>
+        <li><input type="checkbox"> <code>code/01_build-a-network/example.py</code> runs end-to-end</li>
+        <li><input type="checkbox"> README's Project Question Seeds make sense</li>
+        <li><input type="checkbox"> Sketch 01 (place nodes, draw edges) is wired on sketchpad.html</li>
+        <li><input type="checkbox"> Canvas Week 1 assignment exists with all four boxes</li>
+        <li><input type="checkbox"> Office-hours slots open for the week</li>
+      </ul>
+      <div class="links">
+        <a href="../case-studies/build-a-network.html" target="_blank">Open lab ↗</a>
+        <a href="https://github.com/timothyfraser/netsci/tree/main/code/01_build-a-network" target="_blank">Code ↗</a>
+      </div>
+    </details>
+
+    <details class="lc-card">
+      <summary><span class="num">02</span>Network Joins</summary>
+      <ul>
+        <li><input type="checkbox"> Lab loads; R/Python toggle works</li>
+        <li><input type="checkbox"> <code>example.R</code> runs end-to-end</li>
+        <li><input type="checkbox"> <code>example.py</code> runs end-to-end</li>
+        <li><input type="checkbox"> Mermaid flowchart renders</li>
+        <li><input type="checkbox"> Project Question Seeds make sense</li>
+        <li><input type="checkbox"> Sketch 02 (joins) is wired</li>
+      </ul>
+      <div class="links">
+        <a href="../case-studies/joins.html" target="_blank">Open lab ↗</a>
+        <a href="https://github.com/timothyfraser/netsci/tree/main/code/02_joins" target="_blank">Code ↗</a>
+      </div>
+    </details>
+
+    <details class="lc-card">
+      <summary><span class="num">03</span>Aggregation</summary>
+      <ul>
+        <li><input type="checkbox"> Lab loads; resolution slider works</li>
+        <li><input type="checkbox"> <code>example.R</code> runs end-to-end</li>
+        <li><input type="checkbox"> <code>example.py</code> runs end-to-end</li>
+        <li><input type="checkbox"> Project Question Seeds make sense</li>
+        <li><input type="checkbox"> Sketches 03a/03b (aggregation views) are wired</li>
+      </ul>
+      <div class="links">
+        <a href="../case-studies/aggregation.html" target="_blank">Open lab ↗</a>
+        <a href="https://github.com/timothyfraser/netsci/tree/main/code/03_aggregation" target="_blank">Code ↗</a>
+      </div>
+    </details>
+
+    <details class="lc-card">
+      <summary><span class="num">04</span>Centrality &amp; Criticality</summary>
+      <ul>
+        <li><input type="checkbox"> Lab loads; centrality picker works</li>
+        <li><input type="checkbox"> <code>example.R</code> runs end-to-end</li>
+        <li><input type="checkbox"> <code>example.py</code> runs end-to-end</li>
+        <li><input type="checkbox"> Project Question Seeds make sense</li>
+        <li><input type="checkbox"> Sketch 04 (centrality) is wired</li>
+        <li><input type="checkbox"> Sample report matches the question shape (this is the exemplar)</li>
+      </ul>
+      <div class="links">
+        <a href="../case-studies/centrality.html" target="_blank">Open lab ↗</a>
+        <a href="https://github.com/timothyfraser/netsci/tree/main/code/04_centrality" target="_blank">Code ↗</a>
+      </div>
+    </details>
+
+    <details class="lc-card">
+      <summary><span class="num">05</span>Supply Chain Resilience</summary>
+      <ul>
+        <li><input type="checkbox"> Lab loads; attack simulation runs</li>
+        <li><input type="checkbox"> <code>example.R</code> + <code>example.py</code> run</li>
+        <li><input type="checkbox"> Project Question Seeds make sense</li>
+        <li><input type="checkbox"> Sketch 05 (resilience) is wired</li>
+      </ul>
+      <div class="links">
+        <a href="../case-studies/supply-chain.html" target="_blank">Open lab ↗</a>
+        <a href="https://github.com/timothyfraser/netsci/tree/main/code/05_supply-chain" target="_blank">Code ↗</a>
+      </div>
+    </details>
+
+    <details class="lc-card">
+      <summary><span class="num">06</span>DSM Clustering</summary>
+      <ul>
+        <li><input type="checkbox"> Lab loads; Louvain animation runs</li>
+        <li><input type="checkbox"> <code>example.R</code> + <code>example.py</code> run</li>
+        <li><input type="checkbox"> Project Question Seeds make sense</li>
+        <li><input type="checkbox"> Sketch 06 (clustering) is wired</li>
+      </ul>
+      <div class="links">
+        <a href="../case-studies/dsm-clustering.html" target="_blank">Open lab ↗</a>
+        <a href="https://github.com/timothyfraser/netsci/tree/main/code/06_dsm-clustering" target="_blank">Code ↗</a>
+      </div>
+    </details>
+
+    <details class="lc-card">
+      <summary><span class="num">07</span>Network Permutation</summary>
+      <ul>
+        <li><input type="checkbox"> Lab loads; permutation sampler runs</li>
+        <li><input type="checkbox"> <code>example.R</code> + <code>example.py</code> run</li>
+        <li><input type="checkbox"> Project Question Seeds make sense</li>
+        <li><input type="checkbox"> Sketch 07 (permutation) is wired</li>
+      </ul>
+      <div class="links">
+        <a href="../case-studies/permutation.html" target="_blank">Open lab ↗</a>
+        <a href="https://github.com/timothyfraser/netsci/tree/main/code/07_permutation" target="_blank">Code ↗</a>
+      </div>
+    </details>
+
+    <details class="lc-card">
+      <summary><span class="num">08</span>Sampling Big Networks</summary>
+      <ul>
+        <li><input type="checkbox"> Lab loads; sampler swap works</li>
+        <li><input type="checkbox"> <code>example.R</code> + <code>example.py</code> run</li>
+        <li><input type="checkbox"> Project Question Seeds make sense</li>
+        <li><input type="checkbox"> Sketch 08 (sampling) is wired</li>
+      </ul>
+      <div class="links">
+        <a href="../case-studies/sampling.html" target="_blank">Open lab ↗</a>
+        <a href="https://github.com/timothyfraser/netsci/tree/main/code/08_sampling" target="_blank">Code ↗</a>
+      </div>
+    </details>
+
+    <details class="lc-card">
+      <summary><span class="num">09</span>Counterfactual Monte Carlo</summary>
+      <ul>
+        <li><input type="checkbox"> Lab loads; MC sampler runs at R=500 without freeze</li>
+        <li><input type="checkbox"> <code>example.R</code> + <code>example.py</code> run</li>
+        <li><input type="checkbox"> Project Question Seeds make sense</li>
+        <li><input type="checkbox"> Sketch 09 (counterfactual) is wired</li>
+      </ul>
+      <div class="links">
+        <a href="../case-studies/counterfactual.html" target="_blank">Open lab ↗</a>
+        <a href="https://github.com/timothyfraser/netsci/tree/main/code/09_counterfactual" target="_blank">Code ↗</a>
+      </div>
+    </details>
+
+    <details class="lc-card">
+      <summary><span class="num">10</span>GNN by Hand</summary>
+      <ul>
+        <li><input type="checkbox"> Lab loads; matrix walkthrough works</li>
+        <li><input type="checkbox"> <code>example.R</code> + <code>example.py</code> run</li>
+        <li><input type="checkbox"> Project Question Seeds make sense</li>
+        <li><input type="checkbox"> Sketch 10 (GNN) is wired</li>
+      </ul>
+      <div class="links">
+        <a href="../case-studies/gnn-by-hand.html" target="_blank">Open lab ↗</a>
+        <a href="https://github.com/timothyfraser/netsci/tree/main/code/10_gnn-by-hand" target="_blank">Code ↗</a>
+      </div>
+    </details>
+
+    <details class="lc-card">
+      <summary><span class="num">11</span>GNN + XGBoost</summary>
+      <ul>
+        <li><input type="checkbox"> Lab loads; XGBoost panel renders</li>
+        <li><input type="checkbox"> <code>example.R</code> + <code>example.py</code> run</li>
+        <li><input type="checkbox"> Project Question Seeds make sense</li>
+        <li><input type="checkbox"> Sketch 11 (prediction) is wired</li>
+      </ul>
+      <div class="links">
+        <a href="../case-studies/gnn-xgboost.html" target="_blank">Open lab ↗</a>
+        <a href="https://github.com/timothyfraser/netsci/tree/main/code/11_gnn-xgboost" target="_blank">Code ↗</a>
+      </div>
+    </details>
+  </section>
+
+  <p class="site-footer"><strong>SYSEN 5470 · Instructor · Launch checks</strong><br>
+  Internal only. Not for distribution.</p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

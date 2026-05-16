@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Submit · SYSEN 5470</title>
+<meta name="description" content="Monday-morning submission workflow for SYSEN 5470: sketches, learning checks, and the weekly project case study — Canvas plus GitHub.">
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/quickstart.css">
+<style>
+  .four-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px; margin: 16px 0 8px;
+  }
+  .four-grid .item {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 16px;
+    backdrop-filter: blur(8px);
+  }
+  .four-grid .item .ico { font-size: 22px; color: var(--green-bright); }
+  .four-grid .item h4 {
+    font-family: var(--font-display); font-size: 15px;
+    color: var(--white); letter-spacing: 0.02em; margin: 4px 0;
+  }
+  .four-grid .item p {
+    font-family: var(--font-body); font-size: 12.5px;
+    color: var(--green-mint); line-height: 1.5; margin: 0;
+  }
+</style>
+<meta property="og:title" content="How to Submit · SYSEN 5470">
+<meta property="og:description" content="Monday-morning submission workflow for SYSEN 5470: sketches, learning checks, and the weekly project case study — Canvas plus GitHub.">
+<meta property="og:image" content="../images/banner.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="../assets/print.css" media="print">
+</head>
+<body data-page="submit">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html" data-page="home">Overview</a>
+      <div class="nav-dropdown" data-group="course">
+        <button type="button" class="nav-trigger" aria-haspopup="true" aria-expanded="false">Course</button>
+        <div class="nav-menu" role="menu">
+          <a href="../syllabus.html"     data-page="syllabus"    role="menuitem">Syllabus</a>
+          <a href="../materials.html"    data-page="materials"   role="menuitem">Materials</a>
+          <a href="../case-studies.html" data-page="cases"       role="menuitem">Case Studies</a>
+          <a href="../readings.html"     data-page="readings"    role="menuitem">Readings</a>
+          <a href="../sketchpad.html"    data-page="sketch"      role="menuitem">Sketches</a>
+          <a href="../assignments.html"  data-page="assignments" role="menuitem">Assignments</a>
+        </div>
+      </div>
+      <a href="../visualizer.html" data-page="viz">Visualizer</a>
+      <a href="../playground.html" data-page="playground">Playground</a>
+      <div class="nav-dropdown" data-group="help">
+        <button type="button" class="nav-trigger" aria-haspopup="true" aria-expanded="false">Help</button>
+        <div class="nav-menu" role="menu">
+          <a href="../help/index.html"         data-page="help"          role="menuitem">Help Hub</a>
+          <a href="../help/glossary.html"      data-page="glossary"      role="menuitem">Glossary</a>
+          <a href="../help/faq.html"           data-page="faq"           role="menuitem">FAQ &amp; Troubleshooting</a>
+          <a href="../help/ai-policy.html"     data-page="ai-policy"     role="menuitem">AI Use Policy</a>
+          <a href="../help/office-hours.html"  data-page="office-hours"  role="menuitem">Office Hours</a>
+          <a href="../calendar.html"           data-page="calendar"      role="menuitem">Calendar</a>
+          <div class="nav-sep" role="separator"></div>
+          <a href="../help/setup.html"         data-page="setup"         role="menuitem">Environment Setup</a>
+          <a href="../help/quickstart-r.html"  data-page="quickstart-r"  role="menuitem">R Quickstart</a>
+          <a href="../help/quickstart-py.html" data-page="quickstart-py" role="menuitem">Python Quickstart</a>
+          <a href="../help/github-setup.html"  data-page="github-setup"  role="menuitem">GitHub Setup</a>
+          <a href="../help/submit.html"        data-page="submit"        role="menuitem">How to Submit</a>
+        </div>
+      </div>
+      <a href="../about.html" data-page="about">About</a>
+    </div><a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page" id="main" tabindex="-1">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Help · How to Submit</p>
+    <h1 class="hero-title">Push It<br>Up by <span>Monday 9 AM</span>.</h1>
+    <p class="hook">Every Monday you submit the same four things from the previous week — a sketch, a case-study learning check, a code learning check, and your project case study. Canvas holds the receipts; GitHub holds the code. Plan on 15 minutes the first time, three minutes once the rhythm clicks.</p>
+  </section>
+
+  <section class="section">
+
+    <div class="qs-toc">
+      <div class="label">Five steps</div>
+      <ol>
+        <li><span class="num">1</span><a href="#step-1">What you're submitting</a></li>
+        <li><span class="num">2</span><a href="#step-2">Push your code to GitHub</a></li>
+        <li><span class="num">3</span><a href="#step-3">Open the Canvas assignment</a></li>
+        <li><span class="num">4</span><a href="#step-4">Paste the right thing in the right box</a></li>
+        <li><span class="num">5</span><a href="#step-5">Self-grade and submit</a></li>
+      </ol>
+    </div>
+
+    <section class="qs-section" id="step-1">
+      <h2><span class="num">1.</span>What you're submitting</h2>
+      <p>Every Monday the Canvas assignment has the <strong>same four text boxes</strong>, one per item. Here's the shape:</p>
+      <div class="four-grid">
+        <div class="item">
+          <div class="ico">✏️</div>
+          <h4>Sketch</h4>
+          <p>Photo of every <a href="../sketchpad.html">sketchpad prompt</a> assigned to this week.</p>
+        </div>
+        <div class="item">
+          <div class="ico">🧪</div>
+          <h4>Case LC</h4>
+          <p>Learning Check answer from every <a href="../case-studies.html">case study lab</a> last week.</p>
+        </div>
+        <div class="item">
+          <div class="ico">⌨️</div>
+          <h4>Code LC</h4>
+          <p>The console output from running last week's <code>example.R</code> or <code>example.py</code>.</p>
+        </div>
+        <div class="item">
+          <div class="ico">📄</div>
+          <h4>Project</h4>
+          <p>Your project script, dataset, and a 2-page report on this week's chosen case study.</p>
+        </div>
+      </div>
+      <div class="callout"><strong>Why one assignment with four boxes?</strong> So nothing falls through the cracks. Even an empty box is a record — if you skipped sketches one week, the Canvas box is empty rather than ambiguous.</div>
+    </section>
+
+    <section class="qs-section" id="step-2">
+      <h2><span class="num">2.</span>Push your code to GitHub</h2>
+      <p>Your project work lives in your <code>netsci-project</code> repo from <a href="github-setup.html">GitHub Setup</a>. Before you open Canvas, push everything up:</p>
+      <div class="code-block">cd netsci-project
+git status               <span class="cm"># anything uncommitted?</span>
+git add code/03-permutation/  <span class="cm"># the week's project case study folder</span>
+git commit -m <span class="st">"Permutation: week 2 project"</span>
+git push</div>
+      <p>Your project case study folder for the week should contain three things:</p>
+      <ul>
+        <li><code>project.R</code> <em>or</em> <code>project.py</code> — runs end-to-end on the dataset alongside it.</li>
+        <li><code>data/</code> — the network data you used (CSVs, edgelist, anything the script reads).</li>
+        <li><code>report.pdf</code> — your 2-page write-up.</li>
+      </ul>
+      <div class="callout amber"><strong>Network too big for GitHub?</strong> Anything over 100 MB doesn't belong in Git. Add the raw file to <code>.gitignore</code> and instead commit a small <code>data/README.md</code> explaining where to download it. The point is reproducibility, not bytes.</div>
+    </section>
+
+    <section class="qs-section" id="step-3">
+      <h2><span class="num">3.</span>Open the Canvas assignment</h2>
+      <p>Each week's Canvas assignment is titled <strong>"Week N — Monday submission"</strong>. Open it on a laptop (not phone) because you'll paste links and upload files.</p>
+      <p>Before you start filling boxes, line up three browser tabs:</p>
+      <ol>
+        <li>The Canvas assignment.</li>
+        <li>Your <code>netsci-project</code> repo on GitHub — you'll copy the URL of the case-study folder.</li>
+        <li>The course site's <a href="../assignments.html">Assignments page</a> — keep the rubric visible so you can self-grade while you submit.</li>
+      </ol>
+    </section>
+
+    <section class="qs-section" id="step-4">
+      <h2><span class="num">4.</span>Paste the right thing in the right box</h2>
+
+      <h3>Box 1 · Sketch</h3>
+      <ul>
+        <li>Photograph each sketch on a flat surface, in even light. Phone camera is fine.</li>
+        <li>Upload the JPGs (or a single multi-page PDF). One file per sketch is easiest to grade.</li>
+        <li>Add a one-line caption per sketch: <em>"Sketch 03 — bipartite supply chain, 8 firms × 12 components."</em></li>
+      </ul>
+
+      <h3>Box 2 · Case-study Learning Checks</h3>
+      <p>Plain text. One line per lab in this exact format:</p>
+      <div class="code-block">centrality:    B
+permutation:   C
+joins:         A</div>
+      <p>You don't need to justify your answer. The LC is a quick check that you read the lab, not an essay.</p>
+
+      <h3>Box 3 · Code Learning Checks</h3>
+      <p>For each case study, run the matching <code>example.R</code> or <code>example.py</code> from the course repo (your pick — you don't need both):</p>
+      <div class="code-block"><span class="cm"># R track</span>
+cd netsci/code/04_centrality
+Rscript example.R
+
+<span class="cm"># or Python track</span>
+cd netsci/code/04_centrality
+python example.py</div>
+      <p>Each script prints a single answer at the bottom — a number, a node ID, a short string. Paste it in. Add a screenshot of your console for proof:</p>
+      <div class="code-block">centrality:   node_27 (betweenness 0.184)
+permutation:  p = 0.012
+joins:        2,341 weighted edges</div>
+      <div class="callout amber"><strong>Script errored out?</strong> First skim the <a href="faq.html">FAQ</a>; most errors are package-install issues from <a href="setup.html">Environment Setup</a>. If you're still stuck, paste the error message into the box — partial credit beats a missing answer.</div>
+
+      <h3>Box 4 · Project case study</h3>
+      <p>Three things go in:</p>
+      <ol>
+        <li><strong>GitHub link</strong> to this week's project folder: <code>https://github.com/USERNAME/netsci-project/tree/main/code/02-permutation/</code></li>
+        <li><strong>A one-paragraph "what I did this week"</strong> — the question, the network, the result in one sentence. This is the elevator pitch, not the report.</li>
+        <li><strong>Your <code>report.pdf</code></strong> as an attachment. Same PDF that's in your GitHub repo.</li>
+      </ol>
+      <p>The full report rubric lives on <a href="../assignments.html">Assignments</a>. Bring it up in a third tab while you self-grade.</p>
+    </section>
+
+    <section class="qs-section" id="step-5">
+      <h2><span class="num">5.</span>Self-grade and submit</h2>
+      <p>Before you hit submit, run the <a href="../assignments.html#self-grade">self-grade checklist</a> on the Assignments page. It's a short list of yes/no questions — when you click through them, a "Copy paste-able status block" button appears. Click it, then paste the resulting markdown into the top of Box 4.</p>
+      <p>This isn't graded; it's a forcing function. Most missed-point situations are catches the self-grade would have flagged.</p>
+      <div class="callout"><strong>Submit early if you can.</strong> Canvas accepts late submissions but they cost points and shift Tim's grading timeline. There's no bonus for going to the wire.</div>
+      <h3>What happens after you submit</h3>
+      <ul>
+        <li>You'll get feedback on the project report (rubric + a short paragraph) within five days.</li>
+        <li>LC answers don't get individual feedback — they're a binary "you read the lab" check.</li>
+        <li>Sketches don't get scored individually either — they're scored as a set across the term.</li>
+        <li>If something's missing, Canvas will accept a resubmission until Tuesday 9 AM with a one-day-late penalty.</li>
+      </ul>
+    </section>
+
+    <div class="next-card">
+      <div class="ico">📄</div>
+      <div>
+        <h4>See the rubric and self-grade checklist</h4>
+        <p>The Assignments page has the per-skill rubric plus the interactive self-grade checklist with copy-paste output. Open it in another tab while you submit.</p>
+        <a href="../assignments.html">Open Assignments →</a>
+      </div>
+    </div>
+
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · How to Submit</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+<script src="../assets/notebooklm-bubble.js" defer></script>
+</body>
+</html>
