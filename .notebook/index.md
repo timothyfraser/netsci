@@ -1,6 +1,6 @@
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-05-16 18:44 UTC_
+_Auto-generated NotebookLM source · 2026-05-16 19:46 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -697,6 +697,55 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 ## Environment Setup · SYSEN 5470
 
 - **URL:** https://timothyfraser.github.io/netsci/help/setup.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## How to Submit · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/help/submit.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## Announcements · Instructor · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/instructor/announcements.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## Grading Scratchpad · Instructor · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/instructor/grading-scratchpad.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## Instructor · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/instructor/index.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## Launch Checklist · Instructor · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/instructor/launch-checklist.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## Screencast Prompts · Instructor · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/instructor/screencast-prompts.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## Sketch ↔ LC Map · Instructor · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/instructor/sketch-lc-map.html
 - **Topic:** _(uncurated — fill me in)_
 - **Use case:** _(uncurated — fill me in)_
 - **Tags:** _(none)_

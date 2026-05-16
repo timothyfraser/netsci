@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-05-16 18:44 UTC_
+_Auto-generated NotebookLM source · 2026-05-16 19:46 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -9,6 +9,9 @@ This document is the concatenated visible text of the course website. It refresh
 # SYSEN 5470 · Network Science for Systems Engineering
 
 _Source: docs/index.html_
+
+Skip to content
+
 
 Cornell Engineering
 Summer 2026
@@ -189,6 +192,9 @@ Register at Cornell
 # Syllabus · SYSEN 5470
 
 _Source: docs/syllabus.html_
+
+Skip to content
+
 
 SYSEN 5470 · Summer 2026
 
@@ -426,6 +432,9 @@ Browse the labs
 
 _Source: docs/materials.html_
 
+Skip to content
+
+
 SYSEN 5470 · Course Materials
 
 
@@ -570,6 +579,9 @@ Email tmf77@cornell.edu
 
 _Source: docs/four-skills.html_
 
+Skip to content
+
+
 SYSEN 5470 · Network Science for Systems Engineering
 
 
@@ -656,6 +668,9 @@ Try The Skills In The Live Labs
 # Case Studies · SYSEN 5470
 
 _Source: docs/case-studies.html_
+
+Skip to content
+
 
 SYSEN 5470 · Case Studies
 
@@ -829,6 +844,9 @@ Open the Visualizer
 
 _Source: docs/case-studies/aggregation.html_
 
+Skip to content
+
+
 SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify
 
 
@@ -967,6 +985,9 @@ CNo — only the raw view shows real data. Aggregated views are derived summarie
 # Build a Network · SYSEN 5470
 
 _Source: docs/case-studies/build-a-network.html_
+
+Skip to content
+
 
 SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify
 
@@ -1199,6 +1220,9 @@ CTwo — connectors is the single\-supplier component, and via Supplier C it sha
 
 _Source: docs/case-studies/centrality.html_
 
+Skip to content
+
+
 SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure
 
 
@@ -1351,6 +1375,9 @@ C Average path length decreases, because the two smaller components are individu
 # Counterfactual Monte Carlo · Lakeside Bikeshare · SYSEN 5470
 
 _Source: docs/case-studies/counterfactual.html_
+
+Skip to content
+
 
 SYSEN 5470 · Network Science · Interactive Lab · Skill: Predict
 
@@ -1589,6 +1616,9 @@ CN \= 50 is unreliable; the result at N \= 500 is the truth.
 
 _Source: docs/case-studies/dsm-clustering.html_
 
+Skip to content
+
+
 SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure
 
 
@@ -1758,6 +1788,9 @@ C.The software architecture — even though it's cleanly layered, its cross\-cut
 # GNN by Hand · Forward Pass · SYSEN 5470
 
 _Source: docs/case-studies/gnn-by-hand.html_
+
+Skip to content
+
 
 SYSEN 5470 · Network Science · Interactive Lab · Skill: Predict
 
@@ -2146,6 +2179,9 @@ Now trace one message\-passing step by hand: for each node, write down x̃ \= x 
 
 _Source: docs/case-studies/gnn-xgboost.html_
 
+Skip to content
+
+
 SYSEN 5470 · Network Science · Case Study · Skill: Predict
 
 
@@ -2323,6 +2359,9 @@ Use the temporal slider to move through snapshots T6–T9\. Watch which nodes sh
 
 _Source: docs/case-studies/joins.html_
 
+Skip to content
+
+
 SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify
 
 
@@ -2468,6 +2507,9 @@ C
 # Network Permutation Testing · SYSEN 5470
 
 _Source: docs/case-studies/permutation.html_
+
+Skip to content
+
 
 SYSEN 5470 · Network Science · Interactive Lab · Skill: Infer
 
@@ -2653,6 +2695,9 @@ Look at the null distribution. Are the unblocked and blocked histograms centered
 
 _Source: docs/case-studies/sampling.html_
 
+Skip to content
+
+
 SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify
 
 
@@ -2821,6 +2866,9 @@ CEgo\-centric sampling under\-counts edges between non\-seed nodes, which deflat
 
 _Source: docs/case-studies/supply-chain.html_
 
+Skip to content
+
+
 SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure
 
 
@@ -2972,6 +3020,9 @@ Remove **Mesa Consolidator** (highest betweenness) and note the global metrics. 
 
 _Source: docs/visualizer.html_
 
+Skip to content
+
+
 SYSEN 5470 · Tools
 
 
@@ -3088,6 +3139,9 @@ Computed when graph loads (≤600 nodes).
 
 _Source: docs/playground.html_
 
+Skip to content
+
+
 SYSEN 5470 · Coding Playground
 
 
@@ -3186,6 +3240,9 @@ Everything runs in your browser tab. We never see your code or your data. Same g
 
 _Source: docs/playground-r.html_
 
+Skip to content
+
+
 SYSEN 5470 · Coding Playground
 
 
@@ -3274,6 +3331,9 @@ Clear uploaded files
 
 _Source: docs/playground-py.html_
 
+Skip to content
+
+
 SYSEN 5470 · Coding Playground
 
 
@@ -3359,6 +3419,9 @@ Clear uploaded files
 # Readings · SYSEN 5470
 
 _Source: docs/readings.html_
+
+Skip to content
+
 
 SYSEN 5470 · Readings
 
@@ -3636,6 +3699,9 @@ Open lab →
 
 _Source: docs/sketchpad.html_
 
+Skip to content
+
+
 SYSEN 5470 · Sketchpad
 
 
@@ -3891,6 +3957,9 @@ Sharing \& Submission
 
 _Source: docs/about.html_
 
+Skip to content
+
+
 SYSEN 5470 · About
 
 
@@ -4031,12 +4100,15 @@ Email tmf77@cornell.edu
 **SYSEN 5470 · Network Science and Applications for Systems Engineering**
 
  Cornell Engineering · Summer 2026 · tmf77@cornell.edu
+ · instructor →
 
 ---
 
 # SYSEN 5470 – Network Science and Applications for Systems Engineering
 
 _Source: docs/flyer.html_
+
+Skip to content
 
 ![Network Science and Applications for Systems Engineering banner](https://github.com/timothyfraser/netsci/blob/f495e6960b9e917704851f820c1cfeea36ae3ea8/docs/images/banner_bottom.png?raw=true)
 
@@ -4182,6 +4254,9 @@ June 22 \- July 10, 2026
 
 _Source: docs/assignments.html_
 
+Skip to content
+
+
 SYSEN 5470 · Assignments
 
 
@@ -4249,6 +4324,71 @@ Project case studies
  fill at least two pages.
 
 
+How your project is graded — the rubric
+
+ Each project case study is scored against the skill it primarily exercises — Identify, Measure, Infer, or Predict. Four tiers per skill. Aim for *Meets*; *Exceeds* takes the same time but more care.
+
+
+### Identify
+
+
+Make the network legible
+
+Not yet
+Node, edge, and weight are undefined or contradictory.
+Approaching
+Defined but not justified — could be defended in five different ways.
+Meets
+Node, edge, weight, and data source are stated and justified in plain prose.
+Exceeds
+Reports an alternative encoding that was considered and rejected, with reasoning.
+
+
+### Measure
+
+
+Compute the right number
+
+Not yet
+One metric reported with no argument for it.
+Approaching
+Right metric for the question, but no robustness check or alternative.
+Meets
+Metric is argued from the question. Sensitivity or alternative metric appears.
+Exceeds
+Two metrics compared; honest discussion of where they disagree and why.
+
+
+### Infer
+
+
+Say what's real, not just observed
+
+Not yet
+A point estimate with no comparison.
+Approaching
+Compared to a null, but the null is unjustified (e.g. unblocked when blocks matter).
+Meets
+Null model justified, p\-value or CI reported, claim is no stronger than the test supports.
+Exceeds
+Two nulls compared, with explicit discussion of which is right for the question.
+
+
+### Predict
+
+
+Use the network to anticipate
+
+Not yet
+Model fits but its decision\-relevance is unstated.
+Approaching
+AUC or accuracy reported, but no baseline, threshold, or operational framing.
+Meets
+Compared against a non\-network baseline; threshold or operating point chosen and defended.
+Exceeds
+Reports where the model fails, and how a stakeholder would catch it before acting on it.
+
+
 ### Every project report must include
 
 
@@ -4309,7 +4449,12 @@ One real exemplar so you know what 2 pages of "numbers in prose" actually means.
 ⬇ Download sample report (PDF)
 ↗ Open in new tab
 
-⏳ *Awaiting upload from Tim* — link is wired; the PDF will appear before week 2\.
+Source markdown lives at `assignments/sample-report.md` if you want to read the raw text.
+
+
+Self\-grade before you submit
+
+ Click through these before you hit submit. Most missed\-point situations are catches this list would have flagged. The **Copy** button writes a paste\-able status block to your clipboard — paste it into the project box on Canvas so Tim can see what you flagged for yourself.
 
 
  Each case study folder under `code/` has a dedicated
@@ -4354,6 +4499,9 @@ At the end of the term, you give a short presentation on your **strongest of the
 # Calendar · SYSEN 5470
 
 _Source: docs/calendar.html_
+
+Skip to content
+
 
 SYSEN 5470 · June 22 – July 10, 2026
 
