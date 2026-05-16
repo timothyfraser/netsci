@@ -146,6 +146,7 @@
       <a href="readings.html"       data-page="readings">Readings</a>
       <a href="sketchpad.html"      data-page="sketch">Sketches</a>
       <a href="assignments.html"   data-page="assignments">Assignments</a>
+      <a href="calendar.html"       data-page="calendar">Calendar</a>
       <a href="help/index.html"     data-page="help">Help</a>
       <a href="about.html"          data-page="about">About</a>
     </div>
@@ -179,7 +180,7 @@
   </section>
 
   <section class="section">
-    <div class="sec-label">The Nine Prompts</div>
+    <div class="sec-label">The Eleven Prompts — one per lab</div>
 
     <!-- 01: Fundamentals -->
     <div class="sketch-card">
@@ -226,12 +227,12 @@
       </div>
     </div>
 
-    <!-- 03: Network Statistics / permutation -->
-    <div class="sketch-card">
+    <!-- 03a: Network Statistics / permutation — Bluebikes case -->
+    <div class="sketch-card" id="sketch-03a">
       <div class="ico">📐</div>
       <div>
         <div class="head">
-          <h3>Sketch 03 · Two null distributions</h3>
+          <h3>Sketch 03a · Two null distributions — Bluebikes case</h3>
           <div class="meta">
             <span class="skill-chip skill-infer">Infer</span>
             <span class="time-chip">~20 min</span>
@@ -240,11 +241,34 @@
         <div class="prompt">
           Sketch the five Bluebikes neighborhoods as labeled circles. Mark each as high-income (one color) or low-income (other color). Draw the arrows you'd <em>expect</em> to be heaviest. Now sketch two histograms side by side: an "unblocked permutation" null and a "block permutation" null. Mark the observed value with a vertical line. Which test would call the observed pattern significant, and which wouldn't?
         </div>
-        <div class="purpose"><span class="label">Purpose</span>Surfaces the gap between "random shuffle" and "structurally plausible shuffle" — the heart of network-aware inference.</div>
+        <div class="purpose"><span class="label">Purpose</span>Surfaces the gap between "random shuffle" and "structurally plausible shuffle" — the heart of network-aware inference. Lab-specific version.</div>
         <ul class="what-you-draw">
           <li>Five labeled nodes, color-coded by group</li>
           <li>Expected heavy edges (arrows)</li>
           <li>Two histograms with the observed value drawn in</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 03b: Network Statistics — your network -->
+    <div class="sketch-card" id="sketch-03b">
+      <div class="ico">📐</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 03b · Two null distributions — your network</h3>
+          <div class="meta">
+            <span class="skill-chip skill-infer">Infer</span>
+            <span class="time-chip">~25 min</span>
+          </div>
+        </div>
+        <div class="prompt">
+          Now substitute <strong>your own network and your own grouping variable</strong>. Sketch the nodes as labeled circles, colored by your grouping (gender, region, tier, faction, role — whatever makes sense for your project). Draw the arrows you'd expect to be heaviest based on your domain knowledge. Then sketch the same two histograms: an unblocked permutation that ignores groups, and a block permutation that preserves within-group structure. Mark the observed value. Which null is the right one for <em>your</em> question?
+        </div>
+        <div class="purpose"><span class="label">Purpose</span>Forces you to define the grouping that matters for your project, and to commit to a null hypothesis before running it. Project-track students do this version in their project week.</div>
+        <ul class="what-you-draw">
+          <li>5–15 labeled nodes from your network, colored by your grouping</li>
+          <li>Expected heavy edges, with a one-sentence "why" in the margin</li>
+          <li>Two histograms with the observed value, plus a one-line interpretation</li>
         </ul>
       </div>
     </div>
@@ -381,6 +405,54 @@
           <li>Five nodes, each labeled with x and y</li>
           <li>x̃ value circled at each node after one aggregation step</li>
           <li>Final ŷ written next to each node</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 10: Joins · Sketch the pipeline -->
+    <div class="sketch-card" id="sketch-10">
+      <div class="ico">🔗</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 10 · Sketch the pipeline</h3>
+          <div class="meta">
+            <span class="skill-chip skill-identify">Identify</span>
+            <span class="time-chip">~20 min</span>
+          </div>
+        </div>
+        <div class="prompt">
+          Pick three real tables from any system you know (your work data, a course dataset, anything). For each table, draw a box with column names. Then identify, in writing next to your boxes: <strong>(a) the join key</strong>, <strong>(b) what the column collision will be after the first join</strong> (which two columns will share a name?), and <strong>(c) what you'll rename it to</strong>. Finally, write the final pipeline as a sequence of verbs — <code>left_join → rename → mutate</code> or <code>merge → rename → assign</code>.
+        </div>
+        <div class="purpose"><span class="label">Purpose</span>Surfaces the column-collision moment <em>before</em> it becomes an error message in the lab. The rename step is the part everyone forgets — sketching it forces you to remember.</div>
+        <ul class="what-you-draw">
+          <li>Three table boxes with column names</li>
+          <li>Arrows marking join keys</li>
+          <li>The two columns that will collide after the first join, with the new names you'll give them</li>
+          <li>The final pipeline as 4–6 verbs in sequence</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 11: Aggregation · Lose detail to gain insight -->
+    <div class="sketch-card" id="sketch-11">
+      <div class="ico">🗺️</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 11 · Lose detail to gain insight</h3>
+          <div class="meta">
+            <span class="skill-chip skill-identify">Identify</span>
+            <span class="time-chip">~25 min</span>
+          </div>
+        </div>
+        <div class="prompt">
+          Pick a many-node network — real or sketched, 20+ nodes. Draw it three times at three zoom levels: <strong>(1)</strong> all nodes individually, <strong>(2)</strong> grouped into 5–8 categories of your choice, <strong>(3)</strong> grouped into 2–3 high-level buckets. For each zoom level, write one insight you can see at <em>that</em> level that you couldn't see at the others. Mark with an arrow the level that best supports your one-sentence engineering recommendation.
+        </div>
+        <div class="purpose"><span class="label">Purpose</span>Internalizes that aggregation isn't "losing data" — it's choosing what to make visible. The level that best supports the recommendation is rarely the most detailed one.</div>
+        <ul class="what-you-draw">
+          <li>The same network at three zoom levels, side by side</li>
+          <li>One insight written under each level</li>
+          <li>An arrow marking the level that supports your engineering recommendation</li>
+          <li>The one-sentence recommendation itself</li>
         </ul>
       </div>
     </div>

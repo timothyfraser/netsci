@@ -102,6 +102,49 @@
     color: var(--white); font-family: var(--font-display); font-size: 22px;
     display: block; margin-top: 4px;
   }
+
+  /* Sample-report card under the Project section */
+  .sample-report-card {
+    margin-top: 22px;
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-left: 4px solid var(--green-bright);
+    border-radius: var(--radius-lg); padding: 22px 26px;
+    backdrop-filter: blur(8px);
+    display: grid; grid-template-columns: 56px 1fr; gap: 18px;
+  }
+  @media (max-width: 560px) {
+    .sample-report-card { grid-template-columns: 1fr; }
+  }
+  .sample-report-card .srep-ico { font-size: 42px; line-height: 1; }
+  .sample-report-card h3 {
+    font-family: var(--font-display); font-size: 22px;
+    color: var(--white); letter-spacing: 0.03em; margin-bottom: 8px;
+  }
+  .sample-report-card p {
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.6; margin-bottom: 12px;
+  }
+  .sample-report-card .srep-actions {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
+  }
+  .sample-report-card .srep-btn {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 9px 16px; border-radius: var(--radius-sm);
+    background: var(--green-bright); color: var(--black);
+    border: 1px solid var(--green-bright);
+    text-decoration: none; transition: all 0.15s;
+  }
+  .sample-report-card .srep-btn:hover { background: var(--green-mid); border-color: var(--green-mid); }
+  .sample-report-card .srep-btn.ghost {
+    background: transparent; color: var(--green-bright);
+  }
+  .sample-report-card .srep-btn.ghost:hover { background: rgba(57,255,20,0.08); }
+  .sample-report-card .srep-note {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--node-4); letter-spacing: 0.04em;
+    margin-bottom: 0;
+  }
 </style>
 </head>
 <body data-page="assignments">
@@ -121,6 +164,7 @@
       <a href="readings.html"       data-page="readings">Readings</a>
       <a href="sketchpad.html"      data-page="sketch">Sketches</a>
       <a href="assignments.html"    data-page="assignments">Assignments</a>
+      <a href="calendar.html"       data-page="calendar">Calendar</a>
       <a href="help/index.html"     data-page="help">Help</a>
       <a href="about.html"          data-page="about">About</a>
     </div>
@@ -242,11 +286,24 @@
     <div class="checklist">
       <h3>Hard requirements</h3>
       <ul>
-        <li>The <em>writing must be your own</em>. AI-generated prose is not accepted. You can use AI to debug code; you cannot use it to write your report.</li>
+        <li>The <em>writing must be your own</em>. See the <a href="help/ai-policy.html" style="color: var(--green-bright);">AI Use Policy</a> — AI can help with code; the prose has to come from you.</li>
         <li>Your network must have <strong>at least 100 nodes</strong>. Networks of <strong>1,000+ nodes are strongly preferred</strong> — they force you to handle the difficulty of real-world data, which is the whole point of the course.</li>
         <li>If you haven't decided on a network by the <em>end of week 1</em>, contact the instructor and one will be manufactured to fit your field or chosen industry.</li>
         <li>Submit both the script (<code>project.R</code> or <code>project.py</code>) and the report (PDF preferred). The script must run end-to-end on the dataset you submit alongside it.</li>
       </ul>
+    </div>
+
+    <div class="sample-report-card">
+      <div class="srep-ico">📄</div>
+      <div class="srep-body">
+        <h3>What does a project report actually look like?</h3>
+        <p>One real exemplar so you know what 2 pages of "numbers in prose" actually means. Open it on a phone or laptop, skim once before you start your own. The point is the <em>shape</em> of the analysis, not the specific topic — yours should look like this on the page.</p>
+        <div class="srep-actions">
+          <a class="srep-btn" href="assignments/sample-report.pdf" download>⬇ Download sample report (PDF)</a>
+          <a class="srep-btn ghost" href="assignments/sample-report.pdf" target="_blank" rel="noopener">↗ Open in new tab</a>
+        </div>
+        <p class="srep-note">⏳ <em>Awaiting upload from Tim</em> — link is wired; the PDF will appear before week 2.</p>
+      </div>
     </div>
 
     <p style="font-family: var(--font-body); font-size: 15px; color: var(--green-mint); line-height: 1.65; max-width: 760px; margin-top: 20px;">

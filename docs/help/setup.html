@@ -6,47 +6,7 @@
 <title>Environment Setup · SYSEN 5470</title>
 <link rel="stylesheet" href="../assets/design.css">
 <link rel="stylesheet" href="../assets/site.css">
-<style>
-  .placeholder-card {
-    background: rgba(251,191,36,0.06);
-    border: 1px dashed rgba(251,191,36,0.5);
-    border-radius: var(--radius-lg);
-    padding: 28px 32px;
-    backdrop-filter: blur(8px);
-    text-align: center;
-  }
-  .placeholder-card .ico {
-    font-size: 56px; line-height: 1; margin-bottom: 14px;
-  }
-  .placeholder-card .flag {
-    display: inline-block; padding: 4px 12px; margin-bottom: 18px;
-    background: rgba(251,191,36,0.14); border: 1px solid var(--node-4);
-    border-radius: var(--radius-sm);
-    font-family: var(--font-mono); font-size: 10.5px;
-    color: var(--node-4); letter-spacing: 0.16em; text-transform: uppercase;
-  }
-  .placeholder-card h2 {
-    font-family: var(--font-display); font-size: 32px;
-    color: var(--white); letter-spacing: 0.03em; margin-bottom: 12px;
-  }
-  .placeholder-card p {
-    font-family: var(--font-body); font-size: 15px;
-    color: var(--green-mint); line-height: 1.65; max-width: 600px;
-    margin: 0 auto 12px;
-  }
-  .placeholder-card .back-link {
-    margin-top: 18px;
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    padding: 10px 18px; border-radius: var(--radius-sm);
-    background: transparent; color: var(--green-bright);
-    border: 1px solid var(--green-bright); text-decoration: none;
-    display: inline-block;
-  }
-  .placeholder-card .back-link:hover {
-    background: rgba(57,255,20,0.08);
-  }
-</style>
+<link rel="stylesheet" href="../assets/quickstart.css">
 </head>
 <body data-page="help">
 
@@ -65,6 +25,7 @@
       <a href="../readings.html"       data-page="readings">Readings</a>
       <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
       <a href="../assignments.html"    data-page="assignments">Assignments</a>
+      <a href="../calendar.html"       data-page="calendar">Calendar</a>
       <a href="index.html"             data-page="help">Help</a>
       <a href="../about.html"          data-page="about">About</a>
     </div>
@@ -76,19 +37,142 @@
 
   <section class="hero">
     <p class="course-number">SYSEN 5470 · Help · Environment Setup</p>
-    <h1 class="hero-title">Environment Setup<br><span>Coming Soon.</span></h1>
-    <p class="hook">Walks through installing Positron (or RStudio / VS Code), R or Python, and the course packages, then verifies the install with a "hello network" snippet.</p>
+    <h1 class="hero-title">Get the Tools<br><span>Working</span>.</h1>
+    <p class="hook">One page that walks you through installing the editor, the language, and the course packages — then verifies the install with a three-line "hello network" snippet. Plan on 20–30 minutes. Skip ahead if you already have a working R or Python setup.</p>
   </section>
 
   <section class="section">
-    <div class="placeholder-card">
-      <div class="ico">🛠</div>
-      <span class="flag">⏳ Coming before the course starts</span>
-      <h2>Bookmark this page.</h2>
-      <p>This page will be filled in before the course begins. It's listed in the nav now so the structure is complete and links work from the Help hub.</p>
-      <p>If you have questions in the meantime, the <a href="ai-policy.html" style="color: var(--green-bright);">Course Companion</a> and <a href="faq.html" style="color: var(--green-bright);">FAQ</a> are both live.</p>
-      <a class="back-link" href="index.html">← Back to Help hub</a>
+
+    <div class="qs-toc">
+      <div class="label">Five steps</div>
+      <ol>
+        <li><span class="num">1</span><a href="#step-1">Pick your language</a></li>
+        <li><span class="num">2</span><a href="#step-2">Install Positron</a></li>
+        <li><span class="num">3</span><a href="#step-3">Install R or Python + packages</a></li>
+        <li><span class="num">4</span><a href="#step-4">Verify with the "hello network" snippet</a></li>
+        <li><span class="num">5</span><a href="#step-5">If something went wrong</a></li>
+      </ol>
     </div>
+
+    <section class="qs-section" id="step-1">
+      <h2><span class="num">1.</span>Pick your language</h2>
+      <p>You pick one. Both are first-class in this course — every lab works in either; the playground runs both. The decision is mostly about what you'd actually use at your job.</p>
+      <ul>
+        <li><strong>R</strong> — slightly stronger graph-analytics ecosystem (<code>igraph</code>, <code>tidygraph</code>), tidyverse pipelines (<code>|&gt;</code>) read close to English.</li>
+        <li><strong>Python</strong> — broader general-purpose use, better for ML-heavy follow-up work, more familiar if you do production engineering.</li>
+      </ul>
+      <p>If you genuinely have no preference, default to R for this course. You can change your mind in week 1.</p>
+      <div class="callout"><strong>Don't want to install anything?</strong> The browser-based <a href="../playground.html">Coding Playground</a> runs both R and Python with the course packages pre-loaded. Same workflow, no install. Good fallback if step 3 won't cooperate.</div>
+    </section>
+
+    <section class="qs-section" id="step-2">
+      <h2><span class="num">2.</span>Install Positron</h2>
+      <p><strong>Positron</strong> is the editor we recommend. It's by the Posit folks (who built RStudio), works for both R and Python, and has good AI integration. One install, one editor, both languages.</p>
+      <div class="code-block">Download:  <a href="https://positron.posit.co/" style="color: var(--green-bright);">https://positron.posit.co/</a></div>
+      <p>The download page has installers for macOS, Windows, and Linux. Install, open it once to make sure it launches, then continue to step 3.</p>
+      <h3>Alternatives that also work fine</h3>
+      <ul>
+        <li><strong>RStudio</strong> — if you already have it and love it, stay with it. R-only, but battle-tested. <a href="https://posit.co/download/rstudio-desktop/" target="_blank" rel="noopener">posit.co/download/rstudio-desktop</a></li>
+        <li><strong>VS Code</strong> + the <a href="https://marketplace.visualstudio.com/items?itemName=ms-python.python" target="_blank" rel="noopener">Python extension</a> or <a href="https://marketplace.visualstudio.com/items?itemName=REditorSupport.r" target="_blank" rel="noopener">R extension</a> — fine if you live in VS Code already. Add <a href="https://www.cursor.com/" target="_blank" rel="noopener">Cursor</a> if you want inline AI.</li>
+        <li><strong>Jupyter</strong> — works for Python only. Use whatever you're comfortable with.</li>
+      </ul>
+      <div class="callout amber"><strong>The course doesn't grade you on your IDE.</strong> Pick the one that gets out of your way.</div>
+    </section>
+
+    <section class="qs-section" id="step-3">
+      <h2><span class="num">3.</span>Install R or Python + course packages</h2>
+
+      <div class="os-tabs">
+        <button class="os-tab active" data-pane="lang-r">R · install</button>
+        <button class="os-tab" data-pane="lang-py">Python · install</button>
+      </div>
+
+      <div class="os-panel active" id="lang-r">
+        <h3>Install R</h3>
+        <p>Download from CRAN: <a href="https://cran.r-project.org/" target="_blank" rel="noopener">cran.r-project.org</a>. Pick the package for your OS, run the installer, accept the defaults. R 4.1 or newer.</p>
+        <h3>Install the course packages</h3>
+        <p>Open Positron (or RStudio), then in the R console run:</p>
+        <div class="code-block"><span class="fn">install.packages</span>(<span class="fn">c</span>(<span class="st">"tidyverse"</span>, <span class="st">"igraph"</span>, <span class="st">"tidygraph"</span>, <span class="st">"DBI"</span>, <span class="st">"RSQLite"</span>))</div>
+        <p>That's 1–3 minutes. If it fails on <code>igraph</code>, it's almost always a missing system library — see step 5.</p>
+        <h3>Optional but useful</h3>
+        <p>For nicer plots:</p>
+        <div class="code-block"><span class="fn">install.packages</span>(<span class="fn">c</span>(<span class="st">"ggraph"</span>, <span class="st">"patchwork"</span>, <span class="st">"scales"</span>))</div>
+      </div>
+
+      <div class="os-panel" id="lang-py">
+        <h3>Install Python</h3>
+        <p>You need Python 3.10 or newer. Options, in order of preference:</p>
+        <ul>
+          <li><strong>uv</strong> (recommended) — <a href="https://github.com/astral-sh/uv" target="_blank" rel="noopener">github.com/astral-sh/uv</a>. Modern, fast Python+package installer. One command: <code>curl -LsSf https://astral.sh/uv/install.sh | sh</code> (macOS / Linux) or the PowerShell equivalent on Windows.</li>
+          <li><strong>python.org installer</strong> — straight from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org/downloads</a>. Click through.</li>
+          <li><strong>conda / miniforge</strong> — if you already use it.</li>
+        </ul>
+        <h3>Install the course packages</h3>
+        <p>In your terminal (not in Python), run:</p>
+        <div class="code-block">pip install networkx pandas matplotlib numpy scipy scikit-learn</div>
+        <p>Or with uv (faster):</p>
+        <div class="code-block">uv pip install networkx pandas matplotlib numpy scipy scikit-learn</div>
+        <p>That's 1–2 minutes.</p>
+      </div>
+    </section>
+
+    <section class="qs-section" id="step-4">
+      <h2><span class="num">4.</span>Verify with the "hello network" snippet</h2>
+      <p>Three lines that prove (a) the language is installed, (b) the graph package is installed, and (c) the plotting library is installed. Paste it into your editor and run. If you see the words "hello, network!" and a tiny plot pops up, you're done with setup.</p>
+
+      <h3>R version</h3>
+      <div class="code-block"><span class="fn">library</span>(<span class="nm">igraph</span>)
+g <span class="kw">&lt;-</span> <span class="fn">make_ring</span>(<span class="nm">5</span>)
+<span class="fn">plot</span>(g); <span class="fn">cat</span>(<span class="st">"hello, network! "</span>, <span class="fn">vcount</span>(g), <span class="st">"nodes,"</span>, <span class="fn">ecount</span>(g), <span class="st">"edges\n"</span>)</div>
+      <div class="output-block">hello, network!  5 nodes, 5 edges</div>
+
+      <h3>Python version</h3>
+      <div class="code-block"><span class="kw">import</span> networkx <span class="kw">as</span> nx, matplotlib.pyplot <span class="kw">as</span> plt
+G = nx.cycle_graph(<span class="nm">5</span>); nx.draw(G, with_labels=<span class="kw">True</span>); plt.show()
+<span class="fn">print</span>(<span class="st">"hello, network!"</span>, G.number_of_nodes(), <span class="st">"nodes,"</span>, G.number_of_edges(), <span class="st">"edges"</span>)</div>
+      <div class="output-block">hello, network! 5 nodes, 5 edges</div>
+
+      <p>If both lines printed and a window with a 5-node ring graph popped up, your environment is working. Continue to the <a href="quickstart-r.html">R quickstart</a> or <a href="quickstart-py.html">Python quickstart</a>.</p>
+    </section>
+
+    <section class="qs-section" id="step-5">
+      <h2><span class="num">5.</span>If something went wrong</h2>
+      <h3>R · <code>igraph</code> won't install</h3>
+      <p>Almost always missing system libraries.</p>
+      <ul>
+        <li><strong>macOS:</strong> <code>brew install libxml2 glpk</code> then retry.</li>
+        <li><strong>Linux:</strong> <code>sudo apt install libxml2-dev libcurl4-openssl-dev libglpk-dev</code></li>
+        <li><strong>Windows:</strong> the precompiled CRAN binary usually just works — if it doesn't, install <a href="https://cran.r-project.org/bin/windows/Rtools/" target="_blank" rel="noopener">Rtools</a> and retry.</li>
+      </ul>
+
+      <h3>Python · <code>pip install</code> fails</h3>
+      <ul>
+        <li>Most common cause: old Python (you need 3.10+). Check with <code>python3 --version</code>.</li>
+        <li>Corporate proxy? Try <code>uv pip install …</code> (uv handles proxies more gracefully).</li>
+        <li>Permissions error? Use <code>pip install --user …</code> instead.</li>
+      </ul>
+
+      <h3>Plot window doesn't appear</h3>
+      <ul>
+        <li>In a notebook (Jupyter, Quarto): add <code>%matplotlib inline</code> at the top.</li>
+        <li>In a script: make sure you call <code>plt.show()</code> at the end (Python) or that you didn't accidentally save the plot to a file instead of displaying it.</li>
+      </ul>
+
+      <h3>Still stuck</h3>
+      <p>The <a href="faq.html">FAQ</a> has more troubleshooting. If that doesn't help, the in-browser <a href="../playground.html">Playground</a> works without any local install — you can use it for the full course if needed. Or book an <a href="office-hours.html">office-hours slot</a> and we'll debug together.</p>
+    </section>
+
+    <div class="next-card">
+      <div class="ico">🚀</div>
+      <div>
+        <h4>Setup done. What's next?</h4>
+        <p>Run the language-specific quickstart — 30 minutes from a working install to your first centrality calculation.</p>
+        <a href="quickstart-r.html">R Quickstart →</a>
+        <span style="margin: 0 12px; color: var(--grey-dim);">·</span>
+        <a href="quickstart-py.html">Python Quickstart →</a>
+      </div>
+    </div>
+
   </section>
 
   <p class="site-footer">
@@ -101,5 +185,16 @@
 <script src="../assets/network-bg.js" defer></script>
 <script src="../assets/site.js" defer></script>
 <script src="../assets/notebooklm-bubble.js" defer></script>
+
+<script>
+  document.querySelectorAll('.os-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.os-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.os-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.pane).classList.add('active');
+    });
+  });
+</script>
 </body>
 </html>
