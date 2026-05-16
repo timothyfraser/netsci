@@ -103,6 +103,77 @@
     display: block; margin-top: 4px;
   }
 
+  /* Rubric grid — four skill cards in a row, each with 4-tier ladder */
+  .rubric-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px; margin: 18px 0 8px;
+  }
+  .skill-rubric {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 18px 20px;
+    backdrop-filter: blur(8px);
+  }
+  .skill-rubric .skill-name {
+    font-family: var(--font-display); font-size: 18px;
+    color: var(--white); letter-spacing: 0.03em; margin: 0 0 4px;
+  }
+  .skill-rubric .skill-verb {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--green-bright); margin-bottom: 10px;
+  }
+  .skill-rubric dl { margin: 0; }
+  .skill-rubric dt {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--node-4); margin-top: 8px;
+  }
+  .skill-rubric dl > dt:first-child { margin-top: 0; }
+  .skill-rubric dd {
+    font-family: var(--font-body); font-size: 13px;
+    color: var(--green-mint); line-height: 1.5;
+    margin: 2px 0 0;
+  }
+
+  /* Self-grade checklist — interactive, with copy-to-clipboard */
+  #self-grade-checklist {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 22px 28px;
+    backdrop-filter: blur(8px); margin: 18px 0 8px;
+    scroll-margin-top: 80px;
+  }
+  .sg-list { list-style: none; padding: 0; margin: 0 0 14px; }
+  .sg-list li { margin-bottom: 6px; }
+  .sg-list label {
+    display: flex; gap: 10px; align-items: flex-start;
+    cursor: pointer;
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.55;
+  }
+  .sg-list input[type="checkbox"] {
+    margin-top: 4px; accent-color: var(--green-bright);
+    width: 14px; height: 14px; flex-shrink: 0;
+  }
+  .sg-list label:hover .sg-text { color: var(--white); }
+  .sg-list input:checked + .sg-text {
+    color: var(--white); text-decoration: line-through;
+    text-decoration-color: var(--green-bright);
+  }
+  .sg-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .sg-copy {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    background: var(--green-bright); color: var(--black);
+    border: 1px solid var(--green-bright);
+    padding: 9px 16px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .sg-copy:hover { background: var(--green-mid); border-color: var(--green-mid); }
+  .sg-feedback {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--green-bright); letter-spacing: 0.04em;
+  }
+
   /* Sample-report card under the Project section */
   .sample-report-card {
     margin-top: 22px;
@@ -183,6 +254,7 @@
           <a href="help/quickstart-r.html"  data-page="quickstart-r"  role="menuitem">R Quickstart</a>
           <a href="help/quickstart-py.html" data-page="quickstart-py" role="menuitem">Python Quickstart</a>
           <a href="help/github-setup.html"  data-page="github-setup"  role="menuitem">GitHub Setup</a>
+          <a href="help/submit.html"        data-page="submit"        role="menuitem">How to Submit</a>
         </div>
       </div>
       <a href="about.html" data-page="about">About</a>
@@ -263,6 +335,73 @@
       fill at least two pages.
     </p>
 
+    <div class="sec-label" style="margin-top: 28px;">How your project is graded — the rubric</div>
+    <p style="font-family: var(--font-body); font-size: 14.5px; color: var(--green-mint); line-height: 1.6; max-width: 760px;">
+      Each project case study is scored against the skill it primarily exercises — Identify, Measure, Infer, or Predict. Four tiers per skill. Aim for <em>Meets</em>; <em>Exceeds</em> takes the same time but more care.
+    </p>
+
+    <div class="rubric-grid">
+      <div class="skill-rubric">
+        <h3 class="skill-name">Identify</h3>
+        <div class="skill-verb">Make the network legible</div>
+        <dl>
+          <dt>Not yet</dt>
+          <dd>Node, edge, and weight are undefined or contradictory.</dd>
+          <dt>Approaching</dt>
+          <dd>Defined but not justified — could be defended in five different ways.</dd>
+          <dt>Meets</dt>
+          <dd>Node, edge, weight, and data source are stated and justified in plain prose.</dd>
+          <dt>Exceeds</dt>
+          <dd>Reports an alternative encoding that was considered and rejected, with reasoning.</dd>
+        </dl>
+      </div>
+
+      <div class="skill-rubric">
+        <h3 class="skill-name">Measure</h3>
+        <div class="skill-verb">Compute the right number</div>
+        <dl>
+          <dt>Not yet</dt>
+          <dd>One metric reported with no argument for it.</dd>
+          <dt>Approaching</dt>
+          <dd>Right metric for the question, but no robustness check or alternative.</dd>
+          <dt>Meets</dt>
+          <dd>Metric is argued from the question. Sensitivity or alternative metric appears.</dd>
+          <dt>Exceeds</dt>
+          <dd>Two metrics compared; honest discussion of where they disagree and why.</dd>
+        </dl>
+      </div>
+
+      <div class="skill-rubric">
+        <h3 class="skill-name">Infer</h3>
+        <div class="skill-verb">Say what's real, not just observed</div>
+        <dl>
+          <dt>Not yet</dt>
+          <dd>A point estimate with no comparison.</dd>
+          <dt>Approaching</dt>
+          <dd>Compared to a null, but the null is unjustified (e.g. unblocked when blocks matter).</dd>
+          <dt>Meets</dt>
+          <dd>Null model justified, p-value or CI reported, claim is no stronger than the test supports.</dd>
+          <dt>Exceeds</dt>
+          <dd>Two nulls compared, with explicit discussion of which is right for the question.</dd>
+        </dl>
+      </div>
+
+      <div class="skill-rubric">
+        <h3 class="skill-name">Predict</h3>
+        <div class="skill-verb">Use the network to anticipate</div>
+        <dl>
+          <dt>Not yet</dt>
+          <dd>Model fits but its decision-relevance is unstated.</dd>
+          <dt>Approaching</dt>
+          <dd>AUC or accuracy reported, but no baseline, threshold, or operational framing.</dd>
+          <dt>Meets</dt>
+          <dd>Compared against a non-network baseline; threshold or operating point chosen and defended.</dd>
+          <dt>Exceeds</dt>
+          <dd>Reports where the model fails, and how a stakeholder would catch it before acting on it.</dd>
+        </dl>
+      </div>
+    </div>
+
     <div class="checklist">
       <h3>Every project report must include</h3>
       <ul>
@@ -320,9 +459,15 @@
           <a class="srep-btn" href="assignments/sample-report.pdf" download>⬇ Download sample report (PDF)</a>
           <a class="srep-btn ghost" href="assignments/sample-report.pdf" target="_blank" rel="noopener">↗ Open in new tab</a>
         </div>
-        <p class="srep-note">⏳ <em>Awaiting upload from Tim</em> — link is wired; the PDF will appear before week 2.</p>
+        <p class="srep-note">Source markdown lives at <code style="background: rgba(57,255,20,0.08); padding: 0 4px; border-radius: 3px;">assignments/sample-report.md</code> if you want to read the raw text.</p>
       </div>
     </div>
+
+    <div class="sec-label" id="self-grade" style="margin-top: 36px;">Self-grade before you submit</div>
+    <p style="font-family: var(--font-body); font-size: 14.5px; color: var(--green-mint); line-height: 1.6; max-width: 760px;">
+      Click through these before you hit submit. Most missed-point situations are catches this list would have flagged. The <strong>Copy</strong> button writes a paste-able status block to your clipboard — paste it into the project box on Canvas so Tim can see what you flagged for yourself.
+    </p>
+    <div id="self-grade-checklist"></div>
 
     <p style="font-family: var(--font-body); font-size: 15px; color: var(--green-mint); line-height: 1.65; max-width: 760px; margin-top: 20px;">
       Each case study folder under <code>code/</code> has a dedicated
@@ -404,6 +549,7 @@
 
 <script src="assets/network-bg.js" defer></script>
 <script src="assets/site.js" defer></script>
+<script src="assets/checklist.js" defer></script>
 <script src="assets/notebooklm-bubble.js" defer></script>
 </body>
 </html>
