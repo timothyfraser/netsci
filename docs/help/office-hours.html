@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Office Hours · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+  .oh-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px 28px;
+    margin-bottom: 18px; backdrop-filter: blur(8px);
+  }
+  .oh-card h2 {
+    font-family: var(--font-display); font-size: 24px;
+    color: var(--white); letter-spacing: 0.03em; margin-bottom: 10px;
+  }
+  .oh-card p {
+    font-family: var(--font-body); font-size: 14.5px;
+    color: var(--green-mint); line-height: 1.65; margin-bottom: 10px;
+  }
+  .oh-card p:last-child { margin-bottom: 0; }
+  .oh-card p strong { color: var(--white); }
+
+  .book-cta {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    margin: 18px 0 4px;
+  }
+  .book-cta a.btn {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 12px 22px; border-radius: var(--radius-sm);
+    background: var(--green-bright); color: var(--black); border: 1px solid var(--green-bright);
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .book-cta a.btn:hover { background: var(--green-mid); border-color: var(--green-mid); }
+  .book-cta .calendar-note {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--grey); letter-spacing: 0.06em;
+  }
+
+  .use-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px; margin-top: 14px;
+  }
+  .use-item {
+    background: rgba(5,46,22,0.45); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md); padding: 14px 16px;
+  }
+  .use-item h4 {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--green-bright); margin-bottom: 6px;
+  }
+  .use-item p {
+    font-family: var(--font-body); font-size: 13px;
+    color: var(--green-mint); line-height: 1.55;
+  }
+</style>
+</head>
+<body data-page="help">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../materials.html"      data-page="materials">Materials</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../playground.html"     data-page="playground">Playground</a>
+      <a href="../readings.html"       data-page="readings">Readings</a>
+      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="../assignments.html"    data-page="assignments">Assignments</a>
+      <a href="index.html"             data-page="help">Help</a>
+      <a href="../about.html"          data-page="about">About</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Help · Office Hours</p>
+    <h1 class="hero-title">Virtual <span>Office Hours</span>.</h1>
+    <p class="hook">A 100% asynchronous course doesn't mean you can't talk to a human. Book a video slot with Tim when the AI companion, the FAQ, and the glossary haven't gotten you unstuck — or when the question is conceptual enough that a 10-minute conversation will save you an hour of typing.</p>
+  </section>
+
+  <section class="section">
+
+    <div class="oh-card">
+      <h2>Book a slot</h2>
+      <p>Office hours run as bookable slots during the course. Pick a time that works for you — there's no waiting room or hovering required.</p>
+      <div class="book-cta">
+        <a class="btn" href="https://calendar.app.google/ss4xrE2gyTwyS6JL9" target="_blank" rel="noopener">📅 Open the booking page →</a>
+        <span class="calendar-note">opens Google Calendar in a new tab</span>
+      </div>
+    </div>
+
+    <div class="oh-card">
+      <h2>When to book vs. when to ask the bot</h2>
+      <p>The Course Companion (bubble in the bottom-right) and the FAQ catch most evening blockers. Office hours are best reserved for things humans handle better than bots:</p>
+      <div class="use-grid">
+        <div class="use-item">
+          <h4>Project data</h4>
+          <p>"Is this dataset OK for the project?" "How do I get a network out of this CSV?" Bring a sample.</p>
+        </div>
+        <div class="use-item">
+          <h4>Stuck conceptually</h4>
+          <p>"I've read the page three times and I still don't see why this matters." Five minutes of conversation usually fixes that.</p>
+        </div>
+        <div class="use-item">
+          <h4>Picking labs</h4>
+          <p>"Which three of the eleven case studies should I do for the project?" Best answered by talking through your interests.</p>
+        </div>
+        <div class="use-item">
+          <h4>Accommodations or scheduling</h4>
+          <p>SYSEN 5940 overlap, religious observance, SDS accommodations — short live conversation, fewer email rounds.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="oh-card">
+      <h2>Before you arrive</h2>
+      <p>Two minutes of prep saves ten minutes of the meeting:</p>
+      <p style="padding-left: 18px;">
+        — <strong>Have your code open</strong> if it's a code question.<br>
+        — <strong>Have the error message copied</strong> if there is one.<br>
+        — <strong>Have your sketchpad ready</strong> if it's conceptual.<br>
+        — <strong>Have a one-sentence version of the question</strong> ready to lead with — it makes the rest of the conversation faster.
+      </p>
+    </div>
+
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Virtual Office Hours</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+<script src="../assets/notebooklm-bubble.js" defer></script>
+</body>
+</html>

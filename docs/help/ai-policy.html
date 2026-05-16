@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Use Policy · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+  .policy-section {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px 28px;
+    margin-bottom: 18px; backdrop-filter: blur(8px);
+  }
+  .policy-section h2 {
+    font-family: var(--font-display); font-size: 26px;
+    color: var(--white); letter-spacing: 0.03em; margin-bottom: 12px;
+    line-height: 1.1;
+  }
+  .policy-section h2 .emoji { margin-right: 8px; }
+  .policy-section p {
+    font-family: var(--font-body); font-size: 15px;
+    color: var(--green-mint); line-height: 1.65; margin-bottom: 12px;
+  }
+  .policy-section p:last-child { margin-bottom: 0; }
+  .policy-section p strong { color: var(--white); }
+  .policy-section ul {
+    margin: 8px 0 12px 22px;
+    font-family: var(--font-body); font-size: 14.5px;
+    color: var(--green-mint); line-height: 1.7;
+  }
+  .policy-section ul li { margin-bottom: 4px; }
+  .policy-section.allow { border-left: 3px solid var(--green-bright); }
+  .policy-section.disallow { border-left: 3px solid var(--node-7); }
+  .policy-section.principle { border-left: 3px solid var(--node-4); }
+
+  .companion-card {
+    background: rgba(57,255,20,0.06);
+    border: 1px solid rgba(57,255,20,0.3);
+    border-radius: var(--radius-md);
+    padding: 20px 24px; margin-bottom: 18px;
+    display: grid; grid-template-columns: 56px 1fr; gap: 18px;
+    backdrop-filter: blur(8px);
+  }
+  .companion-card .ico { font-size: 42px; line-height: 1; }
+  .companion-card h3 {
+    font-family: var(--font-display); font-size: 22px;
+    color: var(--white); letter-spacing: 0.03em; margin-bottom: 6px;
+  }
+  .companion-card p {
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.6;
+  }
+  .companion-card a { color: var(--green-bright); }
+  @media (max-width: 560px) { .companion-card { grid-template-columns: 1fr; text-align: center; } }
+</style>
+</head>
+<body data-page="help">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../materials.html"      data-page="materials">Materials</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../playground.html"     data-page="playground">Playground</a>
+      <a href="../readings.html"       data-page="readings">Readings</a>
+      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="../assignments.html"    data-page="assignments">Assignments</a>
+      <a href="index.html"             data-page="help">Help</a>
+      <a href="../about.html"          data-page="about">About</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Help · AI Use Policy</p>
+    <h1 class="hero-title">AI in This <span>Course</span>.</h1>
+    <p class="hook">Short version: AI is welcome for syntax, not for thinking. The longer version lives below. When in doubt, ask.</p>
+  </section>
+
+  <section class="section">
+
+    <div class="policy-section principle">
+      <h2><span class="emoji">🎯</span>The principle</h2>
+      <p>AI can accelerate your <strong>syntax</strong>. The course is about your <strong>thinking</strong>. Project reports and reflections are how we see your thinking — so they must be in your own words.</p>
+    </div>
+
+    <div class="policy-section allow">
+      <h2><span class="emoji">✅</span>You may use AI for</h2>
+      <ul>
+        <li>Syntax help and debugging code</li>
+        <li>Clarifying questions about concepts in readings or labs</li>
+        <li>Explaining error messages</li>
+        <li>Generating example data for practice</li>
+      </ul>
+    </div>
+
+    <div class="policy-section disallow">
+      <h2><span class="emoji">🚫</span>You may not use AI for</h2>
+      <ul>
+        <li>Writing your project reports (the prose must be your own)</li>
+        <li>Answering Learning Check questions for you</li>
+        <li>Writing reflections or interpretation prompts</li>
+      </ul>
+    </div>
+
+    <div class="companion-card">
+      <div class="ico">💬</div>
+      <div>
+        <h3>The Course Companion (NotebookLM)</h3>
+        <p>The Course Companion is grounded in this course's own materials — the glossary, the lab walkthroughs, the syllabus, the sketches. It will not write your reports for you, by design. Tap the green bubble in the bottom-right of any page to open it, or go directly: <a href="https://notebooklm.google.com/notebook/9ab55897-e723-4207-bb8c-1ce898e33c71?authuser=1" target="_blank" rel="noopener">NotebookLM →</a></p>
+      </div>
+    </div>
+
+    <div class="policy-section">
+      <h2><span class="emoji">📨</span>If in doubt, ask</h2>
+      <p>Email <a href="mailto:tmf77@cornell.edu" style="color: var(--green-bright);">tmf77@cornell.edu</a>. The honest version of "is this AI use OK?" is always better than a guess.</p>
+    </div>
+
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · AI Use Policy</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+<script src="../assets/notebooklm-bubble.js" defer></script>
+</body>
+</html>

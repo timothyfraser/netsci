@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glossary · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+  .gl-toolbar {
+    position: sticky; top: 64px; z-index: 5;
+    background: rgba(5,10,5,0.85);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    margin-bottom: 22px;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+  }
+  .gl-toolbar input[type=search] {
+    flex: 1; min-width: 220px;
+    background: rgba(5,46,22,0.55); color: var(--white);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-family: var(--font-mono); font-size: 13.5px;
+    letter-spacing: 0.02em;
+  }
+  .gl-toolbar input[type=search]::placeholder { color: var(--grey); }
+  .gl-toolbar input[type=search]:focus {
+    outline: none; border-color: var(--green-bright);
+    box-shadow: 0 0 0 2px rgba(57,255,20,0.15);
+  }
+  .gl-toolbar .gl-count {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--green-bright); letter-spacing: 0.1em;
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .gl-toolbar .gl-clear {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--grey); letter-spacing: 0.1em;
+    text-transform: uppercase; cursor: pointer;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 7px 12px; background: transparent;
+  }
+  .gl-toolbar .gl-clear:hover { color: var(--green-bright); border-color: var(--green-bright); }
+  .gl-toolbar .gl-meta {
+    flex-basis: 100%;
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--grey); letter-spacing: 0.06em;
+  }
+  .gl-toolbar .gl-meta a { color: var(--green-bright); }
+
+  .gl-nav {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 22px;
+  }
+  .gl-nav a {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 6px 10px; border-radius: 999px;
+    border: 1px solid var(--border); color: var(--grey);
+    text-decoration: none; transition: all 0.15s;
+  }
+  .gl-nav a:hover { color: var(--green-bright); border-color: var(--green-bright); }
+
+  .gl-status {
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--grey); font-style: italic;
+    padding: 24px 0;
+  }
+
+  .gl-section {
+    margin-bottom: 36px;
+    scroll-margin-top: 140px;
+  }
+  .gl-section h2 {
+    font-family: var(--font-display); font-size: 28px;
+    color: var(--white); letter-spacing: 0.03em;
+    margin-bottom: 6px; line-height: 1.1;
+  }
+  .gl-section .gl-section-lede {
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--grey); margin-bottom: 16px; line-height: 1.55;
+    max-width: 760px; font-style: italic;
+  }
+
+  .gl-term {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 14px 18px;
+    margin-bottom: 8px; backdrop-filter: blur(8px);
+    transition: border-color 0.15s;
+    scroll-margin-top: 140px;
+  }
+  .gl-term:hover { border-color: var(--green-bright); }
+  .gl-term.gl-hidden { display: none; }
+  .gl-term .term-name {
+    font-family: var(--font-display); font-size: 17px;
+    color: var(--green-bright); letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+  .gl-term .term-def {
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.6;
+  }
+  .gl-term .term-def em { color: var(--node-3); font-style: italic; }
+  .gl-term .term-def strong { color: var(--white); }
+  .gl-term .term-def code {
+    font-family: var(--font-mono); font-size: 12.5px;
+    background: rgba(57,255,20,0.08);
+    border: 1px solid rgba(57,255,20,0.18);
+    padding: 1px 5px; border-radius: 3px;
+    color: var(--green-laser);
+  }
+  .gl-term mark {
+    background: rgba(251,191,36,0.4); color: var(--white);
+    padding: 0 2px; border-radius: 2px;
+  }
+  .gl-term .term-sublist {
+    list-style: none; margin: 6px 0 0 0; padding: 0;
+  }
+  .gl-term .term-sublist li {
+    font-family: var(--font-body); font-size: 13.5px;
+    color: var(--green-mint); line-height: 1.55;
+    margin-top: 4px; padding-left: 16px; position: relative;
+  }
+  .gl-term .term-sublist li::before {
+    content: '◇'; color: var(--green-bright);
+    position: absolute; left: 0; top: 2px; font-size: 9px;
+  }
+
+  .gl-empty {
+    text-align: center;
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--grey); padding: 32px 12px;
+    border: 1px dashed var(--border); border-radius: var(--radius-md);
+    display: none;
+  }
+  .gl-empty.visible { display: block; }
+
+  .gl-companion {
+    background: rgba(57,255,20,0.06);
+    border: 1px solid rgba(57,255,20,0.3);
+    border-left: 4px solid var(--green-bright);
+    border-radius: var(--radius-md);
+    padding: 18px 22px; margin-bottom: 22px;
+    backdrop-filter: blur(8px);
+  }
+  .gl-companion p {
+    font-family: var(--font-body); font-size: 13.5px;
+    color: var(--green-mint); line-height: 1.6;
+  }
+  .gl-companion p strong { color: var(--white); }
+  .gl-companion a { color: var(--green-bright); }
+</style>
+</head>
+<body data-page="help">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../materials.html"      data-page="materials">Materials</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../playground.html"     data-page="playground">Playground</a>
+      <a href="../readings.html"       data-page="readings">Readings</a>
+      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="../assignments.html"    data-page="assignments">Assignments</a>
+      <a href="index.html"             data-page="help">Help</a>
+      <a href="../about.html"          data-page="about">About</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Help · Glossary</p>
+    <h1 class="hero-title">Every Term,<br><span>Once</span>.</h1>
+    <p class="hook">A dictionary for the course. When you encounter an unfamiliar term in a lab or lecture, look it up here. Search filters live as you type.</p>
+  </section>
+
+  <section class="section">
+
+    <div class="gl-companion">
+      <p>This glossary also powers the <strong>Course Companion</strong> (NotebookLM) — tap the green bubble in the bottom-right to ask it questions. <a href="https://notebooklm.google.com/notebook/9ab55897-e723-4207-bb8c-1ce898e33c71?authuser=1" target="_blank" rel="noopener">Open the Companion →</a></p>
+    </div>
+
+    <div class="gl-toolbar">
+      <input type="search" id="gl-search" placeholder="Search terms (e.g. betweenness, modularity, friendship paradox)…" autofocus>
+      <span class="gl-count" id="gl-count">—</span>
+      <button class="gl-clear" id="gl-clear" type="button">Clear</button>
+      <span class="gl-meta">
+        Source of truth: <code>.notebook/glossary/SKILL.md</code> in the course repo. Last mirrored to this page: <span id="gl-updated">—</span>.
+      </span>
+    </div>
+
+    <nav class="gl-nav" id="gl-nav"></nav>
+
+    <div id="gl-status" class="gl-status">Loading glossary…</div>
+    <div id="gl-content"></div>
+    <div id="gl-empty" class="gl-empty">No terms match your search.</div>
+
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Glossary</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+<script src="../assets/notebooklm-bubble.js" defer></script>
+
+<script>
+/* ──────────────────────────────────────────────────────────────────────
+   Glossary parser
+   Pulls .notebook/glossary/SKILL.md (mirrored at help/data/glossary.md)
+   and renders it as a searchable, sectioned reference.
+   ────────────────────────────────────────────────────────────────────── */
+(function () {
+  const SRC = 'data/glossary.md';
+
+  // Tiny inline-markdown renderer for term bodies — bold, italic, code, links.
+  function inline(s) {
+    return s
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  }
+
+  function slug(s) {
+    return s.toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .trim().replace(/\s+/g, '-');
+  }
+
+  // Parse the markdown into { sections: [{number, title, lede, terms: [...]}], updated }
+  function parse(md) {
+    const lines = md.split('\n');
+    const sections = [];
+    let cur = null;
+    let inToc = false;
+    let pendingLede = null;
+    let i = 0;
+
+    // Find a Table of Contents block (header "## Table of Contents") and skip past
+    // the section's first numbered list. After that we trust ## headings.
+    while (i < lines.length) {
+      const line = lines[i];
+      if (/^##\s+Table of Contents/.test(line)) {
+        inToc = true;
+        i++; continue;
+      }
+      if (inToc) {
+        if (/^---/.test(line) || /^##\s/.test(line)) { inToc = false; }
+        else { i++; continue; }
+      }
+
+      // Section heading: "## 1. Node and Edge Basics"
+      const sec = line.match(/^##\s+(\d+)\.\s+(.+)$/);
+      if (sec) {
+        if (cur) sections.push(cur);
+        cur = {
+          number: parseInt(sec[1], 10),
+          title: sec[2].trim(),
+          slug: 'section-' + sec[1],
+          lede: '',
+          terms: []
+        };
+        pendingLede = null;
+        i++;
+        continue;
+      }
+
+      // Skip everything before first numbered ## heading.
+      if (!cur) { i++; continue; }
+
+      // Section lede: first non-empty plain paragraph after the heading,
+      // before any list bullet.
+      if (!cur.terms.length && cur.lede === '' && line.trim() && !line.startsWith('-')) {
+        if (!line.startsWith('#') && !/^---/.test(line)) {
+          cur.lede = line.trim();
+          i++; continue;
+        }
+      }
+
+      // Term bullet: "- **Term name** — definition…"
+      const bullet = line.match(/^-\s+\*\*([^*]+)\*\*\s*[—–-]+\s*(.*)$/);
+      if (bullet) {
+        const term = {
+          name: bullet[1].trim(),
+          slug: slug(bullet[1].trim()),
+          body: bullet[2].trim(),
+          sublist: []
+        };
+        // Continuation lines: indented "  " continuations or nested "  - ..."
+        let j = i + 1;
+        while (j < lines.length) {
+          const cont = lines[j];
+          if (/^\s{2,}-\s+/.test(cont)) {
+            term.sublist.push(cont.replace(/^\s{2,}-\s+/, '').trim());
+            j++; continue;
+          }
+          if (/^\s{2,}\S/.test(cont)) {
+            term.body += ' ' + cont.trim();
+            j++; continue;
+          }
+          break;
+        }
+        cur.terms.push(term);
+        i = j;
+        continue;
+      }
+
+      // Section break "---" ends current section's accepting state
+      if (/^---/.test(line)) { i++; continue; }
+
+      i++;
+    }
+    if (cur) sections.push(cur);
+    return { sections };
+  }
+
+  function render(parsed) {
+    const navEl = document.getElementById('gl-nav');
+    const contentEl = document.getElementById('gl-content');
+
+    navEl.innerHTML = '';
+    contentEl.innerHTML = '';
+
+    parsed.sections.forEach(sec => {
+      const a = document.createElement('a');
+      a.href = '#' + sec.slug;
+      a.textContent = sec.number + ' · ' + sec.title;
+      navEl.appendChild(a);
+
+      const secEl = document.createElement('section');
+      secEl.className = 'gl-section';
+      secEl.id = sec.slug;
+      const h2 = document.createElement('h2');
+      h2.textContent = sec.number + ' · ' + sec.title;
+      secEl.appendChild(h2);
+
+      if (sec.lede) {
+        const lede = document.createElement('p');
+        lede.className = 'gl-section-lede';
+        lede.innerHTML = inline(sec.lede);
+        secEl.appendChild(lede);
+      }
+
+      sec.terms.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'gl-term';
+        card.id = 'term-' + t.slug;
+        card.dataset.haystack = (t.name + ' ' + t.body + ' ' + t.sublist.join(' ')).toLowerCase();
+
+        const name = document.createElement('div');
+        name.className = 'term-name';
+        name.textContent = t.name;
+        card.appendChild(name);
+
+        const def = document.createElement('div');
+        def.className = 'term-def';
+        def.innerHTML = inline(t.body);
+        card.appendChild(def);
+
+        if (t.sublist.length) {
+          const ul = document.createElement('ul');
+          ul.className = 'term-sublist';
+          t.sublist.forEach(s => {
+            const li = document.createElement('li');
+            li.innerHTML = inline(s);
+            ul.appendChild(li);
+          });
+          card.appendChild(ul);
+        }
+
+        secEl.appendChild(card);
+      });
+
+      contentEl.appendChild(secEl);
+    });
+  }
+
+  function applyFilter(q) {
+    q = q.trim().toLowerCase();
+    const terms = document.querySelectorAll('.gl-term');
+    const sections = document.querySelectorAll('.gl-section');
+    let visible = 0;
+
+    terms.forEach(t => {
+      const hit = !q || t.dataset.haystack.includes(q);
+      t.classList.toggle('gl-hidden', !hit);
+      if (hit) visible++;
+    });
+
+    sections.forEach(s => {
+      const anyVisible = s.querySelectorAll('.gl-term:not(.gl-hidden)').length > 0;
+      s.style.display = anyVisible ? '' : 'none';
+    });
+
+    document.getElementById('gl-count').textContent =
+      q ? `${visible} match${visible === 1 ? '' : 'es'}` : `${terms.length} terms`;
+    document.getElementById('gl-empty').classList.toggle('visible', visible === 0);
+  }
+
+  fetch(SRC, { cache: 'no-cache' })
+    .then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const lm = r.headers.get('last-modified');
+      if (lm) document.getElementById('gl-updated').textContent = new Date(lm).toLocaleDateString();
+      return r.text();
+    })
+    .then(md => {
+      const parsed = parse(md);
+      render(parsed);
+      document.getElementById('gl-status').remove();
+      applyFilter('');
+
+      const search = document.getElementById('gl-search');
+      search.addEventListener('input', () => applyFilter(search.value));
+      document.getElementById('gl-clear').addEventListener('click', () => {
+        search.value = '';
+        applyFilter('');
+        search.focus();
+      });
+    })
+    .catch(err => {
+      document.getElementById('gl-status').innerHTML =
+        'Could not load the glossary. <code>' +
+        String(err.message).replace(/</g, '&lt;') +
+        '</code>. The source lives at <code>data/glossary.md</code>.';
+    });
+})();
+</script>
+
+</body>
+</html>
