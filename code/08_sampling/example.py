@@ -24,6 +24,9 @@ We will:
 
 ## 0.1 Packages ##############################################################
 
+# `pandas`/`numpy` for the per-slice aggregations, `geopandas`/`shapely`
+# for the spatial buffer (the only part of this script that needs
+# spatial libraries), `matplotlib` for the comparison figure.
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,9 +35,15 @@ from shapely.geometry import Point
 
 ## 0.2 Load helpers ##########################################################
 
+# `slice_stats()` computes the per-time-slice network statistics
+# (edgeweight, share of nodes touched, etc.) for any edge subset.
+# That's the workhorse we'll reuse on every sample.
 from functions import (
     load_nodes, load_edges, load_subdivisions, slice_stats,
 )
+
+print("\n🚀 Case Study 08 — Sampling Big Networks (Python)")
+print("   Three sampling strategies vs population. Which one preserves the truth?\n")
 
 ## 0.3 Load data #############################################################
 
@@ -42,39 +51,51 @@ nodes = load_nodes()
 edges = load_edges()
 print(f"nodes: {len(nodes):,}  edges: {len(edges):,}")
 print(edges.head())
+print(f"✅ Loaded {len(nodes)} nodes, {len(edges)} edges.")
 
 
 # 1. Baseline (population) statistics over time ##############################
+#
+# We compute four numbers per 8-hour slice: total edgeweight, share of
+# nodes touched, edge ratio, average edgeweight per node. The figure
+# at the end compares each sample's time series to this baseline.
 
 n_total = len(nodes)
 stats = slice_stats(edges, n_total)
 print(stats.head())
+print(f"📊 Baseline: {len(stats)} time slices computed.")
 
 
 # 2. Sampling strategies #####################################################
 
-rng = np.random.default_rng(42)
+rng = np.random.default_rng(42)  # deterministic samples across runs
 
 ## 2.1 Ego-centric: sample N nodes, keep edges that touch any sampled node ###
 
+# An ego sample is biased toward whatever the seeds are. With random
+# seeds, the bias averages out, but small samples are still noisy.
 ego_nodes = nodes.sample(n=50, random_state=42)["node"].to_numpy()
 ego_edges = edges[edges["from"].isin(ego_nodes) | edges["to"].isin(ego_nodes)]
 print(f"ego sample: {len(ego_nodes)} seed nodes, {len(ego_edges):,} edges")
 ego_stats = slice_stats(ego_edges, n_total)
+print(f"✅ Ego sample: {len(ego_nodes)} seeds, {len(ego_edges)} edges retained.")
 
-## 2.2 Edgewise: sample edges uniformly #######################################
+## 2.2 Edgewise: sample edges uniformly ######################################
 
+# Uniform random sampling of edges. Preserves the marginal edge-weight
+# distribution well but tends to leave nodes with low degree under-sampled.
 edge_sample = edges.sample(n=10_000, random_state=42)
 edge_stats  = slice_stats(edge_sample, n_total)
 print(f"edge sample: {len(edge_sample):,} edges")
+print(f"✅ Edge sample: {len(edge_sample)} edges.")
 
 ## 2.3 Spatial buffer: keep edges where BOTH endpoints are within 200 km of Miami
 
-# Miami-area geoid; we use this node's centroid as the point of interest.
+# Use Miami as our point of interest (POI). Project to a meter-based
+# CRS so the 200 km buffer is geometrically meaningful, then back.
 miami_geoid = "1208692158"
 miami_row = nodes[nodes["geoid"] == miami_geoid].iloc[0]
 poi = gpd.GeoSeries([Point(miami_row["x"], miami_row["y"])], crs="EPSG:4326")
-# Reproject to a meter-based CRS for buffering, then back to lat/lon.
 poi_m   = poi.to_crs("EPSG:3857")
 buf_m   = poi_m.buffer(200_000)              # 200 km
 buf_ll  = gpd.GeoSeries(buf_m, crs="EPSG:3857").to_crs("EPSG:4326")
@@ -87,9 +108,12 @@ node_pts = gpd.GeoDataFrame(
 nodes_in_buf = node_pts[node_pts.within(buf_ll.iloc[0])]
 print(f"buffer sample: {len(nodes_in_buf)} nodes within 200 km of Miami")
 
+# Keep only edges where BOTH endpoints are inside the buffer.
 ids_in = set(nodes_in_buf["node"].to_numpy())
 buf_edges = edges[edges["from"].isin(ids_in) & edges["to"].isin(ids_in)]
 buf_stats = slice_stats(buf_edges, n_total)
+print(f"✅ Buffer sample: {len(nodes_in_buf)} nodes within 200 km of Miami, "
+      f"{len(buf_edges)} edges.")
 
 
 # 3. Compare samples vs population ###########################################
@@ -118,6 +142,7 @@ for ax in axes:
 fig.tight_layout()
 fig.savefig("sampling_compare.png", dpi=120)
 plt.close(fig)
+print("💾 Saved sampling_compare.png")
 
 
 # 4. Which strategy best preserves average edgeweight? #######################
@@ -142,7 +167,7 @@ for k, v in mad.items():
     print(f"  {k:16s}: {v:.3f}")
 
 winner = min(mad, key=mad.get)
-print(f"Best preservation: {winner}")
+print(f"📊 Best preservation: {winner}")
 
 
 # 5. Learning Check ##########################################################
@@ -152,4 +177,6 @@ print(f"Best preservation: {winner}")
 # the population's `avg_edgeweight` time series — measured by the
 # smallest max-absolute-deviation? Submit the strategy name.
 
-print(f"Learning Check answer: {winner}")
+print(f"\n📝 Learning Check answer: {winner}")
+
+print("\n🎉 Done. Move on to the case study report when you're ready.")

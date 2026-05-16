@@ -17,6 +17,8 @@ high-betweenness failures cause DIFFERENT amounts of damage.
 
 ## 0.1 Packages ##############################################################
 
+# `igraph` for graph + centrality, `pandas`/`numpy` to keep the
+# per-strategy attack results tidy and easy to plot.
 import pandas as pd
 import numpy as np
 import igraph as ig
@@ -24,32 +26,47 @@ import matplotlib.pyplot as plt
 
 ## 0.2 Load helpers ##########################################################
 
+# `supply_coverage()` and `remove_and_score()` live in functions.py.
+# They compute the % of retailers still reachable from any supplier,
+# before and after a list of victims is deleted.
 from functions import (
     load_nodes, load_edges, build_graph,
     supply_coverage, remove_and_score,
 )
 
+print("\n🚀 Case Study 05 — Supply Chain Resilience (Python)")
+print("   Three attack strategies on a 580-node 3-tier chain. Which one hurts most?\n")
+
 ## 0.3 Load data #############################################################
 
 nodes = load_nodes()
 edges = load_edges()
+# Tier composition: tier 1 = suppliers, tier 2 = DCs, tier 3 = retailers
 print(nodes["tier"].value_counts().sort_index())
-# tier 1 = suppliers, tier 2 = DCs, tier 3 = retailers
 
 g = build_graph(nodes, edges)
 print(g.summary())
+n1 = int((nodes['tier'] == 1).sum())
+n2 = int((nodes['tier'] == 2).sum())
+n3 = int((nodes['tier'] == 3).sum())
+print(f"✅ Loaded chain: {g.vcount()} nodes ({n1} suppliers, {n2} DCs, {n3} retailers).")
 
 
 # 1. Baseline supply coverage ################################################
+#
+# Before we break anything, what fraction of retailers are reachable
+# from at least one supplier? That's our denominator.
 
 base = supply_coverage(g)
-print(f"Baseline supply coverage: {base:.3f}")
+print(f"📊 Baseline supply coverage: {base:.3f}")
 
 
 # 2. Centrality per tier #####################################################
 #
-# We compute centrality so we can target the "important" nodes. For a
-# directed network we use weighted degree (capacity) and betweenness.
+# To target the right nodes we need per-node centrality. For a
+# directed network we use both weighted degree (capacity) and
+# betweenness. We hold these in a tidy table so the attack loop
+# below stays one-liner-clean.
 
 cent = pd.DataFrame({
     "node_id":     g.vs["name"],
@@ -61,7 +78,8 @@ cent = pd.DataFrame({
     "betweenness": g.betweenness(directed=True),
 })
 
-# Most-critical DC by betweenness:
+# Most-critical DC by betweenness. These are the candidates an attacker
+# would target if they understood the network structure.
 print(
     cent.query("tier == 2").sort_values("betweenness", ascending=False).head(5)
 )
@@ -73,7 +91,7 @@ print(
 #   - random
 #   - top-k by out-degree (volume hubs)
 #   - top-k by betweenness (bridges)
-# and track supply coverage as k grows.
+# and track supply coverage as k grows from 0 to 15.
 
 dcs = cent.query("tier == 2").copy()
 rng = np.random.default_rng(42)
@@ -104,6 +122,9 @@ results = pd.DataFrame({
 })
 
 print(results.round(3))
+row10 = results.loc[results["k"] == 10].iloc[0]
+print(f"🧪 At k=10: random={row10['random']:.3f}  out_degree={row10['out_degree']:.3f}"
+      f"  betweenness={row10['betweenness']:.3f}")
 
 
 # 4. Visualize ###############################################################
@@ -120,6 +141,7 @@ ax.legend()
 fig.tight_layout()
 fig.savefig("supply_attack_curve.png", dpi=120)
 plt.close(fig)
+print("💾 Saved supply_attack_curve.png")
 
 
 # 5. Learning Check ##########################################################
@@ -130,4 +152,7 @@ plt.close(fig)
 
 top5_btwn = dcs.sort_values("betweenness", ascending=False).head(5)["node_id"]
 answer = remove_and_score(g, top5_btwn)
-print(f"Learning Check answer: {answer:.3f}")
+
+print(f"\n📝 Learning Check answer: {answer:.3f}")
+
+print("\n🎉 Done. Move on to the case study report when you're ready.")

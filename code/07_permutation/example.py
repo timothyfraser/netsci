@@ -20,6 +20,8 @@ homophily AND planted neighborhood-demo correlation.
 
 ## 0.1 Packages ##############################################################
 
+# `igraph` for assortativity. `numpy` for the per-permutation array,
+# `matplotlib` for the two-null distribution plot.
 import pandas as pd
 import numpy as np
 import igraph as ig
@@ -27,9 +29,15 @@ import matplotlib.pyplot as plt
 
 ## 0.2 Load helpers ##########################################################
 
+# `assort_by()` wraps `igraph.assortativity_nominal`; `permute_labels()`
+# shuffles a vertex attribute, optionally within blocks defined by
+# another attribute. Both live in functions.py.
 from functions import (
     load_nodes, load_edges, build_graph, assort_by, permute_labels
 )
+
+print("\n🚀 Case Study 07 — Network Permutation Testing (Python)")
+print("   Same observed stat, two null models. Watch the p-value change.\n")
 
 ## 0.3 Load data #############################################################
 
@@ -38,21 +46,24 @@ edges = load_edges()
 g     = build_graph(nodes, edges)
 print(g.summary())
 print(nodes.head())
+print(f"✅ Loaded graph: {g.vcount()} nodes (demos A vs B in 10 neighborhoods).")
 
 
-# 1. Observed assortativity ###################################################
+# 1. Observed assortativity ##################################################
 #
-# We computed the nominal assortativity coefficient on the "demo"
-# attribute. Positive = same-demo edges are over-represented;
-# 0 = random; negative = disassortative.
+# Nominal assortativity: positive = same-demo edges over-represented;
+# 0 = random; negative = disassortative. This is the number we'll test.
 
 observed = assort_by(g, "demo")
-print(f"Observed assortativity by `demo`: {observed:.4f}")
+print(f"📊 Observed assortativity by `demo`: {observed:.4f}")
 
 
-# 2. Null model 1: UNBLOCKED permutation ######################################
+# 2. Null model 1: UNBLOCKED permutation #####################################
 #
-# Shuffle the `demo` label across ALL nodes, recompute, repeat.
+# Shuffle the `demo` label across ALL nodes, recompute assortativity,
+# repeat 500 times. The unblocked null breaks BOTH any demo-edge link
+# AND any demo-neighborhood link — it's the "everything is random"
+# baseline.
 
 rng = np.random.default_rng(42)
 n_perm = 500
@@ -62,16 +73,16 @@ for i in range(n_perm):
     null_unblocked[i] = assort_by(g_perm, "demo")
 
 p_unblocked = float(np.mean(null_unblocked >= observed))
-print(f"Unblocked null:    mean = {null_unblocked.mean():+.4f}  "
+print(f"🧪 Unblocked null: mean = {null_unblocked.mean():+.4f}  "
       f"sd = {null_unblocked.std():.4f}  p = {p_unblocked:.3f}")
 
 
-# 3. Null model 2: BLOCK permutation by neighborhood ##########################
+# 3. Null model 2: BLOCK permutation by neighborhood #########################
 #
 # Shuffle `demo` ONLY within neighborhood. This preserves the
-# neighborhood-level composition. It's a more conservative null,
-# because some of the apparent "homophily" comes from the fact that
-# neighborhoods are themselves demo-segregated.
+# neighborhood-level composition. A more conservative null, because
+# some apparent "homophily" comes from the fact that A's and B's
+# already live in different neighborhoods.
 
 null_blocked = np.empty(n_perm)
 for i in range(n_perm):
@@ -79,11 +90,11 @@ for i in range(n_perm):
     null_blocked[i] = assort_by(g_perm, "demo")
 
 p_blocked = float(np.mean(null_blocked >= observed))
-print(f"Block-permuted null: mean = {null_blocked.mean():+.4f}  "
+print(f"🧪 Block-permuted null: mean = {null_blocked.mean():+.4f}  "
       f"sd = {null_blocked.std():.4f}  p = {p_blocked:.3f}")
 
 
-# 4. Visualize the two null distributions vs the observed #####################
+# 4. Visualize the two null distributions vs the observed ####################
 
 fig, ax = plt.subplots(figsize=(8, 4.5))
 ax.hist(null_unblocked, bins=30, alpha=0.55, label="Unblocked null",
@@ -98,6 +109,7 @@ ax.legend()
 fig.tight_layout()
 fig.savefig("permutation_nulls.png", dpi=120)
 plt.close(fig)
+print("💾 Saved permutation_nulls.png")
 
 
 # 5. The take-home ###########################################################
@@ -120,4 +132,6 @@ plt.close(fig)
 # `demo`? (Use neighborhood as the block. 500 permutations.) Report
 # to 3 decimal places.
 
-print(f"Learning Check answer: {p_blocked:.3f}")
+print(f"\n📝 Learning Check answer: {p_blocked:.3f}")
+
+print("\n🎉 Done. Move on to the case study report when you're ready.")

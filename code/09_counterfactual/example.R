@@ -14,14 +14,16 @@
 #' tells you whether the effect is real.
 #'
 #' We use a 180-station synthetic bikeshare network. The metric is
-#' weighted average path length. The intervention adds a new direct
-#' edge between two stations that are currently far apart.
+#' weighted average path length (lower is better). The intervention
+#' adds a new direct edge between two stations that are currently
+#' far apart.
 
 
 # 0. Setup ###################################################################
 
 ## 0.1 Packages ##############################################################
 
+# `igraph` for distances + APL math. `dplyr` for the tidy result tables.
 library(dplyr)
 library(ggplot2)
 library(igraph)
@@ -29,7 +31,13 @@ library(here)
 
 ## 0.2 Load helpers ##########################################################
 
+# `weighted_apl()` computes the weighted average path length;
+# `mc_apls()` runs R Poisson-resampled APL computations, optionally
+# with an extra edge appended. Both live in functions.R.
 source(here::here("code", "09_counterfactual", "functions.R"))
+
+cat("\n🚀 Case Study 09 — Counterfactual Monte Carlo (R)\n")
+cat("   Add one edge to a bikeshare network. Does APL really improve?\n\n")
 
 ## 0.3 Load data #############################################################
 
@@ -37,45 +45,60 @@ nodes <- load_nodes()
 edges <- load_edges()
 g     <- build_graph(nodes, edges)
 g
+cat(sprintf("✅ Loaded network: %d stations, %d edges.\n",
+            igraph::vcount(g), igraph::ecount(g)))
 
 
 # 1. Baseline weighted APL ###################################################
+#
+# APL = average over all (i, j) of the shortest-path *cost* between
+# i and j. Cost is 1/ridership, so a high-ridership edge counts as
+# "short" — it's a "well-traveled" path between its endpoints.
 
 base_apl <- weighted_apl(g)
-cat(sprintf("Baseline weighted APL: %.5f\n", base_apl))
+cat(sprintf("📊 Baseline weighted APL: %.5f\n", base_apl))
 
 
 # 2. Pick an intervention ####################################################
 #
 # Find two stations that are far apart in the current network. We'll
-# propose adding a high-ridership edge between them.
+# propose adding a high-ridership (~120 rides) edge between them and
+# see if that pulls the APL down meaningfully.
 
 dist_mat <- igraph::distances(g, weights = igraph::E(g)$cost)
 diag(dist_mat) <- -Inf
 ij <- which(dist_mat == max(dist_mat), arr.ind = TRUE)[1, ]
 station_a <- igraph::V(g)$name[ij[1]]
 station_b <- igraph::V(g)$name[ij[2]]
-cat(sprintf("farthest-apart pair: %s <-> %s (cost = %.4f)\n",
+cat(sprintf("🔗 farthest-apart pair: %s <-> %s (cost = %.4f)\n",
             station_a, station_b, dist_mat[ij[1], ij[2]]))
 
 intervention <- tibble(
-  from = station_a, to = station_b, ridership = 120
+  from      = station_a,
+  to        = station_b,
+  ridership = 120
 )
 
 
 # 3. Monte Carlo: baseline vs counterfactual #################################
+#
+# For each of R = 500 replicates: Poisson-resample every edge's
+# ridership around its observed value, rebuild the graph, and compute
+# APL. Do this once WITHOUT the new edge (baseline) and once WITH it
+# (counterfactual). The element-wise difference is the per-replicate
+# treatment effect.
 
 R <- 500
 baseline_apls       <- mc_apls(edges, nodes, R = R, extra = NULL,         seed = 1)
 counterfactual_apls <- mc_apls(edges, nodes, R = R, extra = intervention, seed = 1)
 
 diffs <- counterfactual_apls - baseline_apls
-ci <- quantile(diffs, probs = c(0.025, 0.975))
-cat(sprintf("Counterfactual APL change (mean):     %+.5f\n", mean(diffs)))
-cat(sprintf("95%% CI on the change:                 [%+.5f, %+.5f]\n",
+ci    <- quantile(diffs, probs = c(0.025, 0.975))
+cat(sprintf("🧪 Counterfactual APL change (mean):     %+.5f\n", mean(diffs)))
+cat(sprintf("🧪 95%% CI on the change:                 [%+.5f, %+.5f]\n",
             ci[[1]], ci[[2]]))
-cat(sprintf("Effect significant at 95%%?            %s\n",
-            ci[[2]] < 0 || ci[[1]] > 0))
+cat(sprintf("📊 Effect significant at 95%%?            %s\n",
+            if (ci[[2]] < 0 || ci[[1]] > 0) "True" else "False"))
 
 
 # 4. Visualize ###############################################################
@@ -114,4 +137,6 @@ print(p2)
 # APL (counterfactual - baseline), with R=500 replicates and seed=1?
 # Report the LOW end of the CI rounded to 4 decimal places (signed).
 
-cat(sprintf("Learning Check answer (CI low): %.4f\n", ci[[1]]))
+cat(sprintf("\n📝 Learning Check answer (CI low): %.4f\n", ci[[1]]))
+
+cat("\n🎉 Done. Move on to the case study report when you're ready.\n")

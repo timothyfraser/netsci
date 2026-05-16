@@ -22,6 +22,9 @@
 
 ## 0.1 Packages ##############################################################
 
+# `igraph` carries the community-detection algorithms and the matrix
+# conversion. `dplyr` + `tibble` for tidy summaries. Base R `image()`
+# does the DSM heatmap (no ggplot needed).
 library(dplyr)
 library(tibble)
 library(igraph)
@@ -30,7 +33,13 @@ library(here)
 
 ## 0.2 Load helpers ##########################################################
 
+# `cascade_bfs()` does a bounded BFS from a starting node along the
+# directed dependency edges. It's the cascade simulator we use at the
+# end of the script.
 source(here::here("code", "06_dsm-clustering", "functions.R"))
+
+cat("\n🚀 Case Study 06 — DSM Clustering (R)\n")
+cat("   200 components, 8 planted modules. Can community detection recover them?\n\n")
 
 ## 0.3 Load data #############################################################
 
@@ -38,6 +47,8 @@ nodes <- load_nodes()
 edges <- load_edges()
 g     <- build_graph(nodes, edges)
 g
+cat(sprintf("✅ Loaded DSM: %d components, %d dependency edges.\n",
+            igraph::vcount(g), igraph::ecount(g)))
 
 
 # 1. Community detection #####################################################
@@ -49,39 +60,44 @@ g
 g_undirected <- igraph::as.undirected(g, mode = "collapse")
 g_undirected
 
-# Louvain (igraph's `cluster_louvain`):
+# Louvain (igraph's `cluster_louvain`): greedy modularity optimization,
+# moves nodes between communities to maximize modularity score.
 louvain <- igraph::cluster_louvain(g_undirected)
-cat(sprintf("Louvain found %d modules. Modularity: %.3f\n",
+cat(sprintf("📊 Louvain found %d modules. Modularity: %.3f\n",
             length(louvain), igraph::modularity(louvain)))
 
-# Fast-greedy:
+# Fast-greedy: agglomerative — start with each node in its own community,
+# repeatedly merge the pair whose merge most increases modularity.
 fg <- igraph::cluster_fast_greedy(g_undirected)
-cat(sprintf("Fast-greedy found %d modules. Modularity: %.3f\n",
+cat(sprintf("📊 Fast-greedy found %d modules. Modularity: %.3f\n",
             length(fg), igraph::modularity(fg)))
 
 
-# 2. Compare to ground truth ##################################################
+# 2. Compare to ground truth #################################################
 #
-# Our synthetic data planted 8 modules. We can compute the adjusted
-# Rand index between the algorithm's labels and the true labels.
+# Our synthetic data planted 8 modules. The Adjusted Rand Index (ARI)
+# measures how well two clusterings agree, corrected for chance:
+# 1.0 = perfect agreement, 0.0 = chance, < 0 = worse than chance.
 
-# igraph::compare returns NMI / RI / etc. The "adjusted.rand" method
-# is the standard one.
-true_mod  <- igraph::V(g)$true_module
-ari_louv  <- igraph::compare(true_mod, louvain$membership, method = "adjusted.rand")
-ari_fg    <- igraph::compare(true_mod, fg$membership,     method = "adjusted.rand")
-cat(sprintf("Louvain    ARI vs truth: %.3f\n", ari_louv))
-cat(sprintf("FastGreedy ARI vs truth: %.3f\n", ari_fg))
+true_mod <- igraph::V(g)$true_module
+ari_louv <- igraph::compare(true_mod, louvain$membership, method = "adjusted.rand")
+ari_fg   <- igraph::compare(true_mod, fg$membership,     method = "adjusted.rand")
+cat(sprintf("🧪 Louvain    ARI vs truth: %.3f\n", ari_louv))
+cat(sprintf("🧪 FastGreedy ARI vs truth: %.3f\n", ari_fg))
 
 
-# 3. Reorder the DSM by recovered module ######################################
+# 3. Reorder the DSM by recovered module #####################################
+#
+# Sort node indices by Louvain module ID. Then build the n x n
+# adjacency matrix in that order. Dense blocks should land on the
+# diagonal — that's what "modular structure" *looks like*.
 
-ord  <- order(louvain$membership)
-A    <- as.matrix(igraph::as_adjacency_matrix(g))
+ord      <- order(louvain$membership)
+A        <- as.matrix(igraph::as_adjacency_matrix(g))
 A_sorted <- A[ord, ord]
 
-# A simple base-R image() does the job; reverse the y-axis so it
-# looks like a matrix (row 1 at top).
+# Side-by-side base-R image() plots. Reverse the y-axis so row 1 lands
+# at the top, like an actual matrix.
 par(mfrow = c(1, 2))
 image(t(A)[, nrow(A):1], col = c("white", "black"), axes = FALSE,
       main = "DSM — original order")
@@ -99,7 +115,7 @@ par(mfrow = c(1, 1))
 
 seed <- "C037"
 for (k in c(1, 2, 3)) {
-  cat(sprintf("Cascade from %s in %d hop(s): %d components\n",
+  cat(sprintf("🔗 Cascade from %s in %d hop(s): %d components\n",
               seed, k, length(cascade_bfs(g, seed, n_hops = k))))
 }
 
@@ -112,4 +128,7 @@ for (k in c(1, 2, 3)) {
 
 n_modules  <- length(louvain)
 modularity <- round(igraph::modularity(louvain), 3)
-cat(sprintf("Learning Check answer: %d, %.3f\n", n_modules, modularity))
+
+cat(sprintf("\n📝 Learning Check answer: %d, %.3f\n", n_modules, modularity))
+
+cat("\n🎉 Done. Move on to the case study report when you're ready.\n")
