@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Sketch ↔ LC Map · Instructor · SYSEN 5470</title>
+<meta name="description" content="Pedagogical alignment for SYSEN 5470 — each sketchpad prompt mapped to the Learning Check it sets up.">
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/print.css" media="print">
+<style>
+  body[data-page="sketch-lc"] { --green-bright: #a0e090; }
+  .map-table {
+    width: 100%; border-collapse: collapse; margin-top: 16px;
+    font-family: var(--font-body); font-size: 14px;
+  }
+  .map-table th, .map-table td {
+    border-bottom: 1px solid var(--border); padding: 12px 14px;
+    color: var(--green-mint); text-align: left; vertical-align: top;
+  }
+  .map-table th {
+    color: var(--white); font-family: var(--font-display);
+    font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase;
+    background: rgba(160,224,144,0.05);
+  }
+  .map-table td.sketch { color: var(--white); }
+  .map-table td.skill {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: #a0e090;
+  }
+  .map-table td.note {
+    font-family: var(--font-body); font-size: 13px;
+    color: var(--green-mint); font-style: italic;
+  }
+  .map-table a { color: #a0e090; text-decoration: none; }
+  .map-table a:hover { text-decoration: underline; }
+  .map-table tr:hover td { background: rgba(160,224,144,0.04); }
+  .map-table .time {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--node-4); display: block; margin-top: 2px;
+  }
+</style>
+</head>
+<body data-page="sketch-lc">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Instructor</a>
+    <div class="nav-links">
+      <a href="index.html">Hub</a>
+      <a href="launch-checklist.html">Launch checks</a>
+      <a href="announcements.html">Announcements</a>
+      <a href="grading-scratchpad.html">Grading</a>
+      <a href="screencast-prompts.html">Screencasts</a>
+      <a href="sketch-lc-map.html" class="active">Sketch↔LC</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page" id="main" tabindex="-1">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Instructor · Sketch ↔ LC</p>
+    <h1 class="hero-title">Pedagogical<br><span>Wiring Diagram</span>.</h1>
+    <p class="hook">Every sketchpad prompt is engineered to set up a specific Learning Check. Sketch first, code second. This one-pager makes the alignment explicit — useful when adjusting a sketch and you want to know which LC depends on it.</p>
+  </section>
+
+  <section class="section">
+    <table class="map-table">
+      <thead>
+        <tr>
+          <th>Sketch</th>
+          <th>Skill</th>
+          <th>Primes Learning Check</th>
+          <th>The hinge</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="sketch">Sketch 01 — Place nodes, draw edges<span class="time">12 min</span></td>
+          <td class="skill">Identify</td>
+          <td><a href="../case-studies/build-a-network.html" target="_blank">Build a Network</a> LC</td>
+          <td class="note">Forces students to defend node-and-edge choices before any code can hide ambiguity.</td>
+        </tr>
+        <tr>
+          <td class="sketch">Sketch 02 — Two tables, one network<span class="time">10 min</span></td>
+          <td class="skill">Identify</td>
+          <td><a href="../case-studies/joins.html" target="_blank">Joins</a> LC</td>
+          <td class="note">Reveals the silent-column-collision failure mode — drawn first, debugged later.</td>
+        </tr>
+        <tr>
+          <td class="sketch">Sketch 03a — Aggregate by attribute<span class="time">10 min</span></td>
+          <td class="skill">Identify</td>
+          <td><a href="../case-studies/aggregation.html" target="_blank">Aggregation</a> LC (first half)</td>
+          <td class="note">Makes the diagonal-stickiness pattern visible before it's a number.</td>
+        </tr>
+        <tr>
+          <td class="sketch">Sketch 03b — Two competing aggregations<span class="time">10 min</span></td>
+          <td class="skill">Identify</td>
+          <td><a href="../case-studies/aggregation.html" target="_blank">Aggregation</a> LC (second half)</td>
+          <td class="note">Shows that "the right resolution" depends on the question, not the data.</td>
+        </tr>
+        <tr>
+          <td class="sketch">Sketch 04 — Bridges vs hubs<span class="time">15 min</span></td>
+          <td class="skill">Measure</td>
+          <td><a href="../case-studies/centrality.html" target="_blank">Centrality</a> LC</td>
+          <td class="note">Most expensive sketch — students have to argue from the question to the metric.</td>
+        </tr>
+        <tr>
+          <td class="sketch">Sketch 05 — Plan an attack<span class="time">12 min</span></td>
+          <td class="skill">Measure</td>
+          <td><a href="../case-studies/supply-chain.html" target="_blank">Supply Chain</a> LC</td>
+          <td class="note">Targets the "busiest first" heuristic before the lab disproves it.</td>
+        </tr>
+        <tr>
+          <td class="sketch">Sketch 06 — Find the modules<span class="time">10 min</span></td>
+          <td class="skill">Measure</td>
+          <td><a href="../case-studies/dsm-clustering.html" target="_blank">DSM Clustering</a> LC</td>
+          <td class="note">Students try to draw module boundaries — they realize there's not a unique answer.</td>
+        </tr>
+        <tr>
+          <td class="sketch">Sketch 07 — Permute the labels<span class="time">15 min</span></td>
+          <td class="skill">Infer</td>
+          <td><a href="../case-studies/permutation.html" target="_blank">Permutation</a> LC</td>
+          <td class="note">Hard sketch — sets up the unblocked-vs-blocked-null distinction by hand.</td>
+        </tr>
+        <tr>
+          <td class="sketch">Sketch 08 — Sample the network<span class="time">12 min</span></td>
+          <td class="skill">Identify</td>
+          <td><a href="../case-studies/sampling.html" target="_blank">Sampling</a> LC</td>
+          <td class="note">Ego- vs edge-sampling drawn side-by-side; the visual difference is the whole point.</td>
+        </tr>
+        <tr>
+          <td class="sketch">Sketch 09 — A counterfactual<span class="time">12 min</span></td>
+          <td class="skill">Predict</td>
+          <td><a href="../case-studies/counterfactual.html" target="_blank">Counterfactual MC</a> LC</td>
+          <td class="note">"What if we added this edge?" — sketched in two states before the MC runs them 2000 times.</td>
+        </tr>
+        <tr>
+          <td class="sketch">Sketch 10 — Message-pass by hand<span class="time">18 min</span></td>
+          <td class="skill">Predict</td>
+          <td><a href="../case-studies/gnn-by-hand.html" target="_blank">GNN by Hand</a> LC</td>
+          <td class="note">The most concrete sketch in the course — one round of GNN propagation done on paper.</td>
+        </tr>
+        <tr>
+          <td class="sketch">Sketch 11 — Predict from position<span class="time">15 min</span></td>
+          <td class="skill">Predict</td>
+          <td><a href="../case-studies/gnn-xgboost.html" target="_blank">GNN + XGBoost</a> LC</td>
+          <td class="note">Surfaces the question "does network position add information beyond raw features?"</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <p class="site-footer"><strong>SYSEN 5470 · Instructor · Sketch ↔ LC</strong><br>
+  Internal only. Not for distribution.</p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

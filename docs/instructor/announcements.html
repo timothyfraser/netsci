@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Announcements · Instructor · SYSEN 5470</title>
+<meta name="description" content="Announcement template gallery for SYSEN 5470 instructor — Monday launch, mid-week nudge, AI-policy reminder, office hours, common-error, cohort highlight.">
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/print.css" media="print">
+<style>
+  body[data-page="announcements"] { --green-bright: #a0e090; }
+  .ann-fields {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 14px 18px;
+    margin-bottom: 22px; backdrop-filter: blur(8px);
+    display: flex; gap: 18px; flex-wrap: wrap; align-items: center;
+  }
+  .ann-fields label {
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: #a0e090; display: flex; flex-direction: column; gap: 4px;
+  }
+  .ann-fields input {
+    font-family: var(--font-body); font-size: 14px;
+    background: rgba(255,255,255,0.04); color: var(--white);
+    border: 1px solid var(--border); padding: 6px 10px;
+    border-radius: var(--radius-sm); min-width: 100px;
+  }
+  .ann-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 18px 22px;
+    margin-bottom: 16px; backdrop-filter: blur(8px);
+  }
+  .ann-card .head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
+  }
+  .ann-card h3 {
+    font-family: var(--font-display); font-size: 19px;
+    color: var(--white); letter-spacing: 0.03em; margin: 0;
+  }
+  .ann-card p.gloss {
+    font-family: var(--font-body); font-size: 13px;
+    color: var(--green-mint); line-height: 1.5; margin: 0 0 10px;
+  }
+  .ann-card pre {
+    background: rgba(5,10,5,0.7);
+    border: 1px solid var(--border-soft);
+    border-left: 3px solid #a0e090;
+    border-radius: var(--radius-sm);
+    padding: 14px 16px; margin: 0 0 10px;
+    font-family: var(--font-mono); font-size: 12.5px;
+    color: var(--white); line-height: 1.55;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .ann-copy {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    background: #a0e090; color: var(--black);
+    border: 1px solid #a0e090;
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .ann-copy:hover { background: #c0f0a0; border-color: #c0f0a0; }
+</style>
+</head>
+<body data-page="announcements" data-template-scope>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Instructor</a>
+    <div class="nav-links">
+      <a href="index.html">Hub</a>
+      <a href="launch-checklist.html">Launch checks</a>
+      <a href="announcements.html" class="active">Announcements</a>
+      <a href="grading-scratchpad.html">Grading</a>
+      <a href="screencast-prompts.html">Screencasts</a>
+      <a href="sketch-lc-map.html">Sketch↔LC</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page" id="main" tabindex="-1">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Instructor · Announcements</p>
+    <h1 class="hero-title">Templates,<br><span>Pre-Worded</span>.</h1>
+    <p class="hook">Six announcement templates for the recurring touchpoints in the course rhythm. Fill in the two fields below, click Copy on any template, and paste into Canvas. The Copy button substitutes <code>{{week}}</code> and <code>{{date}}</code> with the values you set.</p>
+  </section>
+
+  <section class="section">
+    <div class="ann-fields">
+      <label>Week
+        <input type="text" data-field="week" data-placeholder="2" placeholder="2">
+      </label>
+      <label>Due date
+        <input type="text" data-field="duedate" data-placeholder="June 17" placeholder="June 17">
+      </label>
+      <label>Today
+        <input type="text" data-field="date" data-placeholder="2026-05-16" placeholder="auto">
+      </label>
+    </div>
+
+    <div class="ann-card">
+      <div class="head">
+        <h3>📅 Monday launch</h3>
+        <button class="ann-copy" data-copy-target="tpl-launch">⧉ Copy</button>
+      </div>
+      <p class="gloss">Goes out every Monday around 9 AM as the week's main "we're rolling" message.</p>
+      <pre id="tpl-launch">Week {{week}} is live.
+
+This week we're working on the next two case studies — the labs are
+already on the site, the sketchpad prompts are open, and the Monday
+{{duedate}} submission deadline is the usual: sketches, both LC
+answers, and one project case study.
+
+If you're picking your project case study this week, lock it in by
+Wednesday so you have a clean four days to write. The Project
+Question Seeds card on each lab page is a good starting point.
+
+Office hours are open — grab a slot if you want to walk through
+your network choice before you commit.
+
+— Tim</pre>
+    </div>
+
+    <div class="ann-card">
+      <div class="head">
+        <h3>🌀 Mid-week nudge</h3>
+        <button class="ann-copy" data-copy-target="tpl-midweek">⧉ Copy</button>
+      </div>
+      <p class="gloss">Thursdays. A short check-in to surface the most common stuck spot of the week.</p>
+      <pre id="tpl-midweek">Halfway through Week {{week}}.
+
+By now you should have your project network in hand and a draft
+answer to the question. If you're still hunting for a dataset, ping
+me — I'd rather manufacture one for you than have you spend Friday
+on Kaggle.
+
+The most common stuck spot at this point in the week is operationalization
+— "what's a node and what's an edge in MY data." If that's where you
+are, the Build a Network case study and Sketch 01 are the unstuck
+patterns.
+
+— Tim</pre>
+    </div>
+
+    <div class="ann-card">
+      <div class="head">
+        <h3>⚖ AI-policy reminder</h3>
+        <button class="ann-copy" data-copy-target="tpl-ai">⧉ Copy</button>
+      </div>
+      <p class="gloss">Send once early in the term, then again before the first project report is due.</p>
+      <pre id="tpl-ai">Quick reminder on the AI policy as you start writing reports.
+
+AI is welcome for syntax and debugging — use it. AI is NOT for
+writing your prose, answering Learning Checks, or filling in
+reflection prompts. The course is about your thinking; reports are
+how we see your thinking.
+
+The Course Companion (the bubble bottom-right of any page) is the
+recommended AI for this course. It's grounded in our own materials
+and won't write your report for you, by design.
+
+Full policy: https://timothyfraser.com/netsci/help/ai-policy.html
+
+— Tim</pre>
+    </div>
+
+    <div class="ann-card">
+      <div class="head">
+        <h3>📞 Office-hours invite</h3>
+        <button class="ann-copy" data-copy-target="tpl-oh">⧉ Copy</button>
+      </div>
+      <p class="gloss">Sundays, or whenever the calendar gets sparse.</p>
+      <pre id="tpl-oh">Office hours open for Week {{week}}.
+
+Particularly useful right now for:
+  • Picking your project network if you haven't yet.
+  • Talking through a specific operationalization choice.
+  • Getting unstuck on a code error that the Course Companion
+    couldn't crack.
+
+Sign up: https://timothyfraser.com/netsci/help/office-hours.html
+
+— Tim</pre>
+    </div>
+
+    <div class="ann-card">
+      <div class="head">
+        <h3>🛠 Common-error response</h3>
+        <button class="ann-copy" data-copy-target="tpl-err">⧉ Copy</button>
+      </div>
+      <p class="gloss">When you see the same error in three or more submissions, send this to the whole class.</p>
+      <pre id="tpl-err">Several of you have hit the same error this week.
+
+[Describe the error in one line — e.g. "package install fails on
+M-series Macs when installing igraph from CRAN"]
+
+The fix is on the FAQ:
+https://timothyfraser.com/netsci/help/faq.html#{{slug}}
+
+If your error doesn't match exactly, ping me with the error message
+and your OS. Easier than guessing.
+
+— Tim</pre>
+    </div>
+
+    <div class="ann-card">
+      <div class="head">
+        <h3>✨ Cohort highlight</h3>
+        <button class="ann-copy" data-copy-target="tpl-highlight">⧉ Copy</button>
+      </div>
+      <p class="gloss">Fridays — show one student's good work back to the cohort. Get permission first.</p>
+      <pre id="tpl-highlight">Quick spotlight.
+
+[Student name] picked [network] for their Week {{week}} project and
+the result is a strong example of [the skill — Identify /
+Measure / Infer / Predict].
+
+Specifically: [one-sentence summary of what made the report
+particularly good — e.g. "the choice of betweenness over degree
+was argued from the question, not assumed"].
+
+This is the shape of report I'm hoping for. Use it as a reference,
+not a template — your network and question are different.
+
+— Tim</pre>
+    </div>
+  </section>
+
+  <p class="site-footer"><strong>SYSEN 5470 · Instructor · Announcements</strong><br>
+  Internal only. Not for distribution.</p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+<script src="../assets/instructor.js" defer></script>
+</body>
+</html>

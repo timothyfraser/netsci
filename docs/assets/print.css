@@ -1,0 +1,89 @@
+/* Print stylesheet — used by every page via media="print".
+   Goal: hand a student a paper version that's readable and ink-frugal. */
+
+@page { margin: 0.75in; }
+
+html, body {
+  background: #fff !important;
+  color: #111 !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+}
+
+/* Hide everything that's purely interactive or decorative */
+#bg-canvas,
+.nav,
+.nav-cta,
+.notebooklm-bubble,
+.skip-link,
+.sg-actions,
+#self-grade-checklist .sg-actions,
+.case-code-link,
+.project-seeds,
+script,
+audio, video, iframe {
+  display: none !important;
+}
+
+/* Expand any collapsed details so they print */
+details, details > * { display: block !important; }
+details > summary::-webkit-details-marker { display: none; }
+
+/* Flatten page chrome */
+.page { padding: 0 !important; max-width: 100% !important; }
+.hero { padding: 0 0 18px !important; border-bottom: 2px solid #333; margin-bottom: 18px; }
+.hero-title { font-size: 24pt !important; color: #111 !important; line-height: 1.2 !important; }
+.hero-title span, .hook { color: #333 !important; }
+.course-number { color: #666 !important; font-size: 9pt !important; }
+
+.section { padding: 8pt 0 !important; }
+.sec-label { color: #555 !important; font-weight: bold; }
+
+/* Cards: white box, thin grey border */
+.cadence-card, .why-card, .checklist, .deadline-banner,
+.sample-report-card, .skill-rubric, #self-grade-checklist,
+.help-card, .stuck-callout, .callout, .next-card,
+.qs-section, .ai-policy-box {
+  background: #fff !important;
+  border: 1px solid #999 !important;
+  color: #111 !important;
+  page-break-inside: avoid;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+.cadence-card *, .why-card *, .checklist *, .deadline-banner *,
+.sample-report-card *, .skill-rubric *, #self-grade-checklist *,
+.help-card *, .stuck-callout *, .callout *, .next-card *,
+.qs-section *, .ai-policy-box * {
+  color: #111 !important;
+  text-shadow: none !important;
+}
+
+/* Code blocks: monospace, light grey background */
+.code-block, code, pre {
+  background: #f4f4f4 !important;
+  border: 1px solid #ccc !important;
+  color: #111 !important;
+  font-family: 'SF Mono', Consolas, monospace !important;
+  font-size: 9pt !important;
+  page-break-inside: avoid;
+}
+.code-block .cm { color: #555 !important; font-style: italic; }
+.code-block .kw, .code-block .fn, .code-block .nm { color: #111 !important; font-weight: bold; }
+.code-block .st { color: #444 !important; }
+
+/* Links: underline, show URL when sensible */
+a { color: #1a1a8a !important; text-decoration: underline; }
+a[href^="http"]::after {
+  content: " (" attr(href) ")";
+  font-size: 8pt; color: #666; word-break: break-all;
+}
+
+/* Tables */
+table { border-collapse: collapse !important; width: 100% !important; }
+th, td { border: 1px solid #888 !important; padding: 4pt 6pt !important; color: #111 !important; }
+
+/* Page breaks */
+h1, h2, h3 { page-break-after: avoid; color: #111 !important; }
+img, svg { max-width: 100% !important; page-break-inside: avoid; }
+
+.site-footer { border-top: 1px solid #888; padding-top: 8pt; color: #666 !important; font-size: 9pt; }
