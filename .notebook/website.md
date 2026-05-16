@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-05-16 15:44 UTC_
+_Auto-generated NotebookLM source · 2026-05-16 18:44 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -432,8 +432,7 @@ SYSEN 5470 · Course Materials
 # What to Bring.
 
 
-⚠ Placeholder · Subject to update before the course
-Short list, on purpose. The course leans on hand\-sketching, your own working data, and free open\-source software. Here's what to have on day one.
+Short list, on purpose. The course leans on hand\-sketching, your own working data, and free open\-source software. Here's what to have on day one — and the one\-page Environment Setup walks you through getting it all installed.
 
 
 Required
@@ -509,16 +508,43 @@ Read the full AI Use Policy →
 
 5
 
-### Software · TBD Bring your own IDE
+### An editor / IDE Pick one
 
 
-Students are welcome to use their preferred development environment.
+**Recommended:** Positron — same Posit folks who built RStudio, multi\-language (R \+ Python), AI\-aware. One install, works for both course tracks.
 
 
-**Suggested:** Positron for data\-science work in R and Python — same Posit folks who make RStudio, but multi\-language and AI\-aware. For broader systems work, VS Code \+ Cursor are both solid options.
+**Other fine choices:** RStudio if you already love it (R only). VS Code \+ Cursor if you live in VS Code already. Whatever you pick, the Environment Setup page walks through installing R or Python and the course packages.
 
 
-A specific software list and setup guide will be posted before the course starts.
+Setup
+
+
+6
+
+### Set up your environment \~30 min, once
+
+
+Install Positron (or your editor of choice), then install R or Python and the course packages. The Environment Setup page is a single\-page walkthrough — pick your language, run one install command, run the "hello network" verification snippet. If something fails, the page has the common fixes.
+
+
+If you can't or don't want to install software locally, the in\-browser Playground runs both R and Python with the course packages pre\-loaded. Every lab works there.
+
+
+7
+
+### Clone the course repo \~5 min
+
+
+Once Git is installed, pull down a local copy of the course repository so you can re\-read materials offline and follow along with code:
+
+
+```
+git clone https://github.com/timothyfraser/netsci.git
+cd netsci
+```
+
+The GitHub Setup page covers the rest — installing Git, making a GitHub account, and creating your own project repo for the three project case studies.
 
 
 ## Questions about Materials?
@@ -536,7 +562,7 @@ Email tmf77@cornell.edu
 
 **SYSEN 5470 · Course Materials**
 
- Cornell Engineering · Summer 2026 · This page is a placeholder and will be updated before the course begins.
+ Cornell Engineering · Summer 2026 · tmf77@cornell.edu
 
 ---
 
@@ -3632,7 +3658,7 @@ Every case study includes a sketchpad activity — hand\-drawn, keyboard\-free, 
 * Your phone, for photographing the finished sketch
 
 
-The Nine Prompts
+The Eleven Prompts — one per lab
 
 
 🕸️
@@ -3673,7 +3699,7 @@ PurposeDismantles the "busiest \= most critical" misconception before the code l
 📐
 
 
-### Sketch 03 · Two null distributions
+### Sketch 03a · Two null distributions — Bluebikes case
 
 
 Infer
@@ -3682,10 +3708,28 @@ Infer
 
  Sketch the five Bluebikes neighborhoods as labeled circles. Mark each as high\-income (one color) or low\-income (other color). Draw the arrows you'd *expect* to be heaviest. Now sketch two histograms side by side: an "unblocked permutation" null and a "block permutation" null. Mark the observed value with a vertical line. Which test would call the observed pattern significant, and which wouldn't?
 
-PurposeSurfaces the gap between "random shuffle" and "structurally plausible shuffle" — the heart of network\-aware inference.
+PurposeSurfaces the gap between "random shuffle" and "structurally plausible shuffle" — the heart of network\-aware inference. Lab\-specific version.
 * Five labeled nodes, color\-coded by group
 * Expected heavy edges (arrows)
 * Two histograms with the observed value drawn in
+
+
+📐
+
+
+### Sketch 03b · Two null distributions — your network
+
+
+Infer
+\~25 min
+
+
+ Now substitute **your own network and your own grouping variable**. Sketch the nodes as labeled circles, colored by your grouping (gender, region, tier, faction, role — whatever makes sense for your project). Draw the arrows you'd expect to be heaviest based on your domain knowledge. Then sketch the same two histograms: an unblocked permutation that ignores groups, and a block permutation that preserves within\-group structure. Mark the observed value. Which null is the right one for *your* question?
+
+PurposeForces you to define the grouping that matters for your project, and to commit to a null hypothesis before running it. Project\-track students do this version in their project week.
+* 5–15 labeled nodes from your network, colored by your grouping
+* Expected heavy edges, with a one\-sentence "why" in the margin
+* Two histograms with the observed value, plus a one\-line interpretation
 
 
 🚦
@@ -3792,6 +3836,44 @@ PurposeDemystifies the GNN. The neighborhood aggregation step is the only thing 
 * Five nodes, each labeled with x and y
 * x̃ value circled at each node after one aggregation step
 * Final ŷ written next to each node
+
+
+🔗
+
+
+### Sketch 10 · Sketch the pipeline
+
+
+Identify
+\~20 min
+
+
+ Pick three real tables from any system you know (your work data, a course dataset, anything). For each table, draw a box with column names. Then identify, in writing next to your boxes: **(a) the join key**, **(b) what the column collision will be after the first join** (which two columns will share a name?), and **(c) what you'll rename it to**. Finally, write the final pipeline as a sequence of verbs — `left_join → rename → mutate` or `merge → rename → assign`.
+
+PurposeSurfaces the column\-collision moment *before* it becomes an error message in the lab. The rename step is the part everyone forgets — sketching it forces you to remember.
+* Three table boxes with column names
+* Arrows marking join keys
+* The two columns that will collide after the first join, with the new names you'll give them
+* The final pipeline as 4–6 verbs in sequence
+
+
+🗺️
+
+
+### Sketch 11 · Lose detail to gain insight
+
+
+Identify
+\~25 min
+
+
+ Pick a many\-node network — real or sketched, 20\+ nodes. Draw it three times at three zoom levels: **(1\)** all nodes individually, **(2\)** grouped into 5–8 categories of your choice, **(3\)** grouped into 2–3 high\-level buckets. For each zoom level, write one insight you can see at *that* level that you couldn't see at the others. Mark with an arrow the level that best supports your one\-sentence engineering recommendation.
+
+PurposeInternalizes that aggregation isn't "losing data" — it's choosing what to make visible. The level that best supports the recommendation is rarely the most detailed one.
+* The same network at three zoom levels, side by side
+* One insight written under each level
+* An arrow marking the level that supports your engineering recommendation
+* The one\-sentence recommendation itself
 
 
 Sharing \& Submission
@@ -4210,10 +4292,24 @@ Read the full AI Use Policy →
 ### Hard requirements
 
 
-* The *writing must be your own*. AI\-generated prose is not accepted. You can use AI to debug code; you cannot use it to write your report.
+* The *writing must be your own*. See the AI Use Policy — AI can help with code; the prose has to come from you.
 * Your network must have **at least 100 nodes**. Networks of **1,000\+ nodes are strongly preferred** — they force you to handle the difficulty of real\-world data, which is the whole point of the course.
 * If you haven't decided on a network by the *end of week 1*, contact the instructor and one will be manufactured to fit your field or chosen industry.
 * Submit both the script (`project.R` or `project.py`) and the report (PDF preferred). The script must run end\-to\-end on the dataset you submit alongside it.
+
+
+📄
+
+### What does a project report actually look like?
+
+
+One real exemplar so you know what 2 pages of "numbers in prose" actually means. Open it on a phone or laptop, skim once before you start your own. The point is the *shape* of the analysis, not the specific topic — yours should look like this on the page.
+
+
+⬇ Download sample report (PDF)
+↗ Open in new tab
+
+⏳ *Awaiting upload from Tim* — link is wired; the PDF will appear before week 2\.
 
 
  Each case study folder under `code/` has a dedicated
@@ -4252,6 +4348,167 @@ At the end of the term, you give a short presentation on your **strongest of the
 **SYSEN 5470 · Assignments**
 
  Cornell Engineering · Summer 2026 · Three Mondays, three reports, one network you'll know inside\-out.
+
+---
+
+# Calendar · SYSEN 5470
+
+_Source: docs/calendar.html_
+
+SYSEN 5470 · June 22 – July 10, 2026
+
+
+# Day\-by\-DayPacing.
+
+
+The syllabus tells you what the course covers. This page tells you when to do it. Built around the rhythm a full\-time\-working student actually uses: a long weekend block for each lab, with the Monday\-9am submission at the end of every week. **The weekend blocks are when most of the work happens** — protect them.
+
+
+Weekday — short evening touch
+Weekend — the main work block
+Monday 9 AM — week's submission due
+
+
+Week 01
+## Think Like a Graph
+
+
+Jun 22 – Jun 28, 2026
+Nodes, edges, small\-world phenomena. Three labs: Build\-a\-Network, Network Statistics, Centrality.
+
+
+Mon Jun 22day 1
+
+**Course opens.** Read the syllabus, skim the Help hub, run Setup if you haven't. \~30 min total.
+
+
+Tue Jun 23day 2
+
+🕸️ Build\-a\-Network Watch the lab video, read Barabási Ch. 1–2\. \~45 min.
+
+
+Wed Jun 24day 3
+
+**Sketch 01 · Map your network.** 20 min sketchpad, no keyboard. Open the prompt →
+
+
+Thu Jun 25day 4
+
+📐 Network Statistics Read Farine 2017 (null models). Skim Bluebikes lab intro. \~30 min.
+
+
+Fri Jun 26day 5
+
+📊 Centrality Read Barabási Ch. 3 and Ch. 8\. \~30 min. Light evening — protect Saturday.
+
+
+Sat Jun 27day 6
+
+Weekend block**Run the three labs.** Plan \~4 hours. Open the Build\-a\-Network lab first, then Network Statistics, then Centrality. Sketch 02 \+ 03a in between.
+
+
+Sun Jun 28day 7
+
+Weekend blockWrite your three Learning Check answers and the one\-page reflection. Photograph your sketches. **Stage the Monday submission.**
+
+
+Mon Jun 299 AM
+
+Due 9 AM**Week 1 submission.** Three sketch photos · three LC answers · one reflection. See Assignments for the exact spec.
+
+
+Week 02
+## Find What Matters
+
+
+Jun 29 – Jul 5, 2026
+Critical structure. Four labs: Supply Chain, Routing, Clustering, Aggregation.
+
+
+Mon Jun 29day 8
+
+ Submission done. Read this week's syllabus block, watch the supply\-chain video. \~30 min.
+
+
+Tue Jun 30day 9
+
+📦 Supply Chain Read Barabási Ch. 10 (cascades). \~30 min.
+
+
+Wed Jul 01day 10
+
+🚦 Routing Skim Bertsekas reference chapter. **Sketch 04 · Pick where to add a road.**
+
+
+Thu Jul 02day 11
+
+🧩 Clustering Read Barabási Ch. 9 (communities). **Sketch 05 · Draw the seams.**
+
+
+Fri Jul 03day 12
+
+🗺️ Aggregation Read Bellantuono 2025 (accessibility via transit). **Sketch 11 · Lose detail to gain insight.** Light evening.
+
+
+Sat Jul 04day 13
+
+Weekend block**Run the four labs.** Heavier than week 1 — plan \~5 hours. Bring tea. Holiday in the US; some students prefer to start Friday evening and finish Sunday.
+
+
+Sun Jul 05day 14
+
+Weekend blockWrite LC answers, reflection, and (if you picked one of these for the project) your *first project case study* — code \+ 2\-page report.
+
+
+Mon Jul 069 AM
+
+Due 9 AM**Week 2 submission.** Four sketch photos · four LC answers · one reflection · *(if applicable)* your first project case study.
+
+
+Week 03
+## Move \& Predict
+
+
+Jul 06 – Jul 10, 2026
+Forecasting and big data. Four labs: GNN by Hand, GNN \+ XGBoost, Sampling, Joins. Plus the final project submission.
+
+
+Mon Jul 06day 15
+
+ Submission done. Watch this week's intro video. 🧠 GNN by Hand
+
+
+Tue Jul 07day 16
+
+🤖 GNN \+ XGBoost Read Khan 2025 (ML for network inference). \~30 min.
+
+
+Wed Jul 08day 17
+
+🗄️ Sampling Skim Easley \& Kleinberg §2\.4 (network datasets). **Sketch 09 · Trace a forward pass** for the GNN labs.
+
+
+Thu Jul 09day 18
+
+🔗 Joins **Sketch 10 · Sketch the pipeline.** Light evening — final crunch starts tomorrow.
+
+
+Fri Jul 10day 19
+
+Final\-week blockLast labs (GNN by Hand, GNN \+ XGBoost, Sampling, Joins). Wrap your final project case study or two. **Final presentations** happen this day for cohort members who attend — see Assignments.
+
+
+Mon Jul 139 AM
+
+Final due 9 AM**Week 3 \+ final project submission.** Remaining sketches and LCs · two reflections (this week and a course\-level retrospective) · your *two remaining project case studies* with reports. Grades close out the week after.
+
+
+**Extensions for SYSEN 5940 in\-person students:** if you're juggling 5940 in the same week, email Tim before the Monday deadline and we'll work out a revised due date. The async structure makes this easy; just communicate early.
+
+
+**SYSEN 5470 · Calendar**
+
+ Cornell Engineering · Summer 2026 · tmf77@cornell.edu
 
 ---
 
