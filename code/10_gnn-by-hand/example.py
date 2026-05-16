@@ -19,24 +19,37 @@ you can see GNN embeddings at non-toy scale.
 
 ## 0.1 Packages ##############################################################
 
+# Pure numpy + pandas. No torch — we want you to *see* the matrix math.
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 ## 0.2 Load helpers ##########################################################
 
+# All the building blocks live in functions.py: tiny + large data
+# loaders, adjacency builder, the symmetric normalization, ReLU, and
+# the GCN layer itself. Read them once — each is 5-10 lines.
 from functions import (
     load_tiny, load_large, adjacency, normalize, relu, gcn_layer,
 )
+
+print("\n🚀 Case Study 10 — GNN by Hand (Python)")
+print("   Two-layer GCN, no torch. Pure numpy on a 6-node + 200-node network.\n")
 
 ## 0.3 Load data #############################################################
 
 nodes, edges = load_tiny()
 print(nodes)
 print(edges)
+print(f"✅ Loaded tiny network: {len(nodes)} nodes, {len(edges)} edges.")
 
 
 # 1. Adjacency and normalization #############################################
+#
+# Self-loops let each node "send a message to itself" so its own
+# features survive into the next layer. Symmetric normalization
+# D^{-1/2} A D^{-1/2} stops high-degree nodes from dominating their
+# neighbors. These two preprocessing tricks are the heart of a GCN.
 
 A = adjacency(nodes, edges, add_self_loops=True)
 print("A (with self-loops):")
@@ -56,7 +69,9 @@ X = nodes[["daily_output", "defect_rate"]].to_numpy()
 print("X (input features):")
 print(X)
 
-# Fixed weights for reproducibility. In a real GNN these are learned.
+# Fixed weights for reproducibility. In a real GNN these are learned
+# via gradient descent on an objective; here we hard-code them so the
+# whole pipeline is one numpy matmul chain.
 W1 = np.array([
     [ 0.5, -0.2,  0.8],
     [-0.7,  0.4,  0.3],
@@ -69,6 +84,8 @@ W2 = np.array([
 
 
 # 3. Forward pass ############################################################
+#
+# H_{l+1} = activation(A_norm @ H_l @ W_l). The activation is ReLU.
 
 H1 = gcn_layer(A_norm, X,  W1, activation="relu")
 print("H1 (after layer 1, ReLU):")
@@ -80,9 +97,13 @@ print(H2.round(4))
 
 
 # 4. What does node 4 (the bottleneck) end up looking like? ##################
+#
+# Node 4 sits between two clusters in our 6-node toy. After two GCN
+# layers its embedding has absorbed features from both sides.
 
 print("Final embedding for node 4 (the bottleneck):")
 print(H2[4].round(4))
+print(f"🧪 Node 4 embedding norm: {np.linalg.norm(H2[4]):.4f}")
 
 
 # 5. The same pipeline on a 200-node project-scale network ###################
@@ -93,7 +114,8 @@ X_l = ln[["daily_output", "defect_rate"]].to_numpy()
 
 H1_l = gcn_layer(A_l, X_l, W1, activation="relu")
 H2_l = gcn_layer(A_l, H1_l, W2, activation="relu")
-print(f"Large network embedding shape: {H2_l.shape}")
+print(f"📊 Large network embedding shape: {H2_l.shape}")
+
 # Plot the first two embedding dimensions, colored by node id, so we
 # can see whether the bottlenecks (every 25th node) cluster separately.
 fig, ax = plt.subplots(figsize=(7, 5))
@@ -109,6 +131,7 @@ ax.legend()
 fig.tight_layout()
 fig.savefig("gnn_embeddings.png", dpi=120)
 plt.close(fig)
+print("💾 Saved gnn_embeddings.png")
 
 
 # 6. Learning Check ##########################################################
@@ -121,4 +144,7 @@ plt.close(fig)
 
 emb = H2[4].round(4)
 answer = ", ".join(f"{v:.4f}" for v in emb)
-print(f"Learning Check answer: {answer}")
+
+print(f"\n📝 Learning Check answer: {answer}")
+
+print("\n🎉 Done. Move on to the case study report when you're ready.")

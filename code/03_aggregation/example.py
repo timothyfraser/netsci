@@ -21,6 +21,8 @@ We will:
 
 ## 0.1 Packages ##############################################################
 
+# `pandas` for the grouping pipeline, `seaborn` + `matplotlib` for the
+# three figures.
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,7 +30,12 @@ import seaborn as sns
 
 ## 0.2 Load helpers ##########################################################
 
+# `make_enriched()` does the double join from Case 02 in one call so
+# we can focus on aggregation here.
 from functions import load_edges, load_stations, make_enriched
+
+print("\n🚀 Case Study 03 — Aggregation (Python)")
+print("   Same network at three resolutions: station -> neighborhood -> quintile.\n")
 
 ## 0.3 Load data #############################################################
 
@@ -36,20 +43,29 @@ edges    = load_edges()
 stations = load_stations()
 print(edges.head())
 print(stations.head())
+print(f"✅ Loaded {len(edges)} trip rows and {len(stations)} stations.")
 
 
 # 1. Enrich edges with both-side traits ######################################
+#
+# The helper joins each edge with the start-station's traits AND the
+# end-station's traits (renaming to start_nbhd / end_nbhd, etc.). This
+# is exactly the "double join, with renames" lesson from case 02.
 
 enriched = make_enriched(edges, stations)
 print(enriched.head())
 print(f"{len(enriched):,} enriched edge rows")
+print(f"✅ Built enriched edge table: {len(enriched)} rows.")
 
 
 # 2. Three resolutions #######################################################
 
 ## 2.1 Resolution A — raw station x station ##################################
 
-# Aggregate to (start_code, end_code) totals across all of 2021.
+# Sum trips for each (start, end) station pair. With 500 stations the
+# space of possible pairs is 250,000 cells — way too fine to plot as a
+# heatmap. The aggregation gives a hairball, useful for nothing but a
+# degree histogram.
 station_pairs = (
     enriched
     .groupby(["start_code", "end_code"], as_index=False)["count"]
@@ -57,25 +73,28 @@ station_pairs = (
     .rename(columns={"count": "trips"})
     .sort_values("trips", ascending=False)
 )
-print(f"Resolution A — {len(station_pairs):,} station pairs")
+print(f"📊 Resolution A: {len(station_pairs)} station pairs.")
 print(station_pairs.head())
-# 500 x 500 -> up to 250,000 cells. In practice much sparser.
-# This is the "hairball" view — too fine to visualize as a heatmap.
 
 ## 2.2 Resolution B — neighborhood x neighborhood ############################
 
+# Now sum trips by START neighborhood and END neighborhood. 12 x 12 =
+# 144 cells max. Visualizable as a heatmap. This is where structure
+# begins to appear (the diagonal is heavier than the off-diagonal).
 nbhd_pairs = (
     enriched
     .groupby(["start_nbhd", "end_nbhd"], as_index=False)["count"]
     .sum()
     .rename(columns={"count": "trips"})
 )
-print(f"Resolution B — {len(nbhd_pairs):,} neighborhood pairs")
+print(f"📊 Resolution B: {len(nbhd_pairs)} neighborhood pairs.")
 print(nbhd_pairs.head())
-# 12 x 12 = up to 144 cells. Now we can actually visualize it.
 
 ## 2.3 Resolution C — income quintile x income quintile ######################
 
+# Finally, aggregate to 4 x 4 income-quintile cells and compute a
+# percent column so we can read the equity question directly off the
+# matrix.
 q_pairs = (
     enriched
     .groupby(["start_quintile", "end_quintile"], as_index=False)["count"]
@@ -86,11 +105,13 @@ total = q_pairs["trips"].sum()
 q_pairs["percent"] = (100 * q_pairs["trips"] / total).round(2)
 print("Resolution C — 4x4 income quintile pairs")
 print(q_pairs)
+print(f"📊 Resolution C: 4x4 quintile pairs.")
 
 
-# 3. Visualize each resolution #################################################
+# 3. Visualize each resolution ###############################################
 
 # Resolution A: degree distribution (the only honest view at 500 nodes).
+# Each station's "trip volume" = sum of trips out + sum of trips in.
 station_totals = (
     pd.concat([
         station_pairs.groupby("start_code")["trips"].sum(),
@@ -115,7 +136,7 @@ fig.tight_layout()
 fig.savefig("agg_B_neighborhood.png", dpi=120)
 plt.close(fig)
 
-# Resolution C: 4 x 4 quintile heatmap with percentages
+# Resolution C: 4 x 4 quintile heatmap with percentages drawn on the cells.
 pivot_c = q_pairs.pivot(index="end_quintile", columns="start_quintile",
                        values="percent")
 fig, ax = plt.subplots(figsize=(5.2, 4.5))
@@ -128,6 +149,7 @@ ax.set_title("Resolution C — trips between income quintiles")
 fig.tight_layout()
 fig.savefig("agg_C_quintile.png", dpi=120)
 plt.close(fig)
+print("💾 Saved agg_A_station.png, agg_B_neighborhood.png, agg_C_quintile.png")
 
 
 # 4. The point ###############################################################
@@ -147,11 +169,14 @@ plt.close(fig)
 # QUESTION: What percentage of all AM rush 2021 trips in this dataset
 # stay within the *top* income quintile (Q4 -> Q4)?
 #
-# HINT: look at `q_pairs` above. Pull out the row where
-# start_quintile == 4 and end_quintile == 4.
+# HINT: pull from `q_pairs` directly — start_quintile == 4 AND
+# end_quintile == 4.
 
 answer = float(
     q_pairs.loc[(q_pairs["start_quintile"] == 4) &
                 (q_pairs["end_quintile"]   == 4), "percent"].iloc[0]
 )
-print("Learning Check answer (%):", answer)
+
+print(f"\n📝 Learning Check answer (%): {answer:.2f}")
+
+print("\n🎉 Done. Move on to the case study report when you're ready.")

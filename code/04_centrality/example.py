@@ -16,6 +16,8 @@ them, and find the bridges hiding in plain sight.
 
 ## 0.1 Packages ##############################################################
 
+# `igraph` does the centrality math. `pandas` for the tidy per-node
+# results so we can rank-compare them. `matplotlib` for the figure.
 import pandas as pd
 import numpy as np
 import igraph as ig
@@ -23,7 +25,12 @@ import matplotlib.pyplot as plt
 
 ## 0.2 Load helpers ##########################################################
 
+# `build_graph()` reads the nodes + edges CSVs and returns an undirected,
+# weighted igraph graph. Open functions.py if you want to see the seam.
 from functions import load_nodes, load_edges, build_graph
+
+print("\n🚀 Case Study 04 — Centrality & Criticality (Python)")
+print("   Four centrality measures, ranked. Find the bridges hiding in plain sight.\n")
 
 ## 0.3 Load data #############################################################
 
@@ -34,20 +41,20 @@ print(edges.head())
 
 g = build_graph(nodes, edges)
 print(g.summary())
-# ~500 vertices, ~1000 edges, undirected, weight on each edge.
+print(f"✅ Loaded graph: {g.vcount()} vertices, {g.ecount()} edges.")
 
 
 # 1. Four centrality measures ################################################
 #
-# Each one captures a different intuition for "important".
+# Each one captures a DIFFERENT intuition for "important":
 #   - DEGREE: how many neighbors. Local. Hub-detection.
 #   - BETWEENNESS: how often this node lies on a shortest path
 #     between two other nodes. Global. Bridge-detection.
-#   - CLOSENESS: 1 / mean distance to every other node. Global.
-#     Reach.
+#   - CLOSENESS: 1 / mean distance to every other node. Reach.
 #   - EIGENVECTOR: a node is central if its neighbors are central.
 #     Recursive. Influence.
 
+# All four computed in one tidy table, so we can compare them directly.
 cent = pd.DataFrame({
     "node_id":      g.vs["name"],
     "kind":         g.vs["kind"],
@@ -64,10 +71,11 @@ print(cent.head())
 #
 # Different measures rank the SAME node differently. The Spearman
 # correlation between two centrality vectors tells you how much they
-# agree.
+# agree on the *order* of nodes (not their magnitudes).
 
 corr = cent[["degree", "betweenness", "closeness", "eigenvector"]].corr(method="spearman")
 print(corr.round(3))
+print(f"📊 Degree vs betweenness Spearman: {corr.loc['degree', 'betweenness']:.3f}")
 
 
 # 3. Bridges hiding in plain sight ###########################################
@@ -76,16 +84,19 @@ print(corr.round(3))
 # them on an equal footing, we rank each metric (1 = highest) and
 # compute the GAP: betweenness rank minus degree rank. Big positive
 # gap = "matters more for connectivity than its degree would suggest."
+#
+# In our synthetic data we planted some "bridge" nodes — let's see if
+# this gap statistic recovers them.
 
 cent["deg_rank"]  = cent["degree"].rank(ascending=False)
 cent["btwn_rank"] = cent["betweenness"].rank(ascending=False)
 cent["gap"] = cent["deg_rank"] - cent["btwn_rank"]
-# (positive gap = better betweenness rank than degree rank)
 
 bridges = cent.sort_values("gap", ascending=False).head(10)
 print(bridges)
 # Notice how many of the top-gap nodes are tagged kind == "bridge"
 # in our synthetic data. That's not a coincidence.
+print(f"📝 #1 hidden bridge: {bridges.iloc[0]['node_id']} (gap = {bridges.iloc[0]['gap']:.0f})")
 
 
 # 4. Visualize: size by betweenness ##########################################
@@ -108,25 +119,28 @@ ax.set_title("Node size = betweenness. Red = planted bridges.")
 fig.tight_layout()
 fig.savefig("centrality_bridges.png", dpi=120)
 plt.close(fig)
+print("💾 Saved centrality_bridges.png")
 
 
 # 5. Simulate: remove the top-5 by each metric ###############################
 #
 # To confirm betweenness picks the *load-bearing* nodes, remove the
 # top-5 nodes by each metric and see what happens to the size of the
-# largest connected component.
+# largest connected component. The metric whose top-5 removal
+# fragments the network MOST is the one most attuned to network
+# criticality.
 
 def lcc_size(g_in):
     return max(len(c) for c in g_in.connected_components())
 
 original_lcc = lcc_size(g)
-print("Original largest component:", original_lcc)
+print(f"\n🧪 Original largest component: {original_lcc}")
 
 for metric in ["degree", "betweenness", "closeness", "eigenvector"]:
     top5 = cent.sort_values(metric, ascending=False).head(5)["node_id"].tolist()
     g_test = g.copy()
     g_test.delete_vertices([v.index for v in g_test.vs if v["name"] in top5])
-    print(f"  remove top-5 by {metric:12s} -> LCC = {lcc_size(g_test)}")
+    print(f"   remove top-5 by {metric:12s} -> LCC = {lcc_size(g_test)}")
 
 
 # 6. Learning Check ##########################################################
@@ -136,4 +150,7 @@ for metric in ["degree", "betweenness", "closeness", "eigenvector"]:
 # node_id of the #1 entry?
 
 answer = bridges.iloc[0]["node_id"]
-print("Learning Check answer:", answer)
+
+print(f"\n📝 Learning Check answer: {answer}")
+
+print("\n🎉 Done. Move on to the case study report when you're ready.")

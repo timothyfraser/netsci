@@ -27,10 +27,16 @@
 
 # No package dependencies; everything is base R.
 
+cat("\n🚀 Case Study 10 — GNN by Hand (R base-R re-implementation)\n")
+cat("   Two-layer GCN on the 6-node toy. See example.py for the full walkthrough.\n\n")
+
 
 # 1. Tiny network from the case study ########################################
+#
+# Each node has 2 input features: (daily_output, defect_rate). Six
+# nodes total; node 4 (0-indexed) is the bottleneck the case study
+# focuses on.
 
-# Each node has 2 input features: (daily_output, defect_rate).
 X <- matrix(
   c(0.80, 0.10,
     0.60, 0.20,
@@ -50,15 +56,20 @@ for (k in seq_len(nrow(edges))) {
   i <- edges[k, 1]; j <- edges[k, 2]
   A[i, j] <- 1; A[j, i] <- 1
 }
-diag(A) <- 1
+diag(A) <- 1  # self-loops let each node "send a message to itself"
 
 # Symmetric normalization: D^{-1/2} A D^{-1/2}
+# This stops high-degree nodes from dominating their neighbors.
 d <- rowSums(A)
 D_inv_sqrt <- diag(1 / sqrt(d))
 A_norm <- D_inv_sqrt %*% A %*% D_inv_sqrt
+cat(sprintf("✅ Built 6x6 adjacency, normalized.\n"))
 
 
 # 2. Layer weights (same as example.py) ######################################
+#
+# In a real GNN these are learned via gradient descent; here we
+# hard-code them so the forward pass is one chain of matmuls.
 
 W1 <- matrix(c(0.5, -0.2, 0.8,
               -0.7, 0.4, 0.3), nrow = 2, byrow = TRUE)
@@ -68,13 +79,18 @@ W2 <- matrix(c(0.6, 0.1, -0.4,
 
 
 # 3. Two-layer GCN forward pass ##############################################
-
+#
+# H_{l+1} = ReLU( A_norm %*% H_l %*% W_l ).
 # `pmax(0, X)` would silently drop the matrix dimensions; the
 # element-wise multiply preserves them.
+
 relu <- function(x) x * (x > 0)
 
 H1 <- relu(A_norm %*% X  %*% W1)
 H2 <- relu(A_norm %*% H1 %*% W2)
+
+cat(sprintf("📊 H1 shape: %dx%d   H2 shape: %dx%d\n",
+            nrow(H1), ncol(H1), nrow(H2), ncol(H2)))
 
 
 # 4. Learning Check ##########################################################
@@ -90,5 +106,8 @@ emb_node4 <- round(H2[5, ], 4)
 # Collapse IEEE-754 negative zero to positive zero so the printed
 # answer matches example.py byte-for-byte.
 emb_node4[emb_node4 == 0] <- 0
-cat("Learning Check answer:",
-    paste(sprintf("%.4f", emb_node4), collapse = ", "), "\n")
+answer <- paste(sprintf("%.4f", emb_node4), collapse = ", ")
+
+cat(sprintf("\n📝 Learning Check answer: %s\n", answer))
+
+cat("\n🎉 Done. Move on to the case study report when you're ready.\n")

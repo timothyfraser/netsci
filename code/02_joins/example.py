@@ -19,38 +19,46 @@ yourself in the foot.
 
 ## 0.1 Packages ##############################################################
 
+# `pandas` is the workhorse for joins. `seaborn` + `matplotlib` for the
+# heatmap at the end.
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 ## 0.2 Load helpers ##########################################################
 
-# Tiny wrappers around pd.read_parquet that resolve paths for us.
+# Tiny wrappers around pd.read_csv that resolve paths from the repo root.
 from functions import load_edges, load_stations
+
+print("\n🚀 Case Study 02 — Network Joins (Python)")
+print("   Edges + stations -> single join, then double join, then a quantity of interest.\n")
 
 ## 0.3 Load data #############################################################
 
-# Two tables: one for edges, one for nodes.
+# Two tables: one for edges (one row per trip aggregate), one for
+# nodes (one row per station, with demographic annotation).
 edges    = load_edges()
 stations = load_stations()
 
-# Take a look — get used to running .head() before doing anything else.
+# Get used to running .head() before doing anything else. The columns:
+#   start_code: where the trip started (station ID)
+#   end_code:   where the trip ended (station ID)
+#   day:        the day the trip happened (YYYY-MM-DD)
+#   rush:       "am" — we've already filtered to AM rush
+#   count:      number of trips matching this start/end/day combination
 print(edges.head())
-# start_code: where the trip started (station ID)
-# end_code:   where the trip ended (station ID)
-# day:        the day the trip happened (YYYY-MM-DD)
-# rush:       "am" — we've already filtered to AM rush
-# count:      how many trips matched this start/end/day combination
 
+# Stations table columns:
+#   code:      station ID (merges to start_code / end_code in edges)
+#   cluster:   neighborhood cluster (block group)
+#   maj_black: "yes"/"no" — is the station in a majority-Black block group?
+#   x, y:      longitude / latitude
 print(stations.head())
-# code:      station ID (merges to start_code / end_code in edges)
-# cluster:   which neighborhood cluster (block group) the station is in
-# maj_black: "yes"/"no" — is the station in a majority-Black block group?
-# x, y:      longitude / latitude
 
 # How big is each table?
 print(len(edges), "edges")
 print(len(stations), "stations")
+print(f"✅ Loaded {len(edges)} trip rows and {len(stations)} stations.")
 
 
 # 1. Single-Node Join ########################################################
@@ -58,7 +66,7 @@ print(len(stations), "stations")
 # Goal: tag each edge with a TRAIT of its START station — was it in a
 # majority-Black block group or not?
 
-## 1.1 The basic merge ########################################################
+## 1.1 The basic merge #######################################################
 
 # The key insight: the ID variable has a different NAME in each table.
 #   - in `edges` it's called `start_code`
@@ -71,8 +79,9 @@ print(
     .head()
 )
 
-# That joined in EVERY column from stations. That's usually too much.
-# Better: subset stations down to just what you need before joining.
+# That joined in EVERY column from stations. Usually too much.
+# Better: subset stations to just what you need BEFORE joining. Easier
+# to read AND saves memory on big joins.
 print(
     edges
     .merge(stations[["code", "maj_black"]],
@@ -82,9 +91,10 @@ print(
 
 ## 1.2 Rename on the way in ##################################################
 
-# It's still ambiguous what `maj_black` means after this merge — is it
-# the start station's demographic or the end station's? Rename to make
-# it explicit. This habit will save you 20 minutes of confusion later.
+# After the merge above, `maj_black` is still ambiguous — is it the
+# start station's demographic or the end station's? Rename it to
+# `start_black` *as part of* the merge. This habit will save you 20
+# minutes of "wait, which side was this?" confusion later.
 
 edges_with_start = edges.merge(
     stations[["code", "maj_black"]].rename(
@@ -103,15 +113,16 @@ print(
     .sum()
     .reset_index(name="trips")
 )
-# Note: rows where `start_black` is NaN mean the START station wasn't
-# in our stations table — i.e. the station is outside Boston proper.
-# In the real Bluebikes data these are Cambridge / Somerville stations.
+# Rows where `start_black` is NaN mean the START station wasn't in
+# our stations table — i.e. it's outside Boston proper. In the real
+# Bluebikes data these are Cambridge / Somerville stations.
 
 
 # 2. Double-Node Join ########################################################
 #
-# Now we want to know about BOTH ends of the trip. We do a second merge
-# on `end_code`, and we rename again so we don't clobber the first one.
+# Now we want to know about BOTH ends of the trip. We do a SECOND merge
+# on `end_code`, and we rename again so the two demographics don't
+# clobber each other.
 
 ## 2.1 Two merges, two renames ###############################################
 
@@ -132,6 +143,7 @@ data = (
 )
 
 print(data.head())
+print(f"✅ After double-join + NaN drop: {len(data)} rows.")
 
 ## 2.2 An aggregate quantity of interest #####################################
 
@@ -148,6 +160,7 @@ stat["total"]   = total
 stat["percent"] = (100 * stat["trips"] / total).round(1)
 
 print(stat)
+print(f"📊 Total trips across all four cells: {int(stat['trips'].sum())}")
 
 
 # 3. A quick visual ##########################################################
@@ -167,6 +180,7 @@ ax.set_title("AM rush 2021 — slim Bluebikes-flavored sample", loc="left")
 fig.tight_layout()
 fig.savefig("joins_heatmap.png", dpi=120)
 plt.close(fig)
+print("💾 Saved joins_heatmap.png")
 
 
 # 4. Why renames matter (the silent-bug demo) ################################
@@ -195,9 +209,6 @@ print(bad.head())
 # trips started in a majority-Black block group AND ended in a
 # majority-Black block group?
 #
-# Write the pandas code that returns a single number. Then put that
-# number into the learning-check form on the website.
-#
 # HINT: you've already computed `stat` above. Find the row where
 # start_black == "yes" and end_black == "yes" and read off `trips`.
 
@@ -205,8 +216,11 @@ answer = int(
     stat.loc[(stat["start_black"] == "yes") &
              (stat["end_black"]   == "yes"), "trips"].iloc[0]
 )
-print("Learning Check answer:", answer)
 
-# (Reminder: this is a synthetic-but-deterministic dataset — your
-# answer should be the SAME as your classmates'. If it isn't, your
-# random seed has drifted somewhere.)
+print(f"\n📝 Learning Check answer: {answer}")
+
+# Reminder: this is a synthetic-but-deterministic dataset. Your answer
+# should be the SAME as your classmates'. If it isn't, your random
+# seed has drifted somewhere.
+
+print("\n🎉 Done. Move on to the case study report when you're ready.")
