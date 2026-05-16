@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+  .help-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+  .help-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 22px 24px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: border-color .2s, transform .15s;
+    text-decoration: none; color: inherit;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .help-card:hover { border-color: var(--green-bright); transform: translateY(-2px); }
+  .help-card.coming { border-style: dashed; opacity: 0.85; pointer-events: none; }
+  .help-card .ico { font-size: 28px; line-height: 1; }
+  .help-card h3 {
+    font-family: var(--font-display); font-size: 22px;
+    color: var(--white); letter-spacing: 0.03em; line-height: 1.1;
+  }
+  .help-card .opt-tag {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--node-4); margin-left: 6px; vertical-align: 4px;
+  }
+  .help-card p {
+    font-family: var(--font-body); font-size: 13.5px;
+    color: var(--green-mint); line-height: 1.55;
+  }
+  .help-card .arrow {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--green-bright); letter-spacing: 0.12em;
+    text-transform: uppercase; margin-top: 4px;
+  }
+
+  .stuck-callout {
+    background: rgba(57,255,20,0.06);
+    border: 1px solid rgba(57,255,20,0.3);
+    border-left: 4px solid var(--green-bright);
+    border-radius: var(--radius-md);
+    padding: 20px 26px;
+    margin-bottom: 28px;
+    backdrop-filter: blur(8px);
+  }
+  .stuck-callout h2 {
+    font-family: var(--font-display); font-size: 24px;
+    color: var(--white); letter-spacing: 0.03em; margin-bottom: 8px;
+  }
+  .stuck-callout p {
+    font-family: var(--font-body); font-size: 14.5px;
+    color: var(--green-mint); line-height: 1.65;
+  }
+  .stuck-callout p strong { color: var(--white); }
+  .stuck-callout ol {
+    margin: 12px 0 0 22px;
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.7;
+  }
+  .stuck-callout ol li { margin-bottom: 4px; }
+  .stuck-callout a { color: var(--green-bright); }
+</style>
+</head>
+<body data-page="help">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../materials.html"      data-page="materials">Materials</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../playground.html"     data-page="playground">Playground</a>
+      <a href="../readings.html"       data-page="readings">Readings</a>
+      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="../assignments.html"    data-page="assignments">Assignments</a>
+      <a href="index.html"             data-page="help">Help</a>
+      <a href="../about.html"          data-page="about">About</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Help</p>
+    <h1 class="hero-title">Need Help?<br><span>Start Here.</span></h1>
+    <p class="hook">Stuck during a lab, can't decide between R and Python, want a definition fast, or just want to talk to a human? Every door is on this page. Most questions have an answer here without needing email.</p>
+  </section>
+
+  <section class="section">
+    <div class="stuck-callout">
+      <h2>Stuck and it's 11pm?</h2>
+      <p>The fastest path to unstuck, in order:</p>
+      <ol>
+        <li>Tap the <strong>Course Companion</strong> bubble in the bottom-right of any page — it's an AI grounded in the course's own materials.</li>
+        <li>Check the <a href="glossary.html">Glossary</a> if a term is the blocker.</li>
+        <li>Skim the <a href="faq.html">FAQ</a> — most evening blockers are there.</li>
+        <li>If none of the above worked, book a <a href="office-hours.html">virtual office-hours slot</a> for the next day.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Quick Reference</div>
+    <div class="help-grid">
+
+      <a class="help-card" href="glossary.html">
+        <span class="ico">📖</span>
+        <h3>Glossary</h3>
+        <p>Every term used in the course, defined once, with a link to the lab where it first shows up. Search as you type.</p>
+        <span class="arrow">Open →</span>
+      </a>
+
+      <a class="help-card" href="faq.html">
+        <span class="ico">❓</span>
+        <h3>FAQ &amp; Troubleshooting</h3>
+        <p>"My numbers don't match." "Package install failed." "It's late and I'm stuck." Most common questions, answered.</p>
+        <span class="arrow">Open →</span>
+      </a>
+
+      <a class="help-card" href="ai-policy.html">
+        <span class="ico">🤖</span>
+        <h3>AI Use Policy</h3>
+        <p>What AI is for and what it isn't in this course. Read once, refer back when in doubt.</p>
+        <span class="arrow">Open →</span>
+      </a>
+
+      <a class="help-card" href="office-hours.html">
+        <span class="ico">📅</span>
+        <h3>Virtual Office Hours</h3>
+        <p>Book a 1:1 slot with Tim. Especially useful for project-data questions and conceptual reset moments.</p>
+        <span class="arrow">Open →</span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Setup &amp; Getting Started</div>
+    <div class="help-grid">
+
+      <div class="help-card coming">
+        <span class="ico">🛠</span>
+        <h3>Environment Setup <span class="opt-tag">Coming Tier 2</span></h3>
+        <p>Walks you through installing Positron (or RStudio / VS Code), R or Python, and the course packages. Verifies the install with a "hello network" snippet.</p>
+        <span class="arrow">Coming before the course starts — bookmark this page</span>
+      </div>
+
+      <div class="help-card coming">
+        <span class="ico">📊</span>
+        <h3>R Quickstart <span class="opt-tag">Coming Tier 2</span></h3>
+        <p>30 minutes from "I've never used R" to your first centrality calculation. Tidyverse-flavored, mobile-readable.</p>
+        <span class="arrow">Coming before the course starts — bookmark this page</span>
+      </div>
+
+      <div class="help-card coming">
+        <span class="ico">🐍</span>
+        <h3>Python Quickstart <span class="opt-tag">Coming Tier 2</span></h3>
+        <p>Same 30-minute path in Python — networkx + pandas + matplotlib. Cross-references the R version step-by-step.</p>
+        <span class="arrow">Coming before the course starts — bookmark this page</span>
+      </div>
+
+      <div class="help-card coming">
+        <span class="ico">🐙</span>
+        <h3>GitHub Setup <span class="opt-tag">Coming Tier 2</span></h3>
+        <p>Clone the course repo, make your own project repo, and the minimum add/commit/push you need to keep your project work safe.</p>
+        <span class="arrow">Coming before the course starts — bookmark this page</span>
+      </div>
+
+    </div>
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · Help Hub</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+<script src="../assets/notebooklm-bubble.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ &amp; Troubleshooting · SYSEN 5470</title>
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+  .faq-section { margin-bottom: 32px; }
+  .faq-section .faq-heading {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--green-bright); margin-bottom: 12px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border-soft);
+  }
+
+  details.faq {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 10px; backdrop-filter: blur(8px);
+  }
+  details.faq summary {
+    cursor: pointer; padding: 14px 20px;
+    font-family: var(--font-body); font-size: 15px;
+    color: var(--white); font-weight: 500;
+    line-height: 1.4;
+    user-select: none; list-style: none;
+    display: flex; align-items: center; gap: 10px;
+    transition: color 0.15s;
+  }
+  details.faq summary:hover { color: var(--green-bright); }
+  details.faq summary::-webkit-details-marker { display: none; }
+  details.faq summary::before {
+    content: '▸'; color: var(--green-bright);
+    transition: transform 0.18s; display: inline-block;
+    flex-shrink: 0;
+  }
+  details.faq[open] summary::before { transform: rotate(90deg); }
+  details.faq[open] summary { color: var(--green-bright); }
+
+  details.faq .answer {
+    padding: 4px 22px 18px 36px;
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.65;
+  }
+  details.faq .answer p { margin-bottom: 8px; }
+  details.faq .answer p:last-child { margin-bottom: 0; }
+  details.faq .answer strong { color: var(--white); }
+  details.faq .answer code {
+    font-family: var(--font-mono); font-size: 12.5px;
+    background: rgba(57,255,20,0.08);
+    border: 1px solid rgba(57,255,20,0.18);
+    padding: 1px 6px; border-radius: 3px;
+    color: var(--green-laser);
+  }
+  details.faq .answer a { color: var(--green-bright); }
+
+  .urgent {
+    background: rgba(57,255,20,0.06);
+    border: 1px solid rgba(57,255,20,0.3);
+    border-left: 4px solid var(--green-bright);
+    border-radius: var(--radius-md);
+    padding: 18px 24px;
+    margin-bottom: 28px;
+    backdrop-filter: blur(8px);
+  }
+  .urgent h2 {
+    font-family: var(--font-display); font-size: 22px;
+    color: var(--white); letter-spacing: 0.03em; margin-bottom: 8px;
+  }
+  .urgent p, .urgent ol {
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.65;
+  }
+  .urgent ol { margin: 10px 0 0 22px; }
+  .urgent a { color: var(--green-bright); }
+  .urgent strong { color: var(--white); }
+</style>
+</head>
+<body data-page="help">
+
+<canvas id="bg-canvas"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="brand"><span class="brand-mark"></span>SYSEN 5470 · Netsci</a>
+    <div class="nav-links">
+      <a href="../index.html"          data-page="home">Overview</a>
+      <a href="../syllabus.html"       data-page="syllabus">Syllabus</a>
+      <a href="../materials.html"      data-page="materials">Materials</a>
+      <a href="../case-studies.html"   data-page="cases">Case Studies</a>
+      <a href="../visualizer.html"     data-page="viz">Visualizer</a>
+      <a href="../playground.html"     data-page="playground">Playground</a>
+      <a href="../readings.html"       data-page="readings">Readings</a>
+      <a href="../sketchpad.html"      data-page="sketch">Sketches</a>
+      <a href="../assignments.html"    data-page="assignments">Assignments</a>
+      <a href="index.html"             data-page="help">Help</a>
+      <a href="../about.html"          data-page="about">About</a>
+    </div>
+    <a href="../index.html#enroll" class="nav-cta">Enroll</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section class="hero">
+    <p class="course-number">SYSEN 5470 · Help · FAQ &amp; Troubleshooting</p>
+    <h1 class="hero-title">Most Questions<br>Have an <span>Answer Here</span>.</h1>
+    <p class="hook">Click any question to expand. Grouped by where you'll hit it — setup, during a lab, in the playground, when submitting, on the project, and a catch-all "other" at the bottom.</p>
+  </section>
+
+  <section class="section">
+    <div class="urgent">
+      <h2>It's 11pm and I'm stuck — what's the fastest way to get unstuck?</h2>
+      <p>The order, top to bottom:</p>
+      <ol>
+        <li>Tap the green <strong>Course Companion</strong> bubble in the bottom-right corner of any page. It's an AI grounded in this course's own materials.</li>
+        <li>If the blocker is a term you don't recognize, check the <a href="glossary.html">Glossary</a>.</li>
+        <li>If neither helps, scan this page for your situation.</li>
+        <li>If you've tried all of the above, book an <a href="office-hours.html">office-hours slot</a> for the next day. <strong>Don't lose sleep over it.</strong></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section faq-section">
+    <div class="faq-heading">🛠 Setup &amp; Tools</div>
+
+    <details class="faq">
+      <summary>I can't decide between R and Python — which should I pick?</summary>
+      <div class="answer">
+        <p>Pick the one you'd actually use at your job. Both are first-class in this course — every lab works in both, the playground runs both, and the same case studies render in either.</p>
+        <p><strong>If you genuinely have no preference</strong>, default to <strong>R</strong>: it has slightly stronger graph-analytics packages (<code>igraph</code>, <code>tidygraph</code>) and the tidyverse pipeline syntax (<code>|&gt;</code>) reads almost like English. Python is just as capable and is the better choice if you're heading toward ML/GNN-heavy work.</p>
+        <p>You don't have to pick on day one — work through the quickstart for both if you want, then commit by end of week 1.</p>
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>Positron vs RStudio vs VS Code — what should I install?</summary>
+      <div class="answer">
+        <p><strong>Default suggestion: <a href="https://positron.posit.co/" target="_blank" rel="noopener">Positron</a>.</strong> Same Posit folks who make RStudio, but multi-language (works for both R and Python) and AI-aware. Closest to "just works" for this course.</p>
+        <p>If you already have RStudio installed and love it, stay with it — R-only, but battle-tested. If you live in VS Code already, VS Code + the R or Python extensions is fine; add Cursor if you want inline AI assistance.</p>
+        <p>The course doesn't grade you on your IDE. Pick the one that gets out of your way.</p>
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>Package install failed (igraph, tidygraph, networkx) — what do I do?</summary>
+      <div class="answer">
+        <p>The most common causes, in order of frequency:</p>
+        <p><strong>R, igraph</strong> — needs system libraries (<code>libxml2</code>, <code>libcurl</code>, sometimes <code>glpk</code>). On macOS: <code>brew install libxml2 glpk</code>. On Linux: <code>sudo apt install libxml2-dev libcurl4-openssl-dev libglpk-dev</code>. Then retry <code>install.packages("igraph")</code>.</p>
+        <p><strong>Python, networkx</strong> — should be friction-free with <code>pip install networkx pandas matplotlib</code>. If you're on a corporate laptop with an old Python, install <a href="https://github.com/astral-sh/uv" target="_blank" rel="noopener">uv</a> first and use <code>uv pip install</code>.</p>
+        <p><strong>Either</strong> — if your install is on a managed work laptop and packages are being blocked by an enterprise proxy, use the <a href="../playground.html">in-browser Playground</a> instead. No install needed, packages pre-loaded.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="section faq-section">
+    <div class="faq-heading">🔬 During a Lab</div>
+
+    <details class="faq">
+      <summary>My numbers don't match the example. Did I do it wrong?</summary>
+      <div class="answer">
+        <p><strong>Probably not.</strong> Three possible reasons your numbers are off:</p>
+        <p>(1) <strong>Random seed.</strong> If the lab involves random sampling, permutation, or Monte Carlo, your result will differ slightly from the example unless you set the same seed (<code>set.seed(42)</code> or <code>random.seed(42)</code>). The <em>magnitude and direction</em> of the result should match; the exact value won't.</p>
+        <p>(2) <strong>Different network handling.</strong> Directed vs. undirected, weighted vs. unweighted, self-loops included vs. dropped — small choices like these change centrality numbers. Re-read the lab's setup paragraph.</p>
+        <p>(3) <strong>Actual bug.</strong> If the order of magnitude is off (you're getting 0.4 and the lab says 4,000), check your column references — easy to read the wrong column when both are numeric.</p>
+        <p>Bottom line: <strong>match the story, not the digits</strong>.</p>
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>How do I submit a sketch from my phone?</summary>
+      <div class="answer">
+        <p>Photograph the finished sketch with your phone's camera, then upload the photo with your Monday submission. JPG or PNG, doesn't have to be high-res — legibility is what matters.</p>
+        <p>If you want the photo to look slightly nicer: use the "scan document" mode in Notes (iOS) or Google Drive (Android). They flatten the lighting and crop the page automatically. Not required.</p>
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>I'm stuck and it's late. What's the fastest way to get unstuck?</summary>
+      <div class="answer">
+        <p>See the green callout at the top of this page. Short version: <strong>Course Companion bubble → Glossary → this FAQ → office-hours booking for tomorrow</strong>. Don't grind alone past midnight.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="section faq-section">
+    <div class="faq-heading">🧪 Playground (in-browser R / Python)</div>
+
+    <details class="faq">
+      <summary>WebR / Pyodide is slow on first load — is this normal?</summary>
+      <div class="answer">
+        <p>Yes. The first time you open a playground, the browser downloads ~30MB of the WASM-compiled R or Python interpreter, plus the pre-installed packages. On a typical connection that's ~20–40 seconds. <strong>Subsequent visits load in a second or two</strong> because the browser caches everything.</p>
+        <p>The status pill at the top of the playground shows you which phase it's in: <em>Loading runtime → Installing packages → Ready ✓</em>.</p>
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>My dataset is too big for the playground — what now?</summary>
+      <div class="answer">
+        <p>Browser tabs cap at ~2–4 GB of memory, which is plenty for any single course dataset but <strong>not</strong> enough for a million-row CSV at full resolution. Three options:</p>
+        <p><strong>1. Pre-aggregate.</strong> If your network has a million edges but only 500 nodes, aggregate the edges by node-pair (sum / mean / count) before loading. The playground handles ~100k edges comfortably.</p>
+        <p><strong>2. Sample.</strong> Random-node or snowball-sample the network down to a few thousand nodes. The <a href="../case-studies/sampling.html">Sampling lab</a> walks through how to do this without destroying the structure you care about.</p>
+        <p><strong>3. Use a local IDE.</strong> Install Positron locally and run your full analysis there. The playground is a quick-experiment tool, not your primary workstation.</p>
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>My code disappeared!</summary>
+      <div class="answer">
+        <p>Your code is auto-saved to your browser's <code>localStorage</code>, which means it survives a refresh but <strong>does not survive clearing your browser data</strong>. If you cleared cookies/site data, the code is gone with it.</p>
+        <p>For anything you don't want to lose: copy it into a local file periodically, or paste it into a GitHub gist. The playground is for quick experiments — not your only copy of important work.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="section faq-section">
+    <div class="faq-heading">📝 Submissions</div>
+
+    <details class="faq">
+      <summary>What goes in a Monday submission?</summary>
+      <div class="answer">
+        <p>The short version of the four items every week (full spec on the <a href="../assignments.html">Assignments page</a>):</p>
+        <p>1. A short reflection / interpretation in your own words.<br>
+           2. The Learning Check answer for that week's lab.<br>
+           3. Your sketch (photo of the sketchpad page).<br>
+           4. If it's a project week, the relevant <code>project.R</code> or <code>project.py</code> file plus its 2-page-minimum report.</p>
+        <p>Due Mondays at 9 AM. Extensions available for SYSEN 5940 in-person students by request.</p>
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>Do I have to do both R and Python tracks?</summary>
+      <div class="answer">
+        <p><strong>No.</strong> Pick one and stick with it for the course. Each lab is implementable in either language; the choice is yours. If you want to dabble in the other language to compare, you're welcome to — that's what the playground is for.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="section faq-section">
+    <div class="faq-heading">🎯 Project</div>
+
+    <details class="faq">
+      <summary>I don't have a dataset and it's end of week 1 — what now?</summary>
+      <div class="answer">
+        <p>Email Tim. One will be manufactured to fit your field or chosen industry. Don't wait — the longer you wait, the less time you have to actually run analyses on it.</p>
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>My network only has 60 nodes — is that OK?</summary>
+      <div class="answer">
+        <p>The hard minimum is <strong>100 nodes</strong>. Networks of <strong>1,000+ nodes are strongly preferred</strong> because that's where the difficulty of real-world data actually starts. A 60-node toy network won't surface the analytical challenges the course is built around.</p>
+        <p>If you have only 60 nodes because the system you care about really is small (a specific team's communication graph, e.g.), email Tim — there's usually a way to expand the boundary (include adjacent teams, add multi-week temporal slices) that preserves your interest while crossing the 100-node line.</p>
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>Can I use AI to help write my report?</summary>
+      <div class="answer">
+        <p>For <strong>code and syntax</strong>: yes. For <strong>the prose of the report</strong>: no — that's how we see your thinking.</p>
+        <p>Full policy with reasoning: <a href="ai-policy.html">AI Use Policy</a>.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="section faq-section">
+    <div class="faq-heading">📋 Other</div>
+
+    <details class="faq">
+      <summary>I'm taking SYSEN 5940 in person — does that affect anything?</summary>
+      <div class="answer">
+        <p>Yes — extensions are available for the Monday-morning deadlines if you're juggling the in-person 5940 schedule the same week. Email Tim before enrolling (or before the week in question, whichever comes first) and we'll work it out.</p>
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>I need an accommodation.</summary>
+      <div class="answer">
+        <p>Cornell's <a href="https://sds.cornell.edu/" target="_blank" rel="noopener">Student Disability Services</a> is the official channel — start there if you haven't already. Then email Tim with the relevant SDS paperwork (or just a short description of what you need if you don't have paperwork yet). The course is async and self-paced within each week, so most accommodations are straightforward.</p>
+      </div>
+    </details>
+  </section>
+
+  <p class="site-footer">
+    <strong>SYSEN 5470 · FAQ &amp; Troubleshooting</strong><br>
+    Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
+  </p>
+
+</div>
+
+<script src="../assets/network-bg.js" defer></script>
+<script src="../assets/site.js" defer></script>
+<script src="../assets/notebooklm-bubble.js" defer></script>
+</body>
+</html>
