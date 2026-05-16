@@ -1,0 +1,45 @@
+name: Build NotebookLM bundles
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '.notebook/**'
+      - 'README.md'
+      - 'LICENSE'
+  workflow_dispatch:
+
+concurrency:
+  group: notebook-bundles
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install --quiet beautifulsoup4==4.12.3 markdownify==0.13.1
+
+      - name: Build website bundle (.notebook/website.md)
+        run: python scripts/build_notebooklm_source.py
+
+      - name: Build coding-modules bundle (.notebook/coding-modules.md)
+        run: python scripts/build_coding_bundle.py
+
+      - name: Commit refreshed bundles
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(notebook): refresh NotebookLM bundles"
+          file_pattern: '.notebook/*.md'
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
