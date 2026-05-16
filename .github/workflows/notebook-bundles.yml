@@ -36,6 +36,9 @@ jobs:
       - name: Build coding-modules bundle (.notebook/coding-modules.md)
         run: python scripts/build_coding_bundle.py
 
+      - name: Build resource index (.notebook/index.md)
+        run: python scripts/build_index.py
+
       - name: Commit refreshed bundles
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
