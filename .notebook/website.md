@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-05-16 14:41 UTC_
+_Auto-generated NotebookLM source · 2026-05-16 15:44 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -33,6 +33,31 @@ Open the Labs
 9Real\-World Case Studies
 4Professional Skills
 0Coding Experience Required
+
+
+New here?
+## Start with these four steps.
+
+
+In order. About an hour total if you go slowly. None of it is graded — it's the path of least friction into the rest of the course.
+
+
+1. 1
+
+Read the syllabus →
+Three weeks, eleven labs, four skills. 10 minutes.
+2. 2
+
+Set up your environment →
+Install R or Python and the course packages. 20–30 minutes.
+3. 3
+
+Try the R quickstart →
+From zero to your first centrality calculation. 30 minutes. Python version →
+4. 4
+
+Open your first lab: Build a Network →
+Construct a network from prose. The foundation of everything else.
 
 
 What You'll Learn
@@ -450,6 +475,36 @@ $20 for one month covers the entire course. For a 3\-week intensive, having a st
 
 
 Not required, and you can absolutely succeed without it. But if you're going to try one paid subscription for the duration, this is the one we'd suggest. See anthropic.com/pricing.
+
+
+⚖ AI Use Policy
+### What AI is for in this course (and what it isn't).
+
+
+The short version: AI is welcome for **syntax and debugging**, not for **writing your reports or answering reflections**. The course is about your thinking; reports are how we see your thinking.
+
+
+#### You may use AI for
+
+
+* Syntax help and debugging
+* Explaining error messages
+* Clarifying readings or lab concepts
+* Generating example data
+
+
+#### You may not use AI for
+
+
+* Writing your project report prose
+* Answering Learning Checks
+* Writing reflections or interpretation prompts
+
+
+The **Course Companion** (NotebookLM) is grounded in this course's own materials and is the recommended way to ask AI questions during the course. It will not write your reports for you, by design.
+
+
+Read the full AI Use Policy →
 
 
 5
@@ -3826,6 +3881,36 @@ Supply chains, mobility networks, supplier\-risk feeds — not toy graphs. The c
 R or Python welcome but not required. Quickstart tutorials are built into the course. Bring curiosity and a sketchpad.
 
 
+⚖ AI Use Policy
+### What AI is for in this course (and what it isn't).
+
+
+The short version: AI is welcome for **syntax and debugging**, not for **writing your reports or answering reflections**. The course is about your thinking; reports are how we see your thinking.
+
+
+#### You may use AI for
+
+
+* Syntax help and debugging
+* Explaining error messages
+* Clarifying readings or lab concepts
+* Generating example data
+
+
+#### You may not use AI for
+
+
+* Writing your project report prose
+* Answering Learning Checks
+* Writing reflections or interpretation prompts
+
+
+The **Course Companion** (NotebookLM) is grounded in this course's own materials and is the recommended way to ask AI questions during the course. It will not write your reports for you, by design.
+
+
+Read the full AI Use Policy →
+
+
 Common Questions
 
 Who is this course for?
@@ -4090,6 +4175,36 @@ Project case studies
 * The procedure you ran, in plain language, in order.
 * Your results stated as *numbers in prose*, with at most 1–2 supporting figures and 1 table.
 * What this tells you, and what it doesn't (2–3 sentences).
+
+
+⚖ AI Use Policy
+### What AI is for in this course (and what it isn't).
+
+
+The short version: AI is welcome for **syntax and debugging**, not for **writing your reports or answering reflections**. The course is about your thinking; reports are how we see your thinking.
+
+
+#### You may use AI for
+
+
+* Syntax help and debugging
+* Explaining error messages
+* Clarifying readings or lab concepts
+* Generating example data
+
+
+#### You may not use AI for
+
+
+* Writing your project report prose
+* Answering Learning Checks
+* Writing reflections or interpretation prompts
+
+
+The **Course Companion** (NotebookLM) is grounded in this course's own materials and is the recommended way to ask AI questions during the course. It will not write your reports for you, by design.
+
+
+Read the full AI Use Policy →
 
 
 ### Hard requirements

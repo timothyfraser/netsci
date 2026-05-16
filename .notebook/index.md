@@ -1,6 +1,6 @@
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-05-16 14:41 UTC_
+_Auto-generated NotebookLM source · 2026-05-16 15:44 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -624,4 +624,73 @@ Structured index of every public page and code file in the course. Paste this in
 - **Topic:** This file: structured map of every page and file with URLs
 - **Use case:** The metadata source for NotebookLM. Paste this as a source so NotebookLM can answer 'where do I find X?' with a direct link.
 - **Tags:** NotebookLM, source, index, map, metadata, URLs, directory
+
+---
+
+# Uncurated (auto-detected, needs metadata)
+
+_These files exist on disk but don't yet have curated metadata. Add them to `scripts/build_index.py` to give them topic/use-case/tags._
+
+## AI Use Policy · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/help/ai-policy.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## FAQ & Troubleshooting · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/help/faq.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## GitHub Setup · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/help/github-setup.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## Glossary · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/help/glossary.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## Help · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/help/index.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## Virtual Office Hours · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/help/office-hours.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## Python Quickstart · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/help/quickstart-py.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## R Quickstart · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/help/quickstart-r.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
+## Environment Setup · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/help/setup.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
 
