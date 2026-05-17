@@ -4,7 +4,7 @@
    Tier 1 · T1.1
    ────────────────────────────────────────────────────────────────────── */
 (function () {
-  const NOTEBOOK_URL = 'https://notebooklm.google.com/notebook/9ab55897-e723-4207-bb8c-1ce898e33c71?authuser=1';
+  const NOTEBOOK_URL = 'https://notebooklm.google.com/notebook/dce8fe4a-927e-41c6-96fb-ec331fa46423';
   const SEEN_KEY = 'netsci-notebooklm-bubble-seen-v1';
 
   // Inject only once
