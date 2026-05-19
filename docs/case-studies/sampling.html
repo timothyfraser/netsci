@@ -365,6 +365,19 @@ input[type=range]::-moz-range-thumb {
     <a href="../readings.html#big-data">📚 Readings for this case study →</a>
   </section>
 
+  <section class="case-overview">
+    <div class="card">
+      <h2>The problem an engineer is solving</h2>
+          <p>Your network has 30,000 nodes. You can't hand-label them, you can't visualize them, and the analysis you actually want is too slow on the full network. So you sample — but every sampling strategy distorts the network in a different direction. Ego-centric sampling preserves local structure but warps density. Edgewise sampling preserves density but warps connectivity.</p>
+          <p>The lab below lets you sample the same big network three ways and see how each strategy preserves (or distorts) basic properties — density, mean edge weight, share of nodes still linked. The takeaway: every sampler is biased. The question is whether the bias is compatible with the question you're trying to answer.</p>
+    </div>
+  </section>
+
+  <aside class="lab-sketchpad-prompt">
+    <strong class="label">✏️ Sketchpad — before you click anything</strong>
+    Before you click Sample, predict on paper which property each strategy will preserve best. Will ego-centric sampling overestimate density, underestimate it, or leave it about right? Same question for edgewise. Write your three predictions. Then run the samplers and see which guess held.
+  </aside>
+
   <div class="main-layout">
     <div class="viz-column">
       <div class="viz-header">

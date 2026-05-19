@@ -337,6 +337,11 @@
     <p>We have ground-truth labels from last year's disruption data. The network edges represent <strong>direct material dependencies</strong> — Factory A ships to Factory C, for instance.</p>
   </div>
 
+
+  <aside class="lab-sketchpad-prompt">
+    <strong class="label">✏️ Sketchpad — before you click anything</strong>
+    Before you click <strong>Forward Pass</strong>, do the first GCN propagation step on paper. For each of the four factories, average the output feature across itself and its direct neighbors. Write those four numbers down. The lab will compute exactly the same numbers in the next click — your sketch is the answer key.
+  </aside>
   <div class="network-diagram">
     <svg width="460" height="220" viewBox="0 0 460 220">
       <line x1="100" y1="110" x2="230" y2="55"  stroke="rgba(57,255,20,0.25)" stroke-width="2"/>

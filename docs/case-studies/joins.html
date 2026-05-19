@@ -545,6 +545,19 @@
     <a href="../readings.html#big-data">📚 Readings for this case study →</a>
   </section>
 
+  <section class="case-overview">
+    <div class="card">
+      <h2>The problem an engineer is solving</h2>
+          <p>You have factory metadata in one table and shipments in another. To answer a real supply-chain question — "how much volume flows from Tier 3 to Tier 1?" — those two tables have to be joined, renamed, grouped, and summarised, in the right order.</p>
+          <p>The lab below is a drag-and-drop builder for that pipeline. Snap steps into place, switch between R (<code>dplyr</code>) and Python (<code>pandas</code>), and watch the result table and the live flowchart update with every change. Use it as your calculator while you work through the learning checks.</p>
+    </div>
+  </section>
+
+  <aside class="lab-sketchpad-prompt">
+    <strong class="label">✏️ Sketchpad — before you click anything</strong>
+    Before you touch the builder, sketch the join on paper. List the columns in <code>factories</code> and the columns in <code>shipments</code>. Draw arrows between the columns that have to match for the join. Where do you predict a forgotten rename would cause a silent collision? Mark it. Then build the pipeline and check whether your prediction held.
+  </aside>
+
   <div class="lang-toggle-card">
     <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
       <span class="toggle-label">Language:</span>
