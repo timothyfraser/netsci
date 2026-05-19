@@ -216,6 +216,52 @@
     color: var(--node-4); letter-spacing: 0.04em;
     margin-bottom: 0;
   }
+
+  /* Collapsible sections — used for AI Policy, Hard requirements,
+     Self-grade, and the 11-row case-studies table */
+  details.collapsible {
+    margin: 18px 0;
+    scroll-margin-top: 80px;
+  }
+  details.collapsible > summary {
+    cursor: pointer;
+    font-family: var(--font-mono); font-size: 11.5px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--green-bright);
+    padding: 13px 18px;
+    background: rgba(57,255,20,0.04);
+    border: 1px solid rgba(57,255,20,0.25);
+    border-left: 3px solid var(--green-bright);
+    border-radius: var(--radius-sm);
+    list-style: none;
+    display: flex; align-items: center; gap: 14px;
+    transition: background .15s, border-color .15s;
+  }
+  details.collapsible > summary::-webkit-details-marker { display: none; }
+  details.collapsible > summary::before {
+    content: '▸';
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--green-bright);
+    transition: transform .15s;
+    flex-shrink: 0;
+  }
+  details.collapsible[open] > summary::before { transform: rotate(90deg); }
+  details.collapsible > summary:hover {
+    background: rgba(57,255,20,0.08);
+    border-color: var(--green-bright);
+  }
+  details.collapsible > summary .preview {
+    font-family: var(--font-body); font-size: 12.5px;
+    color: var(--grey); letter-spacing: 0; text-transform: none;
+    margin-left: auto; text-align: right;
+  }
+  details.collapsible > .collapse-body {
+    padding: 18px 4px 8px;
+  }
+  @media (max-width: 560px) {
+    details.collapsible > summary { flex-wrap: wrap; }
+    details.collapsible > summary .preview { margin-left: 0; text-align: left; }
+  }
 </style>
 <meta property="og:title" content="Assignments · SYSEN 5470">
 <meta property="og:description" content="Weekly assignment cadence, project case studies, office hours, and final presentation for SYSEN 5470.">
@@ -420,42 +466,58 @@
       </ul>
     </div>
 
-    <div class="ai-policy-box">
-      <div class="aip-label">⚖ AI Use Policy</div>
-      <h3>What AI is for in this course (and what it isn't).</h3>
-      <p>The short version: AI is welcome for <strong>syntax and debugging</strong>, not for <strong>writing your reports or answering reflections</strong>. The course is about your thinking; reports are how we see your thinking.</p>
-      <div class="aip-cols">
-        <div class="aip-col aip-yes">
-          <h4>You may use AI for</h4>
-          <ul>
-            <li>Syntax help and debugging</li>
-            <li>Explaining error messages</li>
-            <li>Clarifying readings or lab concepts</li>
-            <li>Generating example data</li>
-          </ul>
+    <details class="collapsible" id="ai-policy">
+      <summary>
+        ⚖ AI Use Policy
+        <span class="preview">What AI is for in this course (and what it isn't)</span>
+      </summary>
+      <div class="collapse-body">
+        <div class="ai-policy-box">
+          <div class="aip-label">⚖ AI Use Policy</div>
+          <h3>What AI is for in this course (and what it isn't).</h3>
+          <p>The short version: AI is welcome for <strong>syntax and debugging</strong>, not for <strong>writing your reports or answering reflections</strong>. The course is about your thinking; reports are how we see your thinking.</p>
+          <div class="aip-cols">
+            <div class="aip-col aip-yes">
+              <h4>You may use AI for</h4>
+              <ul>
+                <li>Syntax help and debugging</li>
+                <li>Explaining error messages</li>
+                <li>Clarifying readings or lab concepts</li>
+                <li>Generating example data</li>
+              </ul>
+            </div>
+            <div class="aip-col aip-no">
+              <h4>You may not use AI for</h4>
+              <ul>
+                <li>Writing your project report prose</li>
+                <li>Answering Learning Checks</li>
+                <li>Writing reflections or interpretation prompts</li>
+              </ul>
+            </div>
+          </div>
+          <p>The <strong>Course Companion</strong> (NotebookLM) is grounded in this course's own materials and is the recommended way to ask AI questions during the course. It will not write your reports for you, by design.</p>
+          <p><a class="aip-more" href="help/ai-policy.html">Read the full AI Use Policy →</a></p>
         </div>
-        <div class="aip-col aip-no">
-          <h4>You may not use AI for</h4>
+      </div>
+    </details>
+
+    <details class="collapsible" id="hard-requirements">
+      <summary>
+        Hard requirements
+        <span class="preview">≥ 100 nodes; your own writing; both script and PDF</span>
+      </summary>
+      <div class="collapse-body">
+        <div class="checklist">
+          <h3>Hard requirements</h3>
           <ul>
-            <li>Writing your project report prose</li>
-            <li>Answering Learning Checks</li>
-            <li>Writing reflections or interpretation prompts</li>
+            <li>The <em>writing must be your own</em>. See the <a href="help/ai-policy.html" style="color: var(--green-bright);">AI Use Policy</a> — AI can help with code; the prose has to come from you.</li>
+            <li>Your network must have <strong>at least 100 nodes</strong>. Networks of <strong>1,000+ nodes are strongly preferred</strong> — they force you to handle the difficulty of real-world data, which is the whole point of the course.</li>
+            <li>If you haven't decided on a network by the <em>end of week 1</em>, contact the instructor and one will be manufactured to fit your field or chosen industry.</li>
+            <li>Submit both the script (<code>project.R</code> or <code>project.py</code>) and the report (PDF preferred). The script must run end-to-end on the dataset you submit alongside it.</li>
           </ul>
         </div>
       </div>
-      <p>The <strong>Course Companion</strong> (NotebookLM) is grounded in this course's own materials and is the recommended way to ask AI questions during the course. It will not write your reports for you, by design.</p>
-      <p><a class="aip-more" href="help/ai-policy.html">Read the full AI Use Policy →</a></p>
-    </div>
-
-    <div class="checklist">
-      <h3>Hard requirements</h3>
-      <ul>
-        <li>The <em>writing must be your own</em>. See the <a href="help/ai-policy.html" style="color: var(--green-bright);">AI Use Policy</a> — AI can help with code; the prose has to come from you.</li>
-        <li>Your network must have <strong>at least 100 nodes</strong>. Networks of <strong>1,000+ nodes are strongly preferred</strong> — they force you to handle the difficulty of real-world data, which is the whole point of the course.</li>
-        <li>If you haven't decided on a network by the <em>end of week 1</em>, contact the instructor and one will be manufactured to fit your field or chosen industry.</li>
-        <li>Submit both the script (<code>project.R</code> or <code>project.py</code>) and the report (PDF preferred). The script must run end-to-end on the dataset you submit alongside it.</li>
-      </ul>
-    </div>
+    </details>
 
     <div class="sample-report-card">
       <div class="srep-ico">📄</div>
@@ -470,20 +532,33 @@
       </div>
     </div>
 
-    <div class="sec-label" id="self-grade" style="margin-top: 36px;">Self-grade before you submit</div>
-    <p style="font-family: var(--font-body); font-size: 14.5px; color: var(--green-mint); line-height: 1.6; max-width: 760px;">
-      Click through these before you hit submit. Most missed-point situations are catches this list would have flagged. The <strong>Copy</strong> button writes a paste-able status block to your clipboard — paste it into the project box on Canvas so Tim can see what you flagged for yourself.
-    </p>
-    <div id="self-grade-checklist"></div>
+    <details class="collapsible" id="self-grade" style="margin-top: 36px;">
+      <summary>
+        Self-grade before you submit
+        <span class="preview">12-item checklist with copy-to-Canvas output</span>
+      </summary>
+      <div class="collapse-body">
+        <p style="font-family: var(--font-body); font-size: 14.5px; color: var(--green-mint); line-height: 1.6; max-width: 760px;">
+          Click through these before you hit submit. Most missed-point situations are catches this list would have flagged. The <strong>Copy</strong> button writes a paste-able status block to your clipboard — paste it into the project box on Canvas so Tim can see what you flagged for yourself.
+        </p>
+        <div id="self-grade-checklist"></div>
+      </div>
+    </details>
 
-    <p style="font-family: var(--font-body); font-size: 15px; color: var(--green-mint); line-height: 1.65; max-width: 760px; margin-top: 20px;">
-      Each case study folder under <code>code/</code> has a dedicated
-      <em>Your Project Case Study</em> section in its README, with 3
-      suggested project questions to pick from. You don't have to use
-      one of the suggestions — they're starting points.
-    </p>
+    <details class="collapsible" id="all-case-studies" style="margin-top: 28px;">
+      <summary>
+        All 11 case studies
+        <span class="preview">Lab + GitHub code folder + suggested project questions</span>
+      </summary>
+      <div class="collapse-body">
+        <p style="font-family: var(--font-body); font-size: 15px; color: var(--green-mint); line-height: 1.65; max-width: 760px; margin-bottom: 14px;">
+          Each case study folder under <code>code/</code> has a dedicated
+          <em>Your Project Case Study</em> section in its README, with 3
+          suggested project questions to pick from. You don't have to use
+          one of the suggestions — they're starting points.
+        </p>
 
-    <table class="case-table">
+        <table class="case-table">
       <thead>
         <tr>
           <th>#</th>
@@ -527,8 +602,10 @@
         <tr><td>11</td><td>GNN + XGBoost</td><td>Predict</td>
             <td><a href="case-studies/gnn-xgboost.html">Lab</a></td>
             <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/11_gnn-xgboost#readme">Code &amp; README</a></td></tr>
-      </tbody>
-    </table>
+          </tbody>
+        </table>
+      </div>
+    </details>
   </section>
 
   <section class="section">
@@ -558,5 +635,27 @@
 <script src="assets/site.js" defer></script>
 <script src="assets/checklist.js" defer></script>
 <script src="assets/notebooklm-bubble.js" defer></script>
+<script>
+  // If the URL hash matches a collapsible (or is inside one), auto-open it
+  // and scroll. Handles initial load and later hash changes.
+  (function () {
+    function openIfMatchesHash() {
+      var h = (location.hash || '').replace('#', '');
+      if (!h) return;
+      var el = document.getElementById(h);
+      if (!el) return;
+      var det = el.tagName.toLowerCase() === 'details' ? el : el.closest('details');
+      if (det) det.open = true;
+      // Re-trigger scroll after expansion so the user lands on the right row.
+      setTimeout(function () { el.scrollIntoView({ block: 'start' }); }, 30);
+    }
+    window.addEventListener('hashchange', openIfMatchesHash);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', openIfMatchesHash);
+    } else {
+      openIfMatchesHash();
+    }
+  })();
+</script>
 </body>
 </html>
