@@ -665,3 +665,42 @@ select:focus-visible {
 .case-readings-link a:focus-visible {
   outline: 2px solid var(--white); outline-offset: 3px;
 }
+
+/* ─── Case-study orienting card + inline sketchpad prompt ───
+   Used after the readings link, before the interactive tool, on every
+   lab page that wasn't built with its own bespoke intro section. */
+.case-overview {
+  max-width: 880px; margin: 0 auto 24px;
+}
+.case-overview .card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 26px 30px;
+  backdrop-filter: blur(8px);
+}
+.case-overview h2 {
+  font-family: var(--font-display); font-size: 24px;
+  color: var(--white); letter-spacing: 0.03em; margin: 0 0 10px;
+}
+.case-overview h2 em { color: var(--green-bright); font-style: normal; }
+.case-overview p {
+  font-family: var(--font-body); font-size: 14.5px;
+  color: var(--green-mint); line-height: 1.65; margin: 0 0 10px;
+}
+.case-overview p:last-child { margin-bottom: 0; }
+.case-overview p strong { color: var(--white); }
+.lab-sketchpad-prompt {
+  max-width: 880px; margin: 0 auto 28px;
+  background: rgba(251,191,36,0.06);
+  border: 1px solid rgba(251,191,36,0.3);
+  border-left: 3px solid var(--node-4);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  font-family: var(--font-body); font-size: 13.5px;
+  color: var(--green-mint); line-height: 1.6;
+  backdrop-filter: blur(8px);
+}
+.lab-sketchpad-prompt strong.label {
+  display: block; margin-bottom: 6px;
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--node-4);
+}

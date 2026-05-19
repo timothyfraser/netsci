@@ -278,6 +278,19 @@
     <a href="../readings.html#statistics">📚 Readings for this case study →</a>
   </section>
 
+  <section class="case-overview">
+    <div class="card">
+      <h2>The problem an engineer is solving</h2>
+          <p>You've computed a network statistic — assortativity, for instance — and it looks meaningful. But how do you know it's real, and not just what you'd see by chance in any network of this size and shape? <strong>Permutation tests</strong> are the answer: shuffle the labels, recompute the statistic, repeat thousands of times, see where your observed value lands in the null distribution.</p>
+          <p>The lab below lets you run the permutation sampler interactively and see two p-values side by side: the <em>unblocked</em> null (which often gives a misleadingly small p-value because almost any structure is unusual against pure randomness) and a <em>block-permutation</em> null (the one you actually want when the blocks match a known confounder).</p>
+    </div>
+  </section>
+
+  <aside class="lab-sketchpad-prompt">
+    <strong class="label">✏️ Sketchpad — before you click anything</strong>
+    Before you click Run, predict on paper what you'd expect the null distribution to look like if there were no real structure: where should the observed statistic sit relative to the bulk of the null? Draw the histogram you expect, mark the observed value. Then run the sampler and compare.
+  </aside>
+
   <div class="lab-layout">
     <div>
 

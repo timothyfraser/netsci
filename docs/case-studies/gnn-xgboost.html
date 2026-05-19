@@ -364,6 +364,19 @@
     <a href="../readings.html#ai-ml">📚 Readings for this case study →</a>
   </section>
 
+  <section class="case-overview">
+    <div class="card">
+      <h2>The problem an engineer is solving</h2>
+          <p>The capstone case study. You're predicting which suppliers will fail next quarter. You have raw features (size, location, sector), a time-lag feature (whether they failed last quarter), and a network — who supplies whom. The interesting question isn't "does the model work" (it usually does). The interesting question is <strong>how much does network position add beyond the features and the lag?</strong></p>
+          <p>The lab below trains XGBoost three times — on raw features, then raw + lag, then raw + lag + GNN embeddings — and reports the AUC at each step. Watch where the gain comes from. On some networks, position adds a lot. On others, it adds almost nothing.</p>
+    </div>
+  </section>
+
+  <aside class="lab-sketchpad-prompt">
+    <strong class="label">✏️ Sketchpad — before you click anything</strong>
+    Before you click Train, predict the AUC for all three model variants. Will the GNN-augmented model beat the lag-augmented one by a lot, by a little, or not at all? Write your three predictions on paper. Then train and compare — the gap between your guesses and the actual AUCs is where the lab's real lesson lives.
+  </aside>
+
   <div class="lab-layout">
 
     <div>

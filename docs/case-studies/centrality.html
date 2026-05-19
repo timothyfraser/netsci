@@ -344,6 +344,19 @@ td.highlight { color: var(--white); font-weight: 500; }
     <a href="../readings.html#centrality">📚 Readings for this case study →</a>
   </section>
 
+  <section class="case-overview">
+    <div class="card">
+      <h2>The problem an engineer is solving</h2>
+          <p>You're looking at the Riverdale Metro &amp; Bus network. The operations team wants to close a station for maintenance — which closure does the least damage to riders? "Most damage" is not the same as "busiest station." A bridge node with low traffic can carry more shortest paths than a hub with high traffic.</p>
+          <p>The lab below lets you click any station to inspect its centrality measures, then remove it and watch the metrics shift in real time. The point is to develop intuition for the <strong>bridges-vs-hubs</strong> distinction before you reach for a single number.</p>
+    </div>
+  </section>
+
+  <aside class="lab-sketchpad-prompt">
+    <strong class="label">✏️ Sketchpad — before you click anything</strong>
+    Before you remove a single station, look at the network and predict — by eye — which two stations would do the most damage if knocked out. Mark them on paper. Then remove them in the lab and see whether your intuition matched degree, betweenness, or neither.
+  </aside>
+
   <section class="lab-layout">
 
     <!-- LEFT: NETWORK CANVAS -->
