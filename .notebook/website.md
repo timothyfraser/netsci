@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-05-19 02:48 UTC_
+_Auto-generated NotebookLM source · 2026-05-19 03:18 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -862,6 +862,9 @@ A raw bike\-share network with 40 stations and hundreds of edges hides more than
 ⚠ Synthetic data — Boston\-flavored but not real Bluebikes records
 
 
+📚 Readings for this case study →
+
+
 Raw stations
 Neighborhoods
 Income quintiles
@@ -996,6 +999,9 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify
 
 
 A network is not a picture of stuff connected to stuff — it's a deliberate choice about what counts as a node, what counts as a tie, and what direction information flows. This playground lets you construct networks from prose, see them as node\-link diagrams, adjacency matrices, and edge tables simultaneously, and compute structural properties as you build. The tool is for verification and computation. The thinking happens on your sketchpad.
+
+
+📚 Readings for this case study →
 
 
 ### 🧭 How to use this playground
@@ -1232,6 +1238,9 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure
 Explore how removing a single transit station reshapes the entire network — and why the most dangerous node isn't always the biggest one. Click any station to inspect; remove it and watch the metrics shift.
 
 
+📚 Readings for this case study →
+
+
 ### 🚇 Riverdale Metro \& Bus Network
 
 
@@ -1386,6 +1395,9 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Predict
 
 
 Lakeside is a fictional city of 15 bikeshare stations. Planners are debating a network change. Use Monte Carlo simulation to test whether one proposed intervention *significantly* improves the network — or just happens to look good on one noisy dataset.
+
+
+📚 Readings for this case study →
 
 
 ## The problem an engineer is solving
@@ -1628,6 +1640,9 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure
 A DSM is the adjacency matrix of a directed dependency graph. Trace cascading failures, then try to reorder the matrix into modular blocks by hand — and discover why clustering algorithms exist.
 
 
+📚 Readings for this case study →
+
+
 ### ✏️ Sketchpad — do this before you touch the matrix
 
 
@@ -1799,6 +1814,9 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Predict
 
 
 Walk through every arithmetic step of a forward pass — first as a plain neural network, then as a graph neural network — on a four\-node supply chain so tiny you can check everything with a calculator.
+
+
+📚 Readings for this case study →
 
 
 ## 🏭 The Supply Chain
@@ -2191,6 +2209,9 @@ SYSEN 5470 · Network Science · Case Study · Skill: Predict
 Explore how graph neural networks encode network structure as node embeddings, and how those embeddings help XGBoost predict which suppliers will experience disruptions — controlling for position in the supply network.
 
 
+📚 Readings for this case study →
+
+
 ### Pipeline — Click a Step to Explore
 
 
@@ -2374,6 +2395,9 @@ You have factory metadata in one table and shipments in another — but to answe
 ⚠ Synthetic supply\-chain data — illustrative, not from any real company
 
 
+📚 Readings for this case study →
+
+
 Language:
 
 R · dplyr
@@ -2518,6 +2542,9 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Infer
 
 
 Boston's Bluebikes program connects neighborhoods — but does ridership flow freely across income lines, or do high\-income neighborhoods mostly exchange riders with each other? Use permutation testing to find out whether the observed income pattern could arise by chance.
+
+
+📚 Readings for this case study →
 
 
 ### 📍 Boston Bluebikes — AM Rush Hour Ridership Network
@@ -2707,6 +2734,9 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify
 You are an analyst studying evacuation flows during a Gulf hurricane. The full network has 40 parishes and hundreds of weighted flow edges — too big to wrangle on your laptop. Pick a sampling strategy, choose a sample size, and watch which features of the network survive. Some strategies preserve geographic coverage. Some preserve triangles. None preserve everything.
 
 
+📚 Readings for this case study →
+
+
 ## 📍 Coastal Louisiana Evacuation Network
 
 
@@ -2876,6 +2906,9 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure
 
 
 Explore how goods flow from raw\-material suppliers to end customers — and discover why the busiest node in a supply chain is rarely the most critical one to protect.
+
+
+📚 Readings for this case study →
 
 
  **—** active nodes
@@ -4399,6 +4432,10 @@ Reports where the model fails, and how a stakeholder would catch it before actin
 * What this tells you, and what it doesn't (2–3 sentences).
 
 
+ ⚖ AI Use Policy
+ What AI is for in this course (and what it isn't)
+
+
 ⚖ AI Use Policy
 ### What AI is for in this course (and what it isn't).
 
@@ -4429,6 +4466,10 @@ The **Course Companion** (NotebookLM) is grounded in this course's own materials
 Read the full AI Use Policy →
 
 
+ Hard requirements
+ ≥ 100 nodes; your own writing; both script and PDF
+
+
 ### Hard requirements
 
 
@@ -4452,9 +4493,15 @@ One real exemplar so you know what 2 pages of "numbers in prose" actually means.
 Source markdown lives at `assignments/sample-report.md` if you want to read the raw text.
 
 
-Self\-grade before you submit
+ Self\-grade before you submit
+ 12\-item checklist with copy\-to\-Canvas output
+
 
  Click through these before you hit submit. Most missed\-point situations are catches this list would have flagged. The **Copy** button writes a paste\-able status block to your clipboard — paste it into the project box on Canvas so Tim can see what you flagged for yourself.
+
+
+ All 11 case studies
+ Lab \+ GitHub code folder \+ suggested project questions
 
 
  Each case study folder under `code/` has a dedicated
