@@ -787,14 +787,32 @@ async function bootstrap() {
     await webR.init();
 
     setStatus('Installing packages (this takes ~30s on first load)…', 'loading');
-    await webR.installPackages(['dplyr','tidyr','ggplot2','readr','igraph','tidygraph','DBI','RSQLite']);
+    // The default WebR binary repo (repo.r-wasm.org) intermittently lacks
+    // igraph because of its C dependencies. r-universe builds wasm binaries
+    // for every package automatically — including igraph and tidygraph —
+    // so list it first; webR falls back to repo.r-wasm.org for the rest.
+    const REPOS = [
+      'https://igraph.r-universe.dev',
+      'https://repo.r-wasm.org',
+    ];
+    await webR.installPackages(
+      ['dplyr','tidyr','ggplot2','readr','igraph','tidygraph','DBI','RSQLite'],
+      { repos: REPOS }
+    );
 
-    // Auto-attach the most common ones
+    // Auto-attach the most common ones. Wrapped so one missing package
+    // doesn't kill the whole boot — the playground stays usable for the
+    // packages that did load, and a clear message lands in the console.
     await webR.evalRVoid(`
-      suppressMessages({
-        library(dplyr); library(tidyr); library(ggplot2)
-        library(igraph); library(tidygraph)
-      })
+      .pg_load <- function(pkgs) {
+        for (p in pkgs) {
+          tryCatch(
+            suppressMessages(library(p, character.only = TRUE)),
+            error = function(e) message(sprintf("Could not load %s: %s", p, conditionMessage(e)))
+          )
+        }
+      }
+      .pg_load(c("dplyr","tidyr","ggplot2","igraph","tidygraph"))
     `);
 
     // Restore any previously-uploaded files from IndexedDB into the WASM FS
