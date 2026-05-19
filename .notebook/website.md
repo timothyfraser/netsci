@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-05-19 03:18 UTC_
+_Auto-generated NotebookLM source · 2026-05-19 03:46 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -865,6 +865,19 @@ A raw bike\-share network with 40 stations and hundreds of edges hides more than
 📚 Readings for this case study →
 
 
+## The problem an engineer is solving
+
+
+A raw bike\-share network with 40 stations and hundreds of edges hides more than it reveals. Roll the same network up to neighborhoods, and then to income quintiles, and a clear socioeconomic flow pattern emerges that's invisible at the station level.
+
+
+The lab below lets you toggle between three resolutions and watch the aggregated network rebuild on the fly. The lesson: **losing detail can increase insight.**
+
+
+**✏️ Sketchpad — before you click anything**
+ Before you click any resolution toggle, predict on paper which view will be most legible for a planner. Will the raw station\-level network tell the strongest story, or the neighborhood roll\-up, or the income\-quintile roll\-up? Write down your guess and one sentence of why. Then explore — and notice the gap between your intuition and what the aggregation actually shows.
+
+
 Raw stations
 Neighborhoods
 Income quintiles
@@ -1239,6 +1252,19 @@ Explore how removing a single transit station reshapes the entire network — an
 
 
 📚 Readings for this case study →
+
+
+## The problem an engineer is solving
+
+
+You're looking at the Riverdale Metro \& Bus network. The operations team wants to close a station for maintenance — which closure does the least damage to riders? "Most damage" is not the same as "busiest station." A bridge node with low traffic can carry more shortest paths than a hub with high traffic.
+
+
+The lab below lets you click any station to inspect its centrality measures, then remove it and watch the metrics shift in real time. The point is to develop intuition for the **bridges\-vs\-hubs** distinction before you reach for a single number.
+
+
+**✏️ Sketchpad — before you click anything**
+ Before you remove a single station, look at the network and predict — by eye — which two stations would do the most damage if knocked out. Mark them on paper. Then remove them in the lab and see whether your intuition matched degree, betweenness, or neither.
 
 
 ### 🚇 Riverdale Metro \& Bus Network
@@ -1643,6 +1669,15 @@ A DSM is the adjacency matrix of a directed dependency graph. Trace cascading fa
 📚 Readings for this case study →
 
 
+## The problem an engineer is solving
+
+
+A Design Structure Matrix is a square grid that asks one question for every pair of components: does A depend on B? Cluster the matrix and you discover the system's real modules — which can match the modules the engineers originally drew, or expose coupling that nobody designed in on purpose.
+
+
+The lab below loads three real engineering systems (a rocket, a drone, a software product) and runs **Louvain community detection** on each one. Compare the algorithmic modules against the labelled ones in the matrix legend — and notice where they disagree.
+
+
 ### ✏️ Sketchpad — do this before you touch the matrix
 
 
@@ -1826,6 +1861,10 @@ Four factories in a regional supply chain. Each factory has one feature: its **a
 
 
 We have ground\-truth labels from last year's disruption data. The network edges represent **direct material dependencies** — Factory A ships to Factory C, for instance.
+
+
+**✏️ Sketchpad — before you click anything**
+ Before you click **Forward Pass**, do the first GCN propagation step on paper. For each of the four factories, average the output feature across itself and its direct neighbors. Write those four numbers down. The lab will compute exactly the same numbers in the next click — your sketch is the answer key.
 
 
 ■ A
@@ -2212,6 +2251,19 @@ Explore how graph neural networks encode network structure as node embeddings, a
 📚 Readings for this case study →
 
 
+## The problem an engineer is solving
+
+
+The capstone case study. You're predicting which suppliers will fail next quarter. You have raw features (size, location, sector), a time\-lag feature (whether they failed last quarter), and a network — who supplies whom. The interesting question isn't "does the model work" (it usually does). The interesting question is **how much does network position add beyond the features and the lag?**
+
+
+The lab below trains XGBoost three times — on raw features, then raw \+ lag, then raw \+ lag \+ GNN embeddings — and reports the AUC at each step. Watch where the gain comes from. On some networks, position adds a lot. On others, it adds almost nothing.
+
+
+**✏️ Sketchpad — before you click anything**
+ Before you click Train, predict the AUC for all three model variants. Will the GNN\-augmented model beat the lag\-augmented one by a lot, by a little, or not at all? Write your three predictions on paper. Then train and compare — the gap between your guesses and the actual AUCs is where the lab's real lesson lives.
+
+
 ### Pipeline — Click a Step to Explore
 
 
@@ -2398,6 +2450,19 @@ You have factory metadata in one table and shipments in another — but to answe
 📚 Readings for this case study →
 
 
+## The problem an engineer is solving
+
+
+You have factory metadata in one table and shipments in another. To answer a real supply\-chain question — "how much volume flows from Tier 3 to Tier 1?" — those two tables have to be joined, renamed, grouped, and summarised, in the right order.
+
+
+The lab below is a drag\-and\-drop builder for that pipeline. Snap steps into place, switch between R (`dplyr`) and Python (`pandas`), and watch the result table and the live flowchart update with every change. Use it as your calculator while you work through the learning checks.
+
+
+**✏️ Sketchpad — before you click anything**
+ Before you touch the builder, sketch the join on paper. List the columns in `factories` and the columns in `shipments`. Draw arrows between the columns that have to match for the join. Where do you predict a forgotten rename would cause a silent collision? Mark it. Then build the pipeline and check whether your prediction held.
+
+
 Language:
 
 R · dplyr
@@ -2545,6 +2610,19 @@ Boston's Bluebikes program connects neighborhoods — but does ridership flow fr
 
 
 📚 Readings for this case study →
+
+
+## The problem an engineer is solving
+
+
+You've computed a network statistic — assortativity, for instance — and it looks meaningful. But how do you know it's real, and not just what you'd see by chance in any network of this size and shape? **Permutation tests** are the answer: shuffle the labels, recompute the statistic, repeat thousands of times, see where your observed value lands in the null distribution.
+
+
+The lab below lets you run the permutation sampler interactively and see two p\-values side by side: the *unblocked* null (which often gives a misleadingly small p\-value because almost any structure is unusual against pure randomness) and a *block\-permutation* null (the one you actually want when the blocks match a known confounder).
+
+
+**✏️ Sketchpad — before you click anything**
+ Before you click Run, predict on paper what you'd expect the null distribution to look like if there were no real structure: where should the observed statistic sit relative to the bulk of the null? Draw the histogram you expect, mark the observed value. Then run the sampler and compare.
 
 
 ### 📍 Boston Bluebikes — AM Rush Hour Ridership Network
@@ -2737,6 +2815,19 @@ You are an analyst studying evacuation flows during a Gulf hurricane. The full n
 📚 Readings for this case study →
 
 
+## The problem an engineer is solving
+
+
+Your network has 30,000 nodes. You can't hand\-label them, you can't visualize them, and the analysis you actually want is too slow on the full network. So you sample — but every sampling strategy distorts the network in a different direction. Ego\-centric sampling preserves local structure but warps density. Edgewise sampling preserves density but warps connectivity.
+
+
+The lab below lets you sample the same big network three ways and see how each strategy preserves (or distorts) basic properties — density, mean edge weight, share of nodes still linked. The takeaway: every sampler is biased. The question is whether the bias is compatible with the question you're trying to answer.
+
+
+**✏️ Sketchpad — before you click anything**
+ Before you click Sample, predict on paper which property each strategy will preserve best. Will ego\-centric sampling overestimate density, underestimate it, or leave it about right? Same question for edgewise. Write your three predictions. Then run the samplers and see which guess held.
+
+
 ## 📍 Coastal Louisiana Evacuation Network
 
 
@@ -2909,6 +3000,19 @@ Explore how goods flow from raw\-material suppliers to end customers — and dis
 
 
 📚 Readings for this case study →
+
+
+## The problem an engineer is solving
+
+
+A supplier network looks resilient on paper — until you pick the wrong attack strategy and watch it collapse. Random failures and targeted attacks are not the same thing, and a network can be very resilient to one and very fragile to the other.
+
+
+The lab below lets you pick an attack strategy (random, degree\-targeted, or betweenness\-targeted) and watch the network degrade over the same number of removals. Compare the damage curves and see where the gap is widest — that's where the engineering decisions matter.
+
+
+**✏️ Sketchpad — before you click anything**
+ Before you run any simulation, sketch your predictions for all three strategies on paper. Which one degrades the network fastest? How far behind is the slowest? Draw rough damage curves on a single axis. Then run the lab and see which prediction held — and where you were surprised.
 
 
  **—** active nodes
