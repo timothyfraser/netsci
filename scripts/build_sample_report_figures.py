@@ -96,43 +96,38 @@ def figure_one():
 # ---------------------------------------------------------------------------
 def _build_network():
     """Two geographic clusters (Cambridge / Boston) joined only by bridges."""
-    rng = np.random.default_rng(5470)
+    rng = np.random.default_rng(11)
     G = nx.Graph()
     pos = {}
 
-    def blob(prefix, cx, cy, n, spread=0.62):
+    def blob(prefix, cx, cy, n, sx=0.55, sy=1.05, clamp=1.05):
         ids = []
         for i in range(n):
             nid = f"{prefix}{i}"
-            px = cx + rng.normal(0, spread)
-            # keep clusters off the river channel (|x| > 0.7)
-            if prefix == "C":
-                px = min(px, -0.75)
-            else:
-                px = max(px, 0.75)
-            py = cy + rng.normal(0, 0.85)
+            px = cx + rng.normal(0, sx)
+            px = min(px, -clamp) if prefix == "C" else max(px, clamp)
+            py = cy + rng.normal(0, sy)
             pos[nid] = (px, py)
             G.add_node(nid)
             ids.append(nid)
         return ids
 
-    cambridge = blob("C", -1.7, 0.0, 34)
-    boston = blob("B", 1.7, 0.0, 34)
+    cambridge = blob("C", -2.3, 0.1, 30)
+    boston = blob("B", 2.3, 0.1, 30)
 
-    # intra-cluster edges by proximity (geometric)
-    def connect(ids, r):
+    # intra-cluster edges by proximity (k nearest within the cluster only)
+    def connect(ids, k=3):
         P = np.array([pos[i] for i in ids])
         for a in range(len(ids)):
             d = np.hypot(P[:, 0] - P[a, 0], P[:, 1] - P[a, 1])
-            for b in np.argsort(d)[1:4]:        # ~3 nearest neighbours
-                if d[b] < r:
-                    G.add_edge(ids[a], ids[b])
+            for b in np.argsort(d)[1:k + 1]:
+                G.add_edge(ids[a], ids[b])
+
     def force_connect(ids):
         """Guarantee the cluster is one connected component (MST-style stitch)."""
         comps = list(nx.connected_components(G.subgraph(ids)))
         while len(comps) > 1:
-            c0 = list(comps[0])
-            rest = list(set(ids) - set(comps[0]))
+            c0, rest = list(comps[0]), list(set(ids) - set(comps[0]))
             best, bestd = None, 1e9
             for a in c0:
                 for b in rest:
@@ -142,15 +137,16 @@ def _build_network():
             G.add_edge(*best)
             comps = list(nx.connected_components(G.subgraph(ids)))
 
-    connect(cambridge, 1.1)
-    connect(boston, 1.1)
+    connect(cambridge)
+    connect(boston)
     force_connect(cambridge)
     force_connect(boston)
 
-    # two bridge stations spanning the river: b1 central (short crossing),
-    # b2 north (long detour)
-    pos["b1"] = (0.0, -0.2); G.add_node("b1")
-    pos["b2"] = (0.0, 2.4);  G.add_node("b2")
+    # Two bridge stations are the ONLY river crossings:
+    #   b1 — central, the short everyday crossing
+    #   b2 — north, a long way around
+    pos["b1"] = (0.0, 0.1);  G.add_node("b1")
+    pos["b2"] = (0.0, 2.7);  G.add_node("b2")
 
     def nearest(ids, point, k):
         P = np.array([pos[i] for i in ids])
@@ -162,21 +158,21 @@ def _build_network():
     for nb in nearest(cambridge, pos["b2"], 2) + nearest(boston, pos["b2"], 2):
         G.add_edge("b2", nb)
 
-    # a small pocket that reaches the rest ONLY through b1 -> stranded when cut
+    # A small pocket of stations that reach the rest ONLY through b1, so they
+    # are stranded the moment it closes.
     pocket = []
     for i in range(3):
         nid = f"P{i}"
-        pos[nid] = (-0.15 + rng.normal(0, 0.12), -0.9 - 0.32 * i)
+        pos[nid] = (-0.05 + 0.45 * (i - 1), -1.35 - 0.15 * (i % 2))
         G.add_node(nid); pocket.append(nid)
-    G.add_edge("b1", "P0"); G.add_edge("P0", "P1"); G.add_edge("P1", "P2")
+    G.add_edge("b1", "P1"); G.add_edge("P1", "P0"); G.add_edge("P1", "P2")
 
     return G, pos, cambridge, boston, pocket
 
 
-def _draw(ax, G, pos, path_edges, removed, stranded, title):
-    # river channel
-    ax.axvspan(-0.7, 0.7, color=RIVER, alpha=0.55, zorder=0)
-    ax.text(0.0, -3.15, "Charles River", ha="center", va="center",
+def _draw(ax, G, pos, path_edges, removed, stranded, src, dst, title):
+    ax.axvspan(-0.95, 0.95, color=RIVER, alpha=0.55, zorder=0)
+    ax.text(0.0, -3.05, "Charles River", ha="center", va="center",
             fontsize=8.5, style="italic", color="#3b82f6", zorder=1)
 
     pe = set(map(frozenset, path_edges))
@@ -185,75 +181,79 @@ def _draw(ax, G, pos, path_edges, removed, stranded, title):
             continue
         on_path = frozenset((u, v)) in pe
         ax.plot([pos[u][0], pos[v][0]], [pos[u][1], pos[v][1]],
-                color=(GREEN_LINE if on_path else "#cbd5e1"),
-                lw=(2.8 if on_path else 0.9),
+                color=(GREEN_LINE if on_path else "#d7dde4"),
+                lw=(3.0 if on_path else 0.9),
                 zorder=(4 if on_path else 2), solid_capstyle="round")
 
     for n in G.nodes():
         x, y = pos[n]
-        if n in removed:
-            ax.scatter(x, y, s=200, marker="X", color=AMBER, edgecolor="#7c2d12",
-                       linewidths=1.4, zorder=6)
-            continue
         if n in ("b1", "b2"):
-            ax.scatter(x, y, s=110, color=AMBER_FILL, edgecolor=AMBER,
-                       linewidths=1.6, zorder=5)
+            ax.scatter(x, y, s=120, color=AMBER_FILL, edgecolor=AMBER,
+                       linewidths=1.7, zorder=5)
         elif n in stranded:
-            ax.scatter(x, y, s=34, color=GREY_LIGHT, edgecolor="#94a3b8",
+            ax.scatter(x, y, s=40, color=GREY_LIGHT, edgecolor="#94a3b8",
                        linewidths=0.6, zorder=3)
         else:
-            ax.scatter(x, y, s=34, color=GREEN, edgecolor=GREEN_DARK,
+            ax.scatter(x, y, s=40, color=GREEN, edgecolor=GREEN_DARK,
                        linewidths=0.6, zorder=3)
 
-    # removed nodes are no longer in G, so draw them from stored positions
+    # origin / destination of the trip, ringed and labelled
+    for node, label, dx in ((src, "origin\n(Cambridge)", 0), (dst, "destination\n(Boston)", 0)):
+        x, y = pos[node]
+        ax.scatter(x, y, s=190, facecolor="none", edgecolor=INK,
+                   linewidths=1.8, zorder=8)
+        ax.scatter(x, y, s=46, color=GREEN_LINE, edgecolor="white",
+                   linewidths=0.8, zorder=9)
+        ax.annotate(label, xy=(x, y), xytext=(x + dx, y - 0.85), ha="center",
+                    va="top", fontsize=8, fontweight="bold", color=INK, zorder=9)
+
+    # closed nodes are no longer in G; draw them from stored positions
     for n in removed:
         x, y = pos[n]
-        ax.scatter(x, y, s=210, marker="X", color=AMBER, edgecolor="#7c2d12",
-                   linewidths=1.5, zorder=7)
-        ax.annotate("closed", xy=(x, y), xytext=(x + 0.05, y - 0.7),
-                    ha="center", fontsize=8.5, color="#7c2d12", fontweight="bold")
+        ax.scatter(x, y, s=230, marker="X", color=AMBER, edgecolor="#7c2d12",
+                   linewidths=1.6, zorder=10)
+        ax.annotate("closed", xy=(x, y), xytext=(x, y + 0.55), ha="center",
+                    fontsize=8.5, color="#7c2d12", fontweight="bold", zorder=10)
 
     ax.set_title(title, fontsize=10.5, fontweight="bold", pad=8, loc="center")
-    ax.set_xlim(-3.4, 3.4); ax.set_ylim(-3.4, 3.4)
+    ax.set_xlim(-3.7, 3.7); ax.set_ylim(-3.4, 3.7)
     ax.set_aspect("equal"); ax.axis("off")
 
 
 def figure_two():
     G, pos, camb, bost, pocket = _build_network()
-    src = min(camb, key=lambda n: pos[n][1])      # deep south Cambridge
-    dst = min(bost, key=lambda n: pos[n][1])       # deep south Boston
+    # origin deep in west Cambridge, destination deep in east Boston, so the
+    # trip clearly traverses the whole network and crosses the river once.
+    src = min(camb, key=lambda n: pos[n][0] + 0.25 * pos[n][1])
+    dst = max(bost, key=lambda n: pos[n][0] - 0.25 * pos[n][1])
 
     before = nx.shortest_path(G, src, dst)
     before_edges = list(zip(before[:-1], before[1:]))
 
     G2 = G.copy(); G2.remove_node("b1")
-    comp = nx.node_connected_component(G2, src)
-    stranded = set(G2.nodes()) - comp                 # now unreachable from src
-    try:
-        after = nx.shortest_path(G2, src, dst)
-        after_edges = list(zip(after[:-1], after[1:]))
-    except nx.NetworkXNoPath:
-        after_edges = []
+    stranded = set(G2.nodes()) - nx.node_connected_component(G2, src)
+    after_edges = (list(zip(p[:-1], p[1:]))
+                   if (p := (nx.shortest_path(G2, src, dst)
+                             if nx.has_path(G2, src, dst) else None)) else [])
 
-    fig, (axL, axR) = plt.subplots(1, 2, figsize=(7.6, 4.0))
-    fig.subplots_adjust(wspace=0.10)
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(7.8, 4.2))
+    fig.subplots_adjust(wspace=0.08)
     _draw(axL, G, pos, before_edges, removed=set(), stranded=set(),
-          title="Before: path crosses at the central bridge")
+          src=src, dst=dst, title="Before: trip crosses at the central bridge")
     _draw(axR, G2, pos, after_edges, removed={"b1"}, stranded=stranded,
-          title="After: central bridge closed")
+          src=src, dst=dst, title="After: central bridge closed")
 
-    # shared legend
     from matplotlib.lines import Line2D
     handles = [
         Line2D([0], [0], marker="o", color="w", markerfacecolor=GREEN,
                markeredgecolor=GREEN_DARK, markersize=8, label="station"),
         Line2D([0], [0], marker="o", color="w", markerfacecolor=AMBER_FILL,
                markeredgecolor=AMBER, markersize=10, label="bridge station (high betweenness)"),
-        Line2D([0], [0], marker="x", color=AMBER, markersize=9, lw=0,
-               markeredgewidth=2.4, label="closed station"),
+        Line2D([0], [0], marker="X", color=AMBER, markersize=10, lw=0,
+               markeredgecolor="#7c2d12", label="closed station"),
         Line2D([0], [0], marker="o", color="w", markerfacecolor=GREY_LIGHT,
                markeredgecolor="#94a3b8", markersize=8, label="stranded (now unreachable)"),
-        Line2D([0], [0], color=GREEN_LINE, lw=2.8, label="shortest path, Cambridge → Boston"),
+        Line2D([0], [0], color=GREEN_LINE, lw=3.0, label="shortest path, origin → destination"),
     ]
     fig.legend(handles=handles, loc="lower center", ncol=3, frameon=False,
                fontsize=8.6, bbox_to_anchor=(0.5, -0.02))
