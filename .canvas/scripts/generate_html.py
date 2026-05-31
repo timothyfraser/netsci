@@ -231,11 +231,9 @@ def build_assignments():
 
         # Drawing (group: drawings)
         body = (
-            f'Complete the sketchpad activity for this case study — '
+            f'The hand-drawn sketchpad activity for this case study — '
             f'<strong style="color:{T["white"]};">{esc(c["sketch_title"])}</strong>. '
-            f'Draw it by hand (no keyboard), photograph the finished sketch, and upload '
-            f'the photo here. We grade whether the sketch shows you understood the '
-            f'structure before you wrote any code — not artistic quality.'
+            f'The full prompt and what to submit live on the course website.'
         )
         out.append({
             "key": f'drawing-{c["key"]}',
@@ -253,16 +251,10 @@ def build_assignments():
         # Bundled Learning Check = case-study LC + code "I ran the code" LC
         # (group: casestudies)
         body = (
-            f'Submit your Learning Checks for this case study <strong style="color:'
-            f'{T["white"]};">together in one submission</strong>:<br>'
-            f'<strong style="color:{T["white"]};">(1) Case study Learning Check</strong> — '
-            f'work through the interactive lab and report the in-lab Learning Check '
-            f'answer.<br>'
-            f'<strong style="color:{T["white"]};">(2) Code Learning Check (“I ran the '
-            f'code”)</strong> — run <code style="color:{T["green_laser"]};">example.R</code> '
-            f'or <code style="color:{T["green_laser"]};">example.py</code> in this case '
-            f'study’s code folder and paste the single answer it prints at the bottom. '
-            f'Pick either track (R or Python); you do not need to do both.'
+            f'Your combined Learning Check for this case study — the in-lab '
+            f'case-study check <em>and</em> the “I ran the code” check, '
+            f'<strong style="color:{T["white"]};">submitted together</strong>. The full '
+            f'instructions live on the course website.'
         )
         out.append({
             "key": f'lc-{c["key"]}',
@@ -281,11 +273,9 @@ def build_assignments():
     # ---- Ed Discussion, one per week (group: participation) ----
     for w in M["extras"]["ed_discussion_weeks"]:
         body = (
-            f'Post your reflection and discussion contribution on '
-            f'<strong style="color:{T["white"]};">Ed Discussion</strong> (linked in the '
-            f'Canvas left-hand navigation). One substantive post — react to a classmate '
-            f'where you can. The Week 3 thread also includes a short course-level '
-            f'retrospective.'
+            f'Your weekly post on <strong style="color:{T["white"]};">Ed Discussion</strong> '
+            f'(linked in the Canvas left-hand navigation). The prompt and details live on '
+            f'the course website.'
         )
         out.append({
             "key": f"ed-week-{w}",
@@ -301,10 +291,9 @@ def build_assignments():
     # ---- Office Hours, one per week (group: participation) ----
     for w in M["extras"]["office_hours_weeks"]:
         body = (
-            f'Attend one virtual office-hour session — <strong style="color:'
-            f'{T["white"]};">three are required across the course</strong>. They are '
-            f'informal: bring a question, a stuck spot, or a project idea. Book a slot '
-            f'on the course website; we mark this complete after we meet.'
+            f'Your office-hours check-in for the week — <strong style="color:'
+            f'{T["white"]};">three are required across the course</strong>. Book a slot on '
+            f'the course website.'
         )
         out.append({
             "key": f"office-week-{w}",
@@ -320,14 +309,10 @@ def build_assignments():
     # ---- Projects, one per weekly-homework group ----
     for p in M["extras"]["projects"]:
         body = (
-            f'Your weekly homework <em>is</em> the project. Pick one of the case-study '
-            f'methods, apply it to a network <strong style="color:{T["white"]};">you</strong> '
-            f'chose (≥ 100 nodes; 1,000+ strongly preferred), and write a 2-page-minimum '
-            f'report in your own words. Submit (a) your '
-            f'<code style="color:{T["green_laser"]};">project.R</code> / '
-            f'<code style="color:{T["green_laser"]};">project.py</code> and (b) the report '
-            f'(PDF preferred). The full spec, the four-skill rubric, the hard requirements, '
-            f'and a sample report all live on the Assignments page.'
+            f'Your weekly homework <em>is</em> the project — the analysis code plus your '
+            f'written report, on a network you chose. The full spec, the four-skill '
+            f'rubric, the hard requirements, and a sample report all live on the '
+            f'Assignments page of the course website.'
         )
         out.append({
             "key": f"project-{p['n']}",
@@ -345,10 +330,9 @@ def build_assignments():
     # ---- Final Presentation (group: participation) ----
     fp = M["extras"]["final_presentation"]
     body = (
-        f'Give a short presentation on your <strong style="color:{T["white"]};">'
-        f'strongest of the three project case studies</strong>. We use these to share '
-        f'what worked across the cohort. Format and length are confirmed on the course '
-        f'site once enrollment closes.'
+        f'A short presentation on your <strong style="color:{T["white"]};">strongest of '
+        f'the three project case studies</strong>. Format and details are confirmed on '
+        f'the course website.'
     )
     out.append({
         "key": "final-presentation",

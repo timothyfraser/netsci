@@ -92,6 +92,10 @@ re-run `generate_html.py`, then `push_to_canvas.py`.
    destination regardless) and names its best-fit sketch in text. If you finalize
    the mapping, edit `sketch_title` / `sketch_anchor` per case study in
    `manifest.json`.
+3b. **Cards carry no instructions.** Each card is intentionally a short pointer
+   (what the item is + a button to the website), not a restatement of the
+   assignment's instructions. The website is the single source of truth, so
+   changing an assignment there never requires editing Canvas.
 4. **Ed Discussion & Office Hours** are `submission_types: ["none"]` — they
    happen off-Canvas (Ed) or in a meeting, and you mark them complete. The cards
    link to the calendar / office-hours pages. If you wire up a real Ed LTI or a
