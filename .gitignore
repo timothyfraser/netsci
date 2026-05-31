@@ -22,6 +22,9 @@ __pycache__/
 .Ruserdata
 Rplots.pdf
 *.pdf
+# ...except the sample report PDF: a generated, committed deliverable the
+# site links to. Rebuilt by scripts/build_sample_report.sh / CI.
+!docs/assignments/sample-report.pdf
 
 # Editors
 .vscode/

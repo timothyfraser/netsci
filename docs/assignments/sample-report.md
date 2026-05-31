@@ -142,7 +142,7 @@ betweenness top-10 instead surfaces **three bridge stations on the
 Longfellow and Harvard bridges**, stations with far fewer absolute trips
 but which sit on the only short route between Cambridge and Boston for a
 meaningful share of the network. Weighted eigenvector centrality, for
-its part, tracks degree almost exactly (Spearman ρ = 0.88 with degree,
+its part, tracks degree almost exactly (Spearman rho = 0.88 with degree,
 0.41 with betweenness): it rewards being well-connected to other
 well-connected stations, which is again a volume story, not a
 bottleneck story. That eigenvector and degree agree, while betweenness
@@ -160,7 +160,7 @@ Removing **10 random stations** (mean of 1,000 draws) was essentially
 invisible: largest component 436.8, average shortest path 4.15 (+0.7%).
 Table 1 lays the three strategies side by side.
 
-| Removal strategy | Largest component | Avg shortest path | Δ vs intact |
+| Removal strategy | Largest component | Avg shortest path | Change vs intact |
 |---|---:|---:|---:|
 | None (intact network) | 437 | 4.12 | — |
 | Top-10 by random | 436.8 | 4.15 | +0.7% |
@@ -187,7 +187,7 @@ inflation from +65.3% to +61.8% and +67.0% respectively — the same story
 within a couple of points, so the result is not an artifact of where I
 drew the noise floor.
 
-| k removed | LCC (degree) | LCC (betweenness) | ASP Δ (betweenness) |
+| k removed | LCC (degree) | LCC (betweenness) | ASP change (betweenness) |
 |---:|---:|---:|---:|
 | 5  | 437 | 421 | +28% |
 | 10 | 437 | 402 | +65% |
