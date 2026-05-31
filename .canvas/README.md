@@ -7,16 +7,18 @@ and then send students to the (much nicer) website to actually do the work.
 
 ## What's here
 - A **home page** with shortcut links to the key website pages.
-- **26 assignments**, organized around the **8 case-study topics** (the 11 lab
-  pages roll up into 8 topics, so students see 8 tidy units): one drawing and
-  one **bundled Learning Check** per topic (the case-study check and the "I ran
-  the code" check submitted together), plus a weekly Ed Discussion and Office
-  Hours, three project case studies, and a final presentation.
+- **32 assignments**, one per submission item across the **11 case studies**
+  (each lab keeps its own spot in the course): a drawing and one **bundled
+  Learning Check** per case study (the case-study check and the "I ran the code"
+  check submitted together), plus a weekly Ed Discussion and Office Hours, three
+  project case studies, and a final presentation.
 - **5 modules** (Getting Started · Week 1 · Week 2 · Week 3 · Wrapping Up) of
   website links, kept non-duplicative with the assignments.
 - Each assignment is a **branded HTML card** (matching the site's neon-green-on-
-  near-black theme) with the assignment title, the related topic, a
+  near-black theme) with the assignment title, the related case study, a
   completion-vs-points grading tag, and a button to the relevant website page.
+- **No due dates** — the cards don't mention them and the push script doesn't
+  set them, so you schedule everything in Canvas and can move things freely.
 
 Assignments are sorted into **weighted groups**: Drawings 20% · Case Studies
 (the bundled learning checks) 25% · Participation (Ed discussion + office hours

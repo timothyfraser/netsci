@@ -44,7 +44,7 @@
   ],
 
   "due_dates": {
-    "_comment": "ISO-8601 UTC. 9:00 AM America/New_York (EDT, UTC-4) in summer 2026 == 13:00 UTC. Mirrors docs/calendar.html Monday-9am deadlines.",
+    "_comment": "REFERENCE ONLY — NOT pushed to Canvas. The cards never mention due dates and push_to_canvas.py never sets due_at, so you schedule everything in Canvas. These mirror docs/calendar.html (Monday 9 AM ET = 13:00 UTC in summer) if you want to set the same dates by hand.",
     "week1": "2026-06-29T13:00:00Z",
     "week2": "2026-07-06T13:00:00Z",
     "week3": "2026-07-13T13:00:00Z"
@@ -62,18 +62,6 @@
     { "key": "gnn-xgboost",     "num": "11", "name": "GNN + XGBoost — Supplier Risk",       "short": "GNN + XGBoost",          "icon": "🤖", "skill": "Predict",  "week": 3, "lab": "case-studies/gnn-xgboost.html",     "code": "code/11_gnn-xgboost",     "sketch_title": "Sketch 06 · Two-hop neighborhood",        "sketch_anchor": "sketchpad.html" },
     { "key": "sampling",        "num": "08", "name": "Sampling Big Networks",                  "short": "Sampling",               "icon": "🗄️", "skill": "Identify", "week": 3, "lab": "case-studies/sampling.html",        "code": "code/08_sampling",        "sketch_title": "Sketch 08 · Plan the join",               "sketch_anchor": "sketchpad.html#sketch-10" },
     { "key": "joins",           "num": "02", "name": "Network Joins & Pipelines",              "short": "Joins",                  "icon": "🔗", "skill": "Identify", "week": 3, "lab": "case-studies/joins.html",           "code": "code/02_joins",           "sketch_title": "Sketch 10 · Sketch the pipeline",         "sketch_anchor": "sketchpad.html#sketch-10" }
-  ],
-
-  "topics": [
-    { "_comment": "The 8 case-study TOPICS that are the actual Canvas submission units. Each bundles one or more of the 11 lab pages above (referenced by their case_studies key). due_week = week of the latest member lab, so every member lab is finished by the deadline.",
-      "key": "fundamentals",  "name": "Network Fundamentals",      "icon": "🕸️", "due_week": 1, "labs": ["build-a-network"] },
-    { "key": "statistics",    "name": "Network Statistics",        "icon": "📐", "due_week": 1, "labs": ["permutation"] },
-    { "key": "centrality",    "name": "Centrality & Criticality",  "icon": "📊", "due_week": 2, "labs": ["centrality", "supply-chain"] },
-    { "key": "routing",       "name": "Routing & Optimization",    "icon": "🚦", "due_week": 2, "labs": ["counterfactual"] },
-    { "key": "clustering",    "name": "Clustering & Communities",  "icon": "🧩", "due_week": 2, "labs": ["dsm-clustering"] },
-    { "key": "visualization", "name": "Visualization",             "icon": "🗺️", "due_week": 2, "labs": ["aggregation"] },
-    { "key": "aiml",          "name": "AI & Machine Learning",     "icon": "🤖", "due_week": 3, "labs": ["gnn-by-hand", "gnn-xgboost"] },
-    { "key": "bigdata",       "name": "Big Network Data",          "icon": "🗄️", "due_week": 3, "labs": ["joins", "sampling"] }
   ],
 
   "extras": {

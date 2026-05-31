@@ -56,20 +56,19 @@
   },
   "assignments": [
     {
-      "key": "drawing-fundamentals",
-      "name": "Drawing — Network Fundamentals",
+      "key": "drawing-build-a-network",
+      "name": "Drawing — Build a Network",
       "group": "drawings",
       "grading": "completion",
       "points": 10,
       "submission_types": [
         "online_upload"
       ],
-      "due": "2026-06-29T13:00:00Z",
-      "html_file": "assignments/drawing-fundamentals.html"
+      "html_file": "assignments/drawing-build-a-network.html"
     },
     {
-      "key": "lc-fundamentals",
-      "name": "Learning Checks — Network Fundamentals",
+      "key": "lc-build-a-network",
+      "name": "Learning Checks — Build a Network",
       "group": "casestudies",
       "grading": "completion",
       "points": 10,
@@ -77,11 +76,10 @@
         "online_text_entry",
         "online_upload"
       ],
-      "due": "2026-06-29T13:00:00Z",
-      "html_file": "assignments/lc-fundamentals.html"
+      "html_file": "assignments/lc-build-a-network.html"
     },
     {
-      "key": "drawing-statistics",
+      "key": "drawing-permutation",
       "name": "Drawing — Network Statistics",
       "group": "drawings",
       "grading": "completion",
@@ -89,11 +87,10 @@
       "submission_types": [
         "online_upload"
       ],
-      "due": "2026-06-29T13:00:00Z",
-      "html_file": "assignments/drawing-statistics.html"
+      "html_file": "assignments/drawing-permutation.html"
     },
     {
-      "key": "lc-statistics",
+      "key": "lc-permutation",
       "name": "Learning Checks — Network Statistics",
       "group": "casestudies",
       "grading": "completion",
@@ -102,24 +99,22 @@
         "online_text_entry",
         "online_upload"
       ],
-      "due": "2026-06-29T13:00:00Z",
-      "html_file": "assignments/lc-statistics.html"
+      "html_file": "assignments/lc-permutation.html"
     },
     {
       "key": "drawing-centrality",
-      "name": "Drawing — Centrality & Criticality",
+      "name": "Drawing — Centrality",
       "group": "drawings",
       "grading": "completion",
       "points": 10,
       "submission_types": [
         "online_upload"
       ],
-      "due": "2026-07-06T13:00:00Z",
       "html_file": "assignments/drawing-centrality.html"
     },
     {
       "key": "lc-centrality",
-      "name": "Learning Checks — Centrality & Criticality",
+      "name": "Learning Checks — Centrality",
       "group": "casestudies",
       "grading": "completion",
       "points": 10,
@@ -127,24 +122,22 @@
         "online_text_entry",
         "online_upload"
       ],
-      "due": "2026-07-06T13:00:00Z",
       "html_file": "assignments/lc-centrality.html"
     },
     {
-      "key": "drawing-routing",
-      "name": "Drawing — Routing & Optimization",
+      "key": "drawing-supply-chain",
+      "name": "Drawing — Supply Chain",
       "group": "drawings",
       "grading": "completion",
       "points": 10,
       "submission_types": [
         "online_upload"
       ],
-      "due": "2026-07-06T13:00:00Z",
-      "html_file": "assignments/drawing-routing.html"
+      "html_file": "assignments/drawing-supply-chain.html"
     },
     {
-      "key": "lc-routing",
-      "name": "Learning Checks — Routing & Optimization",
+      "key": "lc-supply-chain",
+      "name": "Learning Checks — Supply Chain",
       "group": "casestudies",
       "grading": "completion",
       "points": 10,
@@ -152,24 +145,22 @@
         "online_text_entry",
         "online_upload"
       ],
-      "due": "2026-07-06T13:00:00Z",
-      "html_file": "assignments/lc-routing.html"
+      "html_file": "assignments/lc-supply-chain.html"
     },
     {
-      "key": "drawing-clustering",
-      "name": "Drawing — Clustering & Communities",
+      "key": "drawing-counterfactual",
+      "name": "Drawing — Routing",
       "group": "drawings",
       "grading": "completion",
       "points": 10,
       "submission_types": [
         "online_upload"
       ],
-      "due": "2026-07-06T13:00:00Z",
-      "html_file": "assignments/drawing-clustering.html"
+      "html_file": "assignments/drawing-counterfactual.html"
     },
     {
-      "key": "lc-clustering",
-      "name": "Learning Checks — Clustering & Communities",
+      "key": "lc-counterfactual",
+      "name": "Learning Checks — Routing",
       "group": "casestudies",
       "grading": "completion",
       "points": 10,
@@ -177,24 +168,22 @@
         "online_text_entry",
         "online_upload"
       ],
-      "due": "2026-07-06T13:00:00Z",
-      "html_file": "assignments/lc-clustering.html"
+      "html_file": "assignments/lc-counterfactual.html"
     },
     {
-      "key": "drawing-visualization",
-      "name": "Drawing — Visualization",
+      "key": "drawing-dsm-clustering",
+      "name": "Drawing — DSM Clustering",
       "group": "drawings",
       "grading": "completion",
       "points": 10,
       "submission_types": [
         "online_upload"
       ],
-      "due": "2026-07-06T13:00:00Z",
-      "html_file": "assignments/drawing-visualization.html"
+      "html_file": "assignments/drawing-dsm-clustering.html"
     },
     {
-      "key": "lc-visualization",
-      "name": "Learning Checks — Visualization",
+      "key": "lc-dsm-clustering",
+      "name": "Learning Checks — DSM Clustering",
       "group": "casestudies",
       "grading": "completion",
       "points": 10,
@@ -202,24 +191,22 @@
         "online_text_entry",
         "online_upload"
       ],
-      "due": "2026-07-06T13:00:00Z",
-      "html_file": "assignments/lc-visualization.html"
+      "html_file": "assignments/lc-dsm-clustering.html"
     },
     {
-      "key": "drawing-aiml",
-      "name": "Drawing — AI & Machine Learning",
+      "key": "drawing-aggregation",
+      "name": "Drawing — Aggregation",
       "group": "drawings",
       "grading": "completion",
       "points": 10,
       "submission_types": [
         "online_upload"
       ],
-      "due": "2026-07-13T13:00:00Z",
-      "html_file": "assignments/drawing-aiml.html"
+      "html_file": "assignments/drawing-aggregation.html"
     },
     {
-      "key": "lc-aiml",
-      "name": "Learning Checks — AI & Machine Learning",
+      "key": "lc-aggregation",
+      "name": "Learning Checks — Aggregation",
       "group": "casestudies",
       "grading": "completion",
       "points": 10,
@@ -227,24 +214,22 @@
         "online_text_entry",
         "online_upload"
       ],
-      "due": "2026-07-13T13:00:00Z",
-      "html_file": "assignments/lc-aiml.html"
+      "html_file": "assignments/lc-aggregation.html"
     },
     {
-      "key": "drawing-bigdata",
-      "name": "Drawing — Big Network Data",
+      "key": "drawing-gnn-by-hand",
+      "name": "Drawing — GNN by Hand",
       "group": "drawings",
       "grading": "completion",
       "points": 10,
       "submission_types": [
         "online_upload"
       ],
-      "due": "2026-07-13T13:00:00Z",
-      "html_file": "assignments/drawing-bigdata.html"
+      "html_file": "assignments/drawing-gnn-by-hand.html"
     },
     {
-      "key": "lc-bigdata",
-      "name": "Learning Checks — Big Network Data",
+      "key": "lc-gnn-by-hand",
+      "name": "Learning Checks — GNN by Hand",
       "group": "casestudies",
       "grading": "completion",
       "points": 10,
@@ -252,8 +237,76 @@
         "online_text_entry",
         "online_upload"
       ],
-      "due": "2026-07-13T13:00:00Z",
-      "html_file": "assignments/lc-bigdata.html"
+      "html_file": "assignments/lc-gnn-by-hand.html"
+    },
+    {
+      "key": "drawing-gnn-xgboost",
+      "name": "Drawing — GNN + XGBoost",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "html_file": "assignments/drawing-gnn-xgboost.html"
+    },
+    {
+      "key": "lc-gnn-xgboost",
+      "name": "Learning Checks — GNN + XGBoost",
+      "group": "casestudies",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry",
+        "online_upload"
+      ],
+      "html_file": "assignments/lc-gnn-xgboost.html"
+    },
+    {
+      "key": "drawing-sampling",
+      "name": "Drawing — Sampling",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "html_file": "assignments/drawing-sampling.html"
+    },
+    {
+      "key": "lc-sampling",
+      "name": "Learning Checks — Sampling",
+      "group": "casestudies",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry",
+        "online_upload"
+      ],
+      "html_file": "assignments/lc-sampling.html"
+    },
+    {
+      "key": "drawing-joins",
+      "name": "Drawing — Joins",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "html_file": "assignments/drawing-joins.html"
+    },
+    {
+      "key": "lc-joins",
+      "name": "Learning Checks — Joins",
+      "group": "casestudies",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry",
+        "online_upload"
+      ],
+      "html_file": "assignments/lc-joins.html"
     },
     {
       "key": "ed-week-1",
@@ -264,7 +317,6 @@
       "submission_types": [
         "none"
       ],
-      "due": "2026-06-29T13:00:00Z",
       "html_file": "assignments/ed-week-1.html"
     },
     {
@@ -276,7 +328,6 @@
       "submission_types": [
         "none"
       ],
-      "due": "2026-07-06T13:00:00Z",
       "html_file": "assignments/ed-week-2.html"
     },
     {
@@ -288,7 +339,6 @@
       "submission_types": [
         "none"
       ],
-      "due": "2026-07-13T13:00:00Z",
       "html_file": "assignments/ed-week-3.html"
     },
     {
@@ -300,7 +350,6 @@
       "submission_types": [
         "none"
       ],
-      "due": "2026-06-29T13:00:00Z",
       "html_file": "assignments/office-week-1.html"
     },
     {
@@ -312,7 +361,6 @@
       "submission_types": [
         "none"
       ],
-      "due": "2026-07-06T13:00:00Z",
       "html_file": "assignments/office-week-2.html"
     },
     {
@@ -324,7 +372,6 @@
       "submission_types": [
         "none"
       ],
-      "due": "2026-07-13T13:00:00Z",
       "html_file": "assignments/office-week-3.html"
     },
     {
@@ -337,7 +384,6 @@
         "online_upload",
         "online_text_entry"
       ],
-      "due": "2026-07-06T13:00:00Z",
       "html_file": "assignments/project-1.html"
     },
     {
@@ -350,7 +396,6 @@
         "online_upload",
         "online_text_entry"
       ],
-      "due": "2026-07-13T13:00:00Z",
       "html_file": "assignments/project-2.html"
     },
     {
@@ -363,7 +408,6 @@
         "online_upload",
         "online_text_entry"
       ],
-      "due": "2026-07-13T13:00:00Z",
       "html_file": "assignments/project-3.html"
     },
     {
@@ -375,7 +419,6 @@
       "submission_types": [
         "none"
       ],
-      "due": "2026-07-13T13:00:00Z",
       "html_file": "assignments/final-presentation.html"
     }
   ],

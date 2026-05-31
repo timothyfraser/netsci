@@ -165,9 +165,11 @@ def ensure_assignments(group_ids):
             ("assignment[points_possible]", str(a["points"])),
             ("assignment[grading_type]", GRADING_TYPE[a["grading"]]),
             ("assignment[assignment_group_id]", str(gid)),
-            ("assignment[due_at]", a["due"]),
             ("assignment[published]", "true"),
         ]
+        # NB: due_at is intentionally NOT set here. Schedule everything in
+        # Canvas so you can move dates without re-running this script (a re-run
+        # would otherwise overwrite your hand-set dates).
         for st in a["submission_types"]:
             data.append(("assignment[submission_types][]", st))
         if a["name"] in existing:

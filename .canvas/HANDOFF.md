@@ -1,7 +1,7 @@
 # SYSEN 5470 → Canvas — Implementation Handoff
 
 This folder is **course scaffolding only**. It contains ready-to-publish HTML
-for a Canvas course (home page + 26 assignments + 5 modules) and two scripts:
+for a Canvas course (home page + 32 assignments + 5 modules) and two scripts:
 one that *generates* the HTML from a manifest, and one that *pushes* it to
 Canvas via the REST API. **No API token is stored here.** A future local
 session (or you) runs the push script with your token in an environment
@@ -22,38 +22,23 @@ variable.
 |---|---|---|
 | Course front page ("Home") | 1 | `pages/home.html` |
 | Assignment **groups** (weighted) | 6 | `manifest.json → assignment_groups` |
-| **Assignments** | 26 | `assignments/*.html` + `canvas_plan.json` |
+| **Assignments** | 32 | `assignments/*.html` + `canvas_plan.json` |
 | **Modules** + items | 5 modules | `manifest.json → modules` |
 
-### Submission units = 8 case-study TOPICS (not 11 labs)
+### Submission units = the 11 case studies (one per lab / code folder)
 
-The site has **11 lab pages / code folders**, but they roll up into **8
-case-study topics** (the "What You'll Learn" list on the website home page).
-Two topics bundle two labs each, and Centrality & Criticality absorbs Supply
-Chain. **Canvas submission units are the 8 topics**, so students see 8 tidy
-units instead of 11:
-
-| Topic | Lab(s) it bundles | Due |
-|---|---|---|
-| 🕸️ Network Fundamentals | build-a-network | Wk 1 |
-| 📐 Network Statistics | permutation | Wk 1 |
-| 📊 Centrality & Criticality | centrality **+** supply-chain | Wk 2 |
-| 🚦 Routing & Optimization | counterfactual | Wk 2 |
-| 🧩 Clustering & Communities | dsm-clustering | Wk 2 |
-| 🗺️ Visualization | aggregation | Wk 2 |
-| 🤖 AI & Machine Learning | gnn-by-hand **+** gnn-xgboost | Wk 3 |
-| 🗄️ Big Network Data | joins **+** sampling | Wk 3 |
-
-Each topic produces **one drawing** and **one bundled Learning Check** (the
-case-study Learning Check *and* the "I ran the code" check submitted together).
-A two-lab topic's card lists both labs with deep links and asks for both.
+Each of the 11 lab pages / code folders is its own Canvas submission unit, so it
+lines up with its own module and its own point in the course (e.g. Sampling and
+Joins are scheduled in different weeks and stay separate). Each case study
+produces **one drawing** and **one bundled Learning Check** — the in-lab
+case-study Learning Check *and* the "I ran the code" check, submitted together.
 
 ### The six weighted assignment groups (sum = 100%)
 
 | Group | Weight | Contains | Rule |
 |---|---|---|---|
-| **Drawings** | 20% | 8 drawings (1 per topic) | **drops the lowest 2** |
-| **Case Studies** | 25% | 8 bundled Learning Checks (1 per topic) | **drops the lowest 2** |
+| **Drawings** | 20% | 11 drawings (1 per case study) | **drops the lowest 2** |
+| **Case Studies** | 25% | 11 bundled Learning Checks (1 per case study) | **drops the lowest 2** |
 | **Participation** | 10% | 3 weekly Ed Discussions + 3 weekly Office Hours + 1 Final Presentation (7 items) | — |
 | **Weekly Homework 1 · Project Case Study** | 15% | Project submission 1 | — |
 | **Weekly Homework 2 · Project Case Study** | 15% | Project submission 2 | — |
@@ -65,6 +50,14 @@ This matches the weighting you specified:
 (= the project) 15 each = 45.* The **drop-lowest-2** rule on Drawings and Case
 Studies gives students two freebies in each group for time-crunch weeks (Canvas
 group rule `rules[drop_lowest]=2`).
+
+### No due dates (by design)
+The cards never mention a due date or week, and **`push_to_canvas.py` does not
+set `due_at`**. Assignments are created with no due date so you schedule
+everything **in Canvas** and can move things around freely — re-running the
+script will not overwrite your hand-set dates. (The Ed Discussion / Office Hours
+titles keep a "Week N" label only to tell the three recurring ones apart; that
+is an identifier, not a deadline.)
 
 ### Grading types
 - **Completion** items → Canvas `grading_type = pass_fail` (complete / incomplete).
@@ -86,28 +79,26 @@ re-run `generate_html.py`, then `push_to_canvas.py`.
    *Participation* groups all items are `pass_fail` with `points_possible: 10`
    (Final Presentation `20`) so they weigh roughly equally. The relative split
    inside a weighted group only matters *within* that group.
-2. **Due dates** — taken from `docs/calendar.html`: every weekly submission is
-   due **Monday 9:00 AM America/New_York**. In summer that is EDT (UTC−4), so
-   `due_at` is stored as `13:00:00Z`. Week 1 = 2026-06-29, Week 2 = 2026-07-06,
-   Week 3 / final = 2026-07-13. Per-case-study items inherit their case study's
-   week. Projects: submission 1 due Week 2, submissions 2 & 3 due the final
-   deadline (the calendar's actual cadence — first project in Week 2, the
-   remaining two by the final). Adjust in `manifest.json → due_dates` / `extras.projects`.
+2. **Due dates** — intentionally **not set**. The cards don't mention them and
+   the push script doesn't send `due_at`, so you own all scheduling in Canvas
+   and can move things without re-running code. `manifest.json → due_dates` keeps
+   the calendar's Monday-9am dates as **reference only** (Week 1 = 2026-06-29,
+   Week 2 = 2026-07-06, Week 3 / final = 2026-07-13) if you want to set the same
+   dates by hand in Canvas.
 3. **Sketch ↔ case-study mapping** is **approximate**. The public
-   `docs/sketchpad.html` has 11 prompts described as "a preview library… for
-   case studies not yet built," and it does not map 1:1 to the 11 case studies
-   (e.g. two aggregation-flavored sketches, one shared supply-chain/GNN
-   neighborhood sketch). Each drawing card therefore links to the **Sketchpad
-   page** (the correct destination regardless) and names its best-fit sketch in
-   text. If you finalize the mapping, edit `sketch_title` / `sketch_anchor` per
-   case study in `manifest.json`.
+   `docs/sketchpad.html` is described as "a preview library… for case studies
+   not yet built," and its prompts do not map perfectly 1:1 to the case studies.
+   Each drawing card therefore links to the **Sketchpad page** (the correct
+   destination regardless) and names its best-fit sketch in text. If you finalize
+   the mapping, edit `sketch_title` / `sketch_anchor` per case study in
+   `manifest.json`.
 4. **Ed Discussion & Office Hours** are `submission_types: ["none"]` — they
    happen off-Canvas (Ed) or in a meeting, and you mark them complete. The cards
    link to the calendar / office-hours pages. If you wire up a real Ed LTI or a
    Canvas Discussion, switch the type accordingly.
 5. **Final Presentation** lives in the *Participation* group (completion-graded)
    alongside Ed Discussions and Office Hours, so the *Case Studies* group is
-   exactly the 8 bundled Learning Checks (clean target for "drop the lowest 2")
+   exactly the 11 bundled Learning Checks (clean target for "drop the lowest 2")
    and each Weekly Homework group stays cleanly = one project = 15%. Move it to a
    Weekly Homework group or its own group if you want it points-graded. Note the
    *Participation* group has **no** drop rule, so a missed Office Hours / Ed
@@ -202,8 +193,8 @@ POST /courses/:course/assignments                    # create
      assignment[points_possible]=10
      assignment[grading_type]=pass_fail              # or "points"
      assignment[assignment_group_id]=<group id>
-     assignment[due_at]=2026-06-29T13:00:00Z
      assignment[published]=true
+     # NB: due_at intentionally omitted — set due dates in Canvas, not here
 PUT  /courses/:course/assignments/:id                # update
 ```
 - **`grading_type` valid values**: `pass_fail`, `points`, `percent`,
@@ -270,13 +261,13 @@ reference their ids. The HTML bodies in `assignments/*.html` and
       20/25/10/15/15/15 and "Total 100%". (Grades → ⋮ → *Assignment Groups
       Weight* is enabled.)
 - [ ] A drawing, a bundled Learning Check, and a project each render their card
-      with the correct **grading pill** and a working website button. (A two-lab
-      topic's Learning Check lists both labs with Lab + Code links.)
+      with the correct **grading pill** and a working website button. (No card
+      mentions a due date or week.)
 - [ ] The **Drawings** and **Case Studies** groups show "drop the lowest 2"
       (group → ⋮ → *Assignment Group Rules*).
 - [ ] **Modules** shows Getting Started / Week 1 / Week 2 / Week 3 / Wrapping Up,
       each with external links opening the website in a new tab.
-- [ ] Due dates show the three Mondays at 9:00 AM Eastern.
+- [ ] Assignments have **no due dates** — set them in Canvas as you like.
 
 ---
 
@@ -290,15 +281,14 @@ reference their ids. The HTML bodies in `assignments/*.html` and
 ├── preview.html            ← open in a browser to see every card
 ├── pages/
 │   └── home.html           ← Canvas front-page body
-├── assignments/            ← 26 assignment bodies (one HTML fragment each)
-│   ├── drawing-<topic>.html        (8 — one per topic)
-│   ├── lc-<topic>.html             (8 — bundled case-study + code LC per topic)
+├── assignments/            ← 32 assignment bodies (one HTML fragment each)
+│   ├── drawing-<case-study>.html   (11 — one per case study)
+│   ├── lc-<case-study>.html        (11 — bundled case-study + code LC per case study)
 │   ├── ed-week-{1,2,3}.html        (3)
 │   ├── office-week-{1,2,3}.html    (3)
 │   ├── project-{1,2,3}.html        (3)
 │   └── final-presentation.html     (1)
-├── build/
-│   └── canvas_plan.json    ← generated machine-readable plan (push reads this)
+├── canvas_plan.json        ← generated machine-readable plan (push reads this)
 └── scripts/
     ├── generate_html.py    ← manifest → HTML + plan + preview (stdlib only)
     └── push_to_canvas.py   ← plan → Canvas via REST (needs `requests` + env vars)
