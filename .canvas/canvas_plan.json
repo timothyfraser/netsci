@@ -1,0 +1,774 @@
+{
+  "course": {
+    "code": "SYSEN 5470",
+    "title": "Network Science and Applications for Systems Engineering",
+    "term": "Summer 2026",
+    "site_base": "https://timothyfraser.com/netsci/",
+    "github": "https://github.com/timothyfraser/netsci",
+    "timezone": "America/New_York",
+    "apply_assignment_group_weights": true
+  },
+  "apply_assignment_group_weights": true,
+  "assignment_groups": [
+    {
+      "key": "drawings",
+      "name": "Drawings",
+      "group_weight": 20,
+      "position": 1
+    },
+    {
+      "key": "completion",
+      "name": "Case Study Completion",
+      "group_weight": 20,
+      "position": 2
+    },
+    {
+      "key": "hw1",
+      "name": "Weekly Homework 1 · Project Case Study",
+      "group_weight": 20,
+      "position": 3
+    },
+    {
+      "key": "hw2",
+      "name": "Weekly Homework 2 · Project Case Study",
+      "group_weight": 20,
+      "position": 4
+    },
+    {
+      "key": "hw3",
+      "name": "Weekly Homework 3 · Project Case Study",
+      "group_weight": 20,
+      "position": 5
+    }
+  ],
+  "front_page": {
+    "title": "Home",
+    "slug": "home",
+    "html_file": "pages/home.html"
+  },
+  "assignments": [
+    {
+      "key": "drawing-build-a-network",
+      "name": "Drawing — Build a Network",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "due": "2026-06-29T13:00:00Z",
+      "html_file": "assignments/drawing-build-a-network.html"
+    },
+    {
+      "key": "code-lc-build-a-network",
+      "name": "Code Learning Check (I Ran the Code) — Build a Network",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-06-29T13:00:00Z",
+      "html_file": "assignments/code-lc-build-a-network.html"
+    },
+    {
+      "key": "cs-lc-build-a-network",
+      "name": "Case Study Learning Check — Build a Network",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-06-29T13:00:00Z",
+      "html_file": "assignments/cs-lc-build-a-network.html"
+    },
+    {
+      "key": "drawing-permutation",
+      "name": "Drawing — Network Statistics",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "due": "2026-06-29T13:00:00Z",
+      "html_file": "assignments/drawing-permutation.html"
+    },
+    {
+      "key": "code-lc-permutation",
+      "name": "Code Learning Check (I Ran the Code) — Network Statistics",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-06-29T13:00:00Z",
+      "html_file": "assignments/code-lc-permutation.html"
+    },
+    {
+      "key": "cs-lc-permutation",
+      "name": "Case Study Learning Check — Network Statistics",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-06-29T13:00:00Z",
+      "html_file": "assignments/cs-lc-permutation.html"
+    },
+    {
+      "key": "drawing-centrality",
+      "name": "Drawing — Centrality",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "due": "2026-06-29T13:00:00Z",
+      "html_file": "assignments/drawing-centrality.html"
+    },
+    {
+      "key": "code-lc-centrality",
+      "name": "Code Learning Check (I Ran the Code) — Centrality",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-06-29T13:00:00Z",
+      "html_file": "assignments/code-lc-centrality.html"
+    },
+    {
+      "key": "cs-lc-centrality",
+      "name": "Case Study Learning Check — Centrality",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-06-29T13:00:00Z",
+      "html_file": "assignments/cs-lc-centrality.html"
+    },
+    {
+      "key": "drawing-supply-chain",
+      "name": "Drawing — Supply Chain",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/drawing-supply-chain.html"
+    },
+    {
+      "key": "code-lc-supply-chain",
+      "name": "Code Learning Check (I Ran the Code) — Supply Chain",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/code-lc-supply-chain.html"
+    },
+    {
+      "key": "cs-lc-supply-chain",
+      "name": "Case Study Learning Check — Supply Chain",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/cs-lc-supply-chain.html"
+    },
+    {
+      "key": "drawing-counterfactual",
+      "name": "Drawing — Routing",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/drawing-counterfactual.html"
+    },
+    {
+      "key": "code-lc-counterfactual",
+      "name": "Code Learning Check (I Ran the Code) — Routing",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/code-lc-counterfactual.html"
+    },
+    {
+      "key": "cs-lc-counterfactual",
+      "name": "Case Study Learning Check — Routing",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/cs-lc-counterfactual.html"
+    },
+    {
+      "key": "drawing-dsm-clustering",
+      "name": "Drawing — DSM Clustering",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/drawing-dsm-clustering.html"
+    },
+    {
+      "key": "code-lc-dsm-clustering",
+      "name": "Code Learning Check (I Ran the Code) — DSM Clustering",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/code-lc-dsm-clustering.html"
+    },
+    {
+      "key": "cs-lc-dsm-clustering",
+      "name": "Case Study Learning Check — DSM Clustering",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/cs-lc-dsm-clustering.html"
+    },
+    {
+      "key": "drawing-aggregation",
+      "name": "Drawing — Aggregation",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/drawing-aggregation.html"
+    },
+    {
+      "key": "code-lc-aggregation",
+      "name": "Code Learning Check (I Ran the Code) — Aggregation",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/code-lc-aggregation.html"
+    },
+    {
+      "key": "cs-lc-aggregation",
+      "name": "Case Study Learning Check — Aggregation",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/cs-lc-aggregation.html"
+    },
+    {
+      "key": "drawing-gnn-by-hand",
+      "name": "Drawing — GNN by Hand",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/drawing-gnn-by-hand.html"
+    },
+    {
+      "key": "code-lc-gnn-by-hand",
+      "name": "Code Learning Check (I Ran the Code) — GNN by Hand",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/code-lc-gnn-by-hand.html"
+    },
+    {
+      "key": "cs-lc-gnn-by-hand",
+      "name": "Case Study Learning Check — GNN by Hand",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/cs-lc-gnn-by-hand.html"
+    },
+    {
+      "key": "drawing-gnn-xgboost",
+      "name": "Drawing — GNN + XGBoost",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/drawing-gnn-xgboost.html"
+    },
+    {
+      "key": "code-lc-gnn-xgboost",
+      "name": "Code Learning Check (I Ran the Code) — GNN + XGBoost",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/code-lc-gnn-xgboost.html"
+    },
+    {
+      "key": "cs-lc-gnn-xgboost",
+      "name": "Case Study Learning Check — GNN + XGBoost",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/cs-lc-gnn-xgboost.html"
+    },
+    {
+      "key": "drawing-sampling",
+      "name": "Drawing — Sampling",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/drawing-sampling.html"
+    },
+    {
+      "key": "code-lc-sampling",
+      "name": "Code Learning Check (I Ran the Code) — Sampling",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/code-lc-sampling.html"
+    },
+    {
+      "key": "cs-lc-sampling",
+      "name": "Case Study Learning Check — Sampling",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/cs-lc-sampling.html"
+    },
+    {
+      "key": "drawing-joins",
+      "name": "Drawing — Joins",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_upload"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/drawing-joins.html"
+    },
+    {
+      "key": "code-lc-joins",
+      "name": "Code Learning Check (I Ran the Code) — Joins",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/code-lc-joins.html"
+    },
+    {
+      "key": "cs-lc-joins",
+      "name": "Case Study Learning Check — Joins",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/cs-lc-joins.html"
+    },
+    {
+      "key": "ed-week-1",
+      "name": "Ed Discussion — Week 1",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "none"
+      ],
+      "due": "2026-06-29T13:00:00Z",
+      "html_file": "assignments/ed-week-1.html"
+    },
+    {
+      "key": "ed-week-2",
+      "name": "Ed Discussion — Week 2",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "none"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/ed-week-2.html"
+    },
+    {
+      "key": "ed-week-3",
+      "name": "Ed Discussion — Week 3",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "none"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/ed-week-3.html"
+    },
+    {
+      "key": "office-week-1",
+      "name": "Office Hours — Week 1",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "none"
+      ],
+      "due": "2026-06-29T13:00:00Z",
+      "html_file": "assignments/office-week-1.html"
+    },
+    {
+      "key": "office-week-2",
+      "name": "Office Hours — Week 2",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "none"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/office-week-2.html"
+    },
+    {
+      "key": "office-week-3",
+      "name": "Office Hours — Week 3",
+      "group": "completion",
+      "grading": "completion",
+      "points": 10,
+      "submission_types": [
+        "none"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/office-week-3.html"
+    },
+    {
+      "key": "project-1",
+      "name": "Project Case Study — Submission 1",
+      "group": "hw1",
+      "grading": "points",
+      "points": 100,
+      "submission_types": [
+        "online_upload",
+        "online_text_entry"
+      ],
+      "due": "2026-07-06T13:00:00Z",
+      "html_file": "assignments/project-1.html"
+    },
+    {
+      "key": "project-2",
+      "name": "Project Case Study — Submission 2",
+      "group": "hw2",
+      "grading": "points",
+      "points": 100,
+      "submission_types": [
+        "online_upload",
+        "online_text_entry"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/project-2.html"
+    },
+    {
+      "key": "project-3",
+      "name": "Project Case Study — Submission 3 (final)",
+      "group": "hw3",
+      "grading": "points",
+      "points": 100,
+      "submission_types": [
+        "online_upload",
+        "online_text_entry"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/project-3.html"
+    },
+    {
+      "key": "final-presentation",
+      "name": "Final Presentation",
+      "group": "completion",
+      "grading": "completion",
+      "points": 20,
+      "submission_types": [
+        "none"
+      ],
+      "due": "2026-07-13T13:00:00Z",
+      "html_file": "assignments/final-presentation.html"
+    }
+  ],
+  "modules": [
+    {
+      "name": "Getting Started",
+      "items": [
+        {
+          "type": "SubHeader",
+          "title": "Read these first"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🏠 Course Website — Home",
+          "path": "index.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📘 Syllabus",
+          "path": "syllabus.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🗓️ Calendar & Pacing",
+          "path": "calendar.html"
+        },
+        {
+          "type": "SubHeader",
+          "title": "Set up your tools"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "⚙️ Environment Setup",
+          "path": "help/setup.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🔤 R Quickstart",
+          "path": "help/quickstart-r.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🐍 Python Quickstart",
+          "path": "help/quickstart-py.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📤 How to Submit",
+          "path": "help/submit.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "⚖️ AI Use Policy",
+          "path": "help/ai-policy.html"
+        }
+      ]
+    },
+    {
+      "name": "Week 1 — Think Like a Graph",
+      "items": [
+        {
+          "type": "SubHeader",
+          "title": "Labs this week (on the course website)"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🕸️ Build a Network — Lab",
+          "path": "case-studies/build-a-network.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📐 Network Statistics — Lab",
+          "path": "case-studies/permutation.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📊 Centrality & Criticality — Lab",
+          "path": "case-studies/centrality.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📚 Readings for Week 1",
+          "path": "readings.html"
+        },
+        {
+          "type": "SubHeader",
+          "title": "Submit on Canvas → Drawings, Case Study Completion & Weekly Homework groups"
+        }
+      ]
+    },
+    {
+      "name": "Week 2 — Find What Matters",
+      "items": [
+        {
+          "type": "SubHeader",
+          "title": "Labs this week (on the course website)"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📦 Supply Chain Resilience — Lab",
+          "path": "case-studies/supply-chain.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🚦 Routing (Counterfactual) — Lab",
+          "path": "case-studies/counterfactual.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🧩 DSM Clustering — Lab",
+          "path": "case-studies/dsm-clustering.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🗺️ Aggregation — Lab",
+          "path": "case-studies/aggregation.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📚 Readings for Week 2",
+          "path": "readings.html"
+        },
+        {
+          "type": "SubHeader",
+          "title": "Submit on Canvas → Drawings, Case Study Completion & Weekly Homework groups"
+        }
+      ]
+    },
+    {
+      "name": "Week 3 — Move & Predict",
+      "items": [
+        {
+          "type": "SubHeader",
+          "title": "Labs this week (on the course website)"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🧠 GNN by Hand — Lab",
+          "path": "case-studies/gnn-by-hand.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🤖 GNN + XGBoost — Lab",
+          "path": "case-studies/gnn-xgboost.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🗄️ Sampling — Lab",
+          "path": "case-studies/sampling.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🔗 Joins & Pipelines — Lab",
+          "path": "case-studies/joins.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📚 Readings for Week 3",
+          "path": "readings.html"
+        },
+        {
+          "type": "SubHeader",
+          "title": "Submit on Canvas → Drawings, Case Study Completion & Weekly Homework groups"
+        }
+      ]
+    },
+    {
+      "name": "Wrapping Up",
+      "items": [
+        {
+          "type": "SubHeader",
+          "title": "Finish strong"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🎤 Final Presentation — details",
+          "path": "assignments.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🗂️ All Case Studies",
+          "path": "case-studies.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📚 Materials & Resources",
+          "path": "materials.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📖 Glossary",
+          "path": "help/glossary.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "❓ FAQ & Troubleshooting",
+          "path": "help/faq.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📁 Course GitHub Repository",
+          "url": "https://github.com/timothyfraser/netsci"
+        }
+      ]
+    }
+  ],
+  "site_base": "https://timothyfraser.com/netsci/"
+}

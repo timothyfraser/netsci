@@ -1,0 +1,153 @@
+{
+  "_comment": "Single source of truth for the SYSEN 5470 Canvas scaffolding. Edit THIS file, then re-run scripts/generate_html.py to rebuild the HTML, then scripts/push_to_canvas.py to publish. See HANDOFF.md for the full implementation guide.",
+
+  "course": {
+    "code": "SYSEN 5470",
+    "title": "Network Science and Applications for Systems Engineering",
+    "term": "Summer 2026",
+    "site_base": "https://timothyfraser.com/netsci/",
+    "github": "https://github.com/timothyfraser/netsci",
+    "timezone": "America/New_York",
+    "apply_assignment_group_weights": true
+  },
+
+  "theme": {
+    "_comment": "Literal hex values mirroring docs/assets/design.css. Canvas strips <style>/var() so every value below is inlined by the generator.",
+    "black": "#050a05",
+    "black2": "#0a140a",
+    "panel": "#08160c",
+    "card_bg": "#0a1f12",
+    "white": "#f0fdf4",
+    "mint": "#d1fae5",
+    "mint2": "#a7f3d0",
+    "grey": "#a3b8a3",
+    "grey_dim": "#6b8170",
+    "green_bright": "#39FF14",
+    "green_laser": "#86efac",
+    "green_mid": "#22C55E",
+    "green_deeper": "#052e16",
+    "amber": "#fbbf24",
+    "border": "rgba(57,255,20,0.25)",
+    "border_soft": "rgba(57,255,20,0.12)",
+    "font_display": "'Bebas Neue','Oswald','Arial Narrow',Impact,sans-serif",
+    "font_body": "'DM Sans','Lato','Helvetica Neue',Arial,sans-serif",
+    "font_mono": "'Space Mono','SFMono-Regular','Consolas','Courier New',monospace"
+  },
+
+  "assignment_groups": [
+    { "key": "drawings",   "name": "Drawings",                              "group_weight": 20, "position": 1 },
+    { "key": "completion", "name": "Case Study Completion",                 "group_weight": 20, "position": 2 },
+    { "key": "hw1",        "name": "Weekly Homework 1 · Project Case Study", "group_weight": 20, "position": 3 },
+    { "key": "hw2",        "name": "Weekly Homework 2 · Project Case Study", "group_weight": 20, "position": 4 },
+    { "key": "hw3",        "name": "Weekly Homework 3 · Project Case Study", "group_weight": 20, "position": 5 }
+  ],
+
+  "due_dates": {
+    "_comment": "ISO-8601 UTC. 9:00 AM America/New_York (EDT, UTC-4) in summer 2026 == 13:00 UTC. Mirrors docs/calendar.html Monday-9am deadlines.",
+    "week1": "2026-06-29T13:00:00Z",
+    "week2": "2026-07-06T13:00:00Z",
+    "week3": "2026-07-13T13:00:00Z"
+  },
+
+  "case_studies": [
+    { "key": "build-a-network", "num": "01", "name": "Build a Network",                       "short": "Build a Network",        "icon": "🕸️", "skill": "Identify", "week": 1, "lab": "case-studies/build-a-network.html", "code": "code/01_build-a-network", "sketch_title": "Sketch 01 · Map your network",            "sketch_anchor": "sketchpad.html" },
+    { "key": "permutation",     "num": "07", "name": "Network Statistics (Permutation)",       "short": "Network Statistics",     "icon": "📐", "skill": "Infer",    "week": 1, "lab": "case-studies/permutation.html",     "code": "code/07_permutation",     "sketch_title": "Sketch 03 · Two null distributions",      "sketch_anchor": "sketchpad.html#sketch-03a" },
+    { "key": "centrality",      "num": "04", "name": "Centrality & Criticality",               "short": "Centrality",             "icon": "📊", "skill": "Measure",  "week": 1, "lab": "case-studies/centrality.html",      "code": "code/04_centrality",      "sketch_title": "Sketch 02 · Predict the bottleneck",      "sketch_anchor": "sketchpad.html" },
+    { "key": "supply-chain",    "num": "05", "name": "Supply Chain Resilience",                "short": "Supply Chain",           "icon": "📦", "skill": "Measure",  "week": 2, "lab": "case-studies/supply-chain.html",    "code": "code/05_supply-chain",    "sketch_title": "Sketch 06 · Two-hop neighborhood",        "sketch_anchor": "sketchpad.html" },
+    { "key": "counterfactual",  "num": "09", "name": "Routing — Counterfactual Monte Carlo", "short": "Routing",             "icon": "🚦", "skill": "Predict",  "week": 2, "lab": "case-studies/counterfactual.html",  "code": "code/09_counterfactual",  "sketch_title": "Sketch 04 · Pick where to add a road",    "sketch_anchor": "sketchpad.html" },
+    { "key": "dsm-clustering",  "num": "06", "name": "Clustering — Design Structure Matrices", "short": "DSM Clustering",     "icon": "🧩", "skill": "Measure",  "week": 2, "lab": "case-studies/dsm-clustering.html",  "code": "code/06_dsm-clustering",  "sketch_title": "Sketch 05 · Draw the seams",              "sketch_anchor": "sketchpad.html" },
+    { "key": "aggregation",     "num": "03", "name": "Visualization — Aggregation",         "short": "Aggregation",            "icon": "🗺️", "skill": "Identify", "week": 2, "lab": "case-studies/aggregation.html",     "code": "code/03_aggregation",     "sketch_title": "Sketch 07 · One chart, three audiences",  "sketch_anchor": "sketchpad.html#sketch-11" },
+    { "key": "gnn-by-hand",     "num": "10", "name": "GNN Forward Pass by Hand",               "short": "GNN by Hand",            "icon": "🧠", "skill": "Predict",  "week": 3, "lab": "case-studies/gnn-by-hand.html",     "code": "code/10_gnn-by-hand",     "sketch_title": "Sketch 09 · Trace a forward pass",        "sketch_anchor": "sketchpad.html" },
+    { "key": "gnn-xgboost",     "num": "11", "name": "GNN + XGBoost — Supplier Risk",       "short": "GNN + XGBoost",          "icon": "🤖", "skill": "Predict",  "week": 3, "lab": "case-studies/gnn-xgboost.html",     "code": "code/11_gnn-xgboost",     "sketch_title": "Sketch 06 · Two-hop neighborhood",        "sketch_anchor": "sketchpad.html" },
+    { "key": "sampling",        "num": "08", "name": "Sampling Big Networks",                  "short": "Sampling",               "icon": "🗄️", "skill": "Identify", "week": 3, "lab": "case-studies/sampling.html",        "code": "code/08_sampling",        "sketch_title": "Sketch 08 · Plan the join",               "sketch_anchor": "sketchpad.html#sketch-10" },
+    { "key": "joins",           "num": "02", "name": "Network Joins & Pipelines",              "short": "Joins",                  "icon": "🔗", "skill": "Identify", "week": 3, "lab": "case-studies/joins.html",           "code": "code/02_joins",           "sketch_title": "Sketch 10 · Sketch the pipeline",         "sketch_anchor": "sketchpad.html#sketch-10" }
+  ],
+
+  "extras": {
+    "_comment": "Weekly items that are not per-case-study. weeks lists which course weeks each recurring item appears in.",
+    "ed_discussion_weeks": [1, 2, 3],
+    "office_hours_weeks": [1, 2, 3],
+    "projects": [
+      { "n": 1, "group": "hw1", "due": "week2", "title": "Project Case Study — Submission 1" },
+      { "n": 2, "group": "hw2", "due": "week3", "title": "Project Case Study — Submission 2" },
+      { "n": 3, "group": "hw3", "due": "week3", "title": "Project Case Study — Submission 3 (final)" }
+    ],
+    "final_presentation": { "group": "completion", "due": "week3" }
+  },
+
+  "home_shortcuts": [
+    { "section": "Start Here", "links": [
+      { "icon": "📘", "label": "Syllabus",            "desc": "Three weeks, eleven labs, four skills, the six-slot rhythm.", "path": "syllabus.html" },
+      { "icon": "🗓️", "label": "Calendar & Pacing",  "desc": "Day-by-day plan. Monday-9am deadlines. Protect the weekend block.", "path": "calendar.html" },
+      { "icon": "⚙️", "label": "Environment Setup",  "desc": "Install R or Python and the course packages. 20–30 min.", "path": "help/setup.html" },
+      { "icon": "📤", "label": "How to Submit",       "desc": "Exactly what each weekly submission needs and how to upload it.", "path": "help/submit.html" }
+    ]},
+    { "section": "Do the Work", "links": [
+      { "icon": "🧪", "label": "Case Study Labs",     "desc": "All eleven interactive labs. This is where most of your time goes.", "path": "case-studies.html" },
+      { "icon": "✏️", "label": "Sketchpad",          "desc": "The hand-drawn prompts. Sketch first, code second.", "path": "sketchpad.html" },
+      { "icon": "📋", "label": "Assignments & Rubric","desc": "Full project spec, the four-skill rubric, and the self-grade checklist.", "path": "assignments.html" },
+      { "icon": "▶️", "label": "Code Playground",    "desc": "Run R or Python in the browser — no install needed.", "path": "playground.html" },
+      { "icon": "🔭", "label": "Network Visualizer",  "desc": "Drop in your own edgelist and explore it interactively.", "path": "visualizer.html" }
+    ]},
+    { "section": "Get Help", "links": [
+      { "icon": "🧭", "label": "Help Hub",            "desc": "Every how-to in one place.", "path": "help/index.html" },
+      { "icon": "🔤", "label": "R Quickstart",        "desc": "Zero to your first centrality calculation.", "path": "help/quickstart-r.html" },
+      { "icon": "🐍", "label": "Python Quickstart",   "desc": "Same path, Python track.", "path": "help/quickstart-py.html" },
+      { "icon": "⚖️", "label": "AI Use Policy",       "desc": "AI is for syntax and debugging — not your reports or reflections.", "path": "help/ai-policy.html" },
+      { "icon": "📖", "label": "Glossary",            "desc": "Every term, defined in plain language.", "path": "help/glossary.html" },
+      { "icon": "❓", "label": "FAQ & Troubleshooting","desc": "Common errors and how to get unstuck fast.", "path": "help/faq.html" },
+      { "icon": "☎️", "label": "Office Hours",        "desc": "Book one of your three required virtual sessions.", "path": "help/office-hours.html" },
+      { "icon": "📁", "label": "Course GitHub Repo",  "desc": "All the example.R / example.py code and dataset folders.", "url": "https://github.com/timothyfraser/netsci" }
+    ]}
+  ],
+
+  "modules": [
+    { "name": "Getting Started", "items": [
+      { "type": "SubHeader", "title": "Read these first" },
+      { "type": "ExternalUrl", "title": "🏠 Course Website — Home", "path": "index.html" },
+      { "type": "ExternalUrl", "title": "📘 Syllabus",                "path": "syllabus.html" },
+      { "type": "ExternalUrl", "title": "🗓️ Calendar & Pacing",      "path": "calendar.html" },
+      { "type": "SubHeader", "title": "Set up your tools" },
+      { "type": "ExternalUrl", "title": "⚙️ Environment Setup",        "path": "help/setup.html" },
+      { "type": "ExternalUrl", "title": "🔤 R Quickstart",             "path": "help/quickstart-r.html" },
+      { "type": "ExternalUrl", "title": "🐍 Python Quickstart",        "path": "help/quickstart-py.html" },
+      { "type": "ExternalUrl", "title": "📤 How to Submit",            "path": "help/submit.html" },
+      { "type": "ExternalUrl", "title": "⚖️ AI Use Policy",            "path": "help/ai-policy.html" }
+    ]},
+    { "name": "Week 1 — Think Like a Graph", "items": [
+      { "type": "SubHeader", "title": "Labs this week (on the course website)" },
+      { "type": "ExternalUrl", "title": "🕸️ Build a Network — Lab",        "path": "case-studies/build-a-network.html" },
+      { "type": "ExternalUrl", "title": "📐 Network Statistics — Lab",     "path": "case-studies/permutation.html" },
+      { "type": "ExternalUrl", "title": "📊 Centrality & Criticality — Lab", "path": "case-studies/centrality.html" },
+      { "type": "ExternalUrl", "title": "📚 Readings for Week 1",          "path": "readings.html" },
+      { "type": "SubHeader", "title": "Submit on Canvas → Drawings, Case Study Completion & Weekly Homework groups" }
+    ]},
+    { "name": "Week 2 — Find What Matters", "items": [
+      { "type": "SubHeader", "title": "Labs this week (on the course website)" },
+      { "type": "ExternalUrl", "title": "📦 Supply Chain Resilience — Lab", "path": "case-studies/supply-chain.html" },
+      { "type": "ExternalUrl", "title": "🚦 Routing (Counterfactual) — Lab", "path": "case-studies/counterfactual.html" },
+      { "type": "ExternalUrl", "title": "🧩 DSM Clustering — Lab",          "path": "case-studies/dsm-clustering.html" },
+      { "type": "ExternalUrl", "title": "🗺️ Aggregation — Lab",            "path": "case-studies/aggregation.html" },
+      { "type": "ExternalUrl", "title": "📚 Readings for Week 2",          "path": "readings.html" },
+      { "type": "SubHeader", "title": "Submit on Canvas → Drawings, Case Study Completion & Weekly Homework groups" }
+    ]},
+    { "name": "Week 3 — Move & Predict", "items": [
+      { "type": "SubHeader", "title": "Labs this week (on the course website)" },
+      { "type": "ExternalUrl", "title": "🧠 GNN by Hand — Lab",            "path": "case-studies/gnn-by-hand.html" },
+      { "type": "ExternalUrl", "title": "🤖 GNN + XGBoost — Lab",         "path": "case-studies/gnn-xgboost.html" },
+      { "type": "ExternalUrl", "title": "🗄️ Sampling — Lab",               "path": "case-studies/sampling.html" },
+      { "type": "ExternalUrl", "title": "🔗 Joins & Pipelines — Lab",      "path": "case-studies/joins.html" },
+      { "type": "ExternalUrl", "title": "📚 Readings for Week 3",          "path": "readings.html" },
+      { "type": "SubHeader", "title": "Submit on Canvas → Drawings, Case Study Completion & Weekly Homework groups" }
+    ]},
+    { "name": "Wrapping Up", "items": [
+      { "type": "SubHeader", "title": "Finish strong" },
+      { "type": "ExternalUrl", "title": "🎤 Final Presentation — details", "path": "assignments.html" },
+      { "type": "ExternalUrl", "title": "🗂️ All Case Studies",            "path": "case-studies.html" },
+      { "type": "ExternalUrl", "title": "📚 Materials & Resources",       "path": "materials.html" },
+      { "type": "ExternalUrl", "title": "📖 Glossary",                   "path": "help/glossary.html" },
+      { "type": "ExternalUrl", "title": "❓ FAQ & Troubleshooting",        "path": "help/faq.html" },
+      { "type": "ExternalUrl", "title": "📁 Course GitHub Repository",   "url": "https://github.com/timothyfraser/netsci" }
+    ]}
+  ]
+}
