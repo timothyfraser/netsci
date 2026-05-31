@@ -1,7 +1,7 @@
 # SYSEN 5470 → Canvas — Implementation Handoff
 
 This folder is **course scaffolding only**. It contains ready-to-publish HTML
-for a Canvas course (home page + 43 assignments + 5 modules) and two scripts:
+for a Canvas course (home page + 26 assignments + 5 modules) and two scripts:
 one that *generates* the HTML from a manifest, and one that *pushes* it to
 Canvas via the REST API. **No API token is stored here.** A future local
 session (or you) runs the push script with your token in an environment
@@ -22,26 +22,51 @@ variable.
 |---|---|---|
 | Course front page ("Home") | 1 | `pages/home.html` |
 | Assignment **groups** (weighted) | 5 | `manifest.json → assignment_groups` |
-| **Assignments** | 43 | `assignments/*.html` + `canvas_plan.json` |
+| **Assignments** | 26 | `assignments/*.html` + `canvas_plan.json` |
 | **Modules** + items | 5 modules | `manifest.json → modules` |
+
+### Submission units = 8 case-study TOPICS (not 11 labs)
+
+The site has **11 lab pages / code folders**, but they roll up into **8
+case-study topics** (the "What You'll Learn" list on the website home page).
+Two topics bundle two labs each, and Centrality & Criticality absorbs Supply
+Chain. **Canvas submission units are the 8 topics**, so students see 8 tidy
+units instead of 11:
+
+| Topic | Lab(s) it bundles | Due |
+|---|---|---|
+| 🕸️ Network Fundamentals | build-a-network | Wk 1 |
+| 📐 Network Statistics | permutation | Wk 1 |
+| 📊 Centrality & Criticality | centrality **+** supply-chain | Wk 2 |
+| 🚦 Routing & Optimization | counterfactual | Wk 2 |
+| 🧩 Clustering & Communities | dsm-clustering | Wk 2 |
+| 🗺️ Visualization | aggregation | Wk 2 |
+| 🤖 AI & Machine Learning | gnn-by-hand **+** gnn-xgboost | Wk 3 |
+| 🗄️ Big Network Data | joins **+** sampling | Wk 3 |
+
+Each topic produces **one drawing** and **one bundled Learning Check** (the
+case-study Learning Check *and* the "I ran the code" check submitted together).
+A two-lab topic's card lists both labs with deep links and asks for both.
 
 ### The five weighted assignment groups (sum = 100%)
 
-| Group | Weight | Contains |
-|---|---|---|
-| **Drawings** | 20% | 11 drawing/sketch submissions (1 per case study) |
-| **Case Study Completion** | 20% | 11 case-study Learning Checks + 11 code Learning Checks ("I ran the code") + 3 weekly Ed Discussions + 3 weekly Office Hours + 1 Final Presentation |
-| **Weekly Homework 1 · Project Case Study** | 20% | Project submission 1 |
-| **Weekly Homework 2 · Project Case Study** | 20% | Project submission 2 |
-| **Weekly Homework 3 · Project Case Study** | 20% | Project submission 3 (final) |
+| Group | Weight | Contains | Rule |
+|---|---|---|---|
+| **Drawings** | 20% | 8 drawings (1 per topic) | **drops the lowest 1** |
+| **Case Study Completion** | 20% | 8 bundled Learning Checks + 3 weekly Ed Discussions + 3 weekly Office Hours + 1 Final Presentation (15 items) | **drops the lowest 1** |
+| **Weekly Homework 1 · Project Case Study** | 20% | Project submission 1 | — |
+| **Weekly Homework 2 · Project Case Study** | 20% | Project submission 2 | — |
+| **Weekly Homework 3 · Project Case Study** | 20% | Project submission 3 (final) | — |
 
 This matches the weighting you specified:
-*drawings 20 · case-study completion (LCs + Ed discussion + code completion) 20 ·
-weekly homeworks (= the project) 20 each.*
+*drawings 20 · case-study completion (bundled LCs + Ed discussion + office
+hours) 20 · weekly homeworks (= the project) 20 each.* The **drop-lowest-1**
+rule on Drawings and Case Study Completion gives students one freebie in each
+group for time-crunch weeks (Canvas group rule `rules[drop_lowest]=1`).
 
 ### Grading types
 - **Completion** items → Canvas `grading_type = pass_fail` (complete / incomplete).
-  Drawings, both kinds of Learning Check, Ed Discussions, Office Hours, Final Presentation.
+  Drawings, the bundled Learning Checks, Ed Discussions, Office Hours, Final Presentation.
 - **Points** items → Canvas `grading_type = points`, `points_possible = 100`.
   The three project case studies.
 
@@ -139,8 +164,13 @@ PUT /courses/:course
 GET  /courses/:course/assignment_groups            # list (match by name)
 POST /courses/:course/assignment_groups            # create
      name=Drawings & group_weight=20 & position=1
-PUT  /courses/:course/assignment_groups/:id        # update weight/position
+     rules[drop_lowest]=1                           # Drawings + Case Study groups only
+PUT  /courses/:course/assignment_groups/:id        # update weight/position/rules
 ```
+The **drop-lowest** freebie is a group *rule*: `rules[drop_lowest]=1`. Other
+rule keys exist if you want them: `rules[drop_highest]=N` and
+`rules[never_drop][]=<assignment_id>` (e.g. to protect the Final Presentation
+from being the dropped one — needs the id, so set it on a second pass).
 
 ### 4.3 Front page + set as course home
 ```
@@ -231,8 +261,11 @@ reference their ids. The HTML bodies in `assignments/*.html` and
       sections (Start Here / Do the Work / Get Help) and working links.
 - [ ] **Assignments** index shows 5 groups; group weights read 20/20/20/20/20
       and "Total 100%". (Grades → ⋮ → *Assignment Groups Weight* is enabled.)
-- [ ] A drawing, a code Learning Check, and a project each render their card
-      with the correct **grading pill** and a working website button.
+- [ ] A drawing, a bundled Learning Check, and a project each render their card
+      with the correct **grading pill** and a working website button. (A two-lab
+      topic's Learning Check lists both labs with Lab + Code links.)
+- [ ] The **Drawings** and **Case Study Completion** groups show "drop the lowest"
+      (group → ⋮ → *Assignment Group Rules*).
 - [ ] **Modules** shows Getting Started / Week 1 / Week 2 / Week 3 / Wrapping Up,
       each with external links opening the website in a new tab.
 - [ ] Due dates show the three Mondays at 9:00 AM Eastern.
@@ -249,10 +282,9 @@ reference their ids. The HTML bodies in `assignments/*.html` and
 ├── preview.html            ← open in a browser to see every card
 ├── pages/
 │   └── home.html           ← Canvas front-page body
-├── assignments/            ← 43 assignment bodies (one HTML fragment each)
-│   ├── drawing-*.html              (11)
-│   ├── cs-lc-*.html                (11)
-│   ├── code-lc-*.html              (11)
+├── assignments/            ← 26 assignment bodies (one HTML fragment each)
+│   ├── drawing-<topic>.html        (8 — one per topic)
+│   ├── lc-<topic>.html             (8 — bundled case-study + code LC per topic)
 │   ├── ed-week-{1,2,3}.html        (3)
 │   ├── office-week-{1,2,3}.html    (3)
 │   ├── project-{1,2,3}.html        (3)

@@ -5,19 +5,23 @@ generate_html.py — SYSEN 5470 Canvas content generator.
 Reads manifest.json (the single source of truth) and writes:
 
   pages/home.html                 Canvas front-page body (HTML fragment)
-  assignments/<key>.html          one HTML fragment per Canvas assignment (43)
+  assignments/<key>.html          one HTML fragment per Canvas assignment
   canvas_plan.json                fully-expanded, machine-readable plan that
                                   push_to_canvas.py consumes
   preview.html                    one self-contained gallery so a human can
                                   eyeball every page + assignment in a browser
 
+SUBMISSION UNITS = 8 case-study TOPICS (manifest.json -> topics). The 11 lab
+pages/code folders (manifest.json -> case_studies) each belong to one topic;
+topics with two labs bundle them into a single drawing and a single learning
+check so students see 8 tidy units, not 11.
+
 WHY FRAGMENTS, NOT FULL PAGES?
   Canvas stores page/assignment bodies as sanitized HTML and renders them
   INSIDE its own <html><head><body>. It strips <head>, <style>, <link>,
-  <script>, and most class-based styling. So every value here is an INLINE
-  style attribute with a literal color (no CSS variables). The whole body is
-  wrapped in one dark "stage" <div> so the neon theme reads on Canvas's white
-  content area.
+  <script>, and class-based styling. So every value here is an INLINE style
+  attribute with a literal color (no CSS variables). The whole body is wrapped
+  in one dark "stage" <div> so the neon theme reads on Canvas's white area.
 
 Pure standard library. Run:  python3 scripts/generate_html.py
 """
@@ -31,6 +35,7 @@ M = json.loads((ROOT / "manifest.json").read_text())
 
 T = M["theme"]
 SITE = M["course"]["site_base"].rstrip("/") + "/"
+CS = {c["key"]: c for c in M["case_studies"]}          # lab registry by key
 
 
 # ---------------------------------------------------------------------------
@@ -116,17 +121,44 @@ def paragraph(htmltext: str) -> str:
     )
 
 
+def textlink(href: str, label: str) -> str:
+    return (f'<a href="{esc(href)}" target="_blank" rel="noopener" '
+            f'style="color:{T["green_bright"]};text-decoration:none;'
+            f'border-bottom:1px solid {T["green_bright"]};">{esc(label)}</a>')
+
+
+def member_rows(labs, kinds) -> str:
+    """A compact 'this topic covers' list with deep links per member lab.
+    kinds is a subset of {'lab','code','sketch'}."""
+    rows = (f'<div style="font-family:{font("mono")};font-size:10.5px;'
+            f'letter-spacing:0.14em;text-transform:uppercase;color:{T["grey"]};'
+            f'margin:16px 0 6px;">This topic covers</div>')
+    for k in labs:
+        c = CS[k]
+        links = []
+        if "lab" in kinds:
+            links.append(textlink(url(c["lab"]), "Lab"))
+        if "code" in kinds:
+            links.append(textlink(url(c["code"] + "#readme"), "Code"))
+        if "sketch" in kinds:
+            links.append(textlink(url(c["sketch_anchor"]), c["sketch_title"]))
+        rows += (
+            f'<div style="font-size:14px;color:{T["mint"]};margin:0 0 6px;'
+            f'padding-left:14px;border-left:2px solid {T["border"]};">'
+            f'<span style="color:{T["white"]};font-weight:600;">{c["icon"]} '
+            f'{esc(c["name"])}</span> &nbsp;·&nbsp; '
+            + ' &nbsp;·&nbsp; '.join(links) + '</div>'
+        )
+    return rows
+
+
 def button(href: str, label: str, primary=True) -> str:
     if primary:
-        style = (
-            f'display:inline-block;background:{T["green_bright"]};color:{T["black"]};'
-            f'border:1px solid {T["green_bright"]};'
-        )
+        style = (f'display:inline-block;background:{T["green_bright"]};color:{T["black"]};'
+                 f'border:1px solid {T["green_bright"]};')
     else:
-        style = (
-            f'display:inline-block;background:transparent;color:{T["green_bright"]};'
-            f'border:1px solid {T["green_bright"]};'
-        )
+        style = (f'display:inline-block;background:transparent;color:{T["green_bright"]};'
+                 f'border:1px solid {T["green_bright"]};')
     return (
         f'<a href="{esc(href)}" target="_blank" rel="noopener" '
         f'style="{style}font-family:{font("mono")};font-weight:700;font-size:13px;'
@@ -145,12 +177,13 @@ def footer_note() -> str:
     )
 
 
-def card(kick, ttl, lines, pill, body_html, buttons):
+def card(kick, ttl, lines, pill, body_html, extra_html, buttons):
     inner = kicker(kick) + title(ttl)
     for lbl, val in lines:
         inner += case_line(lbl, val)
     inner += pill
     inner += paragraph(body_html)
+    inner += extra_html
     inner += '<div style="margin:18px 0 0;">' + "".join(buttons) + "</div>"
     inner += footer_note()
     return stage(inner)
@@ -212,85 +245,82 @@ def build_home():
 
 
 # ---------------------------------------------------------------------------
-# assignment expansion
+# assignment expansion (8 topics + weekly items + projects + final)
 # ---------------------------------------------------------------------------
 def build_assignments():
-    out = []  # list of dicts: {key, name, group, grading, points, submission_types, due, html}
-
+    out = []
     due = M["due_dates"]
     week_due = {1: due["week1"], 2: due["week2"], 3: due["week3"]}
 
-    for c in M["case_studies"]:
-        wk = c["week"]
-        cs_label = f'{c["icon"]} {esc(c["name"])}'
-        lab = url(c["lab"])
-        code = url(c["code"] + "#readme")
-        sketch = url(c["sketch_anchor"])
+    # ---- per TOPIC: one drawing + one bundled learning check ----
+    for t in M["topics"]:
+        labs = t["labs"]
+        wk = t["due_week"]
+        topic_label = f'{t["icon"]} {esc(t["name"])}'
+        is_multi = len(labs) > 1
+        n = len(labs)
 
-        # ---- Drawing (group: drawings) ----
-        body = (
-            f'Complete the sketchpad activity that pairs with this case study — '
-            f'<strong style="color:{T["white"]};">{esc(c["sketch_title"])}</strong>. '
-            f'Draw it by hand (no keyboard), photograph the finished sketch, and upload '
-            f'the photo here. We grade whether the sketch shows you understood the '
-            f'structure before you wrote any code — not artistic quality.'
-        )
+        # Drawing (group: drawings)
+        if is_multi:
+            body = (
+                f'This topic bundles {n} labs, so it has {n} short sketchpad activities. '
+                f'Do each one by hand (no keyboard), photograph the finished sketches, and '
+                f'upload <strong style="color:{T["white"]};">all of them together here</strong>. '
+                f'We grade whether the sketches show you understood the structure before you '
+                f'wrote any code — not artistic quality.'
+            )
+        else:
+            c = CS[labs[0]]
+            body = (
+                f'Complete the sketchpad activity for this topic — '
+                f'<strong style="color:{T["white"]};">{esc(c["sketch_title"])}</strong>. '
+                f'Draw it by hand (no keyboard), photograph the finished sketch, and upload '
+                f'the photo here. We grade whether the sketch shows you understood the '
+                f'structure before you wrote any code — not artistic quality.'
+            )
         out.append({
-            "key": f'drawing-{c["key"]}',
-            "name": f'Drawing — {c["short"]}',
+            "key": f'drawing-{t["key"]}',
+            "name": f'Drawing — {t["name"]}',
             "group": "drawings",
             "grading": "completion", "points": 10,
             "submission_types": ["online_upload"],
             "due": week_due[wk],
-            "html": card("Drawing Submission", f'Drawing · {c["short"]}',
-                         [("Case study", cs_label), ("Week", f"Week {wk}")],
+            "html": card("Drawing Submission", f'Drawing · {t["name"]}',
+                         [("Topic", topic_label), ("Due", f"Week {wk}")],
                          grading_pill("completion"), body,
-                         [button(sketch, "Open the Sketchpad →"),
-                          button(lab, "View the Lab", primary=False)]),
+                         member_rows(labs, {"sketch"}),
+                         [button(url("sketchpad.html"), "Open the Sketchpad →")]),
         })
 
-        # ---- Code Learning Check — "I ran the code" (group: completion) ----
+        # Bundled Learning Check = case-study LC + code "I ran the code" LC
+        # (group: completion)
+        labword = "each lab" if is_multi else "the lab"
         body = (
-            f'Run <code style="color:{T["green_laser"]};">example.R</code> or '
-            f'<code style="color:{T["green_laser"]};">example.py</code> in this case '
-            f'study’s code folder on GitHub. Each script prints a single numeric '
-            f'(or string) answer at the very bottom — <strong style="color:{T["white"]};">'
-            f'paste that answer here</strong>. Pick either track (R or Python); you do '
-            f'not need to do both.'
+            f'Submit your Learning Checks for this topic <strong style="color:{T["white"]};">'
+            f'all together in one submission</strong>:<br>'
+            f'<strong style="color:{T["white"]};">(1) Case study Learning Check</strong> — '
+            f'work through {labword} below and report the in-lab Learning Check answer.<br>'
+            f'<strong style="color:{T["white"]};">(2) Code Learning Check (“I ran the code”)</strong> '
+            f'— run <code style="color:{T["green_laser"]};">example.R</code> or '
+            f'<code style="color:{T["green_laser"]};">example.py</code> in {labword}’s code '
+            f'folder and paste the single answer it prints at the bottom. Pick either track '
+            f'(R or Python); you do not need to do both.'
         )
+        primary = (button(url("case-studies.html"), "Open the Case Studies →") if is_multi
+                   else button(url(CS[labs[0]]["lab"]), "Open the Lab →"))
         out.append({
-            "key": f'code-lc-{c["key"]}',
-            "name": f'Code Learning Check (I Ran the Code) — {c["short"]}',
+            "key": f'lc-{t["key"]}',
+            "name": f'Learning Checks — {t["name"]}',
             "group": "completion",
             "grading": "completion", "points": 10,
-            "submission_types": ["online_text_entry"],
+            "submission_types": ["online_text_entry", "online_upload"],
             "due": week_due[wk],
-            "html": card("Code Learning Check · I Ran the Code",
-                         f'Code Check · {c["short"]}',
-                         [("Case study", cs_label), ("Week", f"Week {wk}")],
+            "html": card("Learning Checks · Case Study + “I Ran the Code”",
+                         f'Learning Checks · {t["name"]}',
+                         [("Topic", topic_label), ("Due", f"Week {wk}")],
                          grading_pill("completion"), body,
-                         [button(code, "Open the Code Folder →"),
-                          button(lab, "View the Lab", primary=False)]),
-        })
-
-        # ---- Case Study Learning Check (group: completion) ----
-        body = (
-            f'Work through the interactive lab for this case study on the course '
-            f'website, then submit your in-lab <strong style="color:{T["white"]};">'
-            f'Learning Check</strong> answer here. One Learning Check per case study.'
-        )
-        out.append({
-            "key": f'cs-lc-{c["key"]}',
-            "name": f'Case Study Learning Check — {c["short"]}',
-            "group": "completion",
-            "grading": "completion", "points": 10,
-            "submission_types": ["online_text_entry"],
-            "due": week_due[wk],
-            "html": card("Case Study Learning Check",
-                         f'Learning Check · {c["short"]}',
-                         [("Case study", cs_label), ("Week", f"Week {wk}")],
-                         grading_pill("completion"), body,
-                         [button(lab, "Open the Lab →")]),
+                         member_rows(labs, {"lab", "code"}),
+                         [primary]),
         })
 
     # ---- Ed Discussion, one per week (group: completion) ----
@@ -311,7 +341,7 @@ def build_assignments():
             "due": week_due[w],
             "html": card("Ed Discussion", f"Ed Discussion · Week {w}",
                          [("Cadence", f"Week {w} · due Monday 9:00 AM")],
-                         grading_pill("completion"), body,
+                         grading_pill("completion"), body, "",
                          [button(url("calendar.html"), "See the Week on the Calendar →")]),
         })
 
@@ -333,21 +363,21 @@ def build_assignments():
             "due": week_due[w],
             "html": card("Office Hours", f"Office Hours · Week {w}",
                          [("Cadence", f"Week {w} · one of three required")],
-                         grading_pill("completion"), body,
+                         grading_pill("completion"), body, "",
                          [button(url("help/office-hours.html"), "Book Office Hours →")]),
         })
 
     # ---- Projects, one per weekly-homework group ----
     for p in M["extras"]["projects"]:
         body = (
-            f'Your weekly homework <em>is</em> the project. Pick one of the eleven '
-            f'case-study methods, apply it to a network <strong style="color:'
-            f'{T["white"]};">you</strong> chose (≥ 100 nodes; 1,000+ strongly '
-            f'preferred), and write a 2-page-minimum report in your own words. Submit '
-            f'(a) your <code style="color:{T["green_laser"]};">project.R</code> / '
-            f'<code style="color:{T["green_laser"]};">project.py</code> and (b) the '
-            f'report (PDF preferred). The full spec, the four-skill rubric, the hard '
-            f'requirements, and a sample report all live on the Assignments page.'
+            f'Your weekly homework <em>is</em> the project. Pick one of the case-study '
+            f'methods, apply it to a network <strong style="color:{T["white"]};">you</strong> '
+            f'chose (≥ 100 nodes; 1,000+ strongly preferred), and write a 2-page-minimum '
+            f'report in your own words. Submit (a) your '
+            f'<code style="color:{T["green_laser"]};">project.R</code> / '
+            f'<code style="color:{T["green_laser"]};">project.py</code> and (b) the report '
+            f'(PDF preferred). The full spec, the four-skill rubric, the hard requirements, '
+            f'and a sample report all live on the Assignments page.'
         )
         out.append({
             "key": f"project-{p['n']}",
@@ -357,8 +387,8 @@ def build_assignments():
             "submission_types": ["online_upload", "online_text_entry"],
             "due": week_due[{"week1": 1, "week2": 2, "week3": 3}[p["due"]]],
             "html": card("Weekly Homework · Project Case Study", p["title"],
-                         [("Case study", "Your choice — one of the eleven methods")],
-                         grading_pill("points", 100), body,
+                         [("Case study", "Your choice — one of the methods")],
+                         grading_pill("points", 100), body, "",
                          [button(url("assignments.html"), "Open the Project Spec & Rubric →"),
                           button(url("case-studies.html"), "Browse the Case Studies", primary=False)]),
         })
@@ -380,7 +410,7 @@ def build_assignments():
         "due": M["due_dates"][fp["due"]],
         "html": card("Final Presentation", "Final Presentation",
                      [("When", "End of term · Week 3")],
-                     grading_pill("completion"), body,
+                     grading_pill("completion"), body, "",
                      [button(url("assignments.html"), "See Presentation Details →")]),
     })
 
@@ -428,9 +458,9 @@ def build_preview(home_html, assignments):
     parts.append(frame("Home", home_html))
 
     buckets = [
-        ("Drawings  ·  group weight 20%", lambda a: a["group"] == "drawings"),
-        ("Case Study Learning Checks  ·  Case Study Completion 20%", lambda a: a["key"].startswith("cs-lc")),
-        ("Code Learning Checks (I Ran the Code)  ·  Case Study Completion 20%", lambda a: a["key"].startswith("code-lc")),
+        ("Drawings  ·  group weight 20%  ·  drops the lowest 1", lambda a: a["group"] == "drawings"),
+        ("Learning Checks (case study + “I ran the code”)  ·  Case Study Completion 20%  ·  drops the lowest 1",
+         lambda a: a["key"].startswith("lc-")),
         ("Ed Discussions  ·  Case Study Completion 20%", lambda a: a["key"].startswith("ed-week")),
         ("Office Hours  ·  Case Study Completion 20%", lambda a: a["key"].startswith("office-week")),
         ("Final Presentation  ·  Case Study Completion 20%", lambda a: a["key"] == "final-presentation"),
@@ -454,6 +484,9 @@ def main():
     asg_dir = ROOT / "assignments"
     for d in (pages_dir, asg_dir):
         d.mkdir(exist_ok=True)
+    # clear stale fragments so renamed/removed assignments don't linger
+    for f in asg_dir.glob("*.html"):
+        f.unlink()
 
     home_html = build_home()
     (pages_dir / "home.html").write_text(home_html)
@@ -462,7 +495,6 @@ def main():
     for a in assignments:
         (asg_dir / f'{a["key"]}.html').write_text(a["html"])
 
-    # machine-readable plan for push_to_canvas.py (HTML referenced by file path)
     plan = {
         "course": M["course"],
         "apply_assignment_group_weights": M["course"]["apply_assignment_group_weights"],

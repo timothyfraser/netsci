@@ -114,6 +114,9 @@ def ensure_groups():
         data = [("name", g["name"]),
                 ("group_weight", str(g["group_weight"])),
                 ("position", str(g["position"]))]
+        if g.get("drop_lowest"):
+            # Canvas group rule: drop the N lowest-scoring assignments in the group
+            data.append(("rules[drop_lowest]", str(g["drop_lowest"])))
         if g["name"] in existing:
             gid = existing[g["name"]]["id"]
             print(f"• Group (update) {g['name']}  ({g['group_weight']}%)")
