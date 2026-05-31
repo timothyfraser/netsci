@@ -21,7 +21,7 @@ variable.
 | Object | Count | Where it comes from |
 |---|---|---|
 | Course front page ("Home") | 1 | `pages/home.html` |
-| Assignment **groups** (weighted) | 5 | `manifest.json → assignment_groups` |
+| Assignment **groups** (weighted) | 6 | `manifest.json → assignment_groups` |
 | **Assignments** | 26 | `assignments/*.html` + `canvas_plan.json` |
 | **Modules** + items | 5 modules | `manifest.json → modules` |
 
@@ -48,21 +48,23 @@ Each topic produces **one drawing** and **one bundled Learning Check** (the
 case-study Learning Check *and* the "I ran the code" check submitted together).
 A two-lab topic's card lists both labs with deep links and asks for both.
 
-### The five weighted assignment groups (sum = 100%)
+### The six weighted assignment groups (sum = 100%)
 
 | Group | Weight | Contains | Rule |
 |---|---|---|---|
-| **Drawings** | 20% | 8 drawings (1 per topic) | **drops the lowest 1** |
-| **Case Study Completion** | 20% | 8 bundled Learning Checks + 3 weekly Ed Discussions + 3 weekly Office Hours + 1 Final Presentation (15 items) | **drops the lowest 1** |
-| **Weekly Homework 1 · Project Case Study** | 20% | Project submission 1 | — |
-| **Weekly Homework 2 · Project Case Study** | 20% | Project submission 2 | — |
-| **Weekly Homework 3 · Project Case Study** | 20% | Project submission 3 (final) | — |
+| **Drawings** | 20% | 8 drawings (1 per topic) | **drops the lowest 2** |
+| **Case Studies** | 25% | 8 bundled Learning Checks (1 per topic) | **drops the lowest 2** |
+| **Participation** | 10% | 3 weekly Ed Discussions + 3 weekly Office Hours + 1 Final Presentation (7 items) | — |
+| **Weekly Homework 1 · Project Case Study** | 15% | Project submission 1 | — |
+| **Weekly Homework 2 · Project Case Study** | 15% | Project submission 2 | — |
+| **Weekly Homework 3 · Project Case Study** | 15% | Project submission 3 (final) | — |
 
 This matches the weighting you specified:
-*drawings 20 · case-study completion (bundled LCs + Ed discussion + office
-hours) 20 · weekly homeworks (= the project) 20 each.* The **drop-lowest-1**
-rule on Drawings and Case Study Completion gives students one freebie in each
-group for time-crunch weeks (Canvas group rule `rules[drop_lowest]=1`).
+*drawings 20 · case studies (the bundled learning checks) 25 · participation
+(Ed discussion + office hours + final presentation) 10 · weekly homeworks
+(= the project) 15 each = 45.* The **drop-lowest-2** rule on Drawings and Case
+Studies gives students two freebies in each group for time-crunch weeks (Canvas
+group rule `rules[drop_lowest]=2`).
 
 ### Grading types
 - **Completion** items → Canvas `grading_type = pass_fail` (complete / incomplete).
@@ -80,10 +82,10 @@ Each assignment card shows a colored **pill** stating exactly this
 Everything below is data-driven from `manifest.json`. Edit the manifest, then
 re-run `generate_html.py`, then `push_to_canvas.py`.
 
-1. **Weighting** — exactly as you specified. Within the *Case Study Completion*
-   group all items are `pass_fail` with `points_possible: 10` (Final Presentation
-   `20`) so they weigh roughly equally. The relative split inside a weighted
-   group only matters *within* that group.
+1. **Weighting** — exactly as you specified. Within the *Case Studies* and
+   *Participation* groups all items are `pass_fail` with `points_possible: 10`
+   (Final Presentation `20`) so they weigh roughly equally. The relative split
+   inside a weighted group only matters *within* that group.
 2. **Due dates** — taken from `docs/calendar.html`: every weekly submission is
    due **Monday 9:00 AM America/New_York**. In summer that is EDT (UTC−4), so
    `due_at` is stored as `13:00:00Z`. Week 1 = 2026-06-29, Week 2 = 2026-07-06,
@@ -103,9 +105,14 @@ re-run `generate_html.py`, then `push_to_canvas.py`.
    happen off-Canvas (Ed) or in a meeting, and you mark them complete. The cards
    link to the calendar / office-hours pages. If you wire up a real Ed LTI or a
    Canvas Discussion, switch the type accordingly.
-5. **Final Presentation** is folded into *Case Study Completion* (completion-
-   graded) so each Weekly Homework group stays cleanly = one project = 20%. Move
-   it to a Weekly Homework group or its own group if you want it points-graded.
+5. **Final Presentation** lives in the *Participation* group (completion-graded)
+   alongside Ed Discussions and Office Hours, so the *Case Studies* group is
+   exactly the 8 bundled Learning Checks (clean target for "drop the lowest 2")
+   and each Weekly Homework group stays cleanly = one project = 15%. Move it to a
+   Weekly Homework group or its own group if you want it points-graded. Note the
+   *Participation* group has **no** drop rule, so a missed Office Hours / Ed
+   Discussion still counts; add `rules[drop_lowest]` there too if you want a
+   participation freebie.
 
 ---
 
@@ -164,10 +171,10 @@ PUT /courses/:course
 GET  /courses/:course/assignment_groups            # list (match by name)
 POST /courses/:course/assignment_groups            # create
      name=Drawings & group_weight=20 & position=1
-     rules[drop_lowest]=1                           # Drawings + Case Study groups only
+     rules[drop_lowest]=2                           # Drawings + Case Studies groups only
 PUT  /courses/:course/assignment_groups/:id        # update weight/position/rules
 ```
-The **drop-lowest** freebie is a group *rule*: `rules[drop_lowest]=1`. Other
+The **drop-lowest** freebie is a group *rule*: `rules[drop_lowest]=2`. Other
 rule keys exist if you want them: `rules[drop_highest]=N` and
 `rules[never_drop][]=<assignment_id>` (e.g. to protect the Final Presentation
 from being the dropped one — needs the id, so set it on a second pass).
@@ -259,12 +266,13 @@ reference their ids. The HTML bodies in `assignments/*.html` and
 
 - [ ] Course **Home** shows the dark neon welcome page with the three shortcut
       sections (Start Here / Do the Work / Get Help) and working links.
-- [ ] **Assignments** index shows 5 groups; group weights read 20/20/20/20/20
-      and "Total 100%". (Grades → ⋮ → *Assignment Groups Weight* is enabled.)
+- [ ] **Assignments** index shows 6 groups; group weights read
+      20/25/10/15/15/15 and "Total 100%". (Grades → ⋮ → *Assignment Groups
+      Weight* is enabled.)
 - [ ] A drawing, a bundled Learning Check, and a project each render their card
       with the correct **grading pill** and a working website button. (A two-lab
       topic's Learning Check lists both labs with Lab + Code links.)
-- [ ] The **Drawings** and **Case Study Completion** groups show "drop the lowest"
+- [ ] The **Drawings** and **Case Studies** groups show "drop the lowest 2"
       (group → ⋮ → *Assignment Group Rules*).
 - [ ] **Modules** shows Getting Started / Week 1 / Week 2 / Week 3 / Wrapping Up,
       each with external links opening the website in a new tab.

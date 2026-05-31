@@ -311,7 +311,7 @@ def build_assignments():
         out.append({
             "key": f'lc-{t["key"]}',
             "name": f'Learning Checks — {t["name"]}',
-            "group": "completion",
+            "group": "casestudies",
             "grading": "completion", "points": 10,
             "submission_types": ["online_text_entry", "online_upload"],
             "due": week_due[wk],
@@ -335,7 +335,7 @@ def build_assignments():
         out.append({
             "key": f"ed-week-{w}",
             "name": f"Ed Discussion — Week {w}",
-            "group": "completion",
+            "group": "participation",
             "grading": "completion", "points": 10,
             "submission_types": ["none"],
             "due": week_due[w],
@@ -357,7 +357,7 @@ def build_assignments():
         out.append({
             "key": f"office-week-{w}",
             "name": f"Office Hours — Week {w}",
-            "group": "completion",
+            "group": "participation",
             "grading": "completion", "points": 10,
             "submission_types": ["none"],
             "due": week_due[w],
@@ -458,13 +458,13 @@ def build_preview(home_html, assignments):
     parts.append(frame("Home", home_html))
 
     buckets = [
-        ("Drawings  ·  group weight 20%  ·  drops the lowest 1", lambda a: a["group"] == "drawings"),
-        ("Learning Checks (case study + “I ran the code”)  ·  Case Study Completion 20%  ·  drops the lowest 1",
+        ("Drawings  ·  group weight 20%  ·  drops the lowest 2", lambda a: a["group"] == "drawings"),
+        ("Case Studies — Learning Checks (case study + “I ran the code”)  ·  25%  ·  drops the lowest 2",
          lambda a: a["key"].startswith("lc-")),
-        ("Ed Discussions  ·  Case Study Completion 20%", lambda a: a["key"].startswith("ed-week")),
-        ("Office Hours  ·  Case Study Completion 20%", lambda a: a["key"].startswith("office-week")),
-        ("Final Presentation  ·  Case Study Completion 20%", lambda a: a["key"] == "final-presentation"),
-        ("Weekly Homework · Projects  ·  20% each", lambda a: a["key"].startswith("project")),
+        ("Participation · Ed Discussions  ·  Participation 10%", lambda a: a["key"].startswith("ed-week")),
+        ("Participation · Office Hours  ·  Participation 10%", lambda a: a["key"].startswith("office-week")),
+        ("Participation · Final Presentation  ·  Participation 10%", lambda a: a["key"] == "final-presentation"),
+        ("Weekly Homework · Projects  ·  15% each", lambda a: a["key"].startswith("project")),
     ]
     for label, pred in buckets:
         parts.append(section_label(label))

@@ -18,10 +18,11 @@ and then send students to the (much nicer) website to actually do the work.
   near-black theme) with the assignment title, the related topic, a
   completion-vs-points grading tag, and a button to the relevant website page.
 
-Assignments are sorted into **weighted groups**: Drawings 20% · Case Study
-Completion 20% · Weekly Homework (the project) ×3 = 60%. The Drawings and Case
-Study Completion groups **drop each student's lowest score** — one freebie per
-group for time-crunch weeks.
+Assignments are sorted into **weighted groups**: Drawings 20% · Case Studies
+(the bundled learning checks) 25% · Participation (Ed discussion + office hours
++ final presentation) 10% · Weekly Homework (the project) ×3 = 45%. The Drawings
+and Case Studies groups **drop each student's lowest 2 scores** — two freebies
+per group for time-crunch weeks.
 
 ## Preview it (no Canvas needed)
 Open **`preview.html`** in any browser — it renders every page and assignment

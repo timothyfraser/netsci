@@ -15,32 +15,38 @@
       "name": "Drawings",
       "group_weight": 20,
       "position": 1,
-      "drop_lowest": 1
+      "drop_lowest": 2
     },
     {
-      "key": "completion",
-      "name": "Case Study Completion",
-      "group_weight": 20,
+      "key": "casestudies",
+      "name": "Case Studies",
+      "group_weight": 25,
       "position": 2,
-      "drop_lowest": 1
+      "drop_lowest": 2
+    },
+    {
+      "key": "participation",
+      "name": "Participation",
+      "group_weight": 10,
+      "position": 3
     },
     {
       "key": "hw1",
       "name": "Weekly Homework 1 · Project Case Study",
-      "group_weight": 20,
-      "position": 3
+      "group_weight": 15,
+      "position": 4
     },
     {
       "key": "hw2",
       "name": "Weekly Homework 2 · Project Case Study",
-      "group_weight": 20,
-      "position": 4
+      "group_weight": 15,
+      "position": 5
     },
     {
       "key": "hw3",
       "name": "Weekly Homework 3 · Project Case Study",
-      "group_weight": 20,
-      "position": 5
+      "group_weight": 15,
+      "position": 6
     }
   ],
   "front_page": {
@@ -64,7 +70,7 @@
     {
       "key": "lc-fundamentals",
       "name": "Learning Checks — Network Fundamentals",
-      "group": "completion",
+      "group": "casestudies",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -89,7 +95,7 @@
     {
       "key": "lc-statistics",
       "name": "Learning Checks — Network Statistics",
-      "group": "completion",
+      "group": "casestudies",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -114,7 +120,7 @@
     {
       "key": "lc-centrality",
       "name": "Learning Checks — Centrality & Criticality",
-      "group": "completion",
+      "group": "casestudies",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -139,7 +145,7 @@
     {
       "key": "lc-routing",
       "name": "Learning Checks — Routing & Optimization",
-      "group": "completion",
+      "group": "casestudies",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -164,7 +170,7 @@
     {
       "key": "lc-clustering",
       "name": "Learning Checks — Clustering & Communities",
-      "group": "completion",
+      "group": "casestudies",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -189,7 +195,7 @@
     {
       "key": "lc-visualization",
       "name": "Learning Checks — Visualization",
-      "group": "completion",
+      "group": "casestudies",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -214,7 +220,7 @@
     {
       "key": "lc-aiml",
       "name": "Learning Checks — AI & Machine Learning",
-      "group": "completion",
+      "group": "casestudies",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -239,7 +245,7 @@
     {
       "key": "lc-bigdata",
       "name": "Learning Checks — Big Network Data",
-      "group": "completion",
+      "group": "casestudies",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -252,7 +258,7 @@
     {
       "key": "ed-week-1",
       "name": "Ed Discussion — Week 1",
-      "group": "completion",
+      "group": "participation",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -264,7 +270,7 @@
     {
       "key": "ed-week-2",
       "name": "Ed Discussion — Week 2",
-      "group": "completion",
+      "group": "participation",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -276,7 +282,7 @@
     {
       "key": "ed-week-3",
       "name": "Ed Discussion — Week 3",
-      "group": "completion",
+      "group": "participation",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -288,7 +294,7 @@
     {
       "key": "office-week-1",
       "name": "Office Hours — Week 1",
-      "group": "completion",
+      "group": "participation",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -300,7 +306,7 @@
     {
       "key": "office-week-2",
       "name": "Office Hours — Week 2",
-      "group": "completion",
+      "group": "participation",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -312,7 +318,7 @@
     {
       "key": "office-week-3",
       "name": "Office Hours — Week 3",
-      "group": "completion",
+      "group": "participation",
       "grading": "completion",
       "points": 10,
       "submission_types": [
@@ -363,7 +369,7 @@
     {
       "key": "final-presentation",
       "name": "Final Presentation",
-      "group": "completion",
+      "group": "participation",
       "grading": "completion",
       "points": 20,
       "submission_types": [
@@ -456,7 +462,7 @@
         },
         {
           "type": "SubHeader",
-          "title": "Submit on Canvas → Drawings, Case Study Completion & Weekly Homework groups"
+          "title": "Submit on Canvas → Drawings, Case Studies, Participation & Weekly Homework groups"
         }
       ]
     },
@@ -494,7 +500,7 @@
         },
         {
           "type": "SubHeader",
-          "title": "Submit on Canvas → Drawings, Case Study Completion & Weekly Homework groups"
+          "title": "Submit on Canvas → Drawings, Case Studies, Participation & Weekly Homework groups"
         }
       ]
     },
@@ -532,7 +538,7 @@
         },
         {
           "type": "SubHeader",
-          "title": "Submit on Canvas → Drawings, Case Study Completion & Weekly Homework groups"
+          "title": "Submit on Canvas → Drawings, Case Studies, Participation & Weekly Homework groups"
         }
       ]
     },

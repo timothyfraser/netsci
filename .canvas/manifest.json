@@ -35,11 +35,12 @@
   },
 
   "assignment_groups": [
-    { "key": "drawings",   "name": "Drawings",                              "group_weight": 20, "position": 1, "drop_lowest": 1 },
-    { "key": "completion", "name": "Case Study Completion",                 "group_weight": 20, "position": 2, "drop_lowest": 1 },
-    { "key": "hw1",        "name": "Weekly Homework 1 · Project Case Study", "group_weight": 20, "position": 3 },
-    { "key": "hw2",        "name": "Weekly Homework 2 · Project Case Study", "group_weight": 20, "position": 4 },
-    { "key": "hw3",        "name": "Weekly Homework 3 · Project Case Study", "group_weight": 20, "position": 5 }
+    { "key": "drawings",     "name": "Drawings",                              "group_weight": 20, "position": 1, "drop_lowest": 2 },
+    { "key": "casestudies",  "name": "Case Studies",                          "group_weight": 25, "position": 2, "drop_lowest": 2 },
+    { "key": "participation","name": "Participation",                         "group_weight": 10, "position": 3 },
+    { "key": "hw1",          "name": "Weekly Homework 1 · Project Case Study", "group_weight": 15, "position": 4 },
+    { "key": "hw2",          "name": "Weekly Homework 2 · Project Case Study", "group_weight": 15, "position": 5 },
+    { "key": "hw3",          "name": "Weekly Homework 3 · Project Case Study", "group_weight": 15, "position": 6 }
   ],
 
   "due_dates": {
@@ -84,7 +85,7 @@
       { "n": 2, "group": "hw2", "due": "week3", "title": "Project Case Study — Submission 2" },
       { "n": 3, "group": "hw3", "due": "week3", "title": "Project Case Study — Submission 3 (final)" }
     ],
-    "final_presentation": { "group": "completion", "due": "week3" }
+    "final_presentation": { "group": "participation", "due": "week3" }
   },
 
   "home_shortcuts": [
@@ -132,7 +133,7 @@
       { "type": "ExternalUrl", "title": "📐 Network Statistics — Lab",     "path": "case-studies/permutation.html" },
       { "type": "ExternalUrl", "title": "📊 Centrality & Criticality — Lab", "path": "case-studies/centrality.html" },
       { "type": "ExternalUrl", "title": "📚 Readings for Week 1",          "path": "readings.html" },
-      { "type": "SubHeader", "title": "Submit on Canvas → Drawings, Case Study Completion & Weekly Homework groups" }
+      { "type": "SubHeader", "title": "Submit on Canvas → Drawings, Case Studies, Participation & Weekly Homework groups" }
     ]},
     { "name": "Week 2 — Find What Matters", "items": [
       { "type": "SubHeader", "title": "Labs this week (on the course website)" },
@@ -141,7 +142,7 @@
       { "type": "ExternalUrl", "title": "🧩 DSM Clustering — Lab",          "path": "case-studies/dsm-clustering.html" },
       { "type": "ExternalUrl", "title": "🗺️ Aggregation — Lab",            "path": "case-studies/aggregation.html" },
       { "type": "ExternalUrl", "title": "📚 Readings for Week 2",          "path": "readings.html" },
-      { "type": "SubHeader", "title": "Submit on Canvas → Drawings, Case Study Completion & Weekly Homework groups" }
+      { "type": "SubHeader", "title": "Submit on Canvas → Drawings, Case Studies, Participation & Weekly Homework groups" }
     ]},
     { "name": "Week 3 — Move & Predict", "items": [
       { "type": "SubHeader", "title": "Labs this week (on the course website)" },
@@ -150,7 +151,7 @@
       { "type": "ExternalUrl", "title": "🗄️ Sampling — Lab",               "path": "case-studies/sampling.html" },
       { "type": "ExternalUrl", "title": "🔗 Joins & Pipelines — Lab",      "path": "case-studies/joins.html" },
       { "type": "ExternalUrl", "title": "📚 Readings for Week 3",          "path": "readings.html" },
-      { "type": "SubHeader", "title": "Submit on Canvas → Drawings, Case Study Completion & Weekly Homework groups" }
+      { "type": "SubHeader", "title": "Submit on Canvas → Drawings, Case Studies, Participation & Weekly Homework groups" }
     ]},
     { "name": "Wrapping Up", "items": [
       { "type": "SubHeader", "title": "Finish strong" },
