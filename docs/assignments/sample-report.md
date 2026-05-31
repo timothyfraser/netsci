@@ -7,6 +7,16 @@ geometry: margin=1in
 fontsize: 11pt
 ---
 
+> **READ FIRST — this is an AI-generated sample, and it is the _floor,_ not
+> the ceiling.** It was written by AI to show the *shape* of a competent
+> project report: a sharp question, a justified network operationalization, a
+> defensible procedure, results stated as numbers in prose, and honest
+> limitations. **Your report should be _better_ than this** — treat it as the
+> minimum bar to clear, not the target to match. Two cautions: the figures are
+> *illustrative* and several numbers are plausible stand-ins, so don't cite
+> anything here; every figure and number in your own report must come from your
+> own analysis of your own network.
+
 ## Question
 
 **Which Bluebikes stations, if knocked offline, would do the most
@@ -170,10 +180,15 @@ Table 1 lays the three strategies side by side.
 The gap is not subtle. The betweenness removal does **twelve times** the
 routing damage of the degree removal, and it is the only one of the
 three that actually disconnects stations from the network. Figure 1
-plots degree against betweenness for every station, colored by which
-top-10 list it appears in; the three bridge stations sit far above the
-regression line — high betweenness, low degree — in exactly the corner
-of the plot where the "swap the busiest first" heuristic is blind.
+puts the four strategies side by side: the betweenness removal towers
+over the others, while the degree and random removals barely clear the
+intact baseline. That tall amber bar is exactly the failure mode the
+"swap the busiest first" heuristic walks into.
+
+![**Figure 1.** Average shortest-path length after each removal strategy
+(mirrors Table 1). Removing the top-10 *betweenness* stations inflates
+routing distance by 65% and disconnects 35 stations; removing the top-10
+*degree* stations barely moves the network off its intact baseline.](sample-report-fig1.png)
 
 **Sensitivity to the cutoff and the threshold.** Two of my choices were
 arbitrary — stopping at the top 10, and filtering at 30 trips — so I
@@ -194,10 +209,20 @@ drew the noise floor.
 | 15 | 437 | 388 | +94% |
 | 20 | 436 | 374 | +121% |
 
-Figure 2 shows the network before and after the top-10 betweenness
-removal, with the disconnected stations highlighted; the fragments are
-overwhelmingly on the Cambridge side, which matches the intuition that
-the bridges are the cut.
+Figure 2 illustrates the mechanism on a reduced view of the network.
+Closing even a *single* low-traffic bridge station severs the short
+cross-river crossing: the Cambridge-to-Boston path that used to run
+straight through it is forced into a long detour around the next bridge,
+and a pocket of stations that depended on the closed one is stranded
+outright. The full analysis removes the top-10 betweenness stations at
+once; this is why even one of them matters.
+
+![**Figure 2.** Why a low-traffic bridge station is load-bearing. *Left:*
+the shortest Cambridge-to-Boston path crosses at the central bridge
+station (high betweenness, modest traffic). *Right:* close that one
+station and the path detours all the way around the northern bridge,
+while a pocket of nearby stations is cut off from the network entirely.
+Layout is illustrative; the effect is the +65% in Figure 1.](sample-report-fig2.png)
 
 **A tougher null than random removal.** Removing *random* stations is a
 weak null — most stations are peripheral, so of course targeting beats

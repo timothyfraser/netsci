@@ -10,6 +10,10 @@
 # but Docker is, it falls back to the official pandoc/latex image — no local
 # TeX install required.
 #
+# The two embedded figures are generated separately (and committed) by
+# scripts/build_sample_report_figures.py; this script just embeds the existing
+# PNGs via --resource-path.
+#
 # Usage:  scripts/build_sample_report.sh
 #
 set -euo pipefail
@@ -19,7 +23,7 @@ cd "$(dirname "$0")/.."
 
 SRC="docs/assignments/sample-report.md"
 OUT="docs/assignments/sample-report.pdf"
-ARGS=(--pdf-engine=xelatex -o "$OUT" "$SRC")
+ARGS=(--pdf-engine=xelatex --resource-path=docs/assignments -o "$OUT" "$SRC")
 
 if command -v pandoc >/dev/null 2>&1; then
   echo "→ Building $OUT with local pandoc + xelatex…"

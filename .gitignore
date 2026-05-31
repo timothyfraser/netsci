@@ -14,6 +14,9 @@ __pycache__/
 # build artifacts, not source.
 *.png
 !docs/assets/*.png
+# Figures embedded in the project sample report (generated, committed,
+# served by the site). Rebuilt by scripts/build_sample_report_figures.py.
+!docs/assignments/sample-report-fig*.png
 
 # R
 .Rhistory

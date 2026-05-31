@@ -9,6 +9,8 @@ on:
     branches: [main]
     paths:
       - 'docs/assignments/sample-report.md'
+      - 'docs/assignments/sample-report-fig1.png'
+      - 'docs/assignments/sample-report-fig2.png'
       - 'scripts/build_sample_report.sh'
       - '.github/workflows/sample-report-pdf.yml'
   workflow_dispatch:
@@ -33,6 +35,7 @@ jobs:
         with:
           args: >-
             --pdf-engine=xelatex
+            --resource-path=docs/assignments
             -o docs/assignments/sample-report.pdf
             docs/assignments/sample-report.md
 
