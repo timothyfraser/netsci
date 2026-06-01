@@ -462,25 +462,28 @@ def build_modules():
             items.append(asg(f'drawing-{c["key"]}', indent=2))
             items.append(asg(f'lc-{c["key"]}', indent=2))
         for s in surveys_by_module.get(f"week{w}", []):
+            if s["key"] == "final-eval":     # placed in Week 3 REMINDERS below
+                continue
             items.append(asg(s["key"]))
         items.append(sub("REMINDERS"))
         items.append(ext("📤 Submit on Canvas — How to Submit", path="help/submit.html"))
         for p in M["extras"]["projects"]:
-            if p["n"] == w and w in (1, 2):   # project-3 (final) lives in Wrapping Up
+            if p["n"] == w and w in (1, 2):
                 items.append(asg(f"project-{p['n']}"))
+        if w == 3:
+            # course-end items live in Week 3 REMINDERS (final week ends the course)
+            items.append(asg("final-eval"))
+            items.append(asg("final-presentation"))
+            items.append(asg("project-3"))
         modules.append({"name": MOD["week_titles"][str(w)], "items": items})
 
     # ---- Wrapping Up ----
+    # Wrapping Up = resource links only; its activities/reminders moved into
+    # Week 3 (the final week ends the course).
     wu = MOD["wrapping_up"]
     items = [sub("OVERVIEW")]
     for ln in wu["overview"]:
         items.append(ext(ln["title"], ln.get("path"), ln.get("url")))
-    items.append(sub("ACTIVITIES"))
-    for s in surveys_by_module.get("wrapping-up", []):
-        items.append(asg(s["key"]))
-    items.append(sub("REMINDERS"))
-    items.append(asg("final-presentation"))
-    items.append(asg("project-3"))
     modules.append({"name": wu["name"], "items": items})
 
     return modules

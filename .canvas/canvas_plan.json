@@ -850,6 +850,21 @@
           "title": "📤 Submit on Canvas — How to Submit",
           "indent": 1,
           "path": "help/submit.html"
+        },
+        {
+          "type": "Assignment",
+          "ref": "final-eval",
+          "indent": 1
+        },
+        {
+          "type": "Assignment",
+          "ref": "final-presentation",
+          "indent": 1
+        },
+        {
+          "type": "Assignment",
+          "ref": "project-3",
+          "indent": 1
         }
       ]
     },
@@ -889,29 +904,6 @@
           "title": "📁 Course GitHub Repository",
           "indent": 1,
           "url": "https://github.com/timothyfraser/netsci"
-        },
-        {
-          "type": "SubHeader",
-          "title": "ACTIVITIES"
-        },
-        {
-          "type": "Assignment",
-          "ref": "final-eval",
-          "indent": 1
-        },
-        {
-          "type": "SubHeader",
-          "title": "REMINDERS"
-        },
-        {
-          "type": "Assignment",
-          "ref": "final-presentation",
-          "indent": 1
-        },
-        {
-          "type": "Assignment",
-          "ref": "project-3",
-          "indent": 1
         }
       ]
     }

@@ -88,7 +88,7 @@
   "surveys": [
     { "key": "intro-survey", "name": "Intro Course Survey",       "icon": "📝", "group": "participation", "module": "getting-started", "week": 1, "url": null },
     { "key": "midterm-eval", "name": "Midterm Course Evaluation", "icon": "📋", "group": "participation", "module": "week2",           "week": 2, "url": null },
-    { "key": "final-eval",   "name": "Final Course Evaluation",   "icon": "📚", "group": "participation", "module": "wrapping-up",     "week": 3, "url": null }
+    { "key": "final-eval",   "name": "Final Course Evaluation",   "icon": "📚", "group": "participation", "module": "week3",           "week": 3, "url": null }
   ],
 
   "home_shortcuts": [
