@@ -62,6 +62,11 @@
   .key-sketch::before { background: var(--node-3); }
   .key-code::before   { background: var(--node-4); }
   .key-check::before  { background: var(--node-6); }
+  /* Grade-breakdown bar key swatches */
+  .key-draw::before   { background: var(--node-3); }
+  .key-case::before   { background: var(--node-1); }
+  .key-part::before   { background: var(--node-5); }
+  .key-hw::before     { background: var(--node-4); }
 
   /* Case study list */
   .case-list { display: grid; grid-template-columns: 1fr; gap: 14px; }
@@ -233,6 +238,25 @@
       <span class="key-sketch">Sketch</span>
       <span class="key-code">Code</span>
       <span class="key-check">Check</span>
+    </div>
+  </section>
+
+  <!-- ── GRADE BREAKDOWN ── -->
+  <section class="section">
+    <div class="sec-label">Grade Breakdown</div>
+    <p class="section-lede">The same idea, applied to your grade: every percentage point lives in one of four assignment groups. Drawings and Case Studies each <strong style="color:var(--white)">drop your two lowest scores</strong>, so one crunched week won't sink you. Everything is submitted on Canvas — the work itself lives here on the site.</p>
+
+    <div class="budget" title="Final grade by assignment group">
+      <div style="width:20%; background:var(--node-3);">DRAWINGS 20%</div>
+      <div style="width:25%; background:var(--node-1);">CASE STUDIES 25%</div>
+      <div style="width:10%; background:var(--node-5);">PART. 10%</div>
+      <div style="width:45%; background:var(--node-4);">WEEKLY HOMEWORK 45%</div>
+    </div>
+    <div class="budget-key">
+      <span class="key-draw">Drawings · hand-drawn sketches</span>
+      <span class="key-case">Case Studies · learning checks</span>
+      <span class="key-part">Participation · discussion, office hours, final</span>
+      <span class="key-hw">Weekly Homework · 3 project case studies (15% each)</span>
     </div>
   </section>
 

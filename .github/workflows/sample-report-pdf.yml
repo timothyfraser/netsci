@@ -1,0 +1,48 @@
+name: Build sample report PDF
+
+# Regenerates docs/assignments/sample-report.pdf from sample-report.md whenever
+# the markdown changes on main, and commits the rebuilt PDF back so the live
+# site (served from docs/) always links to an up-to-date exemplar.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/assignments/sample-report.md'
+      - 'docs/assignments/sample-report-fig1.png'
+      - 'docs/assignments/sample-report-fig2.png'
+      - 'scripts/build_sample_report.sh'
+      - '.github/workflows/sample-report-pdf.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: sample-report-pdf
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The pandoc/latex image ships pandoc + a TeX Live with xelatex.
+      # Its entrypoint is `pandoc`, so `args` below are pandoc arguments.
+      - name: Build PDF (pandoc + xelatex)
+        uses: docker://pandoc/latex:latest
+        with:
+          args: >-
+            --pdf-engine=xelatex
+            --resource-path=docs/assignments
+            -o docs/assignments/sample-report.pdf
+            docs/assignments/sample-report.md
+
+      - name: Commit regenerated PDF
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(docs): rebuild sample-report.pdf"
+          file_pattern: 'docs/assignments/sample-report.pdf'
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
