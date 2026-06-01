@@ -1,8 +1,8 @@
 # SYSEN 5470 — Due Dates & Points (Canvas contract handoff)
 
 - **Course:** `81765` @ https://canvas.cornell.edu
-- **Last pulled from Canvas:** 2026-06-01T15:14:20Z
-- **Generated:** 2026-06-01T15:14:20Z
+- **Last pulled from Canvas:** 2026-06-01T16:11:19Z
+- **Generated:** 2026-06-01T16:11:19Z
 
 > **Dates below are a PROPOSAL** seeded from the course calendar (each week's Monday 9 AM ET). Edit them — in `canvas_contract.json` or by replying in chat — then they get pushed to Canvas.
 
@@ -34,9 +34,9 @@
 | [Drawing — Centrality](https://canvas.cornell.edu/courses/81765/assignments/968350) | Drawings | Completion | 1 | Mon 2026-06-29 13:00 UTC |
 | [Learning Checks — Centrality](https://canvas.cornell.edu/courses/81765/assignments/968351) | Case Studies | Completion | 1 | Mon 2026-06-29 13:00 UTC |
 | [Ed Discussion — Week 1](https://canvas.cornell.edu/courses/81765/assignments/968368) | Participation | Completion | 1 | Mon 2026-06-29 13:00 UTC |
-| [Office Hours — Week 1](https://canvas.cornell.edu/courses/81765/assignments/968371) | Participation | Completion | 1 | Mon 2026-06-29 13:00 UTC |
+| [Office Hours — Week 1](https://canvas.cornell.edu/courses/81765/assignments/968371) | Participation | Completion | 1 | Wed 2026-06-24 03:59 UTC |
 | [Project Case Study — Submission 1](https://canvas.cornell.edu/courses/81765/assignments/968374) | Weekly Homework 1 · Project Case Study | Points | 100 | Mon 2026-06-29 13:00 UTC |
-| [Intro Course Survey](https://canvas.cornell.edu/courses/81765/assignments/968417) | Participation | Completion | 1 | Mon 2026-06-29 13:00 UTC |
+| [Intro Course Survey](https://canvas.cornell.edu/courses/81765/assignments/968417) | Participation | Completion | 1 | Wed 2026-06-24 03:59 UTC |
 
 ## Week 2
 
@@ -53,7 +53,7 @@
 | [Ed Discussion — Week 2](https://canvas.cornell.edu/courses/81765/assignments/968369) | Participation | Completion | 1 | Mon 2026-07-06 13:00 UTC |
 | [Office Hours — Week 2](https://canvas.cornell.edu/courses/81765/assignments/968372) | Participation | Completion | 1 | Mon 2026-07-06 13:00 UTC |
 | [Project Case Study — Submission 2](https://canvas.cornell.edu/courses/81765/assignments/968375) | Weekly Homework 2 · Project Case Study | Points | 100 | Mon 2026-07-06 13:00 UTC |
-| [Midterm Course Evaluation](https://canvas.cornell.edu/courses/81765/assignments/968418) | Participation | Completion | 1 | Mon 2026-07-06 13:00 UTC |
+| [Midterm Course Evaluation](https://canvas.cornell.edu/courses/81765/assignments/968418) | Participation | Completion | 1 | Thu 2026-07-02 03:59 UTC |
 
 ## Week 3
 

@@ -120,6 +120,8 @@ def get_all(path, **params):
 # week → due-date mapping, derived from manifest.json (proposal seed only)
 # ---------------------------------------------------------------------------
 DUE_DATES = {k: v for k, v in MANIFEST["due_dates"].items() if not k.startswith("_")}
+DUE_OVERRIDES = {k: v for k, v in MANIFEST.get("due_overrides", {}).items()
+                 if not k.startswith("_")}
 CS_WEEK = {c["key"]: c["week"] for c in MANIFEST["case_studies"]}
 PROJ_DUE = {p["n"]: p["due"] for p in MANIFEST["extras"]["projects"]}
 FINAL_DUE = MANIFEST["extras"]["final_presentation"]["due"]
@@ -289,15 +291,24 @@ def pull(contract):
 # --seed : fill blank due_at from the manifest week mapping
 # ---------------------------------------------------------------------------
 def seed(contract):
-    filled = 0
+    filled = overridden = 0
     for a in contract["assignments"]:
+        ov = DUE_OVERRIDES.get(a["key"])
+        if ov:
+            # explicit per-item override wins over the week bucket (and over any
+            # earlier seed), but never over a date the user pulled from Canvas
+            if a.get("due_at") != ov:
+                a["due_at"] = ov
+                overridden += 1
+            continue
         if a.get("due_at"):
             continue
         due = due_for_week(a.get("week"))
         if due:
             a["due_at"] = due
             filled += 1
-    print(f"• seed: filled {filled} blank due dates from manifest week mapping")
+    print(f"• seed: filled {filled} blank due dates from week mapping; "
+          f"applied {overridden} per-item override(s)")
 
 
 # ---------------------------------------------------------------------------

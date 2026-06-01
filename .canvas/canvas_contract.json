@@ -2,7 +2,7 @@
   "meta": {
     "course_id": "81765",
     "base_url": "https://canvas.cornell.edu",
-    "last_pull": "2026-06-01T15:14:20Z",
+    "last_pull": "2026-06-01T16:11:19Z",
     "note": "Edit due_at (ISO 8601, e.g. 2026-06-29T13:00:00Z), points_possible, and group weight/drop_lowest here, then run: sync_contract.py --apply. Or edit on Canvas and run --pull. Set due_at to null to leave a date unset."
   },
   "assignment_groups": [
@@ -346,7 +346,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 1,
-      "due_at": "2026-06-29T13:00:00Z",
+      "due_at": "2026-06-24T03:59:00Z",
       "canvas_id": 968371,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968371"
     },
@@ -423,7 +423,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 1,
-      "due_at": "2026-06-29T13:00:00Z",
+      "due_at": "2026-06-24T03:59:00Z",
       "canvas_id": 968417,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968417"
     },
@@ -434,7 +434,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 2,
-      "due_at": "2026-07-06T13:00:00Z",
+      "due_at": "2026-07-02T03:59:00Z",
       "canvas_id": 968418,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968418"
     },

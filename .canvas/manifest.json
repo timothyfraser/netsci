@@ -51,6 +51,13 @@
     "week3": "2026-07-10T13:00:00Z"
   },
 
+  "due_overrides": {
+    "_comment": "Per-assignment due dates that differ from the content-week default in due_dates. sync_contract.py --seed applies these and they WIN over the week bucket. Course runs Mon 2026-06-22 → Fri 2026-07-10. 03:59:00Z = 11:59 PM ET the prior calendar day (EDT = UTC-4).",
+    "intro-survey":  "2026-06-24T03:59:00Z",
+    "office-week-1": "2026-06-24T03:59:00Z",
+    "midterm-eval":  "2026-07-02T03:59:00Z"
+  },
+
   "case_studies": [
     { "key": "build-a-network", "num": "01", "name": "Build a Network",                       "short": "Build a Network",        "icon": "🕸️", "skill": "Identify", "week": 1, "lab": "case-studies/build-a-network.html", "code": "code/01_build-a-network", "sketch_title": "Sketch 01 · Map your network",            "sketch_anchor": "sketchpad.html" },
     { "key": "permutation",     "num": "07", "name": "Network Statistics (Permutation)",       "short": "Network Statistics",     "icon": "📐", "skill": "Infer",    "week": 1, "lab": "case-studies/permutation.html",     "code": "code/07_permutation",     "sketch_title": "Sketch 03 · Two null distributions",      "sketch_anchor": "sketchpad.html#sketch-03a" },
