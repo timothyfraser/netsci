@@ -1,0 +1,453 @@
+{
+  "meta": {
+    "course_id": "81765",
+    "base_url": "https://canvas.cornell.edu",
+    "last_pull": "2026-06-01T15:14:20Z",
+    "note": "Edit due_at (ISO 8601, e.g. 2026-06-29T13:00:00Z), points_possible, and group weight/drop_lowest here, then run: sync_contract.py --apply. Or edit on Canvas and run --pull. Set due_at to null to leave a date unset."
+  },
+  "assignment_groups": [
+    {
+      "key": "drawings",
+      "name": "Drawings",
+      "canvas_id": 248724,
+      "group_weight": 20.0,
+      "position": 1,
+      "drop_lowest": 2
+    },
+    {
+      "key": "casestudies",
+      "name": "Case Studies",
+      "canvas_id": 248725,
+      "group_weight": 25.0,
+      "position": 2,
+      "drop_lowest": 2
+    },
+    {
+      "key": "participation",
+      "name": "Participation",
+      "canvas_id": 248726,
+      "group_weight": 5.0,
+      "position": 3,
+      "drop_lowest": 0
+    },
+    {
+      "key": "finalpres",
+      "name": "Final Presentation",
+      "canvas_id": 248731,
+      "group_weight": 5.0,
+      "position": 4,
+      "drop_lowest": 0
+    },
+    {
+      "key": "hw1",
+      "name": "Weekly Homework 1 · Project Case Study",
+      "canvas_id": 248727,
+      "group_weight": 15.0,
+      "position": 5,
+      "drop_lowest": 0
+    },
+    {
+      "key": "hw2",
+      "name": "Weekly Homework 2 · Project Case Study",
+      "canvas_id": 248728,
+      "group_weight": 15.0,
+      "position": 6,
+      "drop_lowest": 0
+    },
+    {
+      "key": "hw3",
+      "name": "Weekly Homework 3 · Project Case Study",
+      "canvas_id": 248729,
+      "group_weight": 15.0,
+      "position": 7,
+      "drop_lowest": 0
+    }
+  ],
+  "assignments": [
+    {
+      "key": "drawing-build-a-network",
+      "name": "Drawing — Build a Network",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 1,
+      "due_at": "2026-06-29T13:00:00Z",
+      "canvas_id": 968346,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968346"
+    },
+    {
+      "key": "lc-build-a-network",
+      "name": "Learning Checks — Build a Network",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 1,
+      "due_at": "2026-06-29T13:00:00Z",
+      "canvas_id": 968347,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968347"
+    },
+    {
+      "key": "drawing-permutation",
+      "name": "Drawing — Network Statistics",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 1,
+      "due_at": "2026-06-29T13:00:00Z",
+      "canvas_id": 968348,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968348"
+    },
+    {
+      "key": "lc-permutation",
+      "name": "Learning Checks — Network Statistics",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 1,
+      "due_at": "2026-06-29T13:00:00Z",
+      "canvas_id": 968349,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968349"
+    },
+    {
+      "key": "drawing-centrality",
+      "name": "Drawing — Centrality",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 1,
+      "due_at": "2026-06-29T13:00:00Z",
+      "canvas_id": 968350,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968350"
+    },
+    {
+      "key": "lc-centrality",
+      "name": "Learning Checks — Centrality",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 1,
+      "due_at": "2026-06-29T13:00:00Z",
+      "canvas_id": 968351,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968351"
+    },
+    {
+      "key": "drawing-supply-chain",
+      "name": "Drawing — Supply Chain",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968352,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968352"
+    },
+    {
+      "key": "lc-supply-chain",
+      "name": "Learning Checks — Supply Chain",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968353,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968353"
+    },
+    {
+      "key": "drawing-counterfactual",
+      "name": "Drawing — Routing",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968354,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968354"
+    },
+    {
+      "key": "lc-counterfactual",
+      "name": "Learning Checks — Routing",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968355,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968355"
+    },
+    {
+      "key": "drawing-dsm-clustering",
+      "name": "Drawing — DSM Clustering",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968356,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968356"
+    },
+    {
+      "key": "lc-dsm-clustering",
+      "name": "Learning Checks — DSM Clustering",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968357,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968357"
+    },
+    {
+      "key": "drawing-aggregation",
+      "name": "Drawing — Aggregation",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968358,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968358"
+    },
+    {
+      "key": "lc-aggregation",
+      "name": "Learning Checks — Aggregation",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968359,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968359"
+    },
+    {
+      "key": "drawing-gnn-by-hand",
+      "name": "Drawing — GNN by Hand",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-10T13:00:00Z",
+      "canvas_id": 968360,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968360"
+    },
+    {
+      "key": "lc-gnn-by-hand",
+      "name": "Learning Checks — GNN by Hand",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-10T13:00:00Z",
+      "canvas_id": 968361,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968361"
+    },
+    {
+      "key": "drawing-gnn-xgboost",
+      "name": "Drawing — GNN + XGBoost",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-10T13:00:00Z",
+      "canvas_id": 968362,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968362"
+    },
+    {
+      "key": "lc-gnn-xgboost",
+      "name": "Learning Checks — GNN + XGBoost",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-10T13:00:00Z",
+      "canvas_id": 968363,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968363"
+    },
+    {
+      "key": "drawing-sampling",
+      "name": "Drawing — Sampling",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-10T13:00:00Z",
+      "canvas_id": 968364,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968364"
+    },
+    {
+      "key": "lc-sampling",
+      "name": "Learning Checks — Sampling",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-10T13:00:00Z",
+      "canvas_id": 968365,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968365"
+    },
+    {
+      "key": "drawing-joins",
+      "name": "Drawing — Joins",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-10T13:00:00Z",
+      "canvas_id": 968366,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968366"
+    },
+    {
+      "key": "lc-joins",
+      "name": "Learning Checks — Joins",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-10T13:00:00Z",
+      "canvas_id": 968367,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968367"
+    },
+    {
+      "key": "ed-week-1",
+      "name": "Ed Discussion — Week 1",
+      "group": "participation",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 1,
+      "due_at": "2026-06-29T13:00:00Z",
+      "canvas_id": 968368,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968368"
+    },
+    {
+      "key": "ed-week-2",
+      "name": "Ed Discussion — Week 2",
+      "group": "participation",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968369,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968369"
+    },
+    {
+      "key": "ed-week-3",
+      "name": "Ed Discussion — Week 3",
+      "group": "participation",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-10T13:00:00Z",
+      "canvas_id": 968370,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968370"
+    },
+    {
+      "key": "office-week-1",
+      "name": "Office Hours — Week 1",
+      "group": "participation",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 1,
+      "due_at": "2026-06-29T13:00:00Z",
+      "canvas_id": 968371,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968371"
+    },
+    {
+      "key": "office-week-2",
+      "name": "Office Hours — Week 2",
+      "group": "participation",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968372,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968372"
+    },
+    {
+      "key": "office-week-3",
+      "name": "Office Hours — Week 3",
+      "group": "participation",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-10T13:00:00Z",
+      "canvas_id": 968373,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968373"
+    },
+    {
+      "key": "project-1",
+      "name": "Project Case Study — Submission 1",
+      "group": "hw1",
+      "grading_type": "points",
+      "points_possible": 100,
+      "week": 1,
+      "due_at": "2026-06-29T13:00:00Z",
+      "canvas_id": 968374,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968374"
+    },
+    {
+      "key": "project-2",
+      "name": "Project Case Study — Submission 2",
+      "group": "hw2",
+      "grading_type": "points",
+      "points_possible": 100,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968375,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968375"
+    },
+    {
+      "key": "project-3",
+      "name": "Project Case Study — Submission 3 (final)",
+      "group": "hw3",
+      "grading_type": "points",
+      "points_possible": 100,
+      "week": 3,
+      "due_at": "2026-07-10T13:00:00Z",
+      "canvas_id": 968376,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968376"
+    },
+    {
+      "key": "final-presentation",
+      "name": "Final Presentation",
+      "group": "finalpres",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-10T13:00:00Z",
+      "canvas_id": 968377,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968377"
+    },
+    {
+      "key": "intro-survey",
+      "name": "Intro Course Survey",
+      "group": "participation",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 1,
+      "due_at": "2026-06-29T13:00:00Z",
+      "canvas_id": 968417,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968417"
+    },
+    {
+      "key": "midterm-eval",
+      "name": "Midterm Course Evaluation",
+      "group": "participation",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968418,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968418"
+    },
+    {
+      "key": "final-eval",
+      "name": "Final Course Evaluation",
+      "group": "participation",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-10T13:00:00Z",
+      "canvas_id": 968419,
+      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968419"
+    }
+  ]
+}

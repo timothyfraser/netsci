@@ -16,7 +16,17 @@
     "allow": [
       "Bash(Rscript:*)",
       "Bash(R:*)",
-      "Bash(R CMD:*)"
+      "Bash(R CMD:*)",
+      "Bash(git fetch *)",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_network_requests",
+      "mcp__playwright__browser_network_request",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_console_messages",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__Claude_Preview__preview_console_logs",
+      "mcp__Claude_Preview__preview_screenshot",
+      "mcp__Claude_Preview__preview_snapshot"
     ]
   }
 }

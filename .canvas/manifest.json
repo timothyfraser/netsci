@@ -37,17 +37,18 @@
   "assignment_groups": [
     { "key": "drawings",     "name": "Drawings",                              "group_weight": 20, "position": 1, "drop_lowest": 2 },
     { "key": "casestudies",  "name": "Case Studies",                          "group_weight": 25, "position": 2, "drop_lowest": 2 },
-    { "key": "participation","name": "Participation",                         "group_weight": 10, "position": 3 },
-    { "key": "hw1",          "name": "Weekly Homework 1 · Project Case Study", "group_weight": 15, "position": 4 },
-    { "key": "hw2",          "name": "Weekly Homework 2 · Project Case Study", "group_weight": 15, "position": 5 },
-    { "key": "hw3",          "name": "Weekly Homework 3 · Project Case Study", "group_weight": 15, "position": 6 }
+    { "key": "participation","name": "Participation",                         "group_weight": 5,  "position": 3 },
+    { "key": "finalpres",    "name": "Final Presentation",                    "group_weight": 5,  "position": 4 },
+    { "key": "hw1",          "name": "Weekly Homework 1 · Project Case Study", "group_weight": 15, "position": 5 },
+    { "key": "hw2",          "name": "Weekly Homework 2 · Project Case Study", "group_weight": 15, "position": 6 },
+    { "key": "hw3",          "name": "Weekly Homework 3 · Project Case Study", "group_weight": 15, "position": 7 }
   ],
 
   "due_dates": {
-    "_comment": "REFERENCE ONLY — NOT pushed to Canvas. The cards never mention due dates and push_to_canvas.py never sets due_at, so you schedule everything in Canvas. These mirror docs/calendar.html (Monday 9 AM ET = 13:00 UTC in summer) if you want to set the same dates by hand.",
+    "_comment": "Per CONTENT WEEK = the deadline for work done that week. Course is 3 weeks starting the week of Sun 2026-06-21 (Wk1 Jun22-28, Wk2 Jun29-Jul5, Wk3 Jul6-12). Work-week N is due at the start of week N+1; Week 3 is due at the end of Week 3 (Fri). These are SEED VALUES read by sync_contract.py --seed into the contract for review; nothing is pushed to Canvas until --apply. 13:00 UTC = 9 AM ET.",
     "week1": "2026-06-29T13:00:00Z",
     "week2": "2026-07-06T13:00:00Z",
-    "week3": "2026-07-13T13:00:00Z"
+    "week3": "2026-07-10T13:00:00Z"
   },
 
   "case_studies": [
@@ -65,16 +66,23 @@
   ],
 
   "extras": {
-    "_comment": "Weekly items that are not per-case-study. weeks lists which course weeks each recurring item appears in.",
+    "_comment": "Weekly items that are not per-case-study. *_weeks list which course weeks each recurring item appears in. week_videos: per-week OVERVIEW intro video (null = placeholder until Tim provides the URL).",
     "ed_discussion_weeks": [1, 2, 3],
     "office_hours_weeks": [1, 2, 3],
+    "week_videos": { "1": null, "2": null, "3": null },
     "projects": [
-      { "n": 1, "group": "hw1", "due": "week2", "title": "Project Case Study — Submission 1" },
-      { "n": 2, "group": "hw2", "due": "week3", "title": "Project Case Study — Submission 2" },
+      { "n": 1, "group": "hw1", "due": "week1", "title": "Project Case Study — Submission 1" },
+      { "n": 2, "group": "hw2", "due": "week2", "title": "Project Case Study — Submission 2" },
       { "n": 3, "group": "hw3", "due": "week3", "title": "Project Case Study — Submission 3 (final)" }
     ],
-    "final_presentation": { "group": "participation", "due": "week3" }
+    "final_presentation": { "group": "finalpres", "due": "week3" }
   },
+
+  "surveys": [
+    { "key": "intro-survey", "name": "Intro Course Survey",       "icon": "📝", "group": "participation", "module": "getting-started", "week": 1, "url": null },
+    { "key": "midterm-eval", "name": "Midterm Course Evaluation", "icon": "📋", "group": "participation", "module": "week2",           "week": 2, "url": null },
+    { "key": "final-eval",   "name": "Final Course Evaluation",   "icon": "📚", "group": "participation", "module": "wrapping-up",     "week": 3, "url": null }
+  ],
 
   "home_shortcuts": [
     { "section": "Start Here", "links": [
@@ -102,53 +110,36 @@
     ]}
   ],
 
-  "modules": [
-    { "name": "Getting Started", "items": [
-      { "type": "SubHeader", "title": "Read these first" },
-      { "type": "ExternalUrl", "title": "🏠 Course Website — Home", "path": "index.html" },
-      { "type": "ExternalUrl", "title": "📘 Syllabus",                "path": "syllabus.html" },
-      { "type": "ExternalUrl", "title": "🗓️ Calendar & Pacing",      "path": "calendar.html" },
-      { "type": "SubHeader", "title": "Set up your tools" },
-      { "type": "ExternalUrl", "title": "⚙️ Environment Setup",        "path": "help/setup.html" },
-      { "type": "ExternalUrl", "title": "🔤 R Quickstart",             "path": "help/quickstart-r.html" },
-      { "type": "ExternalUrl", "title": "🐍 Python Quickstart",        "path": "help/quickstart-py.html" },
-      { "type": "ExternalUrl", "title": "📤 How to Submit",            "path": "help/submit.html" },
-      { "type": "ExternalUrl", "title": "⚖️ AI Use Policy",            "path": "help/ai-policy.html" }
-    ]},
-    { "name": "Week 1 — Think Like a Graph", "items": [
-      { "type": "SubHeader", "title": "Labs this week (on the course website)" },
-      { "type": "ExternalUrl", "title": "🕸️ Build a Network — Lab",        "path": "case-studies/build-a-network.html" },
-      { "type": "ExternalUrl", "title": "📐 Network Statistics — Lab",     "path": "case-studies/permutation.html" },
-      { "type": "ExternalUrl", "title": "📊 Centrality & Criticality — Lab", "path": "case-studies/centrality.html" },
-      { "type": "ExternalUrl", "title": "📚 Readings for Week 1",          "path": "readings.html" },
-      { "type": "SubHeader", "title": "Submit on Canvas → Drawings, Case Studies, Participation & Weekly Homework groups" }
-    ]},
-    { "name": "Week 2 — Find What Matters", "items": [
-      { "type": "SubHeader", "title": "Labs this week (on the course website)" },
-      { "type": "ExternalUrl", "title": "📦 Supply Chain Resilience — Lab", "path": "case-studies/supply-chain.html" },
-      { "type": "ExternalUrl", "title": "🚦 Routing (Counterfactual) — Lab", "path": "case-studies/counterfactual.html" },
-      { "type": "ExternalUrl", "title": "🧩 DSM Clustering — Lab",          "path": "case-studies/dsm-clustering.html" },
-      { "type": "ExternalUrl", "title": "🗺️ Aggregation — Lab",            "path": "case-studies/aggregation.html" },
-      { "type": "ExternalUrl", "title": "📚 Readings for Week 2",          "path": "readings.html" },
-      { "type": "SubHeader", "title": "Submit on Canvas → Drawings, Case Studies, Participation & Weekly Homework groups" }
-    ]},
-    { "name": "Week 3 — Move & Predict", "items": [
-      { "type": "SubHeader", "title": "Labs this week (on the course website)" },
-      { "type": "ExternalUrl", "title": "🧠 GNN by Hand — Lab",            "path": "case-studies/gnn-by-hand.html" },
-      { "type": "ExternalUrl", "title": "🤖 GNN + XGBoost — Lab",         "path": "case-studies/gnn-xgboost.html" },
-      { "type": "ExternalUrl", "title": "🗄️ Sampling — Lab",               "path": "case-studies/sampling.html" },
-      { "type": "ExternalUrl", "title": "🔗 Joins & Pipelines — Lab",      "path": "case-studies/joins.html" },
-      { "type": "ExternalUrl", "title": "📚 Readings for Week 3",          "path": "readings.html" },
-      { "type": "SubHeader", "title": "Submit on Canvas → Drawings, Case Studies, Participation & Weekly Homework groups" }
-    ]},
-    { "name": "Wrapping Up", "items": [
-      { "type": "SubHeader", "title": "Finish strong" },
-      { "type": "ExternalUrl", "title": "🎤 Final Presentation — details", "path": "assignments.html" },
-      { "type": "ExternalUrl", "title": "🗂️ All Case Studies",            "path": "case-studies.html" },
-      { "type": "ExternalUrl", "title": "📚 Materials & Resources",       "path": "materials.html" },
-      { "type": "ExternalUrl", "title": "📖 Glossary",                   "path": "help/glossary.html" },
-      { "type": "ExternalUrl", "title": "❓ FAQ & Troubleshooting",        "path": "help/faq.html" },
-      { "type": "ExternalUrl", "title": "📁 Course GitHub Repository",   "url": "https://github.com/timothyfraser/netsci" }
-    ]}
-  ]
+  "modules": {
+    "_comment": "Lightweight inputs only — generate_html.py:build_modules() assembles the full ordered modules (OVERVIEW / ACTIVITIES / REMINDERS sections, with Assignment items per case study). Week modules are derived from case_studies (by week) + extras + surveys. readings_path is the per-week readings page; week_videos (in extras) supply the OVERVIEW intro video per week.",
+    "readings_path": "readings.html",
+    "week_titles": {
+      "1": "Week 1 — Think Like a Graph",
+      "2": "Week 2 — Find What Matters",
+      "3": "Week 3 — Move & Predict"
+    },
+    "getting_started": {
+      "name": "Getting Started",
+      "overview": [
+        { "title": "🏠 Course Website — Home", "path": "index.html" },
+        { "title": "📘 Syllabus",              "path": "syllabus.html" },
+        { "title": "🗓️ Calendar & Pacing",    "path": "calendar.html" },
+        { "title": "⚙️ Environment Setup",      "path": "help/setup.html" },
+        { "title": "🔤 R Quickstart",           "path": "help/quickstart-r.html" },
+        { "title": "🐍 Python Quickstart",      "path": "help/quickstart-py.html" },
+        { "title": "📤 How to Submit",          "path": "help/submit.html" },
+        { "title": "⚖️ AI Use Policy",          "path": "help/ai-policy.html" }
+      ]
+    },
+    "wrapping_up": {
+      "name": "Wrapping Up",
+      "overview": [
+        { "title": "🗂️ All Case Studies",       "path": "case-studies.html" },
+        { "title": "📚 Materials & Resources",   "path": "materials.html" },
+        { "title": "📖 Glossary",               "path": "help/glossary.html" },
+        { "title": "❓ FAQ & Troubleshooting",    "path": "help/faq.html" },
+        { "title": "📁 Course GitHub Repository","url": "https://github.com/timothyfraser/netsci" }
+      ]
+    }
+  }
 }
