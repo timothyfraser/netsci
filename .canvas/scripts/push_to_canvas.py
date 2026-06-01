@@ -114,9 +114,9 @@ def ensure_groups():
         data = [("name", g["name"]),
                 ("group_weight", str(g["group_weight"])),
                 ("position", str(g["position"]))]
-        if g.get("drop_lowest"):
-            # Canvas group rule: drop the N lowest-scoring assignments in the group
-            data.append(("rules[drop_lowest]", str(g["drop_lowest"])))
+        # NB: rules[drop_lowest] is deferred to apply_group_rules() — Canvas
+        # rejects a drop rule larger than the group's assignment count, and the
+        # group is empty at create time. We set it after assignments exist.
         if g["name"] in existing:
             gid = existing[g["name"]]["id"]
             print(f"• Group (update) {g['name']}  ({g['group_weight']}%)")
@@ -127,6 +127,22 @@ def ensure_groups():
             gid = res.get("id", f"NEW_{g['key']}")
         key_to_id[g["key"]] = gid
     return key_to_id
+
+
+# ---------------------------------------------------------------------------
+# 2b. group rules — applied AFTER assignments exist (Canvas rejects a
+#     drop_lowest rule that exceeds the number of assignments in the group)
+# ---------------------------------------------------------------------------
+def apply_group_rules(group_ids):
+    for g in PLAN["assignment_groups"]:
+        if not g.get("drop_lowest"):
+            continue
+        gid = group_ids.get(g["key"])
+        if not gid or str(gid).startswith("NEW_"):
+            continue
+        print(f"• Group rule  {g['name']}  drop_lowest={g['drop_lowest']}")
+        _req("PUT", f"/courses/{COURSE}/assignment_groups/{gid}",
+             data=[("rules[drop_lowest]", str(g["drop_lowest"]))])
 
 
 # ---------------------------------------------------------------------------
@@ -156,7 +172,10 @@ def ensure_front_page():
 # 4. assignments  (match by name → update or create)
 # ---------------------------------------------------------------------------
 def ensure_assignments(group_ids):
+    """Create/update each assignment; return {plan key -> Canvas assignment id}
+    so modules can reference assignments as items."""
     existing = {a["name"]: a for a in get_all(f"/courses/{COURSE}/assignments")}
+    key_to_id = {}
     for a in PLAN["assignments"]:
         gid = group_ids.get(a["group"])
         data = [
@@ -178,11 +197,17 @@ def ensure_assignments(group_ids):
             _req("PUT", f"/courses/{COURSE}/assignments/{aid}", data=data)
         else:
             print(f"  - assignment (create) {a['name']}")
-            _req("POST", f"/courses/{COURSE}/assignments", data=data)
+            res = _req("POST", f"/courses/{COURSE}/assignments", data=data)
+            aid = res.get("id", f"NEW_{a['key']}")
+        key_to_id[a["key"]] = aid
+    return key_to_id
 
 
 # ---------------------------------------------------------------------------
-# 5. modules + items  (match by name; add only missing items)
+# 5. modules + items  (match module by name; REPLACE its items in order)
+#    Item types: SubHeader, ExternalUrl (url/path), Assignment (ref -> id).
+#    Because modules are restructured, we delete existing items and re-add in
+#    order — module items are just references, so this is safe and idempotent.
 # ---------------------------------------------------------------------------
 def site_url(item):
     if "url" in item:
@@ -190,7 +215,7 @@ def site_url(item):
     return PLAN["site_base"] + item["path"].lstrip("/")
 
 
-def ensure_modules():
+def ensure_modules(assignment_ids):
     existing = {m["name"]: m for m in get_all(f"/courses/{COURSE}/modules")}
     for pos, mod in enumerate(PLAN["modules"], start=1):
         if mod["name"] in existing:
@@ -198,6 +223,9 @@ def ensure_modules():
             print(f"• Module (exists) {mod['name']}")
             _req("PUT", f"/courses/{COURSE}/modules/{mid}",
                  data=[("module[published]", "true"), ("module[position]", str(pos))])
+            # clear existing items so the restructured list lands cleanly
+            for it in get_all(f"/courses/{COURSE}/modules/{mid}/items"):
+                _req("DELETE", f"/courses/{COURSE}/modules/{mid}/items/{it['id']}")
         else:
             print(f"• Module (create) {mod['name']}")
             res = _req("POST", f"/courses/{COURSE}/modules",
@@ -205,19 +233,26 @@ def ensure_modules():
                              ("module[position]", str(pos)),
                              ("module[published]", "true")])
             mid = res.get("id", f"NEW_{pos}")
-        have = {i.get("title") for i in get_all(f"/courses/{COURSE}/modules/{mid}/items")} \
-            if not str(mid).startswith("NEW_") else set()
         for ipos, item in enumerate(mod["items"], start=1):
-            if item["title"] in have:
-                continue
-            data = [("module_item[type]", item["type"]),
-                    ("module_item[title]", item["title"]),
+            typ = item["type"]
+            data = [("module_item[type]", typ),
                     ("module_item[position]", str(ipos))]
-            if item["type"] == "ExternalUrl":
-                data += [("module_item[external_url]", site_url(item)),
+            if typ == "SubHeader":
+                data.append(("module_item[title]", item["title"]))
+            elif typ == "ExternalUrl":
+                data += [("module_item[title]", item["title"]),
+                         ("module_item[external_url]", site_url(item)),
                          ("module_item[new_tab]", "true"),
-                         ("module_item[indent]", "1")]
-            print(f"    · item {item['type']}: {item['title']}")
+                         ("module_item[indent]", str(item.get("indent", 1)))]
+            elif typ == "Assignment":
+                cid = assignment_ids.get(item["ref"])
+                if cid is None:
+                    print(f"    ! skip Assignment item (unknown ref): {item['ref']}")
+                    continue
+                data += [("module_item[content_id]", str(cid)),
+                         ("module_item[indent]", str(item.get("indent", 1)))]
+            label = item.get("title") or item.get("ref", "?")
+            print(f"    · item {typ}: {label}")
             _req("POST", f"/courses/{COURSE}/modules/{mid}/items", data=data)
 
 
@@ -228,8 +263,9 @@ def main():
     set_course_settings()
     group_ids = ensure_groups()
     ensure_front_page()
-    ensure_assignments(group_ids)
-    ensure_modules()
+    assignment_ids = ensure_assignments(group_ids)
+    apply_group_rules(group_ids)
+    ensure_modules(assignment_ids)
     print("\n✅ Done. Open the course in Canvas and verify the home page, the "
           "Assignments index (grouped + weighted), and Modules.\n")
 

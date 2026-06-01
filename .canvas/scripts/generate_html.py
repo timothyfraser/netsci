@@ -36,7 +36,7 @@ import html
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-M = json.loads((ROOT / "manifest.json").read_text())
+M = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
 
 T = M["theme"]
 SITE = M["course"]["site_base"].rstrip("/") + "/"
@@ -233,14 +233,17 @@ def build_assignments():
         body = (
             f'The hand-drawn sketchpad activity for this case study — '
             f'<strong style="color:{T["white"]};">{esc(c["sketch_title"])}</strong>. '
-            f'The full prompt and what to submit live on the course website.'
+            f'The full prompt and what to submit live on the course website. '
+            f'<strong style="color:{T["white"]};">To submit:</strong> paste a photo of '
+            f'your drawing directly into the text box (Online · Text Entry) so it is easy '
+            f'to review right here in Canvas.'
         )
         out.append({
             "key": f'drawing-{c["key"]}',
             "name": f'Drawing — {c["short"]}',
             "group": "drawings",
-            "grading": "completion", "points": 10,
-            "submission_types": ["online_upload"],
+            "grading": "completion", "points": 1,
+            "submission_types": ["online_text_entry"],
             "html": card("Drawing Submission", f'Drawing · {c["short"]}',
                          [("Case study", cs_label), ("Skill", c["skill"])],
                          grading_pill("completion"), body,
@@ -254,14 +257,21 @@ def build_assignments():
             f'Your combined Learning Check for this case study — the in-lab '
             f'case-study check <em>and</em> the “I ran the code” check, '
             f'<strong style="color:{T["white"]};">submitted together</strong>. The full '
-            f'instructions live on the course website.'
+            f'instructions live on the course website. '
+            f'<strong style="color:{T["white"]};">To submit (Online · Text Entry):</strong> '
+            f'include your code either (A) by pasting it at the end of the text box, or '
+            f'(B) by pasting a link to the exact file in your GitHub repo. '
+            f'<strong style="color:{T["amber"]};">Option B is the harder path</strong> — if I '
+            f'(GitHub <span style="font-family:{font("mono")};color:{T["white"]};">timothyfraser</span>) '
+            f'cannot open that repo at the deadline, the assignment is a 0, so make your repo '
+            f'public or grant me access before you submit.'
         )
         out.append({
             "key": f'lc-{c["key"]}',
             "name": f'Learning Checks — {c["short"]}',
             "group": "casestudies",
-            "grading": "completion", "points": 10,
-            "submission_types": ["online_text_entry", "online_upload"],
+            "grading": "completion", "points": 1,
+            "submission_types": ["online_text_entry"],
             "html": card("Learning Checks · Case Study + “I Ran the Code”",
                          f'Learning Checks · {c["short"]}',
                          [("Case study", cs_label), ("Skill", c["skill"])],
@@ -275,14 +285,16 @@ def build_assignments():
         body = (
             f'Your weekly post on <strong style="color:{T["white"]};">Ed Discussion</strong> '
             f'(linked in the Canvas left-hand navigation). The prompt and details live on '
-            f'the course website.'
+            f'the course website. <strong style="color:{T["white"]};">To submit (Online · '
+            f'Text Entry):</strong> paste a screenshot of your Ed Discussion post into the '
+            f'text box.'
         )
         out.append({
             "key": f"ed-week-{w}",
             "name": f"Ed Discussion — Week {w}",
             "group": "participation",
-            "grading": "completion", "points": 10,
-            "submission_types": ["none"],
+            "grading": "completion", "points": 1,
+            "submission_types": ["online_text_entry"],
             "html": card("Ed Discussion", f"Ed Discussion · Week {w}",
                          [], grading_pill("completion"), body,
                          [button(url("calendar.html"), "See the Course Calendar →")]),
@@ -293,14 +305,16 @@ def build_assignments():
         body = (
             f'Your office-hours check-in for the week — <strong style="color:'
             f'{T["white"]};">three are required across the course</strong>. Book a slot on '
-            f'the course website.'
+            f'the course website. <strong style="color:{T["white"]};">To submit (Online · '
+            f'Text Entry):</strong> paste a screenshot of your calendar invite to our '
+            f'office-hours meeting into the text box.'
         )
         out.append({
             "key": f"office-week-{w}",
             "name": f"Office Hours — Week {w}",
             "group": "participation",
-            "grading": "completion", "points": 10,
-            "submission_types": ["none"],
+            "grading": "completion", "points": 1,
+            "submission_types": ["online_text_entry"],
             "html": card("Office Hours", f"Office Hours · Week {w}",
                          [], grading_pill("completion"), body,
                          [button(url("help/office-hours.html"), "Book Office Hours →")]),
@@ -338,14 +352,138 @@ def build_assignments():
         "key": "final-presentation",
         "name": "Final Presentation",
         "group": fp["group"],
-        "grading": "completion", "points": 20,
+        "grading": "completion", "points": 1,
         "submission_types": ["none"],
         "html": card("Final Presentation", "Final Presentation",
                      [], grading_pill("completion"), body,
                      [button(url("assignments.html"), "See Presentation Details →")]),
     })
 
+    # ---- Course surveys (group: participation) ----
+    for s in M.get("surveys", []):
+        form_url = s.get("url")
+        if s["key"] == "final-eval":
+            body = (
+                f'<strong style="color:{T["white"]};">Take the Final Course Evaluation.</strong> '
+                f'🕒 Estimated time: 5–10 minutes. All participants receive course credit for '
+                f'completing the final course survey — it helps your instructor tailor this course '
+                f'to suit future students. <strong style="color:{T["white"]};">Your answers are '
+                f'fully anonymized.</strong> To complete it, search your inbox for the email from '
+                f'Cornell about final course evaluations. <strong style="color:{T["white"]};">To '
+                f'submit (Online · URL):</strong> paste the confirmation link to affirm you '
+                f'completed the evaluation so I can give you credit.'
+            )
+        else:
+            body = (
+                f'A short course survey — <strong style="color:{T["white"]};">all participants '
+                f'receive course credit</strong> for completing it. 🕒 A few minutes, answers '
+                f'anonymized. <strong style="color:{T["white"]};">To submit (Online · URL):</strong> '
+                f'paste the link to your completed Google Form (or its confirmation) into the box.'
+            )
+        if form_url:
+            buttons = [button(form_url, "Open the Survey →")]
+        else:
+            buttons = [button("#", "Survey Link — Coming Soon")]
+            body += (f' <span style="color:{T["grey_dim"]};">(The form link will be posted '
+                     f'here shortly.)</span>')
+        out.append({
+            "key": s["key"],
+            "name": s["name"],
+            "group": s["group"],
+            "grading": "completion", "points": 1,
+            "submission_types": ["online_url"],
+            "html": card(s["name"], f'{s["icon"]} {s["name"]}', [],
+                         grading_pill("completion"), body, buttons),
+        })
+
     return out
+
+
+# ---------------------------------------------------------------------------
+# modules — OVERVIEW / ACTIVITIES / REMINDERS, assembled from the manifest.
+# Every assignment appears in the module it relates to (content week). Items
+# of type "Assignment" carry a "ref" = the assignment key; push_to_canvas.py
+# resolves the ref to the Canvas assignment id at push time.
+# ---------------------------------------------------------------------------
+def build_modules():
+    MOD = M["modules"]
+    readings = MOD["readings_path"]
+    videos = M["extras"].get("week_videos", {})
+    surveys_by_module = {}
+    for s in M.get("surveys", []):
+        surveys_by_module.setdefault(s["module"], []).append(s)
+
+    def sub(t):
+        return {"type": "SubHeader", "title": t}
+
+    def ext(t, path=None, url_=None, indent=1):
+        d = {"type": "ExternalUrl", "title": t, "indent": indent}
+        if url_:
+            d["url"] = url_
+        else:
+            d["path"] = path
+        return d
+
+    def asg(ref, indent=1):
+        return {"type": "Assignment", "ref": ref, "indent": indent}
+
+    modules = []
+
+    # ---- Getting Started ----
+    gs = MOD["getting_started"]
+    items = [sub("OVERVIEW")]
+    for ln in gs["overview"]:
+        items.append(ext(ln["title"], ln.get("path"), ln.get("url")))
+    items.append(sub("ACTIVITIES"))
+    for s in surveys_by_module.get("getting-started", []):
+        items.append(asg(s["key"]))
+    # surface the first office hours + first ed discussion here too
+    items.append(asg("office-week-1"))
+    items.append(asg("ed-week-1"))
+    modules.append({"name": gs["name"], "items": items})
+
+    # ---- Week 1 / 2 / 3 ----
+    for w in (1, 2, 3):
+        cs_week = [c for c in M["case_studies"] if c["week"] == w]
+        items = [sub("OVERVIEW")]
+        vid = videos.get(str(w))
+        if vid:
+            items.append(ext(f"🎬 Week {w} Overview Video", url_=vid))
+        else:
+            items.append(ext(f"🎬 Week {w} Overview Video (coming soon)", path="index.html"))
+        items.append(ext(f"📚 Readings for Week {w}", path=readings))
+        items.append(sub("ACTIVITIES"))
+        # Office Hours + Ed Discussion always come first
+        items.append(asg(f"office-week-{w}"))
+        items.append(asg(f"ed-week-{w}"))
+        # then each case-study Lab, with its Drawing + Learning Check nested under it
+        for c in cs_week:
+            items.append(ext(f'{c["icon"]} {c["short"]} — Lab', path=c["lab"], indent=1))
+            items.append(asg(f'drawing-{c["key"]}', indent=2))
+            items.append(asg(f'lc-{c["key"]}', indent=2))
+        for s in surveys_by_module.get(f"week{w}", []):
+            items.append(asg(s["key"]))
+        items.append(sub("REMINDERS"))
+        items.append(ext("📤 Submit on Canvas — How to Submit", path="help/submit.html"))
+        for p in M["extras"]["projects"]:
+            if p["n"] == w and w in (1, 2):   # project-3 (final) lives in Wrapping Up
+                items.append(asg(f"project-{p['n']}"))
+        modules.append({"name": MOD["week_titles"][str(w)], "items": items})
+
+    # ---- Wrapping Up ----
+    wu = MOD["wrapping_up"]
+    items = [sub("OVERVIEW")]
+    for ln in wu["overview"]:
+        items.append(ext(ln["title"], ln.get("path"), ln.get("url")))
+    items.append(sub("ACTIVITIES"))
+    for s in surveys_by_module.get("wrapping-up", []):
+        items.append(asg(s["key"]))
+    items.append(sub("REMINDERS"))
+    items.append(asg("final-presentation"))
+    items.append(asg("project-3"))
+    modules.append({"name": wu["name"], "items": items})
+
+    return modules
 
 
 # ---------------------------------------------------------------------------
@@ -389,14 +527,17 @@ def build_preview(home_html, assignments):
     parts.append(section_label("Course Homepage (front page)"))
     parts.append(frame("Home", home_html))
 
+    surveys = ("intro-survey", "midterm-eval", "final-eval")
     buckets = [
-        ("Drawings  ·  group weight 20%  ·  drops the lowest 2", lambda a: a["group"] == "drawings"),
-        ("Case Studies — Learning Checks (case study + “I ran the code”)  ·  25%  ·  drops the lowest 2",
+        ("Drawings  ·  group weight 20%  ·  drops the lowest 2  ·  1 pt · Text Entry",
+         lambda a: a["group"] == "drawings"),
+        ("Case Studies — Learning Checks (case study + “I ran the code”)  ·  25%  ·  drops the lowest 2  ·  1 pt · Text Entry",
          lambda a: a["key"].startswith("lc-")),
-        ("Participation · Ed Discussions  ·  Participation 10%", lambda a: a["key"].startswith("ed-week")),
-        ("Participation · Office Hours  ·  Participation 10%", lambda a: a["key"].startswith("office-week")),
-        ("Participation · Final Presentation  ·  Participation 10%", lambda a: a["key"] == "final-presentation"),
-        ("Weekly Homework · Projects  ·  15% each", lambda a: a["key"].startswith("project")),
+        ("Participation · Ed Discussions  ·  Participation 5%  ·  1 pt", lambda a: a["key"].startswith("ed-week")),
+        ("Participation · Office Hours  ·  Participation 5%  ·  1 pt", lambda a: a["key"].startswith("office-week")),
+        ("Participation · Course Surveys  ·  Participation 5%  ·  1 pt · Online URL", lambda a: a["key"] in surveys),
+        ("Final Presentation  ·  own group 5%", lambda a: a["key"] == "final-presentation"),
+        ("Weekly Homework · Projects  ·  15% each  ·  100 pts", lambda a: a["key"].startswith("project")),
     ]
     for label, pred in buckets:
         parts.append(section_label(label))
@@ -421,11 +562,11 @@ def main():
         f.unlink()
 
     home_html = build_home()
-    (pages_dir / "home.html").write_text(home_html)
+    (pages_dir / "home.html").write_text(home_html, encoding="utf-8")
 
     assignments = build_assignments()
     for a in assignments:
-        (asg_dir / f'{a["key"]}.html').write_text(a["html"])
+        (asg_dir / f'{a["key"]}.html').write_text(a["html"], encoding="utf-8")
 
     plan = {
         "course": M["course"],
@@ -438,12 +579,14 @@ def main():
             | {"html_file": f'assignments/{a["key"]}.html'}
             for a in assignments
         ],
-        "modules": M["modules"],
+        "modules": build_modules(),
         "site_base": SITE,
     }
-    (ROOT / "canvas_plan.json").write_text(json.dumps(plan, indent=2, ensure_ascii=False))
+    (ROOT / "canvas_plan.json").write_text(
+        json.dumps(plan, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    (ROOT / "preview.html").write_text(build_preview(home_html, assignments))
+    (ROOT / "preview.html").write_text(build_preview(home_html, assignments),
+                                       encoding="utf-8")
 
     print(f"✅ Wrote 1 front page  -> pages/home.html")
     print(f"✅ Wrote {len(assignments)} assignment fragments -> assignments/")
