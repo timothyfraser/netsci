@@ -2,7 +2,7 @@
   "meta": {
     "course_id": "81765",
     "base_url": "https://canvas.cornell.edu",
-    "last_pull": "2026-06-01T16:11:19Z",
+    "last_pull": "2026-06-01T16:18:59Z",
     "note": "Edit due_at (ISO 8601, e.g. 2026-06-29T13:00:00Z), points_possible, and group weight/drop_lowest here, then run: sync_contract.py --apply. Or edit on Canvas and run --pull. Set due_at to null to leave a date unset."
   },
   "assignment_groups": [
@@ -225,7 +225,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 3,
-      "due_at": "2026-07-10T13:00:00Z",
+      "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968360,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968360"
     },
@@ -236,7 +236,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 3,
-      "due_at": "2026-07-10T13:00:00Z",
+      "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968361,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968361"
     },
@@ -247,7 +247,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 3,
-      "due_at": "2026-07-10T13:00:00Z",
+      "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968362,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968362"
     },
@@ -258,7 +258,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 3,
-      "due_at": "2026-07-10T13:00:00Z",
+      "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968363,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968363"
     },
@@ -269,7 +269,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 3,
-      "due_at": "2026-07-10T13:00:00Z",
+      "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968364,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968364"
     },
@@ -280,7 +280,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 3,
-      "due_at": "2026-07-10T13:00:00Z",
+      "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968365,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968365"
     },
@@ -291,7 +291,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 3,
-      "due_at": "2026-07-10T13:00:00Z",
+      "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968366,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968366"
     },
@@ -302,7 +302,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 3,
-      "due_at": "2026-07-10T13:00:00Z",
+      "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968367,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968367"
     },
@@ -335,7 +335,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 3,
-      "due_at": "2026-07-10T13:00:00Z",
+      "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968370,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968370"
     },
@@ -368,7 +368,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 3,
-      "due_at": "2026-07-10T13:00:00Z",
+      "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968373,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968373"
     },
@@ -401,7 +401,7 @@
       "grading_type": "points",
       "points_possible": 100,
       "week": 3,
-      "due_at": "2026-07-10T13:00:00Z",
+      "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968376,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968376"
     },
@@ -412,7 +412,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 3,
-      "due_at": "2026-07-10T13:00:00Z",
+      "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968377,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968377"
     },
@@ -445,7 +445,7 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 3,
-      "due_at": "2026-07-10T13:00:00Z",
+      "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968419,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968419"
     }

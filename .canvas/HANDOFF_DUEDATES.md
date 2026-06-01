@@ -1,8 +1,8 @@
 # SYSEN 5470 — Due Dates & Points (Canvas contract handoff)
 
 - **Course:** `81765` @ https://canvas.cornell.edu
-- **Last pulled from Canvas:** 2026-06-01T16:11:19Z
-- **Generated:** 2026-06-01T16:11:19Z
+- **Last pulled from Canvas:** 2026-06-01T16:18:59Z
+- **Generated:** 2026-06-01T16:18:59Z
 
 > **Dates below are a PROPOSAL** seeded from the course calendar (each week's Monday 9 AM ET). Edit them — in `canvas_contract.json` or by replying in chat — then they get pushed to Canvas.
 
@@ -59,17 +59,17 @@
 
 | Assignment | Group | Grading | Points | Proposed due |
 |---|---|---|---|---|
-| [Drawing — GNN by Hand](https://canvas.cornell.edu/courses/81765/assignments/968360) | Drawings | Completion | 1 | Fri 2026-07-10 13:00 UTC |
-| [Learning Checks — GNN by Hand](https://canvas.cornell.edu/courses/81765/assignments/968361) | Case Studies | Completion | 1 | Fri 2026-07-10 13:00 UTC |
-| [Drawing — GNN + XGBoost](https://canvas.cornell.edu/courses/81765/assignments/968362) | Drawings | Completion | 1 | Fri 2026-07-10 13:00 UTC |
-| [Learning Checks — GNN + XGBoost](https://canvas.cornell.edu/courses/81765/assignments/968363) | Case Studies | Completion | 1 | Fri 2026-07-10 13:00 UTC |
-| [Drawing — Sampling](https://canvas.cornell.edu/courses/81765/assignments/968364) | Drawings | Completion | 1 | Fri 2026-07-10 13:00 UTC |
-| [Learning Checks — Sampling](https://canvas.cornell.edu/courses/81765/assignments/968365) | Case Studies | Completion | 1 | Fri 2026-07-10 13:00 UTC |
-| [Drawing — Joins](https://canvas.cornell.edu/courses/81765/assignments/968366) | Drawings | Completion | 1 | Fri 2026-07-10 13:00 UTC |
-| [Learning Checks — Joins](https://canvas.cornell.edu/courses/81765/assignments/968367) | Case Studies | Completion | 1 | Fri 2026-07-10 13:00 UTC |
-| [Ed Discussion — Week 3](https://canvas.cornell.edu/courses/81765/assignments/968370) | Participation | Completion | 1 | Fri 2026-07-10 13:00 UTC |
-| [Office Hours — Week 3](https://canvas.cornell.edu/courses/81765/assignments/968373) | Participation | Completion | 1 | Fri 2026-07-10 13:00 UTC |
-| [Project Case Study — Submission 3 (final)](https://canvas.cornell.edu/courses/81765/assignments/968376) | Weekly Homework 3 · Project Case Study | Points | 100 | Fri 2026-07-10 13:00 UTC |
-| [Final Presentation](https://canvas.cornell.edu/courses/81765/assignments/968377) | Final Presentation | Completion | 1 | Fri 2026-07-10 13:00 UTC |
-| [Final Course Evaluation](https://canvas.cornell.edu/courses/81765/assignments/968419) | Participation | Completion | 1 | Fri 2026-07-10 13:00 UTC |
+| [Drawing — GNN by Hand](https://canvas.cornell.edu/courses/81765/assignments/968360) | Drawings | Completion | 1 | Sat 2026-07-11 03:59 UTC |
+| [Learning Checks — GNN by Hand](https://canvas.cornell.edu/courses/81765/assignments/968361) | Case Studies | Completion | 1 | Sat 2026-07-11 03:59 UTC |
+| [Drawing — GNN + XGBoost](https://canvas.cornell.edu/courses/81765/assignments/968362) | Drawings | Completion | 1 | Sat 2026-07-11 03:59 UTC |
+| [Learning Checks — GNN + XGBoost](https://canvas.cornell.edu/courses/81765/assignments/968363) | Case Studies | Completion | 1 | Sat 2026-07-11 03:59 UTC |
+| [Drawing — Sampling](https://canvas.cornell.edu/courses/81765/assignments/968364) | Drawings | Completion | 1 | Sat 2026-07-11 03:59 UTC |
+| [Learning Checks — Sampling](https://canvas.cornell.edu/courses/81765/assignments/968365) | Case Studies | Completion | 1 | Sat 2026-07-11 03:59 UTC |
+| [Drawing — Joins](https://canvas.cornell.edu/courses/81765/assignments/968366) | Drawings | Completion | 1 | Sat 2026-07-11 03:59 UTC |
+| [Learning Checks — Joins](https://canvas.cornell.edu/courses/81765/assignments/968367) | Case Studies | Completion | 1 | Sat 2026-07-11 03:59 UTC |
+| [Ed Discussion — Week 3](https://canvas.cornell.edu/courses/81765/assignments/968370) | Participation | Completion | 1 | Sat 2026-07-11 03:59 UTC |
+| [Office Hours — Week 3](https://canvas.cornell.edu/courses/81765/assignments/968373) | Participation | Completion | 1 | Sat 2026-07-11 03:59 UTC |
+| [Project Case Study — Submission 3 (final)](https://canvas.cornell.edu/courses/81765/assignments/968376) | Weekly Homework 3 · Project Case Study | Points | 100 | Sat 2026-07-11 03:59 UTC |
+| [Final Presentation](https://canvas.cornell.edu/courses/81765/assignments/968377) | Final Presentation | Completion | 1 | Sat 2026-07-11 03:59 UTC |
+| [Final Course Evaluation](https://canvas.cornell.edu/courses/81765/assignments/968419) | Participation | Completion | 1 | Sat 2026-07-11 03:59 UTC |
 

@@ -48,7 +48,7 @@
     "_comment": "Per CONTENT WEEK = the deadline for work done that week. Course is 3 weeks starting the week of Sun 2026-06-21 (Wk1 Jun22-28, Wk2 Jun29-Jul5, Wk3 Jul6-12). Work-week N is due at the start of week N+1; Week 3 is due at the end of Week 3 (Fri). These are SEED VALUES read by sync_contract.py --seed into the contract for review; nothing is pushed to Canvas until --apply. 13:00 UTC = 9 AM ET.",
     "week1": "2026-06-29T13:00:00Z",
     "week2": "2026-07-06T13:00:00Z",
-    "week3": "2026-07-10T13:00:00Z"
+    "week3": "2026-07-11T03:59:00Z"
   },
 
   "due_overrides": {
