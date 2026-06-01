@@ -2,7 +2,7 @@
   "meta": {
     "course_id": "81765",
     "base_url": "https://canvas.cornell.edu",
-    "last_pull": "2026-06-01T16:18:59Z",
+    "last_pull": "2026-06-01T16:42:22Z",
     "note": "Edit due_at (ISO 8601, e.g. 2026-06-29T13:00:00Z), points_possible, and group weight/drop_lowest here, then run: sync_contract.py --apply. Or edit on Canvas and run --pull. Set due_at to null to leave a date unset."
   },
   "assignment_groups": [
@@ -448,6 +448,565 @@
       "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968419,
       "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968419"
+    }
+  ],
+  "modules": [
+    {
+      "name": "Getting Started",
+      "canvas_id": 542666,
+      "position": 1,
+      "items": [
+        {
+          "type": "SubHeader",
+          "title": "OVERVIEW",
+          "indent": 0
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🏠 Course Website — Home",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/index.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📘 Syllabus",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/syllabus.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🗓️ Calendar & Pacing",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/calendar.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "⚙️ Environment Setup",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/help/setup.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🔤 R Quickstart",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/help/quickstart-r.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🐍 Python Quickstart",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/help/quickstart-py.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📤 How to Submit",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/help/submit.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "⚖️ AI Use Policy",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/help/ai-policy.html"
+        },
+        {
+          "type": "SubHeader",
+          "title": "ACTIVITIES",
+          "indent": 0
+        },
+        {
+          "type": "Assignment",
+          "title": "Intro Course Survey",
+          "indent": 1,
+          "content_id": 968417,
+          "ref": "intro-survey"
+        },
+        {
+          "type": "Assignment",
+          "title": "Office Hours — Week 1",
+          "indent": 1,
+          "content_id": 968371,
+          "ref": "office-week-1"
+        },
+        {
+          "type": "Assignment",
+          "title": "Ed Discussion — Week 1",
+          "indent": 1,
+          "content_id": 968368,
+          "ref": "ed-week-1"
+        }
+      ]
+    },
+    {
+      "name": "Week 1 — Think Like a Graph",
+      "canvas_id": 542667,
+      "position": 2,
+      "items": [
+        {
+          "type": "SubHeader",
+          "title": "OVERVIEW",
+          "indent": 0
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🎬 Week 1 Overview Video (coming soon)",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/index.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📚 Readings for Week 1",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/readings.html"
+        },
+        {
+          "type": "SubHeader",
+          "title": "ACTIVITIES",
+          "indent": 0
+        },
+        {
+          "type": "Assignment",
+          "title": "Office Hours — Week 1",
+          "indent": 1,
+          "content_id": 968371,
+          "ref": "office-week-1"
+        },
+        {
+          "type": "Assignment",
+          "title": "Ed Discussion — Week 1",
+          "indent": 1,
+          "content_id": 968368,
+          "ref": "ed-week-1"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🕸️ Build a Network — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/build-a-network.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — Build a Network",
+          "indent": 2,
+          "content_id": 968346,
+          "ref": "drawing-build-a-network"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — Build a Network",
+          "indent": 2,
+          "content_id": 968347,
+          "ref": "lc-build-a-network"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📐 Network Statistics — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/permutation.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — Network Statistics",
+          "indent": 2,
+          "content_id": 968348,
+          "ref": "drawing-permutation"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — Network Statistics",
+          "indent": 2,
+          "content_id": 968349,
+          "ref": "lc-permutation"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📊 Centrality — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/centrality.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — Centrality",
+          "indent": 2,
+          "content_id": 968350,
+          "ref": "drawing-centrality"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — Centrality",
+          "indent": 2,
+          "content_id": 968351,
+          "ref": "lc-centrality"
+        },
+        {
+          "type": "SubHeader",
+          "title": "REMINDERS",
+          "indent": 0
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📤 Submit on Canvas — How to Submit",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/help/submit.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Project Case Study — Submission 1",
+          "indent": 1,
+          "content_id": 968374,
+          "ref": "project-1"
+        }
+      ]
+    },
+    {
+      "name": "Week 2 — Find What Matters",
+      "canvas_id": 542668,
+      "position": 3,
+      "items": [
+        {
+          "type": "SubHeader",
+          "title": "OVERVIEW",
+          "indent": 0
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🎬 Week 2 Overview Video (coming soon)",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/index.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📚 Readings for Week 2",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/readings.html"
+        },
+        {
+          "type": "SubHeader",
+          "title": "ACTIVITIES",
+          "indent": 0
+        },
+        {
+          "type": "Assignment",
+          "title": "Office Hours — Week 2",
+          "indent": 1,
+          "content_id": 968372,
+          "ref": "office-week-2"
+        },
+        {
+          "type": "Assignment",
+          "title": "Ed Discussion — Week 2",
+          "indent": 1,
+          "content_id": 968369,
+          "ref": "ed-week-2"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📦 Supply Chain — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/supply-chain.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — Supply Chain",
+          "indent": 2,
+          "content_id": 968352,
+          "ref": "drawing-supply-chain"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — Supply Chain",
+          "indent": 2,
+          "content_id": 968353,
+          "ref": "lc-supply-chain"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🚦 Routing — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/counterfactual.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — Routing",
+          "indent": 2,
+          "content_id": 968354,
+          "ref": "drawing-counterfactual"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — Routing",
+          "indent": 2,
+          "content_id": 968355,
+          "ref": "lc-counterfactual"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🧩 DSM Clustering — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/dsm-clustering.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — DSM Clustering",
+          "indent": 2,
+          "content_id": 968356,
+          "ref": "drawing-dsm-clustering"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — DSM Clustering",
+          "indent": 2,
+          "content_id": 968357,
+          "ref": "lc-dsm-clustering"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🗺️ Aggregation — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/aggregation.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — Aggregation",
+          "indent": 2,
+          "content_id": 968358,
+          "ref": "drawing-aggregation"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — Aggregation",
+          "indent": 2,
+          "content_id": 968359,
+          "ref": "lc-aggregation"
+        },
+        {
+          "type": "Assignment",
+          "title": "Midterm Course Evaluation",
+          "indent": 1,
+          "content_id": 968418,
+          "ref": "midterm-eval"
+        },
+        {
+          "type": "SubHeader",
+          "title": "REMINDERS",
+          "indent": 0
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📤 Submit on Canvas — How to Submit",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/help/submit.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Project Case Study — Submission 2",
+          "indent": 1,
+          "content_id": 968375,
+          "ref": "project-2"
+        }
+      ]
+    },
+    {
+      "name": "Week 3 — Move & Predict",
+      "canvas_id": 542669,
+      "position": 4,
+      "items": [
+        {
+          "type": "SubHeader",
+          "title": "OVERVIEW",
+          "indent": 0
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🎬 Week 3 Overview Video (coming soon)",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/index.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📚 Readings for Week 3",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/readings.html"
+        },
+        {
+          "type": "SubHeader",
+          "title": "ACTIVITIES",
+          "indent": 0
+        },
+        {
+          "type": "Assignment",
+          "title": "Office Hours — Week 3",
+          "indent": 1,
+          "content_id": 968373,
+          "ref": "office-week-3"
+        },
+        {
+          "type": "Assignment",
+          "title": "Ed Discussion — Week 3",
+          "indent": 1,
+          "content_id": 968370,
+          "ref": "ed-week-3"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🧠 GNN by Hand — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/gnn-by-hand.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — GNN by Hand",
+          "indent": 2,
+          "content_id": 968360,
+          "ref": "drawing-gnn-by-hand"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — GNN by Hand",
+          "indent": 2,
+          "content_id": 968361,
+          "ref": "lc-gnn-by-hand"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🤖 GNN + XGBoost — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/gnn-xgboost.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — GNN + XGBoost",
+          "indent": 2,
+          "content_id": 968362,
+          "ref": "drawing-gnn-xgboost"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — GNN + XGBoost",
+          "indent": 2,
+          "content_id": 968363,
+          "ref": "lc-gnn-xgboost"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🗄️ Sampling — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/sampling.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — Sampling",
+          "indent": 2,
+          "content_id": 968364,
+          "ref": "drawing-sampling"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — Sampling",
+          "indent": 2,
+          "content_id": 968365,
+          "ref": "lc-sampling"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🔗 Joins — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/joins.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — Joins",
+          "indent": 2,
+          "content_id": 968366,
+          "ref": "drawing-joins"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — Joins",
+          "indent": 2,
+          "content_id": 968367,
+          "ref": "lc-joins"
+        },
+        {
+          "type": "SubHeader",
+          "title": "REMINDERS",
+          "indent": 0
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📤 Submit on Canvas — How to Submit",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/help/submit.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Final Course Evaluation",
+          "indent": 1,
+          "content_id": 968419,
+          "ref": "final-eval"
+        },
+        {
+          "type": "Assignment",
+          "title": "Final Presentation",
+          "indent": 1,
+          "content_id": 968377,
+          "ref": "final-presentation"
+        },
+        {
+          "type": "Assignment",
+          "title": "Project Case Study — Submission 3 (final)",
+          "indent": 1,
+          "content_id": 968376,
+          "ref": "project-3"
+        }
+      ]
+    },
+    {
+      "name": "Wrapping Up",
+      "canvas_id": 542670,
+      "position": 5,
+      "items": [
+        {
+          "type": "SubHeader",
+          "title": "OVERVIEW",
+          "indent": 0
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🗂️ All Case Studies",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📚 Materials & Resources",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/materials.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📖 Glossary",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/help/glossary.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "❓ FAQ & Troubleshooting",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/help/faq.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "📁 Course GitHub Repository",
+          "indent": 1,
+          "url": "https://github.com/timothyfraser/netsci"
+        },
+        {
+          "type": "SubHeader",
+          "title": "REMINDERS",
+          "indent": 0
+        }
+      ]
     }
   ]
 }
