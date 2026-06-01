@@ -279,12 +279,36 @@ def pull(contract):
                 g["position"] = cg["position"]
             g["drop_lowest"] = (cg.get("rules") or {}).get("drop_lowest", 0)
 
+    # record the LIVE module structure (so edits made on Canvas are captured;
+    # map each content item back to its assignment key where we can)
+    id_to_key = {a["canvas_id"]: a["key"]
+                 for a in contract["assignments"] if a.get("canvas_id")}
+    mods = []
+    for m in get_all(f"/courses/{COURSE}/modules"):
+        items = []
+        for it in get_all(f"/courses/{COURSE}/modules/{m['id']}/items"):
+            entry = {"type": it.get("type"),
+                     "title": it.get("title"),
+                     "indent": it.get("indent", 0)}
+            if it.get("type") == "ExternalUrl":
+                entry["url"] = it.get("external_url")
+            cid = it.get("content_id")
+            if cid is not None:
+                entry["content_id"] = cid
+                if cid in id_to_key:
+                    entry["ref"] = id_to_key[cid]
+            items.append(entry)
+        mods.append({"name": m.get("name"), "canvas_id": m.get("id"),
+                     "position": m.get("position"), "items": items})
+    contract["modules"] = mods
+
     contract["meta"]["course_id"] = COURSE
     contract["meta"]["base_url"] = BASE
     contract["meta"]["last_pull"] = now_iso()
     mode = " (ids only)" if IDS_ONLY else ""
     print(f"• pull{mode}: matched {matched_a}/{len(contract['assignments'])} "
-          f"assignments, {matched_g}/{len(contract['assignment_groups'])} groups")
+          f"assignments, {matched_g}/{len(contract['assignment_groups'])} groups; "
+          f"recorded {len(mods)} modules ({sum(len(x['items']) for x in mods)} items)")
 
 
 # ---------------------------------------------------------------------------
