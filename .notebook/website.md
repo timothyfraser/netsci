@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-05-19 03:46 UTC_
+_Auto-generated NotebookLM source · 2026-06-01 01:30 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -253,6 +253,22 @@ Read
 Sketch
 Code
 Check
+
+
+Grade Breakdown
+The same idea, applied to your grade: every percentage point lives in one of four assignment groups. Drawings and Case Studies each **drop your two lowest scores**, so one crunched week won't sink you. Everything is submitted on Canvas — the work itself lives here on the site.
+
+
+DRAWINGS 20%
+CASE STUDIES 25%
+PART. 10%
+WEEKLY HOMEWORK 45%
+
+
+Drawings · hand\-drawn sketches
+Case Studies · learning checks
+Participation · discussion, office hours, final
+Weekly Homework · 3 project case studies (15% each)
 
 
 Four Professional Skills
@@ -4446,7 +4462,7 @@ Item 4 · Project Case Study
 ### Your project code \& report for this week's case study
 
 
-You pick **3 out of 11** case studies to do as project case studies (one per week). For each one you submit (a) a `project.R` or `project.py` that runs your full analysis on a network *you* chose, and (b) a 2\-page\-minimum report in your own words. See the Project section below for the full spec.
+You pick **3 out of 11** case studies to do as project case studies (one per week). For each one you submit (a) a `project.R` or `project.py` that runs your full analysis on a network *you* chose, and (b) a 5\-page\-minimum report in your own words — that's five pages of *text*; figures and tables are encouraged but don't count toward the five. See the Project section below for the full spec.
 
 
 Project case studies
@@ -4458,7 +4474,8 @@ Project case studies
  pose a meaningful question, justify your operationalization, run
  a defensible analysis, and report your results as quantitative
  quantities of interest in prose. Each report should comfortably
- fill at least two pages.
+ fill at least five pages of text — figures and tables are encouraged,
+ but they sit on top of the five pages rather than counting toward them.
 
 
 How your project is graded — the rubric
@@ -4588,7 +4605,7 @@ Read the full AI Use Policy →
 ### What does a project report actually look like?
 
 
-One real exemplar so you know what 2 pages of "numbers in prose" actually means. Open it on a phone or laptop, skim once before you start your own. The point is the *shape* of the analysis, not the specific topic — yours should look like this on the page.
+One real, full\-length exemplar so you know what five pages of "numbers in prose" actually looks like on the page — figures and tables sit on top of the five. Open it on a phone or laptop, skim once before you start your own. The point is the *shape* of the analysis, not the specific topic — yours should look like this on the page.
 
 
 ⬇ Download sample report (PDF)
@@ -4756,7 +4773,7 @@ Weekend block**Run the four labs.** Heavier than week 1 — plan \~5 hours. Brin
 
 Sun Jul 05day 14
 
-Weekend blockWrite LC answers, reflection, and (if you picked one of these for the project) your *first project case study* — code \+ 2\-page report.
+Weekend blockWrite LC answers, reflection, and (if you picked one of these for the project) your *first project case study* — code \+ 5\-page report.
 
 
 Mon Jul 069 AM
