@@ -1,6 +1,6 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-01 17:17 UTC_
+_Auto-generated NotebookLM source · 2026-06-10 23:54 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
@@ -6413,13 +6413,16 @@ forward pass in numpy and walks through it node by node. You will:
   many converging neighbors — ends up with the largest embedding
   values. That's GNN aggregation showing up exactly where you'd hope.
 
-## Track note: this case is Python-primary
+## Track note: R reaches full parity via reticulate
 
 R doesn't have a widely-used, well-maintained Graph Neural Network
-library. The R file in this folder (`example.R`) is a stub pointing
-at `example.py` and showing how to call the Python script from R via
-`reticulate`. For both the learning check and the project, use the
-Python version.
+library — so instead of re-deriving the math, the R track *borrows* the
+Python one. `example.R` drives the same numpy GCN functions in
+`functions.py` (`adjacency`, `normalize`, `gcn_layer`) through
+`reticulate`, while doing the data loading, plotting, and reporting
+natively in R. Because the forward pass runs through the identical numpy
+code, the R Learning Check is **byte-identical** to the Python one. Both
+tracks are fully runnable; pick whichever you're comfortable in.
 
 ## Prerequisites
 
@@ -6434,8 +6437,9 @@ Python version.
 ```
 10_gnn-by-hand/
 ├── README.md
-├── example.R           # stub pointing to example.py
-├── example.py          # the actual content
+├── example.R           # R track: drives functions.py's GCN via reticulate
+├── example.py          # Python track
+├── functions.R         # R loaders + reticulate bridge to the GCN functions
 ├── functions.py        # adjacency(), normalize(), gcn_layer()
 └── data/
     ├── tiny_nodes.csv  / tiny_edges.csv   # 6-node toy
@@ -6446,8 +6450,14 @@ Python version.
 ## How to run
 
 ```bash
-python code/10_gnn-by-hand/example.py
+python  code/10_gnn-by-hand/example.py    # Python track
+Rscript code/10_gnn-by-hand/example.R     # R track (calls functions.py via reticulate)
 ```
+
+The R track needs the `reticulate` package and a Python with `numpy` +
+`pandas`. On a current `reticulate` (>= 1.41) the script provisions those
+automatically via `py_require()`; otherwise point `reticulate` at a Python
+that already has them (e.g. `RETICULATE_PYTHON`).
 
 ## Learning check (submit this string)
 
@@ -6584,114 +6594,173 @@ if __name__ == "__main__":
 
 ```r
 #' @name example.R
-#' @title Case Study 10 — GNN by Hand (R: base-R re-implementation)
+#' @title Case Study 10 — GNN by Hand (R via reticulate)
 #' @author <your-name-here>
 #' @description
-#' Graph Neural Networks are one of the few cases where the Python
-#' ecosystem is meaningfully ahead of R. There is no widely-used,
-#' well-maintained R port of PyTorch Geometric. So this case study
-#' is **Python-primary** — see `example.py` for the full walkthrough
-#' on both the tiny 6-node toy and the 200-node project-scale
-#' network.
+#' The case study lab walked you through a hand-computed forward pass.
+#' Here we do it on the same 6-node toy network — but from R. R has no
+#' mature Graph Neural Network library, so rather than re-derive the math
+#' we borrow the course's canonical numpy implementation (`functions.py`)
+#' through `reticulate`. R drives the workflow and does the data loading,
+#' plotting, and reporting; Python does the four lines of GCN matrix
+#' algebra. Because the numbers run through the exact same code as
+#' `example.py`, the Learning Check comes out byte-for-byte identical.
 #'
-#' This R file does the *Learning Check math* in base R: ~30 lines of
-#' matrix algebra that reproduce the Python script's final embedding
-#' for node 4 on the tiny network. It gives you a way to verify the
-#' answer without leaving R.
+#' Step by step:
+#'   1. Build the adjacency matrix (with self-loops).
+#'   2. Symmetric-normalize it (D^{-1/2} A D^{-1/2}).
+#'   3. Apply a single GCN layer: H = ReLU(A_norm %*% X %*% W).
+#'   4. Stack a second layer.
+#'   5. Read off the embedding for the bottleneck node (node 4).
 #'
-#' For the PROJECT, switch to Python. If you'd like to stay in
-#' RStudio, call the Python file via `reticulate`:
-#'
-#'   library(reticulate)
-#'   reticulate::use_python("/usr/bin/python3")  # adjust as needed
-#'   reticulate::source_python(here::here("code", "10_gnn-by-hand",
-#'                                        "example.py"))
+#' Then we run the same pipeline on a 200-node project-scale network so
+#' you can see GNN embeddings at non-toy scale.
 
 
 # 0. Setup ###################################################################
 
-# No package dependencies; everything is base R.
+## 0.1 Packages ##############################################################
 
-cat("\n🚀 Case Study 10 — GNN by Hand (R base-R re-implementation)\n")
-cat("   Two-layer GCN on the 6-node toy. See example.py for the full walkthrough.\n\n")
+# `reticulate` is the bridge to the Python GCN functions; `ggplot2` draws
+# the embedding scatter; `here` keeps file paths robust.
+library(reticulate)
+library(ggplot2)
+library(here)
+
+## 0.2 Load helpers ##########################################################
+
+# functions.R gives us the R-native loaders (load_tiny / load_large) and
+# the `gcn` Python module handle (gcn$adjacency / gcn$normalize /
+# gcn$gcn_layer). Sourcing it triggers the one-time Python setup.
+source(here::here("code", "10_gnn-by-hand", "functions.R"))
+
+cat("\n🚀 Case Study 10 — GNN by Hand (R via reticulate)\n")
+cat("   Two-layer GCN, no native R GNN lib. We drive numpy's functions.py from R.\n\n")
+
+## 0.3 Load data #############################################################
+
+tiny  <- load_tiny()
+nodes <- tiny$nodes
+edges <- tiny$edges
+print(nodes)
+print(edges)
+cat(sprintf("✅ Loaded tiny network: %d nodes, %d edges.\n",
+            nrow(nodes), nrow(edges)))
 
 
-# 1. Tiny network from the case study ########################################
+# 1. Adjacency and normalization #############################################
 #
-# Each node has 2 input features: (daily_output, defect_rate). Six
-# nodes total; node 4 (0-indexed) is the bottleneck the case study
-# focuses on.
+# Self-loops let each node "send a message to itself" so its own
+# features survive into the next layer. Symmetric normalization
+# D^{-1/2} A D^{-1/2} stops high-degree nodes from dominating their
+# neighbors. These two preprocessing tricks are the heart of a GCN — and
+# both come straight from functions.py via the `gcn` handle.
 
-X <- matrix(
-  c(0.80, 0.10,
-    0.60, 0.20,
-    0.40, 0.30,
-    0.55, 0.15,
-    0.70, 0.05,
-    0.30, 0.40),
-  ncol = 2, byrow = TRUE
+A <- gcn$adjacency(nodes, edges, add_self_loops = TRUE)
+cat("A (with self-loops):\n")
+print(A)
+
+A_norm <- gcn$normalize(A)
+cat("A_norm (symmetric-normalized):\n")
+print(round(A_norm, 3))
+
+
+# 2. Feature matrix and weight matrices ######################################
+#
+# Each node has 2 input features: (daily_output, defect_rate).
+# Layer 1 maps 2 -> 3 hidden dims; layer 2 maps 3 -> 3.
+
+X <- as.matrix(nodes[, c("daily_output", "defect_rate")])
+cat("X (input features):\n")
+print(X)
+
+# Fixed weights for reproducibility — identical to example.py. In a real
+# GNN these are learned via gradient descent on an objective; here we
+# hard-code them so the whole pipeline is one chain of matrix multiplies.
+W1 <- matrix(c( 0.5, -0.2,  0.8,
+               -0.7,  0.4,  0.3), nrow = 2, byrow = TRUE)
+W2 <- matrix(c( 0.6,  0.1, -0.4,
+                0.2,  0.7,  0.3,
+               -0.5,  0.4,  0.6), nrow = 3, byrow = TRUE)
+
+
+# 3. Forward pass ############################################################
+#
+# H_{l+1} = ReLU(A_norm %*% H_l %*% W_l). The matmul-and-activate happens
+# inside gcn$gcn_layer(), the same numpy function example.py calls.
+
+H1 <- gcn$gcn_layer(A_norm, X,  W1, activation = "relu")
+cat("H1 (after layer 1, ReLU):\n")
+print(round(H1, 4))
+
+H2 <- gcn$gcn_layer(A_norm, H1, W2, activation = "relu")
+cat("H2 (after layer 2, ReLU):\n")
+print(round(H2, 4))
+
+
+# 4. What does node 4 (the bottleneck) end up looking like? ##################
+#
+# Node 4 sits between two clusters in our 6-node toy. After two GCN
+# layers its embedding has absorbed features from both sides. Node 4 is
+# 0-indexed in Python, which is row 5 in 1-indexed R.
+
+emb_node4 <- H2[5, ]
+cat("Final embedding for node 4 (the bottleneck):\n")
+print(round(emb_node4, 4))
+cat(sprintf("🧪 Node 4 embedding norm: %.4f\n",
+            sqrt(sum(emb_node4^2))))
+
+
+# 5. The same pipeline on a 200-node project-scale network ###################
+
+large <- load_large()
+A_l   <- gcn$normalize(gcn$adjacency(large$nodes, large$edges, add_self_loops = TRUE))
+X_l   <- as.matrix(large$nodes[, c("daily_output", "defect_rate")])
+
+H1_l <- gcn$gcn_layer(A_l,  X_l,  W1, activation = "relu")
+H2_l <- gcn$gcn_layer(A_l,  H1_l, W2, activation = "relu")
+cat(sprintf("📊 Large network embedding shape: %d x %d\n",
+            nrow(H2_l), ncol(H2_l)))
+
+# Plot the first two embedding dimensions, colored by whether the node is
+# a planted bottleneck (every 25th node), so we can see whether the
+# bottlenecks cluster separately after two GCN layers.
+bottlenecks <- 25 * 1:7
+plot_df <- data.frame(
+  dim0  = H2_l[, 1],
+  dim1  = H2_l[, 2],
+  group = ifelse(large$nodes$node_id %in% bottlenecks,
+                 "planted bottlenecks", "regular nodes")
 )
 
-# Adjacency with self-loops.
-# Edges (0-indexed in Python): (0,4), (1,4), (2,4), (3,4), (4,5).
-# In 1-indexed R: (1,5), (2,5), (3,5), (4,5), (5,6).
-A <- matrix(0, 6, 6)
-edges <- rbind(c(1, 5), c(2, 5), c(3, 5), c(4, 5), c(5, 6))
-for (k in seq_len(nrow(edges))) {
-  i <- edges[k, 1]; j <- edges[k, 2]
-  A[i, j] <- 1; A[j, i] <- 1
-}
-diag(A) <- 1  # self-loops let each node "send a message to itself"
+p <- ggplot(plot_df, aes(dim0, dim1, color = group, size = group)) +
+  geom_point(alpha = 0.7) +
+  scale_color_manual(values = c("planted bottlenecks" = "#d62728",
+                                "regular nodes"        = "#999999")) +
+  scale_size_manual(values = c("planted bottlenecks" = 3, "regular nodes" = 1.4)) +
+  labs(x = "embedding dim 0", y = "embedding dim 1",
+       title = "After 2 GCN layers, do bottlenecks separate?",
+       color = NULL, size = NULL) +
+  theme_minimal()
 
-# Symmetric normalization: D^{-1/2} A D^{-1/2}
-# This stops high-degree nodes from dominating their neighbors.
-d <- rowSums(A)
-D_inv_sqrt <- diag(1 / sqrt(d))
-A_norm <- D_inv_sqrt %*% A %*% D_inv_sqrt
-cat(sprintf("✅ Built 6x6 adjacency, normalized.\n"))
+ggsave(here::here("code", "10_gnn-by-hand", "gnn_embeddings.png"),
+       p, width = 7, height = 5, dpi = 120)
+cat("💾 Saved gnn_embeddings.png\n")
 
 
-# 2. Layer weights (same as example.py) ######################################
+# 6. Learning Check ##########################################################
 #
-# In a real GNN these are learned via gradient descent; here we
-# hard-code them so the forward pass is one chain of matmuls.
-
-W1 <- matrix(c(0.5, -0.2, 0.8,
-              -0.7, 0.4, 0.3), nrow = 2, byrow = TRUE)
-W2 <- matrix(c(0.6, 0.1, -0.4,
-               0.2, 0.7, 0.3,
-              -0.5, 0.4, 0.6), nrow = 3, byrow = TRUE)
-
-
-# 3. Two-layer GCN forward pass ##############################################
-#
-# H_{l+1} = ReLU( A_norm %*% H_l %*% W_l ).
-# `pmax(0, X)` would silently drop the matrix dimensions; the
-# element-wise multiply preserves them.
-
-relu <- function(x) x * (x > 0)
-
-H1 <- relu(A_norm %*% X  %*% W1)
-H2 <- relu(A_norm %*% H1 %*% W2)
-
-cat(sprintf("📊 H1 shape: %dx%d   H2 shape: %dx%d\n",
-            nrow(H1), ncol(H1), nrow(H2), ncol(H2)))
-
-
-# 4. Learning Check ##########################################################
-#
-# QUESTION: With the layer weights W1 and W2 above (symmetric
+# QUESTION: With the layer weights W1 and W2 defined above (symmetric
 # normalization, ReLU, self-loops), what is the FINAL embedding (3
-# numbers) for node 4 on the tiny network? Round each to 4 decimal
-# places, comma-separated.
+# numbers) for node 4 on the tiny network?
 #
-# Node 4 is 0-indexed in Python, which is row index 5 in 1-indexed R.
+# Round each to 4 decimal places. Submit as a comma-separated string.
 
-emb_node4 <- round(H2[5, ], 4)
-# Collapse IEEE-754 negative zero to positive zero so the printed
-# answer matches example.py byte-for-byte.
-emb_node4[emb_node4 == 0] <- 0
-answer <- paste(sprintf("%.4f", emb_node4), collapse = ", ")
+emb <- round(emb_node4, 4)
+# Collapse IEEE-754 negative zero to positive zero so the printed answer
+# matches example.py byte-for-byte.
+emb[emb == 0] <- 0
+answer <- paste(sprintf("%.4f", emb), collapse = ", ")
 
 cat(sprintf("\n📝 Learning Check answer: %s\n", answer))
 
@@ -6861,17 +6930,26 @@ print("\n🎉 Done. Move on to the case study report when you're ready.")
 
 ```r
 #' @name functions.R
-#' @title Helpers for the GNN-by-Hand case study (R stub)
-#'
-#' GNN-by-Hand is Python-primary. This file is here so the folder is
-#' consistent with the others, but the actual `gcn_layer()` / `relu()`
-#' / `normalize()` functions live in `functions.py`. Use
-#' `reticulate::source_python()` if you want to call them from R.
-#'
-#' See `example.R` for a base-R re-implementation of the Learning
-#' Check math.
+#' @title Helpers for the GNN-by-Hand case study (R, reticulate bridge)
+#' @author <your-name-here>
+#' @description
+#' Graph Neural Networks are the one spot in this course where R has no
+#' mature native library, so the GCN math itself lives in Python
+#' (`functions.py`). This file handles the half R is great at — reading
+#' the toy and project-scale networks from CSV — and then reaches across
+#' to Python with `reticulate` to borrow the GCN building blocks
+#' (`adjacency`, `normalize`, `gcn_layer`). The Python module is loaded
+#' once here and exposed as the object `gcn`, so `example.R` can call
+#' `gcn$gcn_layer(...)` and friends directly.
+
+
+# 0. R-native data loaders ###################################################
+#
+# Reading CSVs is something R does perfectly well, so we keep it on this
+# side of the bridge. Each loader returns a named list of two tibbles.
 
 library(here)
+library(reticulate)
 
 .case_dir <- function() here::here("code", "10_gnn-by-hand", "data")
 
@@ -6885,7 +6963,7 @@ load_tiny <- function() {
   )
 }
 
-#' Load the 200-node project-scale network.
+#' Load the 200-node project-scale network as a list of two tibbles.
 load_large <- function() {
   list(
     nodes = readr::read_csv(file.path(.case_dir(), "large_nodes.csv"),
@@ -6894,6 +6972,28 @@ load_large <- function() {
                             show_col_types = FALSE)
   )
 }
+
+
+# 1. The GNN half: borrow the numpy GCN functions from functions.py ##########
+#
+# We only need numpy + pandas on the Python side. On a current reticulate
+# (>= 1.41) py_require() records those requirements and provisions them in
+# an ephemeral environment the first time Python is touched -- the same
+# one-liner used in dsai/07_rag/05_embed.R. (On an older reticulate, point
+# it at a Python that already has numpy + pandas via RETICULATE_PYTHON.)
+# import_from_path() then hands us the module as the R object `gcn` WITHOUT
+# dumping its functions into the global namespace, so our R loaders above
+# keep their names.
+
+if (utils::packageVersion("reticulate") >= "1.41") {
+  reticulate::py_require(c("numpy", "pandas"))
+}
+
+gcn <- reticulate::import_from_path(
+  "functions",
+  path    = here::here("code", "10_gnn-by-hand"),
+  convert = TRUE  # numpy arrays come back as R matrices, automatically
+)
 ```
 
 ---
@@ -6984,7 +7084,8 @@ def gcn_layer(A_norm: np.ndarray, X: np.ndarray, W: np.ndarray,
 
 > Interactive lab: [`docs/case-studies/gnn-xgboost.html`](../../docs/case-studies/gnn-xgboost.html)
 >
-> Skill: **Predict** · Track: **Python = full pipeline · R = XGBoost-only variant**
+> Skill: **Predict** · Track: **Python & R both run the full pipeline**
+> (R computes the GNN embedding via `reticulate`)
 > · Data: synthetic supplier-disruption panel (500 suppliers × 52 weeks,
 > ~1,200 directed dependency edges)
 
@@ -7005,27 +7106,32 @@ XGBoost on all three usually beats XGBoost on any subset. The case
 study makes that improvement concrete and lets you read the
 feature-importance bars to see *why* the GNN helps.
 
-## Why R is partial
+## How R runs the full pipeline
 
-R's `xgboost` package is excellent, so the raw + lag pipeline is
-identical in R and Python. But R has no widely-used GNN library, so:
+R's `xgboost` package is excellent and R handles the loaders, the lag
+feature, the train/test split, and the AUC scoring natively. The one
+piece R has no mature library for is the **GNN embedding**, so the R track
+borrows the course's numpy implementation through `reticulate` (see
+`functions.R`) — the same surgical-bridge pattern as `dsai/07_rag`.
 
-- **Python (`example.py`)**: runs the full pipeline (raw + lag + GNN).
+- **Python (`example.py`)**: full pipeline (raw → raw+lag → raw+lag+GNN).
   Final test AUC ≈ 0.66.
-- **R (`example.R`)**: runs raw + lag only. Final test AUC ≈ 0.64.
+- **R (`example.R`)**: same full pipeline. The GNN embedding is computed
+  in numpy via `reticulate`; everything else, including XGBoost, is native
+  R. Final test AUC ≈ 0.66 as well (R's `xgboost` can differ from Python's
+  in the last digits).
 
-That ~0.02 AUC gap is the value the GNN embedding adds on this
-dataset. The Python script demonstrates it; the R script
-acknowledges it. The GNN embedding here is a *parameter-free*
-GCN-style aggregation (mean of in-neighbors' lag rate over 1 and 2
-hops), so there's no torch dependency.
+The GNN embedding here is a *parameter-free* GCN-style aggregation (mean of
+in-neighbors' lag rate over 1 and 2 hops), so there's no torch dependency —
+just a couple of matrix multiplies that the shared `functions.py` performs.
 
 ## Prerequisites
 
 - Case study 10 (GNN by Hand) so the embedding step makes sense.
 - The interactive lab.
 - R packages: `dplyr`, `tidyr`, `readr`, `ggplot2`, `xgboost`, `zoo`,
-  `here`.
+  `here`, `reticulate` (plus a Python with `numpy` + `pandas` for the
+  embedding step — auto-provisioned by `py_require()` on reticulate >= 1.41).
 - Python packages: see [`code/requirements.txt`](../requirements.txt).
   Uses `scikit-learn` for AUC.
 
@@ -7034,9 +7140,9 @@ hops), so there's no torch dependency.
 ```
 11_gnn-xgboost/
 ├── README.md
-├── example.R              # XGBoost on raw + lag
+├── example.R              # XGBoost on raw + lag + GNN (embedding via reticulate)
 ├── example.py             # XGBoost on raw + lag + GNN embedding
-├── functions.R            # lag_rate helper
+├── functions.R            # R loaders + lag_rate + reticulate bridge to the embedding
 ├── functions.py           # lag_rate, adjacency, GNN-aggregation helpers
 └── data/
     ├── suppliers.csv  # 500 suppliers, static features
@@ -7052,21 +7158,17 @@ python code/11_gnn-xgboost/example.py    # full pipeline
 Rscript code/11_gnn-xgboost/example.R    # raw + lag variant
 ```
 
-## Learning check (submit ONE of these)
+## Learning check
 
-The two tracks have different LC questions so you don't have to do
-the part your track skipped.
+> **On the held-out test weeks (40..51), what is the ROC AUC of the
+> (raw + lag + GNN 1-hop + GNN 2-hop) XGBoost model?**
 
-- **Python track:** *On the held-out test weeks (40..51), what is the
-  ROC AUC of the (raw + lag + GNN 1-hop + GNN 2-hop) XGBoost model?*
-  4 decimal places.
-
-- **R track:** *On the held-out test weeks (40..51), what are the
-  TOP 3 features by XGBoost gain for the (raw + lag) model?*
-  Comma-separated feature names in descending gain order.
-
-You only need to submit your track's answer. If you ran both,
-mention both in your submission.
+Report to 4 decimal places. Both tracks now answer the same question.
+The Python and R answers will be very close (≈ 0.66) but may differ in
+the last digit or two: the GNN embedding is computed by the same numpy
+code, but Python and R train XGBoost with their own implementations and
+defaults, which aren't bit-for-bit identical. Submit the value your track
+prints.
 
 ## Your Project Case Study
 
@@ -7243,56 +7345,62 @@ if __name__ == "__main__":
 
 ```r
 #' @name example.R
-#' @title Case Study 11 — GNN + XGBoost (R track: feature-engineering variant)
+#' @title Case Study 11 — GNN + XGBoost (R, full pipeline via reticulate)
 #' @author <your-name-here>
 #' @description
-#' The full case study lab combines:
+#' The case study lab showed that combining:
 #'   - raw static features
 #'   - a lag (history) feature
 #'   - a GNN-style structural embedding
-#' into XGBoost, and shows that the combination beats any one piece
-#' alone.
+#' into XGBoost beats any one of them alone. Here we run that full
+#' pipeline in R on a synthetic supplier-disruption panel (500 suppliers
+#' x 52 weeks).
 #'
-#' R can do the static-features and lag pieces fine. There is no
-#' widely-used R GNN library, so the **GNN embedding step is
-#' Python-only**.
+#' R does almost all of it natively — the loaders, the lag feature, the
+#' XGBoost models, and the AUC scoring. The single piece R has no mature
+#' library for is the GNN embedding, so we borrow the course's numpy
+#' implementation through `reticulate` (see functions.R). The embedding
+#' here is a *parameter-free* GCN-style aggregation (mean of in-neighbors'
+#' lag_rate, 1 and 2 hops) — same structural signal as a trained GNN, no
+#' torch dependency.
 #'
-#' This R script compares two feature sets on the same train/test
-#' split: raw vs raw+lag. It prefers `xgboost` if installed (the
-#' canonical case-study tool), and falls back to base R `glm()` so
-#' the script always runs.
+#' Pipeline:
+#'   1. Load suppliers, edges, and the (supplier, week, disrupted) panel.
+#'   2. Add the 4-week lag_rate feature (R).
+#'   3. Add 1-hop and 2-hop GNN embeddings of lag_rate (Python via reticulate).
+#'   4. Split into train (weeks 0..39) / test (weeks 40..51).
+#'   5. Train three XGBoost models on three feature sets; compare AUC.
 
 
 # 0. Setup ###################################################################
 
 ## 0.1 Packages ##############################################################
 
-# `zoo` provides the rolling-mean function we use for the lag feature.
-# `xgboost` is preferred but optional — we detect it and fall back to
-# base R `glm()` if it isn't installed (e.g. in a CRAN-blocked sandbox).
+# `xgboost` is the model; `dplyr`/`tidyr` wrangle the panel; `ggplot2`
+# draws the importance bars; `reticulate` (loaded in functions.R) bridges
+# to the GNN embedding.
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-library(zoo)
+library(xgboost)
 library(here)
-
-# xgboost is optional. Detect once and report which backend we're using.
-HAS_XGB <- requireNamespace("xgboost", quietly = TRUE)
-
-cat("\n🚀 Case Study 11 — GNN + XGBoost (R, feature-engineering variant)\n")
-cat(sprintf("   Model backend: %s\n",
-            if (HAS_XGB) "xgboost" else "base R glm() fallback"))
-cat("   Compare raw vs raw+lag features on a 500-supplier disruption panel.\n\n")
 
 ## 0.2 Load helpers ##########################################################
 
+# functions.R gives us the R-native loaders + add_lag_features(), and the
+# add_gnn_embeddings() wrapper that calls the Python embedding code.
 source(here::here("code", "11_gnn-xgboost", "functions.R"))
+
+cat("\n🚀 Case Study 11 — GNN + XGBoost (R, full pipeline via reticulate)\n")
+cat("   Three feature sets stacked. Watch AUC climb as we add structure.\n\n")
 
 ## 0.3 Load data #############################################################
 
 suppliers <- load_suppliers()
 edges     <- load_edges()
 panel     <- load_panel()
+print(head(suppliers))
+print(head(panel))
 cat(sprintf("✅ Loaded %d suppliers, %d dependency edges, %d panel rows.\n",
             nrow(suppliers), nrow(edges), nrow(panel)))
 
@@ -7300,18 +7408,30 @@ cat(sprintf("✅ Loaded %d suppliers, %d dependency edges, %d panel rows.\n",
 # 1. Add lag feature #########################################################
 #
 # `lag_rate` is the rolling 4-week disruption rate for each supplier,
-# computed BEFORE the current week to avoid label leakage. It's our
-# best non-network feature for predicting next week's disruption.
+# computed BEFORE the current week to avoid label leakage. It's our best
+# non-network feature for predicting next week's disruption.
 
 panel <- add_lag_features(panel, window = 4)
-cat(sprintf("✅ Added 4-week lag_rate feature.\n"))
+cat("✅ Added 4-week lag_rate feature.\n")
 
 
-# 2. Merge static features ###################################################
+# 2. Add GNN embeddings (Python via reticulate) ##############################
 #
-# Join the suppliers table (tier, capacity, region, geo_risk) onto
-# the panel. Region is categorical, so we one-hot encode it explicitly
-# — xgboost can handle factors directly but glm() needs numeric matrices.
+# This is the one step with no mature R library, so add_gnn_embeddings()
+# (in functions.R) reaches across to numpy: it builds the row-normalized
+# in-neighbor adjacency A and computes A %*% lag (1-hop neighbor average)
+# and A %*% A %*% lag (2-hop), per week. The result is two new columns.
+
+panel <- add_gnn_embeddings(panel, suppliers, edges)
+print(head(panel, 10))
+cat("✅ Added 1-hop and 2-hop GNN embeddings of lag_rate.\n")
+
+
+# 3. Merge static features ###################################################
+#
+# Join the suppliers table (tier, capacity, region, geo_risk) onto the
+# panel and one-hot encode region. XGBoost can take factors directly, but
+# we keep the encoding explicit so the feature columns are obvious.
 
 dat <- panel |>
   left_join(suppliers, by = "supplier_id") |>
@@ -7323,26 +7443,33 @@ dat <- panel |>
   )
 
 
-# 3. Train/test split ########################################################
+# 4. Train/test split ########################################################
 #
-# Train on weeks 0..39 (the first 40 weeks). Test on weeks 40..51
-# (the last 12). This is the canonical time-series holdout: never
-# train on data from a week you'll later evaluate on.
+# Train on weeks 0..39 (the first 40 weeks). Test on weeks 40..51 (the
+# last 12). This is the canonical time-series holdout: never train on
+# data from a week you'll later evaluate on.
 
 train <- dat |> filter(week < 40)
 test  <- dat |> filter(week >= 40)
 cat(sprintf("📊 train rows: %d   test rows: %d\n", nrow(train), nrow(test)))
+cat(sprintf("📊 train positive rate: %.3f\n", mean(train$disrupted)))
 
 
-# 4. Two feature sets, two models ############################################
+# 5. Three feature sets, three models ########################################
+#
+# Each feature set is a SUPERSET of the previous one, so any AUC
+# improvement from raw -> raw+lag -> raw+lag+GNN tells you what adding
+# *that piece* contributed.
 
 raw_cols <- c("tier", "capacity", "geo_risk",
               "region_MW", "region_NE", "region_SE", "region_W")
 lag_cols <- c(raw_cols, "lag_rate")
+gnn_cols <- c(lag_cols, "gnn_1hop", "gnn_2hop")
 
-# Rank-based AUC (no extra package needed). For each pair of
-# (positive_score, negative_score) we count how often the positive
-# scored higher — that's the AUC by definition.
+# Rank-based AUC (no extra package needed). For each (positive, negative)
+# score pair we count how often the positive scored higher — that is the
+# ROC AUC by definition (the Mann-Whitney identity), so it matches what
+# sklearn's roc_auc_score would report for the same predictions.
 auc_rank <- function(scores, labels) {
   pos <- scores[labels == 1]
   neg <- scores[labels == 0]
@@ -7350,79 +7477,67 @@ auc_rank <- function(scores, labels) {
   mean(outer(pos, neg, ">")) + 0.5 * mean(outer(pos, neg, "=="))
 }
 
+# Fit one XGBoost model on a feature set and return its test AUC + the
+# feature-importance table. Same hyperparameters as the Python track. We
+# use the low-level xgb.train() + xgb.DMatrix() API because it is stable
+# across xgboost versions (the high-level xgboost() signature changed in 3.x).
 fit_and_score <- function(features) {
-  if (HAS_XGB) {
-    dtrain <- xgboost::xgb.DMatrix(
-      data  = as.matrix(train[, features]),
-      label = train$disrupted
-    )
-    dtest <- xgboost::xgb.DMatrix(
-      data  = as.matrix(test[, features]),
-      label = test$disrupted
-    )
-    model <- xgboost::xgboost(
-      data        = dtrain,
-      nrounds     = 200,
-      max_depth   = 4,
-      eta         = 0.05,
-      objective   = "binary:logistic",
-      eval_metric = "auc",
-      verbose     = 0
-    )
-    preds <- predict(model, dtest)
-    imp <- xgboost::xgb.importance(model = model,
-                                   feature_names = features) |>
-      arrange(desc(Gain))
-  } else {
-    # base R logistic regression fallback. We use |z-value| as the
-    # rough analog of XGBoost feature importance — a feature with
-    # a big standardized coefficient is "important" in either model.
-    f <- as.formula(paste("disrupted ~", paste(features, collapse = " + ")))
-    model <- glm(f, data = train, family = binomial())
-    preds <- predict(model, newdata = test, type = "response")
-    co <- summary(model)$coefficients
-    co <- co[rownames(co) != "(Intercept)", , drop = FALSE]
-    imp <- tibble::tibble(
-      Feature = rownames(co),
-      Gain    = abs(co[, "z value"])
-    ) |> arrange(desc(Gain))
-  }
+  set.seed(42)  # XGBoost's RNG; keeps runs reproducible
+  dtrain <- xgboost::xgb.DMatrix(as.matrix(train[, features]),
+                                 label = train$disrupted)
+  dtest  <- xgboost::xgb.DMatrix(as.matrix(test[, features]),
+                                 label = test$disrupted)
+  model  <- xgboost::xgb.train(
+    params  = list(max_depth = 4, eta = 0.05,
+                   objective = "binary:logistic", eval_metric = "auc"),
+    data    = dtrain, nrounds = 200, verbose = 0
+  )
+  preds <- predict(model, dtest)
+  imp   <- xgboost::xgb.importance(model = model, feature_names = features) |>
+    arrange(desc(Gain))
   list(model = model, auc = auc_rank(preds, test$disrupted), imp = imp)
 }
 
 raw_fit <- fit_and_score(raw_cols)
 lag_fit <- fit_and_score(lag_cols)
+gnn_fit <- fit_and_score(gnn_cols)
 
-cat(sprintf("🧪 AUC, raw features only: %.4f\n", raw_fit$auc))
-cat(sprintf("🧪 AUC, raw + lag:         %.4f\n", lag_fit$auc))
+cat(sprintf("🧪 AUC, raw features only:           %.4f\n", raw_fit$auc))
+cat(sprintf("🧪 AUC, raw + lag:                   %.4f\n", lag_fit$auc))
+cat(sprintf("🧪 AUC, raw + lag + GNN (1+2 hop):   %.4f\n", gnn_fit$auc))
 
 
-# 5. Feature importance (or |z| if using glm) ################################
+# 6. Feature importance ######################################################
 #
-# What does the (raw + lag) model think the most important features
-# are? The top of this list answers the R-track Learning Check.
+# What does the full model think the most important features are? A high
+# gain on `gnn_1hop` or `gnn_2hop` is the visible signature of the GNN
+# piece earning its keep.
 
-print(lag_fit$imp)
+print(gnn_fit$imp)
+
+p <- ggplot(gnn_fit$imp, aes(x = Gain, y = reorder(Feature, Gain))) +
+  geom_col(fill = "#3a8bc6") +
+  labs(x = "XGBoost feature importance (gain)", y = NULL,
+       title = "Which features matter? (raw + lag + GNN model)") +
+  theme_minimal()
+
+ggsave(here::here("code", "11_gnn-xgboost", "xgboost_importance.png"),
+       p, width = 7, height = 4.5, dpi = 120)
+cat("💾 Saved xgboost_importance.png\n")
 
 
-# 6. Learning Check (R track) ################################################
+# 7. Learning Check ##########################################################
 #
-# QUESTION: On the held-out test weeks (40..51), what are the top 3
-# features by gain (xgboost) or by |z| value (glm fallback) for the
-# (raw + lag) model? Submit the three feature names, comma-separated,
-# in descending order.
+# QUESTION: On the held-out test weeks (40..51), what is the ROC AUC of
+# the (raw + lag + GNN 1-hop + GNN 2-hop) XGBoost model?
+# Report to 4 decimal places.
 #
-# Note: the *order* may be the same across both backends even when the
-# underlying scores differ.
+# NOTE: this asks the same question as the Python track. The embedding is
+# computed by the same numpy code, but the model is trained by R's own
+# xgboost, so the value can differ from Python's in the last digits —
+# implementations and their defaults are not bit-for-bit identical.
 
-top3 <- lag_fit$imp |> slice(1:3) |> pull(Feature)
-answer <- paste(top3, collapse = ", ")
-
-cat(sprintf("\n📝 Learning Check answer (R track): %s\n", answer))
-
-# NOTE: the Python LC asks for AUC of the (raw + lag + GNN) model on
-# the same test split. The two LC answers are intentionally different
-# — they test different pieces of the case-study pipeline.
+cat(sprintf("\n📝 Learning Check answer: %.4f\n", gnn_fit$auc))
 
 cat("\n🎉 Done. Move on to the case study report when you're ready.\n")
 ```
@@ -7608,30 +7723,39 @@ print("\n🎉 Done. Move on to the case study report when you're ready.")
 
 ```r
 #' @name functions.R
-#' @title Helpers for the GNN + XGBoost case study (R track)
-#'
-#' R does the same pipeline as Python, EXCEPT the GNN-embedding step.
-#' R's `xgboost` package is excellent, but there is no widely-used R
-#' GNN library. So this helper builds the static + lag features and
-#' leaves the embeddings to the Python track. The README explains the
-#' AUC gap.
+#' @title Helpers for the GNN + XGBoost case study (R, reticulate bridge)
+#' @author <your-name-here>
+#' @description
+#' R handles almost this entire pipeline natively: loading the supplier
+#' tables, engineering the lag feature, training XGBoost, and scoring AUC.
+#' The ONE piece with no mature R library is the GNN-style structural
+#' embedding, so for that step we reach across to the course's canonical
+#' numpy implementation (`functions.py`) through `reticulate`. This file
+#' exposes the R-native loaders + `add_lag_features()`, plus a thin
+#' `add_gnn_embeddings()` wrapper that drives the Python embedding code.
+
+
+# 0. R-native loaders and lag feature ########################################
 
 library(dplyr)
 library(readr)
+library(zoo)
 library(here)
+library(reticulate)
 
 .case_dir <- function() here::here("code", "11_gnn-xgboost", "data")
 
-load_suppliers <- function() readr::read_csv(file.path(.case_dir(), "suppliers.csv"))
-load_edges     <- function() readr::read_csv(file.path(.case_dir(), "edges.csv"))
-load_panel     <- function() readr::read_csv(file.path(.case_dir(), "panel.csv"))
+load_suppliers <- function() readr::read_csv(file.path(.case_dir(), "suppliers.csv"),
+                                             show_col_types = FALSE)
+load_edges     <- function() readr::read_csv(file.path(.case_dir(), "edges.csv"),
+                                             show_col_types = FALSE)
+load_panel     <- function() readr::read_csv(file.path(.case_dir(), "panel.csv"),
+                                             show_col_types = FALSE)
 
-#' Add a `lag_rate` column: trailing `window`-week disruption rate
-#' per supplier. Uses a rolling mean over the previous `window` weeks
-#' (not including the current week, to avoid leakage).
+#' Add a `lag_rate` column: trailing `window`-week disruption rate per
+#' supplier, computed from weeks BEFORE the current one (no leakage).
 add_lag_features <- function(panel, window = 4) {
-  panel <- panel |>
-    arrange(supplier_id, week)
+  panel <- panel |> arrange(supplier_id, week)
   panel |>
     group_by(supplier_id) |>
     mutate(
@@ -7644,6 +7768,37 @@ add_lag_features <- function(panel, window = 4) {
     ) |>
     select(-prev) |>
     ungroup()
+}
+
+
+# 1. The GNN half: borrow the embedding from functions.py ####################
+#
+# The structural embedding is the "A %*% x" piece of a GCN layer applied to
+# each week's lag_rate (1-hop = neighbor average, 2-hop = neighbors'
+# neighbors). There's no maintained R GNN library, so we call the course's
+# numpy implementation. We only need numpy + pandas on the Python side;
+# py_require() provisions them on a current reticulate (same idiom as
+# dsai/07_rag/05_embed.R), and import_from_path() hands us the module as
+# `.gnn_py` without polluting the global namespace.
+
+if (utils::packageVersion("reticulate") >= "1.41") {
+  reticulate::py_require(c("numpy", "pandas"))
+}
+
+.gnn_py <- reticulate::import_from_path(
+  "functions",
+  path    = here::here("code", "11_gnn-xgboost"),
+  convert = TRUE
+)
+
+#' Add `gnn_1hop` and `gnn_2hop` columns to the panel.
+#'
+#' Builds the row-normalized in-neighbor adjacency from the edge list,
+#' then averages each supplier's neighbors' (and 2-hop neighbors')
+#' lag_rate, per week. Both steps run in numpy via reticulate.
+add_gnn_embeddings <- function(panel, suppliers, edges) {
+  A <- .gnn_py$build_adjacency(suppliers, edges)
+  .gnn_py$add_gnn_embeddings(panel, suppliers, A)
 }
 ```
 
@@ -7861,15 +8016,22 @@ We try to keep the two scripts as close as possible:
   language can sanity-check against the other).
 - Same Learning Check numeric answer.
 
-A few unavoidable differences:
+The two GNN cases are the one place R has no mature native library, so the
+R scripts borrow the course's numpy code through `reticulate` — doing
+everything else (loading, wrangling, XGBoost, plotting) natively in R. The
+pattern follows `dsai/07_rag/05_embed.R`: reticulate is a surgical bridge
+for the one Python-only capability, not a wholesale rewrite.
 
-- **GNN-by-hand (case 10)** is Python-primary. R is hard to use for
-  Graph Neural Networks. The R file is a stub that points to the Python
-  one and shows how to call it from R via `reticulate` if you want.
-- **GNN + XGBoost (case 11)** is split: Python does the full GNN +
-  XGBoost pipeline; R does an XGBoost-only variant on raw + lag features
-  (no GNN embeddings). This lets R users still complete the case study;
-  the README documents the AUC gap.
+- **GNN-by-hand (case 10)**: `example.R` drives the same numpy GCN
+  functions (`functions.py`: `adjacency`, `normalize`, `gcn_layer`) via
+  `reticulate`, so the forward pass — and the Learning Check — are
+  **byte-identical** to `example.py`.
+- **GNN + XGBoost (case 11)**: R now runs the full pipeline. Only the GNN
+  embedding (the one step with no R library) is computed in numpy via
+  `reticulate`; the lag feature, the train/test split, **XGBoost**, and the
+  AUC scoring are all native R. The R Learning Check asks the same question
+  as Python (full-model AUC); because R trains with its own `xgboost`, the
+  value can differ from Python's in the last digits.
 
 Everything else is parallel.
 
