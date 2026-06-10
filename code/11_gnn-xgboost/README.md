@@ -2,7 +2,8 @@
 
 > Interactive lab: [`docs/case-studies/gnn-xgboost.html`](../../docs/case-studies/gnn-xgboost.html)
 >
-> Skill: **Predict** · Track: **Python = full pipeline · R = XGBoost-only variant**
+> Skill: **Predict** · Track: **Python & R both run the full pipeline**
+> (R computes the GNN embedding via `reticulate`)
 > · Data: synthetic supplier-disruption panel (500 suppliers × 52 weeks,
 > ~1,200 directed dependency edges)
 
@@ -23,27 +24,32 @@ XGBoost on all three usually beats XGBoost on any subset. The case
 study makes that improvement concrete and lets you read the
 feature-importance bars to see *why* the GNN helps.
 
-## Why R is partial
+## How R runs the full pipeline
 
-R's `xgboost` package is excellent, so the raw + lag pipeline is
-identical in R and Python. But R has no widely-used GNN library, so:
+R's `xgboost` package is excellent and R handles the loaders, the lag
+feature, the train/test split, and the AUC scoring natively. The one
+piece R has no mature library for is the **GNN embedding**, so the R track
+borrows the course's numpy implementation through `reticulate` (see
+`functions.R`) — the same surgical-bridge pattern as `dsai/07_rag`.
 
-- **Python (`example.py`)**: runs the full pipeline (raw + lag + GNN).
+- **Python (`example.py`)**: full pipeline (raw → raw+lag → raw+lag+GNN).
   Final test AUC ≈ 0.66.
-- **R (`example.R`)**: runs raw + lag only. Final test AUC ≈ 0.64.
+- **R (`example.R`)**: same full pipeline. The GNN embedding is computed
+  in numpy via `reticulate`; everything else, including XGBoost, is native
+  R. Final test AUC ≈ 0.66 as well (R's `xgboost` can differ from Python's
+  in the last digits).
 
-That ~0.02 AUC gap is the value the GNN embedding adds on this
-dataset. The Python script demonstrates it; the R script
-acknowledges it. The GNN embedding here is a *parameter-free*
-GCN-style aggregation (mean of in-neighbors' lag rate over 1 and 2
-hops), so there's no torch dependency.
+The GNN embedding here is a *parameter-free* GCN-style aggregation (mean of
+in-neighbors' lag rate over 1 and 2 hops), so there's no torch dependency —
+just a couple of matrix multiplies that the shared `functions.py` performs.
 
 ## Prerequisites
 
 - Case study 10 (GNN by Hand) so the embedding step makes sense.
 - The interactive lab.
 - R packages: `dplyr`, `tidyr`, `readr`, `ggplot2`, `xgboost`, `zoo`,
-  `here`.
+  `here`, `reticulate` (plus a Python with `numpy` + `pandas` for the
+  embedding step — auto-provisioned by `py_require()` on reticulate >= 1.41).
 - Python packages: see [`code/requirements.txt`](../requirements.txt).
   Uses `scikit-learn` for AUC.
 
@@ -52,9 +58,9 @@ hops), so there's no torch dependency.
 ```
 11_gnn-xgboost/
 ├── README.md
-├── example.R              # XGBoost on raw + lag
+├── example.R              # XGBoost on raw + lag + GNN (embedding via reticulate)
 ├── example.py             # XGBoost on raw + lag + GNN embedding
-├── functions.R            # lag_rate helper
+├── functions.R            # R loaders + lag_rate + reticulate bridge to the embedding
 ├── functions.py           # lag_rate, adjacency, GNN-aggregation helpers
 └── data/
     ├── suppliers.csv  # 500 suppliers, static features
@@ -70,21 +76,17 @@ python code/11_gnn-xgboost/example.py    # full pipeline
 Rscript code/11_gnn-xgboost/example.R    # raw + lag variant
 ```
 
-## Learning check (submit ONE of these)
+## Learning check
 
-The two tracks have different LC questions so you don't have to do
-the part your track skipped.
+> **On the held-out test weeks (40..51), what is the ROC AUC of the
+> (raw + lag + GNN 1-hop + GNN 2-hop) XGBoost model?**
 
-- **Python track:** *On the held-out test weeks (40..51), what is the
-  ROC AUC of the (raw + lag + GNN 1-hop + GNN 2-hop) XGBoost model?*
-  4 decimal places.
-
-- **R track:** *On the held-out test weeks (40..51), what are the
-  TOP 3 features by XGBoost gain for the (raw + lag) model?*
-  Comma-separated feature names in descending gain order.
-
-You only need to submit your track's answer. If you ran both,
-mention both in your submission.
+Report to 4 decimal places. Both tracks now answer the same question.
+The Python and R answers will be very close (≈ 0.66) but may differ in
+the last digit or two: the GNN embedding is computed by the same numpy
+code, but Python and R train XGBoost with their own implementations and
+defaults, which aren't bit-for-bit identical. Submit the value your track
+prints.
 
 ## Your Project Case Study
 

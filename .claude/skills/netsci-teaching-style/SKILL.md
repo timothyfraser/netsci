@@ -240,8 +240,14 @@ The two scripts in a case study MUST:
    of decimal places.
 4. End with the same closing 🎉 line.
 
-The README documents any intentional divergence (case 10 is
-Python-primary; case 11 uses different LC questions per track).
+The README documents any intentional divergence. The two GNN cases (10,
+11) have no mature R library, so their R scripts compute the GNN numbers
+through the same Python code via `reticulate` (the dsai/07_rag pattern):
+- **Case 10** runs the GCN forward pass in numpy, so its LC is
+  byte-identical across tracks.
+- **Case 11** computes the GNN embedding in numpy but trains XGBoost with
+  R's own implementation, so its LC asks the same question as Python and
+  lands very close (≈ 0.66) but may differ in the last digit or two.
 
 ## 12. Testing rule
 
@@ -252,9 +258,10 @@ Rscript code/NN_<case>/example.R    # exits 0, prints all sections + LC
 python  code/NN_<case>/example.py   # exits 0, prints all sections + LC
 ```
 
-Both LCs must match (case 1–10) or be the documented per-track variants
-(case 11). The CI sweep at the bottom of this skill runs both languages
-for every case and diffs the LC lines — keep it green.
+Both LCs must match character-for-character (cases 1–10), or be very close
+(case 11, where R and Python train separate XGBoost implementations). The
+CI sweep at the bottom of this skill runs both languages for every case and
+diffs the LC lines — keep it green.
 
 ### One-shot CI sweep
 
@@ -269,5 +276,6 @@ done
 ```
 
 For cases 1–10 the two lines should be identical character-for-character
-modulo trailing whitespace. For case 11 they are intentionally different
-(R reports top-3 features by gain; Python reports AUC).
+modulo trailing whitespace. For case 11 they should be very close (≈ 0.66)
+but may differ in the last digit or two, since R and Python train XGBoost
+with separate implementations.

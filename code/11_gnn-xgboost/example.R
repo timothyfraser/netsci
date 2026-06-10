@@ -1,54 +1,60 @@
 #' @name example.R
-#' @title Case Study 11 — GNN + XGBoost (R track: feature-engineering variant)
+#' @title Case Study 11 — GNN + XGBoost (R, full pipeline via reticulate)
 #' @author <your-name-here>
 #' @description
-#' The full case study lab combines:
+#' The case study lab showed that combining:
 #'   - raw static features
 #'   - a lag (history) feature
 #'   - a GNN-style structural embedding
-#' into XGBoost, and shows that the combination beats any one piece
-#' alone.
+#' into XGBoost beats any one of them alone. Here we run that full
+#' pipeline in R on a synthetic supplier-disruption panel (500 suppliers
+#' x 52 weeks).
 #'
-#' R can do the static-features and lag pieces fine. There is no
-#' widely-used R GNN library, so the **GNN embedding step is
-#' Python-only**.
+#' R does almost all of it natively — the loaders, the lag feature, the
+#' XGBoost models, and the AUC scoring. The single piece R has no mature
+#' library for is the GNN embedding, so we borrow the course's numpy
+#' implementation through `reticulate` (see functions.R). The embedding
+#' here is a *parameter-free* GCN-style aggregation (mean of in-neighbors'
+#' lag_rate, 1 and 2 hops) — same structural signal as a trained GNN, no
+#' torch dependency.
 #'
-#' This R script compares two feature sets on the same train/test
-#' split: raw vs raw+lag. It prefers `xgboost` if installed (the
-#' canonical case-study tool), and falls back to base R `glm()` so
-#' the script always runs.
+#' Pipeline:
+#'   1. Load suppliers, edges, and the (supplier, week, disrupted) panel.
+#'   2. Add the 4-week lag_rate feature (R).
+#'   3. Add 1-hop and 2-hop GNN embeddings of lag_rate (Python via reticulate).
+#'   4. Split into train (weeks 0..39) / test (weeks 40..51).
+#'   5. Train three XGBoost models on three feature sets; compare AUC.
 
 
 # 0. Setup ###################################################################
 
 ## 0.1 Packages ##############################################################
 
-# `zoo` provides the rolling-mean function we use for the lag feature.
-# `xgboost` is preferred but optional — we detect it and fall back to
-# base R `glm()` if it isn't installed (e.g. in a CRAN-blocked sandbox).
+# `xgboost` is the model; `dplyr`/`tidyr` wrangle the panel; `ggplot2`
+# draws the importance bars; `reticulate` (loaded in functions.R) bridges
+# to the GNN embedding.
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-library(zoo)
+library(xgboost)
 library(here)
-
-# xgboost is optional. Detect once and report which backend we're using.
-HAS_XGB <- requireNamespace("xgboost", quietly = TRUE)
-
-cat("\n🚀 Case Study 11 — GNN + XGBoost (R, feature-engineering variant)\n")
-cat(sprintf("   Model backend: %s\n",
-            if (HAS_XGB) "xgboost" else "base R glm() fallback"))
-cat("   Compare raw vs raw+lag features on a 500-supplier disruption panel.\n\n")
 
 ## 0.2 Load helpers ##########################################################
 
+# functions.R gives us the R-native loaders + add_lag_features(), and the
+# add_gnn_embeddings() wrapper that calls the Python embedding code.
 source(here::here("code", "11_gnn-xgboost", "functions.R"))
+
+cat("\n🚀 Case Study 11 — GNN + XGBoost (R, full pipeline via reticulate)\n")
+cat("   Three feature sets stacked. Watch AUC climb as we add structure.\n\n")
 
 ## 0.3 Load data #############################################################
 
 suppliers <- load_suppliers()
 edges     <- load_edges()
 panel     <- load_panel()
+print(head(suppliers))
+print(head(panel))
 cat(sprintf("✅ Loaded %d suppliers, %d dependency edges, %d panel rows.\n",
             nrow(suppliers), nrow(edges), nrow(panel)))
 
@@ -56,18 +62,30 @@ cat(sprintf("✅ Loaded %d suppliers, %d dependency edges, %d panel rows.\n",
 # 1. Add lag feature #########################################################
 #
 # `lag_rate` is the rolling 4-week disruption rate for each supplier,
-# computed BEFORE the current week to avoid label leakage. It's our
-# best non-network feature for predicting next week's disruption.
+# computed BEFORE the current week to avoid label leakage. It's our best
+# non-network feature for predicting next week's disruption.
 
 panel <- add_lag_features(panel, window = 4)
-cat(sprintf("✅ Added 4-week lag_rate feature.\n"))
+cat("✅ Added 4-week lag_rate feature.\n")
 
 
-# 2. Merge static features ###################################################
+# 2. Add GNN embeddings (Python via reticulate) ##############################
 #
-# Join the suppliers table (tier, capacity, region, geo_risk) onto
-# the panel. Region is categorical, so we one-hot encode it explicitly
-# — xgboost can handle factors directly but glm() needs numeric matrices.
+# This is the one step with no mature R library, so add_gnn_embeddings()
+# (in functions.R) reaches across to numpy: it builds the row-normalized
+# in-neighbor adjacency A and computes A %*% lag (1-hop neighbor average)
+# and A %*% A %*% lag (2-hop), per week. The result is two new columns.
+
+panel <- add_gnn_embeddings(panel, suppliers, edges)
+print(head(panel, 10))
+cat("✅ Added 1-hop and 2-hop GNN embeddings of lag_rate.\n")
+
+
+# 3. Merge static features ###################################################
+#
+# Join the suppliers table (tier, capacity, region, geo_risk) onto the
+# panel and one-hot encode region. XGBoost can take factors directly, but
+# we keep the encoding explicit so the feature columns are obvious.
 
 dat <- panel |>
   left_join(suppliers, by = "supplier_id") |>
@@ -79,26 +97,33 @@ dat <- panel |>
   )
 
 
-# 3. Train/test split ########################################################
+# 4. Train/test split ########################################################
 #
-# Train on weeks 0..39 (the first 40 weeks). Test on weeks 40..51
-# (the last 12). This is the canonical time-series holdout: never
-# train on data from a week you'll later evaluate on.
+# Train on weeks 0..39 (the first 40 weeks). Test on weeks 40..51 (the
+# last 12). This is the canonical time-series holdout: never train on
+# data from a week you'll later evaluate on.
 
 train <- dat |> filter(week < 40)
 test  <- dat |> filter(week >= 40)
 cat(sprintf("📊 train rows: %d   test rows: %d\n", nrow(train), nrow(test)))
+cat(sprintf("📊 train positive rate: %.3f\n", mean(train$disrupted)))
 
 
-# 4. Two feature sets, two models ############################################
+# 5. Three feature sets, three models ########################################
+#
+# Each feature set is a SUPERSET of the previous one, so any AUC
+# improvement from raw -> raw+lag -> raw+lag+GNN tells you what adding
+# *that piece* contributed.
 
 raw_cols <- c("tier", "capacity", "geo_risk",
               "region_MW", "region_NE", "region_SE", "region_W")
 lag_cols <- c(raw_cols, "lag_rate")
+gnn_cols <- c(lag_cols, "gnn_1hop", "gnn_2hop")
 
-# Rank-based AUC (no extra package needed). For each pair of
-# (positive_score, negative_score) we count how often the positive
-# scored higher — that's the AUC by definition.
+# Rank-based AUC (no extra package needed). For each (positive, negative)
+# score pair we count how often the positive scored higher — that is the
+# ROC AUC by definition (the Mann-Whitney identity), so it matches what
+# sklearn's roc_auc_score would report for the same predictions.
 auc_rank <- function(scores, labels) {
   pos <- scores[labels == 1]
   neg <- scores[labels == 0]
@@ -106,78 +131,66 @@ auc_rank <- function(scores, labels) {
   mean(outer(pos, neg, ">")) + 0.5 * mean(outer(pos, neg, "=="))
 }
 
+# Fit one XGBoost model on a feature set and return its test AUC + the
+# feature-importance table. Same hyperparameters as the Python track. We
+# use the low-level xgb.train() + xgb.DMatrix() API because it is stable
+# across xgboost versions (the high-level xgboost() signature changed in 3.x).
 fit_and_score <- function(features) {
-  if (HAS_XGB) {
-    dtrain <- xgboost::xgb.DMatrix(
-      data  = as.matrix(train[, features]),
-      label = train$disrupted
-    )
-    dtest <- xgboost::xgb.DMatrix(
-      data  = as.matrix(test[, features]),
-      label = test$disrupted
-    )
-    model <- xgboost::xgboost(
-      data        = dtrain,
-      nrounds     = 200,
-      max_depth   = 4,
-      eta         = 0.05,
-      objective   = "binary:logistic",
-      eval_metric = "auc",
-      verbose     = 0
-    )
-    preds <- predict(model, dtest)
-    imp <- xgboost::xgb.importance(model = model,
-                                   feature_names = features) |>
-      arrange(desc(Gain))
-  } else {
-    # base R logistic regression fallback. We use |z-value| as the
-    # rough analog of XGBoost feature importance — a feature with
-    # a big standardized coefficient is "important" in either model.
-    f <- as.formula(paste("disrupted ~", paste(features, collapse = " + ")))
-    model <- glm(f, data = train, family = binomial())
-    preds <- predict(model, newdata = test, type = "response")
-    co <- summary(model)$coefficients
-    co <- co[rownames(co) != "(Intercept)", , drop = FALSE]
-    imp <- tibble::tibble(
-      Feature = rownames(co),
-      Gain    = abs(co[, "z value"])
-    ) |> arrange(desc(Gain))
-  }
+  set.seed(42)  # XGBoost's RNG; keeps runs reproducible
+  dtrain <- xgboost::xgb.DMatrix(as.matrix(train[, features]),
+                                 label = train$disrupted)
+  dtest  <- xgboost::xgb.DMatrix(as.matrix(test[, features]),
+                                 label = test$disrupted)
+  model  <- xgboost::xgb.train(
+    params  = list(max_depth = 4, eta = 0.05,
+                   objective = "binary:logistic", eval_metric = "auc"),
+    data    = dtrain, nrounds = 200, verbose = 0
+  )
+  preds <- predict(model, dtest)
+  imp   <- xgboost::xgb.importance(model = model, feature_names = features) |>
+    arrange(desc(Gain))
   list(model = model, auc = auc_rank(preds, test$disrupted), imp = imp)
 }
 
 raw_fit <- fit_and_score(raw_cols)
 lag_fit <- fit_and_score(lag_cols)
+gnn_fit <- fit_and_score(gnn_cols)
 
-cat(sprintf("🧪 AUC, raw features only: %.4f\n", raw_fit$auc))
-cat(sprintf("🧪 AUC, raw + lag:         %.4f\n", lag_fit$auc))
+cat(sprintf("🧪 AUC, raw features only:           %.4f\n", raw_fit$auc))
+cat(sprintf("🧪 AUC, raw + lag:                   %.4f\n", lag_fit$auc))
+cat(sprintf("🧪 AUC, raw + lag + GNN (1+2 hop):   %.4f\n", gnn_fit$auc))
 
 
-# 5. Feature importance (or |z| if using glm) ################################
+# 6. Feature importance ######################################################
 #
-# What does the (raw + lag) model think the most important features
-# are? The top of this list answers the R-track Learning Check.
+# What does the full model think the most important features are? A high
+# gain on `gnn_1hop` or `gnn_2hop` is the visible signature of the GNN
+# piece earning its keep.
 
-print(lag_fit$imp)
+print(gnn_fit$imp)
+
+p <- ggplot(gnn_fit$imp, aes(x = Gain, y = reorder(Feature, Gain))) +
+  geom_col(fill = "#3a8bc6") +
+  labs(x = "XGBoost feature importance (gain)", y = NULL,
+       title = "Which features matter? (raw + lag + GNN model)") +
+  theme_minimal()
+
+ggsave(here::here("code", "11_gnn-xgboost", "xgboost_importance.png"),
+       p, width = 7, height = 4.5, dpi = 120)
+cat("💾 Saved xgboost_importance.png\n")
 
 
-# 6. Learning Check (R track) ################################################
+# 7. Learning Check ##########################################################
 #
-# QUESTION: On the held-out test weeks (40..51), what are the top 3
-# features by gain (xgboost) or by |z| value (glm fallback) for the
-# (raw + lag) model? Submit the three feature names, comma-separated,
-# in descending order.
+# QUESTION: On the held-out test weeks (40..51), what is the ROC AUC of
+# the (raw + lag + GNN 1-hop + GNN 2-hop) XGBoost model?
+# Report to 4 decimal places.
 #
-# Note: the *order* may be the same across both backends even when the
-# underlying scores differ.
+# NOTE: this asks the same question as the Python track. The embedding is
+# computed by the same numpy code, but the model is trained by R's own
+# xgboost, so the value can differ from Python's in the last digits —
+# implementations and their defaults are not bit-for-bit identical.
 
-top3 <- lag_fit$imp |> slice(1:3) |> pull(Feature)
-answer <- paste(top3, collapse = ", ")
-
-cat(sprintf("\n📝 Learning Check answer (R track): %s\n", answer))
-
-# NOTE: the Python LC asks for AUC of the (raw + lag + GNN) model on
-# the same test split. The two LC answers are intentionally different
-# — they test different pieces of the case-study pipeline.
+cat(sprintf("\n📝 Learning Check answer: %.4f\n", gnn_fit$auc))
 
 cat("\n🎉 Done. Move on to the case study report when you're ready.\n")
