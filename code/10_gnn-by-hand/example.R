@@ -1,112 +1,171 @@
 #' @name example.R
-#' @title Case Study 10 — GNN by Hand (R: base-R re-implementation)
+#' @title Case Study 10 — GNN by Hand (R via reticulate)
 #' @author <your-name-here>
 #' @description
-#' Graph Neural Networks are one of the few cases where the Python
-#' ecosystem is meaningfully ahead of R. There is no widely-used,
-#' well-maintained R port of PyTorch Geometric. So this case study
-#' is **Python-primary** — see `example.py` for the full walkthrough
-#' on both the tiny 6-node toy and the 200-node project-scale
-#' network.
+#' The case study lab walked you through a hand-computed forward pass.
+#' Here we do it on the same 6-node toy network — but from R. R has no
+#' mature Graph Neural Network library, so rather than re-derive the math
+#' we borrow the course's canonical numpy implementation (`functions.py`)
+#' through `reticulate`. R drives the workflow and does the data loading,
+#' plotting, and reporting; Python does the four lines of GCN matrix
+#' algebra. Because the numbers run through the exact same code as
+#' `example.py`, the Learning Check comes out byte-for-byte identical.
 #'
-#' This R file does the *Learning Check math* in base R: ~30 lines of
-#' matrix algebra that reproduce the Python script's final embedding
-#' for node 4 on the tiny network. It gives you a way to verify the
-#' answer without leaving R.
+#' Step by step:
+#'   1. Build the adjacency matrix (with self-loops).
+#'   2. Symmetric-normalize it (D^{-1/2} A D^{-1/2}).
+#'   3. Apply a single GCN layer: H = ReLU(A_norm %*% X %*% W).
+#'   4. Stack a second layer.
+#'   5. Read off the embedding for the bottleneck node (node 4).
 #'
-#' For the PROJECT, switch to Python. If you'd like to stay in
-#' RStudio, call the Python file via `reticulate`:
-#'
-#'   library(reticulate)
-#'   reticulate::use_python("/usr/bin/python3")  # adjust as needed
-#'   reticulate::source_python(here::here("code", "10_gnn-by-hand",
-#'                                        "example.py"))
+#' Then we run the same pipeline on a 200-node project-scale network so
+#' you can see GNN embeddings at non-toy scale.
 
 
 # 0. Setup ###################################################################
 
-# No package dependencies; everything is base R.
+## 0.1 Packages ##############################################################
 
-cat("\n🚀 Case Study 10 — GNN by Hand (R base-R re-implementation)\n")
-cat("   Two-layer GCN on the 6-node toy. See example.py for the full walkthrough.\n\n")
+# `reticulate` is the bridge to the Python GCN functions; `ggplot2` draws
+# the embedding scatter; `here` keeps file paths robust.
+library(reticulate)
+library(ggplot2)
+library(here)
+
+## 0.2 Load helpers ##########################################################
+
+# functions.R gives us the R-native loaders (load_tiny / load_large) and
+# the `gcn` Python module handle (gcn$adjacency / gcn$normalize /
+# gcn$gcn_layer). Sourcing it triggers the one-time Python setup.
+source(here::here("code", "10_gnn-by-hand", "functions.R"))
+
+cat("\n🚀 Case Study 10 — GNN by Hand (R via reticulate)\n")
+cat("   Two-layer GCN, no native R GNN lib. We drive numpy's functions.py from R.\n\n")
+
+## 0.3 Load data #############################################################
+
+tiny  <- load_tiny()
+nodes <- tiny$nodes
+edges <- tiny$edges
+print(nodes)
+print(edges)
+cat(sprintf("✅ Loaded tiny network: %d nodes, %d edges.\n",
+            nrow(nodes), nrow(edges)))
 
 
-# 1. Tiny network from the case study ########################################
+# 1. Adjacency and normalization #############################################
 #
-# Each node has 2 input features: (daily_output, defect_rate). Six
-# nodes total; node 4 (0-indexed) is the bottleneck the case study
-# focuses on.
+# Self-loops let each node "send a message to itself" so its own
+# features survive into the next layer. Symmetric normalization
+# D^{-1/2} A D^{-1/2} stops high-degree nodes from dominating their
+# neighbors. These two preprocessing tricks are the heart of a GCN — and
+# both come straight from functions.py via the `gcn` handle.
 
-X <- matrix(
-  c(0.80, 0.10,
-    0.60, 0.20,
-    0.40, 0.30,
-    0.55, 0.15,
-    0.70, 0.05,
-    0.30, 0.40),
-  ncol = 2, byrow = TRUE
+A <- gcn$adjacency(nodes, edges, add_self_loops = TRUE)
+cat("A (with self-loops):\n")
+print(A)
+
+A_norm <- gcn$normalize(A)
+cat("A_norm (symmetric-normalized):\n")
+print(round(A_norm, 3))
+
+
+# 2. Feature matrix and weight matrices ######################################
+#
+# Each node has 2 input features: (daily_output, defect_rate).
+# Layer 1 maps 2 -> 3 hidden dims; layer 2 maps 3 -> 3.
+
+X <- as.matrix(nodes[, c("daily_output", "defect_rate")])
+cat("X (input features):\n")
+print(X)
+
+# Fixed weights for reproducibility — identical to example.py. In a real
+# GNN these are learned via gradient descent on an objective; here we
+# hard-code them so the whole pipeline is one chain of matrix multiplies.
+W1 <- matrix(c( 0.5, -0.2,  0.8,
+               -0.7,  0.4,  0.3), nrow = 2, byrow = TRUE)
+W2 <- matrix(c( 0.6,  0.1, -0.4,
+                0.2,  0.7,  0.3,
+               -0.5,  0.4,  0.6), nrow = 3, byrow = TRUE)
+
+
+# 3. Forward pass ############################################################
+#
+# H_{l+1} = ReLU(A_norm %*% H_l %*% W_l). The matmul-and-activate happens
+# inside gcn$gcn_layer(), the same numpy function example.py calls.
+
+H1 <- gcn$gcn_layer(A_norm, X,  W1, activation = "relu")
+cat("H1 (after layer 1, ReLU):\n")
+print(round(H1, 4))
+
+H2 <- gcn$gcn_layer(A_norm, H1, W2, activation = "relu")
+cat("H2 (after layer 2, ReLU):\n")
+print(round(H2, 4))
+
+
+# 4. What does node 4 (the bottleneck) end up looking like? ##################
+#
+# Node 4 sits between two clusters in our 6-node toy. After two GCN
+# layers its embedding has absorbed features from both sides. Node 4 is
+# 0-indexed in Python, which is row 5 in 1-indexed R.
+
+emb_node4 <- H2[5, ]
+cat("Final embedding for node 4 (the bottleneck):\n")
+print(round(emb_node4, 4))
+cat(sprintf("🧪 Node 4 embedding norm: %.4f\n",
+            sqrt(sum(emb_node4^2))))
+
+
+# 5. The same pipeline on a 200-node project-scale network ###################
+
+large <- load_large()
+A_l   <- gcn$normalize(gcn$adjacency(large$nodes, large$edges, add_self_loops = TRUE))
+X_l   <- as.matrix(large$nodes[, c("daily_output", "defect_rate")])
+
+H1_l <- gcn$gcn_layer(A_l,  X_l,  W1, activation = "relu")
+H2_l <- gcn$gcn_layer(A_l,  H1_l, W2, activation = "relu")
+cat(sprintf("📊 Large network embedding shape: %d x %d\n",
+            nrow(H2_l), ncol(H2_l)))
+
+# Plot the first two embedding dimensions, colored by whether the node is
+# a planted bottleneck (every 25th node), so we can see whether the
+# bottlenecks cluster separately after two GCN layers.
+bottlenecks <- 25 * 1:7
+plot_df <- data.frame(
+  dim0  = H2_l[, 1],
+  dim1  = H2_l[, 2],
+  group = ifelse(large$nodes$node_id %in% bottlenecks,
+                 "planted bottlenecks", "regular nodes")
 )
 
-# Adjacency with self-loops.
-# Edges (0-indexed in Python): (0,4), (1,4), (2,4), (3,4), (4,5).
-# In 1-indexed R: (1,5), (2,5), (3,5), (4,5), (5,6).
-A <- matrix(0, 6, 6)
-edges <- rbind(c(1, 5), c(2, 5), c(3, 5), c(4, 5), c(5, 6))
-for (k in seq_len(nrow(edges))) {
-  i <- edges[k, 1]; j <- edges[k, 2]
-  A[i, j] <- 1; A[j, i] <- 1
-}
-diag(A) <- 1  # self-loops let each node "send a message to itself"
+p <- ggplot(plot_df, aes(dim0, dim1, color = group, size = group)) +
+  geom_point(alpha = 0.7) +
+  scale_color_manual(values = c("planted bottlenecks" = "#d62728",
+                                "regular nodes"        = "#999999")) +
+  scale_size_manual(values = c("planted bottlenecks" = 3, "regular nodes" = 1.4)) +
+  labs(x = "embedding dim 0", y = "embedding dim 1",
+       title = "After 2 GCN layers, do bottlenecks separate?",
+       color = NULL, size = NULL) +
+  theme_minimal()
 
-# Symmetric normalization: D^{-1/2} A D^{-1/2}
-# This stops high-degree nodes from dominating their neighbors.
-d <- rowSums(A)
-D_inv_sqrt <- diag(1 / sqrt(d))
-A_norm <- D_inv_sqrt %*% A %*% D_inv_sqrt
-cat(sprintf("✅ Built 6x6 adjacency, normalized.\n"))
+ggsave(here::here("code", "10_gnn-by-hand", "gnn_embeddings.png"),
+       p, width = 7, height = 5, dpi = 120)
+cat("💾 Saved gnn_embeddings.png\n")
 
 
-# 2. Layer weights (same as example.py) ######################################
+# 6. Learning Check ##########################################################
 #
-# In a real GNN these are learned via gradient descent; here we
-# hard-code them so the forward pass is one chain of matmuls.
-
-W1 <- matrix(c(0.5, -0.2, 0.8,
-              -0.7, 0.4, 0.3), nrow = 2, byrow = TRUE)
-W2 <- matrix(c(0.6, 0.1, -0.4,
-               0.2, 0.7, 0.3,
-              -0.5, 0.4, 0.6), nrow = 3, byrow = TRUE)
-
-
-# 3. Two-layer GCN forward pass ##############################################
-#
-# H_{l+1} = ReLU( A_norm %*% H_l %*% W_l ).
-# `pmax(0, X)` would silently drop the matrix dimensions; the
-# element-wise multiply preserves them.
-
-relu <- function(x) x * (x > 0)
-
-H1 <- relu(A_norm %*% X  %*% W1)
-H2 <- relu(A_norm %*% H1 %*% W2)
-
-cat(sprintf("📊 H1 shape: %dx%d   H2 shape: %dx%d\n",
-            nrow(H1), ncol(H1), nrow(H2), ncol(H2)))
-
-
-# 4. Learning Check ##########################################################
-#
-# QUESTION: With the layer weights W1 and W2 above (symmetric
+# QUESTION: With the layer weights W1 and W2 defined above (symmetric
 # normalization, ReLU, self-loops), what is the FINAL embedding (3
-# numbers) for node 4 on the tiny network? Round each to 4 decimal
-# places, comma-separated.
+# numbers) for node 4 on the tiny network?
 #
-# Node 4 is 0-indexed in Python, which is row index 5 in 1-indexed R.
+# Round each to 4 decimal places. Submit as a comma-separated string.
 
-emb_node4 <- round(H2[5, ], 4)
-# Collapse IEEE-754 negative zero to positive zero so the printed
-# answer matches example.py byte-for-byte.
-emb_node4[emb_node4 == 0] <- 0
-answer <- paste(sprintf("%.4f", emb_node4), collapse = ", ")
+emb <- round(emb_node4, 4)
+# Collapse IEEE-754 negative zero to positive zero so the printed answer
+# matches example.py byte-for-byte.
+emb[emb == 0] <- 0
+answer <- paste(sprintf("%.4f", emb), collapse = ", ")
 
 cat(sprintf("\n📝 Learning Check answer: %s\n", answer))
 

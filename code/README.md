@@ -114,14 +114,21 @@ We try to keep the two scripts as close as possible:
   language can sanity-check against the other).
 - Same Learning Check numeric answer.
 
-A few unavoidable differences:
+The two GNN cases are the one place R has no mature native library, so the
+R scripts borrow the course's numpy code through `reticulate` — doing
+everything else (loading, wrangling, XGBoost, plotting) natively in R. The
+pattern follows `dsai/07_rag/05_embed.R`: reticulate is a surgical bridge
+for the one Python-only capability, not a wholesale rewrite.
 
-- **GNN-by-hand (case 10)** is Python-primary. R is hard to use for
-  Graph Neural Networks. The R file is a stub that points to the Python
-  one and shows how to call it from R via `reticulate` if you want.
-- **GNN + XGBoost (case 11)** is split: Python does the full GNN +
-  XGBoost pipeline; R does an XGBoost-only variant on raw + lag features
-  (no GNN embeddings). This lets R users still complete the case study;
-  the README documents the AUC gap.
+- **GNN-by-hand (case 10)**: `example.R` drives the same numpy GCN
+  functions (`functions.py`: `adjacency`, `normalize`, `gcn_layer`) via
+  `reticulate`, so the forward pass — and the Learning Check — are
+  **byte-identical** to `example.py`.
+- **GNN + XGBoost (case 11)**: R now runs the full pipeline. Only the GNN
+  embedding (the one step with no R library) is computed in numpy via
+  `reticulate`; the lag feature, the train/test split, **XGBoost**, and the
+  AUC scoring are all native R. The R Learning Check asks the same question
+  as Python (full-model AUC); because R trains with its own `xgboost`, the
+  value can differ from Python's in the last digits.
 
 Everything else is parallel.

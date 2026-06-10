@@ -20,13 +20,16 @@ forward pass in numpy and walks through it node by node. You will:
   many converging neighbors — ends up with the largest embedding
   values. That's GNN aggregation showing up exactly where you'd hope.
 
-## Track note: this case is Python-primary
+## Track note: R reaches full parity via reticulate
 
 R doesn't have a widely-used, well-maintained Graph Neural Network
-library. The R file in this folder (`example.R`) is a stub pointing
-at `example.py` and showing how to call the Python script from R via
-`reticulate`. For both the learning check and the project, use the
-Python version.
+library — so instead of re-deriving the math, the R track *borrows* the
+Python one. `example.R` drives the same numpy GCN functions in
+`functions.py` (`adjacency`, `normalize`, `gcn_layer`) through
+`reticulate`, while doing the data loading, plotting, and reporting
+natively in R. Because the forward pass runs through the identical numpy
+code, the R Learning Check is **byte-identical** to the Python one. Both
+tracks are fully runnable; pick whichever you're comfortable in.
 
 ## Prerequisites
 
@@ -41,8 +44,9 @@ Python version.
 ```
 10_gnn-by-hand/
 ├── README.md
-├── example.R           # stub pointing to example.py
-├── example.py          # the actual content
+├── example.R           # R track: drives functions.py's GCN via reticulate
+├── example.py          # Python track
+├── functions.R         # R loaders + reticulate bridge to the GCN functions
 ├── functions.py        # adjacency(), normalize(), gcn_layer()
 └── data/
     ├── tiny_nodes.csv  / tiny_edges.csv   # 6-node toy
@@ -53,8 +57,14 @@ Python version.
 ## How to run
 
 ```bash
-python code/10_gnn-by-hand/example.py
+python  code/10_gnn-by-hand/example.py    # Python track
+Rscript code/10_gnn-by-hand/example.R     # R track (calls functions.py via reticulate)
 ```
+
+The R track needs the `reticulate` package and a Python with `numpy` +
+`pandas`. On a current `reticulate` (>= 1.41) the script provisions those
+automatically via `py_require()`; otherwise point `reticulate` at a Python
+that already has them (e.g. `RETICULATE_PYTHON`).
 
 ## Learning check (submit this string)
 
