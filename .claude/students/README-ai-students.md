@@ -33,6 +33,7 @@ tidyverse + base-pipe `CLAUDE.md`, Playwright MCP already configured).
     settings.students.json     ← permissions reference (already merged into settings.json)
   harness/
     progress.sh                ← peek at how far each persona has gotten, mid-run
+    prepare-env.sh             ← one-time, flock-guarded env prep (R, pkgs, Chromium)
 ```
 
 > The whole AI-student system lives under `.claude/` on purpose — it's a hidden config
@@ -76,11 +77,19 @@ bash .claude/harness/run-students.sh sofia priya
 Each persona is an independent process with its own `runs/<id>/` and log, so they run
 concurrently. Key env vars: `MODEL` (default `sonnet`), `PERMISSION_MODE`
 (`acceptEdits` default → `dontAsk` for headless → `bypassPermissions` for fully
-unattended, **container only**), `OUTPUT_FORMAT` (default `stream-json`; the harness
-auto-adds `--verbose`, which `claude -p` requires for stream-json or it dies at launch),
-**`PARALLEL`** (`1` default = run concurrently; `0` = series), **`MAX_JOBS`** (default
-`3` = how many personas run at once when parallel — raise/lower for your box and token
-budget).
+unattended, **container only**), `OUTPUT_FORMAT` (default `text` — deliverables are
+files, so stdout format is irrelevant; if you set `stream-json` the harness auto-adds
+the `--verbose` that `claude -p` requires or it dies at launch), **`PARALLEL`** (`1`
+default = run concurrently; `0` = series), **`MAX_JOBS`** (default `3` = how many
+personas run at once when parallel — raise/lower for your box and token budget),
+**`SKIP_PREPARE`** (`1` to skip the one-time env warm-up if you've already prepared).
+
+`run-students.sh` **warms the environment once** (via `prepare-env.sh`) before fanning
+out, so the personas don't each trigger a heavy install in parallel. You can also run it
+yourself ahead of time:
+```
+bash .claude/harness/prepare-env.sh   # R + packages + Chromium, once (flock-guarded)
+```
 
 **Option C — orchestrated from a main session.** Paste `.claude/students/orchestrate-students.md` into a
 main Claude Code session; it runs preflight, dispatches all six, aggregates, and writes
@@ -113,7 +122,10 @@ week/lab they're on), project reports done (`n/3`, `!` = one under ~1,800 words)
 and a status (`DONE ✓` when `report.md` + three full-length reports exist). The LIVE
 column means a session that **crashed at launch** shows `✗ likely failed (check log)`
 rather than being indistinguishable from one that just started — always trust LIVE over
-ITEMS when deciding if something died. It only reads files + `ps`, so it's safe anytime.
+ITEMS when deciding if something died. A persona that's LIVE with 0 items shows
+`⏳ env preparing (shared setup)` until the one-time `prepare-env.sh` marker exists, so
+you can tell "still installing R/Chromium" apart from "stuck." It only reads files +
+`ps`, so it's safe anytime.
 Per-persona logs also stream to `logs/<id>-<stamp>.log` for the raw play-by-play
 (`tail -f`).
 

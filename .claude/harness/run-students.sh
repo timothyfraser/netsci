@@ -19,6 +19,13 @@
 # ============================================================================
 set -uo pipefail
 
+# Stop cleanly: a plain `pkill -f run-students.sh` kills this wrapper but orphans the
+# child `claude -p` processes (they reparent to PID 1 and keep burning tokens). This
+# trap forwards a stop to the whole process group so the children die with the wrapper.
+# To stop from outside, signal the wrapper (kill <pid>) rather than pkill-ing the name,
+# or kill the children directly: pkill -f 'claude -p'.
+trap 'echo; echo ">> stop received — terminating persona processes…"; kill 0 2>/dev/null; exit 130' INT TERM
+
 # Resolve this script's own directory so aggregate.R is found no matter where
 # the harness lives or where you invoke it from (runs/ and logs/ stay relative
 # to your CWD — invoke from the repo root).
@@ -29,12 +36,13 @@ MODEL="${MODEL:-sonnet}"                       # sonnet | opus | haiku | full id
 PERMISSION_MODE="${PERMISSION_MODE:-acceptEdits}"  # acceptEdits (supervised-ish)
                                                #  | dontAsk (headless, auto-deny extras)
                                                #  | bypassPermissions (container only!)
-OUTPUT_FORMAT="${OUTPUT_FORMAT:-stream-json}"  # stream-json | json | text
-                                               #  NOTE: with `claude -p`, stream-json
-                                               #  REQUIRES --verbose or the run dies at
-                                               #  launch ("--output-format=stream-json
-                                               #  requires --verbose"). We add --verbose
-                                               #  automatically below for stream-json.
+OUTPUT_FORMAT="${OUTPUT_FORMAT:-text}"          # text (default) | json | stream-json
+                                               #  Deliverables are FILES under runs/<id>/,
+                                               #  so stdout format is irrelevant — 'text'
+                                               #  is the safe default. NOTE: stream-json
+                                               #  with `claude -p` REQUIRES --verbose or
+                                               #  it dies at launch; we add it below if you
+                                               #  opt into stream-json.
 PARALLEL="${PARALLEL:-1}"                       # 1 = personas run concurrently (default); 0 = series
 MAX_JOBS="${MAX_JOBS:-3}"                       # cap on concurrent personas when PARALLEL=1
 ALL_PERSONAS=(priya marcus sofia kenji aisha david)
@@ -52,6 +60,16 @@ echo "=== SYSEN 5470 AI student run $STAMP ==="
 echo "model=$MODEL  permission-mode=$PERMISSION_MODE  mode=$MODE  personas=${PERSONAS[*]}"
 echo "tip: background this run (append &) and watch with 'bash $SCRIPT_DIR/progress.sh --watch'."
 echo
+
+# Warm the shared environment ONCE before fanning out. Otherwise each persona's
+# SessionStart hook would try to install R/packages/Chromium concurrently, racing
+# the same R library. prepare-env.sh is flock-guarded + idempotent, so this is a
+# fast no-op if the env is already prepared. Skip with SKIP_PREPARE=1.
+if [ "${SKIP_PREPARE:-0}" != "1" ]; then
+  echo ">> warming shared environment (one-time prepare-env.sh)…"
+  bash "$SCRIPT_DIR/prepare-env.sh" || echo "!! prepare-env.sh reported issues — continuing anyway"
+  echo
+fi
 
 # run_one <id> — drive a single persona's headless session. Self-contained so it
 # can be called sequentially or backgrounded for parallel runs.

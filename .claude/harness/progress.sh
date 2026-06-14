@@ -24,6 +24,9 @@ set -uo pipefail
 
 RUNS_DIR="${RUNS_DIR:-runs}"
 ALL=(priya marcus sofia kenji aisha david)
+# marker written by prepare-env.sh when the heavy one-time setup is complete; lets us
+# tell "stuck in env setup" apart from "actually doing coursework".
+MARKER="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)/.harness-env-ready"
 
 # ---- args: optional --watch [interval], optional persona list ---------------
 WATCH=0; INTERVAL=30
@@ -54,7 +57,8 @@ render() {
 
     if [ ! -d "$dir" ]; then
       if [ "$alive" = "yes" ]; then
-        printf "$fmt" "$id" "0" "-" "0/3" "yes" "-" "starting…"
+        local s0="starting…"; [ -f "$MARKER" ] || s0="⏳ env preparing (shared setup)"
+        printf "$fmt" "$id" "0" "-" "0/3" "yes" "-" "$s0"
       else
         printf "$fmt" "$id" "-" "-" "0/3" "-" "-" "not started"
       fi
@@ -88,7 +92,7 @@ render() {
     elif [ "$items" -eq 0 ] && [ "$alive" = "no" ]; then
       status="✗ not running, no progress — likely failed at launch (check log)"
     elif [ "$items" -eq 0 ] && [ "$alive" = "yes" ]; then
-      status="starting…"
+      if [ -f "$MARKER" ]; then status="starting…"; else status="⏳ env preparing (shared setup)"; fi
     elif [ "$alive" = "no" ]; then
       status="✗ exited early — no report (check log)"
     elif [ "$fresh" != "-" ] && [ "${fresh%m}" -gt 15 ]; then
