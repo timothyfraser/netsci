@@ -1,32 +1,10 @@
 {
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup|resume",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/session-start.sh"
-          }
-        ]
-      }
-    ]
-  },
+  "_comment": "MERGE the allow/deny arrays below into your existing .claude/settings.json. These extend the repo's existing allow-list (Rscript/R/git-fetch + read-only Playwright) with: Python, file/dir ops, git reads, and the Playwright NAVIGATION/INTERACTION tools the students need. Without the nav/click/type tools, an unattended run stalls on permission prompts. Tool names follow the @playwright/mcp server; confirm they match your installed version with `claude mcp list` / the /permissions view.",
   "permissions": {
     "allow": [
       "Bash(Rscript:*)",
       "Bash(R:*)",
       "Bash(R CMD:*)",
-      "Bash(git fetch *)",
-      "mcp__playwright__browser_take_screenshot",
-      "mcp__playwright__browser_network_requests",
-      "mcp__playwright__browser_network_request",
-      "mcp__playwright__browser_snapshot",
-      "mcp__playwright__browser_console_messages",
-      "mcp__chrome-devtools__take_screenshot",
-      "mcp__Claude_Preview__preview_console_logs",
-      "mcp__Claude_Preview__preview_screenshot",
-      "mcp__Claude_Preview__preview_snapshot",
       "Bash(python:*)",
       "Bash(python3:*)",
       "Bash(pip:*)",
@@ -55,7 +33,11 @@
       "mcp__playwright__browser_select_option",
       "mcp__playwright__browser_hover",
       "mcp__playwright__browser_wait_for",
-      "mcp__playwright__browser_tabs"
+      "mcp__playwright__browser_tabs",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_network_requests"
     ],
     "deny": [
       "Bash(sudo:*)",

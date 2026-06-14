@@ -33,3 +33,6 @@ Rplots.pdf
 .vscode/
 .idea/
 .DS_Store
+runs/
+logs/
+.claude/settings.proposed.json
