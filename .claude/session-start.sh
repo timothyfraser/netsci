@@ -1,46 +1,25 @@
 #!/usr/bin/env bash
+# SessionStart hook — kept deliberately SLIM so it doesn't do heavy installs on
+# every launch (which, under parallel persona runs, raced the shared R library and
+# left sessions idle for minutes). The heavy, one-time work lives in
+# .claude/harness/prepare-env.sh, which is flock-guarded and idempotent.
 set -euo pipefail
 
-# 1. Bootstrap R if it isn't installed yet.
-# The repo's setup.sh handles the full install (R + system libs + CRAN
-# packages). It's safe to re-run because each step is idempotent.
-if ! command -v Rscript >/dev/null 2>&1; then
-  echo "Rscript not found - running setup.sh to install R..."
-  bash "$CLAUDE_PROJECT_DIR/setup.sh"
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+MARKER="$PROJECT_DIR/.harness-env-ready"
+
+if [ -f "$MARKER" ] && command -v Rscript >/dev/null 2>&1; then
+  # Fast path: environment was already prepared (e.g. by prepare-env.sh before a
+  # cohort, or by an earlier session). Near-instant.
+  echo "env ready (prepared $(cat "$MARKER" 2>/dev/null)); R: $(Rscript -e 'cat(R.version.string)' 2>/dev/null)"
+else
+  # Not prepared yet — delegate to the flock-guarded one-time prep. If several
+  # sessions hit this at once, flock serializes them so only the first installs.
+  echo "env not prepared — running prepare-env.sh (one-time)…"
+  bash "$PROJECT_DIR/.claude/harness/prepare-env.sh" || true
 fi
 
-# 2. Restore project-pinned packages if renv.lock present
-if [ -f "$CLAUDE_PROJECT_DIR/renv.lock" ]; then
-  Rscript -e 'if (!requireNamespace("renv", quietly=TRUE)) install.packages("renv"); renv::restore(prompt = FALSE)'
-fi
-
-# 3. Make sure the code/<case>/example.R scripts can run by
-# installing any package they need that may not be in the baseline
-# (this is cheap when the packages are already there).
-Rscript -e '
-need <- c("dplyr","readr","tidyr","tibble","stringr","arrow",
-          "ggplot2","viridis","patchwork",
-          "igraph","tidygraph","ggraph",
-          "sf","xgboost","zoo","reticulate","here",
-          "jsonlite","purrr")
-have <- rownames(installed.packages())
-miss <- setdiff(need, have)
-if (length(miss)) {
-  message("installing missing R packages: ", paste(miss, collapse = ", "))
-  install.packages(miss)
-}
-' || true
-
-# 4. Make API keys from the .env file available to R sessions
+# Make API keys from the .env file available to R sessions (cheap; every session).
 {
-#  [ -n "${ANTHROPIC_API_KEY:-}"   ] && echo "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY"
+  :  # add 'echo "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}"' style lines here to expose secrets to R
 } >> "$HOME/.Renviron" || true
-
-echo "R session ready: $(Rscript -e 'cat(R.version.string)')"
-
-# 5. Pre-warm the Playwright MCP browser so the first browser tool call in a
-# fresh remote session is instant instead of stalling on a Chromium download.
-# Idempotent and best-effort: cached after the first run, never fails the hook.
-npx -y @playwright/mcp@latest --version >/dev/null 2>&1 || true
-npx -y playwright install chromium --with-deps >/dev/null 2>&1 || true
-echo "Playwright MCP browser pre-warmed (chromium)"

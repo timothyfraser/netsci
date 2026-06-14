@@ -36,3 +36,5 @@ Rplots.pdf
 runs/
 logs/
 .claude/settings.proposed.json
+.harness-env-ready
+.harness-env.lock

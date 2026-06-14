@@ -19,6 +19,13 @@
 # ============================================================================
 set -uo pipefail
 
+# Stop cleanly: a plain `pkill -f run-students.sh` kills this wrapper but orphans the
+# child `claude -p` processes (they reparent to PID 1 and keep burning tokens). This
+# trap forwards a stop to the whole process group so the children die with the wrapper.
+# To stop from outside, signal the wrapper (kill <pid>) rather than pkill-ing the name,
+# or kill the children directly: pkill -f 'claude -p'.
+trap 'echo; echo ">> stop received — terminating persona processes…"; kill 0 2>/dev/null; exit 130' INT TERM
+
 # Resolve this script's own directory so aggregate.R is found no matter where
 # the harness lives or where you invoke it from (runs/ and logs/ stay relative
 # to your CWD — invoke from the repo root).
@@ -29,7 +36,15 @@ MODEL="${MODEL:-sonnet}"                       # sonnet | opus | haiku | full id
 PERMISSION_MODE="${PERMISSION_MODE:-acceptEdits}"  # acceptEdits (supervised-ish)
                                                #  | dontAsk (headless, auto-deny extras)
                                                #  | bypassPermissions (container only!)
-OUTPUT_FORMAT="${OUTPUT_FORMAT:-stream-json}"  # stream-json | json | text
+OUTPUT_FORMAT="${OUTPUT_FORMAT:-text}"          # text (default) | json | stream-json
+                                               #  Deliverables are FILES under runs/<id>/,
+                                               #  so stdout format is irrelevant — 'text'
+                                               #  is the safe default. NOTE: stream-json
+                                               #  with `claude -p` REQUIRES --verbose or
+                                               #  it dies at launch; we add it below if you
+                                               #  opt into stream-json.
+PARALLEL="${PARALLEL:-1}"                       # 1 = personas run concurrently (default); 0 = series
+MAX_JOBS="${MAX_JOBS:-3}"                       # cap on concurrent personas when PARALLEL=1
 ALL_PERSONAS=(priya marcus sofia kenji aisha david)
 
 # ---- which personas this run -----------------------------------------------
@@ -40,22 +55,36 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 
 command -v claude >/dev/null 2>&1 || { echo "ERROR: 'claude' CLI not found on PATH."; exit 1; }
 
+MODE=$([ "$PARALLEL" = "1" ] && echo "parallel (max $MAX_JOBS at once)" || echo "series")
 echo "=== SYSEN 5470 AI student run $STAMP ==="
-echo "model=$MODEL  permission-mode=$PERMISSION_MODE  personas=${PERSONAS[*]}"
+echo "model=$MODEL  permission-mode=$PERMISSION_MODE  mode=$MODE  personas=${PERSONAS[*]}"
 echo "tip: background this run (append &) and watch with 'bash $SCRIPT_DIR/progress.sh --watch'."
 echo
 
-for id in "${PERSONAS[@]}"; do
-  agent_file=".claude/agents/student-${id}.md"
+# Warm the shared environment ONCE before fanning out. Otherwise each persona's
+# SessionStart hook would try to install R/packages/Chromium concurrently, racing
+# the same R library. prepare-env.sh is flock-guarded + idempotent, so this is a
+# fast no-op if the env is already prepared. Skip with SKIP_PREPARE=1.
+if [ "${SKIP_PREPARE:-0}" != "1" ]; then
+  echo ">> warming shared environment (one-time prepare-env.sh)…"
+  bash "$SCRIPT_DIR/prepare-env.sh" || echo "!! prepare-env.sh reported issues — continuing anyway"
+  echo
+fi
+
+# run_one <id> — drive a single persona's headless session. Self-contained so it
+# can be called sequentially or backgrounded for parallel runs.
+run_one() {
+  local id="$1"
+  local agent_file=".claude/agents/student-${id}.md"
   if [ ! -f "$agent_file" ]; then
-    echo "!! skipping '$id' — no $agent_file"; continue
+    echo "!! skipping '$id' — no $agent_file"; return 0
   fi
 
   mkdir -p "runs/${id}"
-  log="logs/${id}-${STAMP}.log"
+  local log="logs/${id}-${STAMP}.log"
   echo ">> $id : starting (log -> $log)"
 
-  prompt="Use the student-${id} subagent to take SYSEN 5470 in full, exactly per \
+  local prompt="Use the student-${id} subagent to take SYSEN 5470 in full, exactly per \
 its brief (.claude/agents/_shared/student-brief.md). Inhabit the persona's skill \
 ceilings honestly. Actually run the example.R/example.py scripts and record real \
 outputs and errors. Produce ALL graded deliverables — in particular the project's \
@@ -75,17 +104,36 @@ path to runs/${id}/report.md."
   #                           container-only, refuses to run as root.
   #  In -p mode, 3 consecutive / 20 total classifier blocks abort the session, so a
   #  failed run usually means a missing allow-rule or a too-broad action — check the log.
+  #  stream-json + --print requires --verbose, else claude exits immediately — add it.
+  local fmt_args=(--output-format "$OUTPUT_FORMAT")
+  [ "$OUTPUT_FORMAT" = "stream-json" ] && fmt_args+=(--verbose)
+
   if claude -p "$prompt" \
         --model "$MODEL" \
         --permission-mode "$PERMISSION_MODE" \
-        --output-format "$OUTPUT_FORMAT" \
+        "${fmt_args[@]}" \
         > "$log" 2>&1; then
     echo ">> $id : done"
   else
     echo "!! $id : exited non-zero — inspect $log (likely a permission block or overrun)"
   fi
-  echo
-done
+}
+
+if [ "$PARALLEL" = "1" ]; then
+  # Each persona is an independent process writing to its own runs/<id>/ and log,
+  # so fan them out concurrently and wait for all to finish. MAX_JOBS caps how many
+  # run at once (each persona is itself token- and CPU-heavy).
+  for id in "${PERSONAS[@]}"; do
+    run_one "$id" &
+    # throttle: block once MAX_JOBS are already running
+    while [ "$(jobs -rp | wc -l)" -ge "$MAX_JOBS" ]; do
+      wait -n 2>/dev/null || sleep 2
+    done
+  done
+  wait
+else
+  for id in "${PERSONAS[@]}"; do run_one "$id"; echo; done
+fi
 
 echo "=== all requested personas finished. Aggregating... ==="
 if command -v Rscript >/dev/null 2>&1; then
