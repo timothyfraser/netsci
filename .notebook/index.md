@@ -1,6 +1,6 @@
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-10 23:54 UTC_
+_Auto-generated NotebookLM source · 2026-06-14 01:34 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
