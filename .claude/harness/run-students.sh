@@ -42,7 +42,7 @@ command -v claude >/dev/null 2>&1 || { echo "ERROR: 'claude' CLI not found on PA
 
 echo "=== SYSEN 5470 AI student run $STAMP ==="
 echo "model=$MODEL  permission-mode=$PERMISSION_MODE  personas=${PERSONAS[*]}"
-echo "tip: from another shell, run 'bash $SCRIPT_DIR/progress.sh' to watch progress."
+echo "tip: background this run (append &) and watch with 'bash $SCRIPT_DIR/progress.sh --watch'."
 echo
 
 for id in "${PERSONAS[@]}"; do

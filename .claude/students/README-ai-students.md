@@ -84,36 +84,46 @@ a synthesis (`runs/_registrar-notes.md`).
 Then read `runs/_summary.md`. A friction row red across *many* personas = a course
 problem (fix the lab); red for *one* = a fit problem for that learner type.
 
-## Watch progress (checkpoints during a long run)
+## Watch progress (while it runs unattended)
 
-A full walkthrough is slow, and **while a subagent is running the parent session is
-blocked and can't show you what's happening inside it** — that's a hard limit of
-subagents. What you *can* do is read what they've already written to disk: the brief
-makes every persona append to `runs/<id>/journal.md` after each item, so it grows in
-real time. `progress.sh` turns that into a one-screen dashboard:
+The headless batch already runs the **whole cohort start-to-finish on its own** — all
+six personas, sequentially, no per-week prompting. The only catch is visibility: a
+foreground run blocks the session and shows nothing until it's done. So **run it in the
+background and poll the monitor.**
 
 ```
-bash .claude/harness/progress.sh           # all personas
-bash .claude/harness/progress.sh sofia      # one
-watch -n 30 bash .claude/harness/progress.sh # auto-refresh (CLI/terminal only)
+# kick off the full cohort, unattended, in the background:
+PERMISSION_MODE=dontAsk bash .claude/harness/run-students.sh &
+
+# then watch progress whenever — it keeps working on its own:
+bash .claude/harness/progress.sh            # one-shot snapshot
+bash .claude/harness/progress.sh --watch    # self-refresh every 30s
+bash .claude/harness/progress.sh --watch 10 # every 10s
 ```
-It shows, per persona: journal entries logged, the last entry (so you see which
+
+The dashboard shows, per persona: journal entries logged, the last entry (which
 week/lab they're on), project reports done (`n/3`, `!` = one under ~1,800 words),
-**FRESH** = minutes since `journal.md` last changed (rising number while idle = likely
-stalled), and a status. Safe to run anytime — it only reads files.
+**FRESH** = minutes since `journal.md` last changed (a rising number = idle/stalled),
+and a status (`DONE ✓` when `report.md` + three full-length reports exist). It only
+reads files, so it's safe to run anytime. Per-persona `stream-json` logs also stream to
+`logs/<id>-<stamp>.log` if you want the raw play-by-play (`tail -f`).
 
-**Three ways to actually get the checkpoints in front of you:**
-- **Headless batch (Option B):** run it in the background, then run `progress.sh` from a
-  second shell in the same container whenever you want a snapshot. Per-persona
-  `stream-json` logs also stream to `logs/<id>-<stamp>.log` (`tail -f` them).
-- **Single web session (the phone case):** a second session is a *different* container
-  and won't see `runs/`, so out-of-band tailing isn't available. Instead dispatch
-  **one course-week at a time** (see the resilience tip in
-  `orchestrate-students.md`): the subagent returns after each week, control comes back
-  to the parent, and you get a natural checkpoint you can see — then say "continue with
-  Week 2." Three returns per persona instead of one long opaque call.
-- **Orchestrator session (Option C):** the registrar can call `progress.sh` itself
-  between dispatches and report each persona's standing to you.
+`PERMISSION_MODE=dontAsk` is what keeps it unattended — it auto-denies anything not in
+the allow-list instead of stopping to ask (so it never blocks waiting on you). Use it in
+an isolated container; `bypassPermissions` also works but refuses to run as root.
+
+**Driving this from one web session (phone):** tell the session to *start the run in the
+background and report progress periodically* — e.g. *"Run the cohort unattended in the
+background with `PERMISSION_MODE=dontAsk`, then run `progress.sh` every few minutes and
+show me the dashboard until every persona says DONE."* The run keeps moving on its own;
+the session just re-reads the on-disk progress and relays it. You never have to nudge it
+forward.
+
+> Why background matters: while a subagent (or a blocking foreground command) runs, the
+> parent session is frozen and can't show you anything. Backgrounding the harness frees
+> the session to read `runs/` and surface progress while the work continues. (The
+> per-week dispatch in `orchestrate-students.md` is only needed if you deliberately want
+> manual checkpoints — you don't, so skip it.)
 
 ## Honest caveats
 
