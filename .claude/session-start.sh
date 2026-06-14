@@ -37,3 +37,10 @@ if (length(miss)) {
 } >> "$HOME/.Renviron" || true
 
 echo "R session ready: $(Rscript -e 'cat(R.version.string)')"
+
+# 5. Pre-warm the Playwright MCP browser so the first browser tool call in a
+# fresh remote session is instant instead of stalling on a Chromium download.
+# Idempotent and best-effort: cached after the first run, never fails the hook.
+npx -y @playwright/mcp@latest --version >/dev/null 2>&1 || true
+npx -y playwright install chromium --with-deps >/dev/null 2>&1 || true
+echo "Playwright MCP browser pre-warmed (chromium)"
