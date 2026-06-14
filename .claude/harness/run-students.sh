@@ -30,8 +30,13 @@ PERMISSION_MODE="${PERMISSION_MODE:-acceptEdits}"  # acceptEdits (supervised-ish
                                                #  | dontAsk (headless, auto-deny extras)
                                                #  | bypassPermissions (container only!)
 OUTPUT_FORMAT="${OUTPUT_FORMAT:-stream-json}"  # stream-json | json | text
+                                               #  NOTE: with `claude -p`, stream-json
+                                               #  REQUIRES --verbose or the run dies at
+                                               #  launch ("--output-format=stream-json
+                                               #  requires --verbose"). We add --verbose
+                                               #  automatically below for stream-json.
 PARALLEL="${PARALLEL:-1}"                       # 1 = personas run concurrently (default); 0 = series
-MAX_JOBS="${MAX_JOBS:-6}"                       # cap on concurrent personas when PARALLEL=1
+MAX_JOBS="${MAX_JOBS:-3}"                       # cap on concurrent personas when PARALLEL=1
 ALL_PERSONAS=(priya marcus sofia kenji aisha david)
 
 # ---- which personas this run -----------------------------------------------
@@ -81,10 +86,14 @@ path to runs/${id}/report.md."
   #                           container-only, refuses to run as root.
   #  In -p mode, 3 consecutive / 20 total classifier blocks abort the session, so a
   #  failed run usually means a missing allow-rule or a too-broad action — check the log.
+  #  stream-json + --print requires --verbose, else claude exits immediately — add it.
+  local fmt_args=(--output-format "$OUTPUT_FORMAT")
+  [ "$OUTPUT_FORMAT" = "stream-json" ] && fmt_args+=(--verbose)
+
   if claude -p "$prompt" \
         --model "$MODEL" \
         --permission-mode "$PERMISSION_MODE" \
-        --output-format "$OUTPUT_FORMAT" \
+        "${fmt_args[@]}" \
         > "$log" 2>&1; then
     echo ">> $id : done"
   else

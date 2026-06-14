@@ -76,9 +76,11 @@ bash .claude/harness/run-students.sh sofia priya
 Each persona is an independent process with its own `runs/<id>/` and log, so they run
 concurrently. Key env vars: `MODEL` (default `sonnet`), `PERMISSION_MODE`
 (`acceptEdits` default → `dontAsk` for headless → `bypassPermissions` for fully
-unattended, **container only**), `OUTPUT_FORMAT`, **`PARALLEL`** (`1` default = run
-concurrently; `0` = series), **`MAX_JOBS`** (default `6` = how many personas run at once
-when parallel — lower it if the box is small or you want to cap token burn).
+unattended, **container only**), `OUTPUT_FORMAT` (default `stream-json`; the harness
+auto-adds `--verbose`, which `claude -p` requires for stream-json or it dies at launch),
+**`PARALLEL`** (`1` default = run concurrently; `0` = series), **`MAX_JOBS`** (default
+`3` = how many personas run at once when parallel — raise/lower for your box and token
+budget).
 
 **Option C — orchestrated from a main session.** Paste `.claude/students/orchestrate-students.md` into a
 main Claude Code session; it runs preflight, dispatches all six, aggregates, and writes
@@ -106,10 +108,22 @@ bash .claude/harness/progress.sh --watch 10 # every 10s
 
 The dashboard shows, per persona: journal entries logged, the last entry (which
 week/lab they're on), project reports done (`n/3`, `!` = one under ~1,800 words),
+**LIVE** = whether that persona's `claude -p` process is actually running right now,
 **FRESH** = minutes since `journal.md` last changed (a rising number = idle/stalled),
-and a status (`DONE ✓` when `report.md` + three full-length reports exist). It only
-reads files, so it's safe to run anytime. Per-persona `stream-json` logs also stream to
-`logs/<id>-<stamp>.log` if you want the raw play-by-play (`tail -f`).
+and a status (`DONE ✓` when `report.md` + three full-length reports exist). The LIVE
+column means a session that **crashed at launch** shows `✗ likely failed (check log)`
+rather than being indistinguishable from one that just started — always trust LIVE over
+ITEMS when deciding if something died. It only reads files + `ps`, so it's safe anytime.
+Per-persona logs also stream to `logs/<id>-<stamp>.log` for the raw play-by-play
+(`tail -f`).
+
+**Stopping / restarting (two footguns):**
+- Killing the wrapper (`pkill -f run-students.sh`) does **not** stop the personas — the
+  child `claude -p` processes get reparented and keep running. Kill those directly:
+  `pkill -f 'claude -p'` (or target one: `pkill -f 'student-sofia subagent'`).
+- Backgrounded commands don't reliably inherit your `cd`. Start every launch/poll
+  command with `cd /path/to/netsci` (or use absolute paths), or they'll run from the
+  wrong directory and write `runs/` somewhere you won't find it.
 
 `PERMISSION_MODE=dontAsk` is what keeps it unattended — it auto-denies anything not in
 the allow-list instead of stopping to ask (so it never blocks waiting on you). Use it in

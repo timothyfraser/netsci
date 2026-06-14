@@ -33,22 +33,38 @@ if [ "${1:-}" = "--watch" ] || [ "${1:-}" = "-w" ]; then
 fi
 if [ "$#" -gt 0 ]; then IDS=("$@"); else IDS=("${ALL[@]}"); fi
 
+# is this persona's headless session actually running right now? Matches the
+# "student-<id> subagent" text the harness puts in the `claude -p` prompt, so a
+# crashed/absent session is distinguishable from one that merely just started.
+is_alive() {
+  ps -eo args 2>/dev/null | grep -F "student-${1} subagent" | grep -vq "grep"
+}
+
 render() {
   if [ ! -d "$RUNS_DIR" ]; then echo "No '$RUNS_DIR/' yet — nothing has started."; return; fi
   local now; now=$(date +%s)
-  printf '%-8s %-6s %-22s %-9s %-7s %s\n' "STUDENT" "ITEMS" "LAST ENTRY" "REPORTS" "FRESH" "STATUS"
-  printf '%-8s %-6s %-22s %-9s %-7s %s\n' "-------" "-----" "----------" "-------" "-----" "------"
+  local fmt='%-8s %-6s %-20s %-9s %-5s %-6s %s\n'
+  # shellcheck disable=SC2059
+  printf "$fmt" "STUDENT" "ITEMS" "LAST ENTRY" "REPORTS" "LIVE" "FRESH" "STATUS"
+  printf "$fmt" "-------" "-----" "----------" "-------" "----" "-----" "------"
 
   for id in "${IDS[@]}"; do
-    local dir="$RUNS_DIR/$id"
+    local dir="$RUNS_DIR/$id" alive="no"
+    is_alive "$id" && alive="yes"
+
     if [ ! -d "$dir" ]; then
-      printf '%-8s %-6s %-22s %-9s %-7s %s\n' "$id" "-" "-" "0/3" "-" "not started"; continue
+      if [ "$alive" = "yes" ]; then
+        printf "$fmt" "$id" "0" "-" "0/3" "yes" "-" "starting…"
+      else
+        printf "$fmt" "$id" "-" "-" "0/3" "-" "-" "not started"
+      fi
+      continue
     fi
 
     local journal="$dir/journal.md" items=0 last="(no journal yet)" fresh="-"
     if [ -f "$journal" ]; then
       items=$(grep -cE '^\[Week' "$journal" 2>/dev/null || echo 0)
-      last=$(grep -E '^\[Week' "$journal" 2>/dev/null | tail -1 | sed 's/^\[//; s/\]$//' | cut -c1-22)
+      last=$(grep -E '^\[Week' "$journal" 2>/dev/null | tail -1 | sed 's/^\[//; s/\]$//' | cut -c1-20)
       [ -z "$last" ] && last="(writing…)"
       local mt; mt=$(stat -c %Y "$journal" 2>/dev/null || stat -f %m "$journal" 2>/dev/null || echo "$now")
       fresh="$(( (now - mt) / 60 ))m"
@@ -63,20 +79,28 @@ render() {
     fi
     local rep="${reports}/3"; [ "$short" -gt 0 ] && rep="${rep}!"
 
+    # status: done > under-spec > crashed/absent > exited-early > stalled > working
     local status="in progress"
     if [ -f "$dir/report.md" ] && [ "$reports" -ge 3 ] && [ "$short" -eq 0 ]; then
       status="DONE ✓"
-    elif [ -f "$dir/report.md" ] && { [ "$reports" -lt 3 ] || [ "$short" -gt 0 ]; }; then
+    elif [ -f "$dir/report.md" ]; then
       status="⚠ report.md but project under-spec"
+    elif [ "$items" -eq 0 ] && [ "$alive" = "no" ]; then
+      status="✗ not running, no progress — likely failed at launch (check log)"
+    elif [ "$items" -eq 0 ] && [ "$alive" = "yes" ]; then
+      status="starting…"
+    elif [ "$alive" = "no" ]; then
+      status="✗ exited early — no report (check log)"
     elif [ "$fresh" != "-" ] && [ "${fresh%m}" -gt 15 ]; then
       status="⚠ idle ${fresh} — maybe stalled"
     fi
 
-    printf '%-8s %-6s %-22s %-9s %-7s %s\n' "$id" "$items" "$last" "$rep" "$fresh" "$status"
+    printf "$fmt" "$id" "$items" "$last" "$rep" "$alive" "$fresh" "$status"
   done
 
   echo
   echo "ITEMS = journal entries logged | REPORTS n/3 (! = one under ~1,800 words)"
+  echo "LIVE  = a 'claude -p ... student-<id>' process is running right now"
   echo "FRESH = minutes since journal last changed (rising = working; flat = idle)"
 }
 
