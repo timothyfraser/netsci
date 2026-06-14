@@ -12,7 +12,7 @@ tidyverse + base-pipe `CLAUDE.md`, Playwright MCP already configured).
 
 ```
 .claude/
-  agents/
+  agents/                      ← MUST stay here (Claude Code only discovers subagents in .claude/agents/)
     _shared/student-brief.md   ← protocol + journal/report/scores schemas (read by all)
     student-priya.md           ← stellar coder, Python track (the ceiling)
     student-marcus.md          ← strong Python, new to R, shaky inference theory
@@ -21,19 +21,28 @@ tidyverse + base-pipe `CLAUDE.md`, Playwright MCP already configured).
     student-aisha.md           ← fluent R, new to Python AND to graphs (Python track)
     student-david.md           ← rusty, time-poor manager (async promise stress test)
     _student-template.md       ← copy to add more personas
-  settings.students.json       ← permissions to MERGE into .claude/settings.json
-harness/
-  run-students.sh              ← headless loop: each persona → its subagent → runs/<id>/
-  aggregate.R                  ← builds the cross-persona matrix + summary
-orchestrate-students.md        ← prompt to drive the cohort from a main CC session instead
+  harness/
+    run-students.sh            ← headless loop: each persona → its subagent → runs/<id>/
+    aggregate.R                ← builds the cross-persona matrix + summary
+  students/                    ← docs & references (kept out of the student personas' way)
+    README-ai-students.md      ← this file
+    orchestrate-students.md    ← prompt to drive the cohort from a main CC session instead
+    SETUP-AGENT-HANDOFF.md     ← original install handoff (historical)
+    MERGE-ME.md                ← permission-merge notes (already applied)
+    NETWORK-ALLOWLIST.md       ← custom network allowlist for cloud sessions
+    settings.students.json     ← permissions reference (already merged into settings.json)
 ```
+
+> The whole AI-student system lives under `.claude/` on purpose — it's a hidden config
+> dir the simulated student personas don't browse, so the evaluation scaffolding stays
+> out of their way. Output still lands at the repo root under `runs/` and `logs/`.
 
 Outputs land in `runs/<id>/` (`journal.md`, `report.md`, `scores.json`, `project/`) plus
 `runs/_summary.md`, `runs/_matrix_friction.csv`, `runs/_matrix_clarity.csv`.
 
 ## Install (one time)
 
-1. Copy `.claude/agents/` and `harness/` into the repo root.
+1. Files are already in place under `.claude/` (`agents/`, `harness/`, `students/`).
 2. **Merge permissions.** Add the `allow` and `deny` entries from
    `.claude/settings.students.json` into your existing `.claude/settings.json`
    `permissions` block. The repo's current allow-list only has *read-only* Playwright
@@ -55,15 +64,15 @@ claude
 
 **Option B — headless batch.** All six, sequential, then auto-aggregate:
 ```
-bash harness/run-students.sh
+bash .claude/harness/run-students.sh
 # or a subset:
-bash harness/run-students.sh sofia priya
+bash .claude/harness/run-students.sh sofia priya
 ```
 Key env vars: `MODEL` (default `sonnet`), `PERMISSION_MODE`
 (`acceptEdits` default → `dontAsk` for headless → `bypassPermissions` for fully
 unattended, **container only**), `OUTPUT_FORMAT`.
 
-**Option C — orchestrated from a main session.** Paste `orchestrate-students.md` into a
+**Option C — orchestrated from a main session.** Paste `.claude/students/orchestrate-students.md` into a
 main Claude Code session; it runs preflight, dispatches all six, aggregates, and writes
 a synthesis (`runs/_registrar-notes.md`).
 

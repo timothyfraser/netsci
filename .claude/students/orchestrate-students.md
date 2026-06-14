@@ -36,7 +36,7 @@ Do this:
    runs/<id>/." Wait for it to finish and confirm runs/<id>/report.md exists before
    starting the next. If a persona fails or breaks character, note it and continue.
 
-3. AGGREGATE. After all six finish, run: Rscript harness/aggregate.R runs
+3. AGGREGATE. After all six finish, run: Rscript .claude/harness/aggregate.R runs
    Then read runs/_summary.md and the two matrix CSVs.
 
 4. SYNTHESIZE. Write runs/_registrar-notes.md with:

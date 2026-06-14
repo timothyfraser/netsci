@@ -7,17 +7,22 @@
 # keep personas honest). Outputs land in runs/<id>/.
 #
 # USAGE
-#   bash harness/run-students.sh                      # all personas, sequential
-#   bash harness/run-students.sh priya sofia          # just these two
-#   PERMISSION_MODE=bypassPermissions bash harness/run-students.sh   # unattended
+#   bash .claude/harness/run-students.sh              # all personas, sequential
+#   bash .claude/harness/run-students.sh priya sofia  # just these two
+#   PERMISSION_MODE=bypassPermissions bash .claude/harness/run-students.sh   # unattended
 #
-# PREREQUISITES (see README-ai-students.md)
+# PREREQUISITES (see .claude/students/README-ai-students.md)
 #   - Run from the repo root, inside an isolated environment / container.
 #   - Playwright MCP server configured & reachable (`claude mcp list`).
-#   - .claude/settings.json merged with .claude/settings.students.json.
+#   - .claude/settings.json merged with .claude/students/settings.students.json.
 #   - R (and Python if any persona uses the Python track) installed.
 # ============================================================================
 set -uo pipefail
+
+# Resolve this script's own directory so aggregate.R is found no matter where
+# the harness lives or where you invoke it from (runs/ and logs/ stay relative
+# to your CWD — invoke from the repo root).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ---- config (override via env) ---------------------------------------------
 MODEL="${MODEL:-sonnet}"                       # sonnet | opus | haiku | full id
@@ -77,8 +82,8 @@ done
 
 echo "=== all requested personas finished. Aggregating... ==="
 if command -v Rscript >/dev/null 2>&1; then
-  Rscript harness/aggregate.R runs || echo "!! aggregate.R failed — run it manually."
+  Rscript "$SCRIPT_DIR/aggregate.R" runs || echo "!! aggregate.R failed — run it manually."
 else
-  echo "Rscript not found; run 'Rscript harness/aggregate.R runs' yourself."
+  echo "Rscript not found; run 'Rscript .claude/harness/aggregate.R runs' yourself."
 fi
 echo "=== see runs/_summary.md and runs/_matrix_friction.csv ==="
