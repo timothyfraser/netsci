@@ -1,5 +1,7 @@
 {
-  "enabledMcpjsonServers": ["playwright"],
+  "enabledMcpjsonServers": [
+    "playwright"
+  ],
   "hooks": {
     "SessionStart": [
       {
@@ -56,7 +58,11 @@
       "mcp__playwright__browser_select_option",
       "mcp__playwright__browser_hover",
       "mcp__playwright__browser_wait_for",
-      "mcp__playwright__browser_tabs"
+      "mcp__playwright__browser_tabs",
+      "Write",
+      "Edit",
+      "Read",
+      "Bash(tee:*)"
     ],
     "deny": [
       "Bash(sudo:*)",
