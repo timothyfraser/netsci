@@ -67,15 +67,18 @@ claude
   run the real code, and write outputs to runs/sofia/.
 ```
 
-**Option B — headless batch.** All six, sequential, then auto-aggregate:
+**Option B — headless batch.** All six **in parallel** (default), then auto-aggregate:
 ```
 bash .claude/harness/run-students.sh
 # or a subset:
 bash .claude/harness/run-students.sh sofia priya
 ```
-Key env vars: `MODEL` (default `sonnet`), `PERMISSION_MODE`
+Each persona is an independent process with its own `runs/<id>/` and log, so they run
+concurrently. Key env vars: `MODEL` (default `sonnet`), `PERMISSION_MODE`
 (`acceptEdits` default → `dontAsk` for headless → `bypassPermissions` for fully
-unattended, **container only**), `OUTPUT_FORMAT`.
+unattended, **container only**), `OUTPUT_FORMAT`, **`PARALLEL`** (`1` default = run
+concurrently; `0` = series), **`MAX_JOBS`** (default `6` = how many personas run at once
+when parallel — lower it if the box is small or you want to cap token burn).
 
 **Option C — orchestrated from a main session.** Paste `.claude/students/orchestrate-students.md` into a
 main Claude Code session; it runs preflight, dispatches all six, aggregates, and writes
