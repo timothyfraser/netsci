@@ -21,7 +21,8 @@ Rscript -e '
 need <- c("dplyr","readr","tidyr","tibble","stringr","arrow",
           "ggplot2","viridis","patchwork",
           "igraph","tidygraph","ggraph",
-          "sf","xgboost","zoo","reticulate","here")
+          "sf","xgboost","zoo","reticulate","here",
+          "jsonlite","purrr")
 have <- rownames(installed.packages())
 miss <- setdiff(need, have)
 if (length(miss)) {
