@@ -2,7 +2,7 @@
 # ============================================================================
 # aggregate.R — turn per-student scores.json files into a cross-persona view.
 #
-#   Rscript harness/aggregate.R runs
+#   Rscript .claude/harness/aggregate.R runs
 #
 # Reads runs/<id>/scores.json for every persona and writes:
 #   runs/_matrix_friction.csv   lab x student friction (1-5)

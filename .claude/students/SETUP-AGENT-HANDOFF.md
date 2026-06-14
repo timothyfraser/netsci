@@ -1,5 +1,11 @@
 # SETUP-AGENT HANDOFF — install the SYSEN 5470 AI-student system
 
+> **Historical note (relocated):** this doc describes the original install, which placed
+> `harness/` and the student docs at the **repo root**. The system was later moved under
+> `.claude/` (`.claude/harness/`, `.claude/students/`; subagents stay in `.claude/agents/`)
+> so the scaffolding stays out of the student personas' way. Paths below reflect the
+> original layout — see `.claude/students/README-ai-students.md` for the current one.
+
 **You are a setup agent (Claude Code) working at the root of the `timothyfraser/netsci`
 repository.** Your job is to install the AI-student walkthrough system from this bundle
 into the repo, verify the environment, and stage the one human-review step — then stop
