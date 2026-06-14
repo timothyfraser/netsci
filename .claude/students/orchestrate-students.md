@@ -32,9 +32,19 @@ Do this:
 2. DISPATCH, one persona at a time, in this order: sofia, david, marcus, kenji,
    aisha, priya (struggling students first, so problems surface early). For each:
    "Use the student-<id> subagent to take SYSEN 5470 in full per its brief, run the
-   real code, and write journal.md, report.md, scores.json, and project/ into
-   runs/<id>/." Wait for it to finish and confirm runs/<id>/report.md exists before
-   starting the next. If a persona fails or breaks character, note it and continue.
+   real code, produce ALL graded deliverables — including the project's THREE separate
+   5-page-minimum reports (~1,800+ words of text each, as
+   project/report_weekN_caseNN.md, never combined), having read docs/assignments.html
+   and docs/assignments/sample-report.md first — and write journal.md, report.md,
+   scores.json, and project/ into runs/<id>/." Wait for it to finish, then confirm
+   runs/<id>/report.md exists AND that runs/<id>/project/ holds three
+   report_week*.md files each >=~1,800 words (`wc -w`). If the three full-length
+   reports aren't there, the persona's project is non-conforming — send it back to
+   finish before moving on. If a persona fails or breaks character, note it and continue.
+   After each persona, run `bash .claude/harness/progress.sh` and report the dashboard
+   to me so I can see how far the cohort has gotten. For a very long persona, dispatch
+   it one course-week at a time and report progress after each week (see the resilience
+   tip below).
 
 3. AGGREGATE. After all six finish, run: Rscript .claude/harness/aggregate.R runs
    Then read runs/_summary.md and the two matrix CSVs.

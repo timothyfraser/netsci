@@ -50,10 +50,23 @@ persona is explicitly told to evaluate the other track's quickstart.
 3. **Project.** Across the 3 weeks pick **3 of the 11** case-study methods (one per
    week) and apply each to a network **you choose or synthesize** (see your persona).
    The network must have **100+ nodes; 1,000+ strongly preferred**. Commit to a
-   network by the end of week 1. For each chosen case study, write
-   `project.R`/`project.py` that runs end-to-end, plus a short report (question;
-   node/edge/weight definitions + data source; procedure in plain language; results
-   as **numbers in prose**; what it does and doesn't tell you).
+   network by the end of week 1.
+
+   **Read the real spec before you write any project report.** Open
+   `docs/assignments.html` (the assignment spec **and** the Identify / Measure /
+   Infer / Predict rubric) and the worked exemplar `docs/assignments/sample-report.md`
+   (~2,667 words for a single case study). Mirror its section structure:
+   **Question / Network / Procedure / Results (numbers in prose) / What this tells me,
+   and what it doesn't.**
+
+   For each of your 3 chosen case studies you produce **two files**:
+   - `project/project_weekN_caseNN.R` (or `.py`) that runs end-to-end, and
+   - a **separate** `project/report_weekN_caseNN.md` — **one per case study, one per
+     week; do NOT combine them into a single file.** Each report is a
+     **5-page-minimum in your own words: ~1,800–2,500 words of text** (figures and
+     tables are encouraged but do **not** count toward the length). State which rubric
+     tier (Identify / Measure / Infer / Predict) you're targeting and self-score
+     against it.
 4. **Office hours + final presentation.** Simulate the 3 required check-ins by
    writing the questions you'd actually bring. Outline what you'd present on your
    strongest project.
@@ -76,6 +89,12 @@ structure for you, or felt like busywork.** That judgment is the signal — not 
   Flag every spot a student like you would stall, re-read, or quit.
 - **Execute, don't simulate.** A Learning Check answer you didn't compute is a
   failed run. If a script won't run, that **is** the finding — log it.
+- **A weak student still submits the whole thing.** If your persona struggles with the
+  project, produce a *struggling* full-length report for each of the 3 case studies —
+  hedged claims, a thin Procedure, an honest "I'm not sure my inference is right" — but
+  still hit the required **length and count (3 separate reports, 5 pages / ~1,800+
+  words each)**. Skipping, shrinking, or combining the project reports is **out of
+  persona** (real students submit all three) and it destroys comparability across runs.
 - **Respect the course AI policy in-world:** you may use AI to debug code, never to
   write report prose. (Note: everything you produce here is a **simulation artifact
   for course evaluation**, not a submittable assignment.)
@@ -131,7 +150,28 @@ Write to `runs/<your-id>/` (e.g. `runs/priya/`). Create the folder if needed.
    Include one `labs` entry per lab you actually attempted. `ran` ∈
    `"clean" | "errored" | "unfinished"`. `almost_dropped` is a lab id string or `null`.
 
-4. **`project/`** — your `project.R`/`project.py`, the dataset you used, and your
-   2-page project report(s). These are the simulation's project artifacts.
+4. **`project/`** — for **each** of your 3 chosen case studies: the runnable
+   `project_weekN_caseNN.R`/`.py`, the dataset you used, and a **separate**
+   `report_weekN_caseNN.md`. **Three reports, one per week, never combined**, each a
+   **5-page minimum (~1,800–2,500 words of text)** following the
+   `docs/assignments/sample-report.md` structure. These are the **graded homework** —
+   the single largest deliverable in the course. Do not shortchange them even if your
+   persona finds five pages hard (see the fidelity rules and the acceptance gate).
 
-When finished, print **only** the path to `runs/<your-id>/report.md`.
+### Acceptance gate — run this before you finish
+
+The project reports are the most-often-undershot deliverable, so verify them and
+**paste the output** before printing anything:
+
+```
+ls -1 runs/<your-id>/project/report_week*.md    # must list THREE separate files
+wc -w runs/<your-id>/project/report_week*.md     # each ≥ ~1,800 words of text
+```
+
+If there are not **three** separate reports, or any is under ~1,800 words, the run is
+**incomplete**: say so explicitly and finish the missing/short reports (in persona)
+instead of stopping. Combining the three into one file, or emitting a single short
+report, does **not** satisfy the course.
+
+When finished — **and only after the acceptance gate passes** — print **only** the
+path to `runs/<your-id>/report.md`.

@@ -31,6 +31,8 @@ tidyverse + base-pipe `CLAUDE.md`, Playwright MCP already configured).
     MERGE-ME.md                ← permission-merge notes (already applied)
     NETWORK-ALLOWLIST.md       ← custom network allowlist for cloud sessions
     settings.students.json     ← permissions reference (already merged into settings.json)
+  harness/
+    progress.sh                ← peek at how far each persona has gotten, mid-run
 ```
 
 > The whole AI-student system lives under `.claude/` on purpose — it's a hidden config
@@ -38,7 +40,10 @@ tidyverse + base-pipe `CLAUDE.md`, Playwright MCP already configured).
 > out of their way. Output still lands at the repo root under `runs/` and `logs/`.
 
 Outputs land in `runs/<id>/` (`journal.md`, `report.md`, `scores.json`, `project/`) plus
-`runs/_summary.md`, `runs/_matrix_friction.csv`, `runs/_matrix_clarity.csv`.
+`runs/_summary.md`, `runs/_matrix_friction.csv`, `runs/_matrix_clarity.csv`. The
+`project/` folder holds the graded homework: **three separate `report_weekN_caseNN.md`
+files (one per case study, one per week, 5-page / ~1,800+ words each)** alongside each
+runnable `project_weekN_caseNN.R`/`.py`.
 
 ## Install (one time)
 
@@ -78,6 +83,47 @@ a synthesis (`runs/_registrar-notes.md`).
 
 Then read `runs/_summary.md`. A friction row red across *many* personas = a course
 problem (fix the lab); red for *one* = a fit problem for that learner type.
+
+## Watch progress (while it runs unattended)
+
+The headless batch already runs the **whole cohort start-to-finish on its own** — all
+six personas, sequentially, no per-week prompting. The only catch is visibility: a
+foreground run blocks the session and shows nothing until it's done. So **run it in the
+background and poll the monitor.**
+
+```
+# kick off the full cohort, unattended, in the background:
+PERMISSION_MODE=dontAsk bash .claude/harness/run-students.sh &
+
+# then watch progress whenever — it keeps working on its own:
+bash .claude/harness/progress.sh            # one-shot snapshot
+bash .claude/harness/progress.sh --watch    # self-refresh every 30s
+bash .claude/harness/progress.sh --watch 10 # every 10s
+```
+
+The dashboard shows, per persona: journal entries logged, the last entry (which
+week/lab they're on), project reports done (`n/3`, `!` = one under ~1,800 words),
+**FRESH** = minutes since `journal.md` last changed (a rising number = idle/stalled),
+and a status (`DONE ✓` when `report.md` + three full-length reports exist). It only
+reads files, so it's safe to run anytime. Per-persona `stream-json` logs also stream to
+`logs/<id>-<stamp>.log` if you want the raw play-by-play (`tail -f`).
+
+`PERMISSION_MODE=dontAsk` is what keeps it unattended — it auto-denies anything not in
+the allow-list instead of stopping to ask (so it never blocks waiting on you). Use it in
+an isolated container; `bypassPermissions` also works but refuses to run as root.
+
+**Driving this from one web session (phone):** tell the session to *start the run in the
+background and report progress periodically* — e.g. *"Run the cohort unattended in the
+background with `PERMISSION_MODE=dontAsk`, then run `progress.sh` every few minutes and
+show me the dashboard until every persona says DONE."* The run keeps moving on its own;
+the session just re-reads the on-disk progress and relays it. You never have to nudge it
+forward.
+
+> Why background matters: while a subagent (or a blocking foreground command) runs, the
+> parent session is frozen and can't show you anything. Backgrounding the harness frees
+> the session to read `runs/` and surface progress while the work continues. (The
+> per-week dispatch in `orchestrate-students.md` is only needed if you deliberately want
+> manual checkpoints — you don't, so skip it.)
 
 ## Honest caveats
 

@@ -42,6 +42,7 @@ command -v claude >/dev/null 2>&1 || { echo "ERROR: 'claude' CLI not found on PA
 
 echo "=== SYSEN 5470 AI student run $STAMP ==="
 echo "model=$MODEL  permission-mode=$PERMISSION_MODE  personas=${PERSONAS[*]}"
+echo "tip: background this run (append &) and watch with 'bash $SCRIPT_DIR/progress.sh --watch'."
 echo
 
 for id in "${PERSONAS[@]}"; do
@@ -57,8 +58,14 @@ for id in "${PERSONAS[@]}"; do
   prompt="Use the student-${id} subagent to take SYSEN 5470 in full, exactly per \
 its brief (.claude/agents/_shared/student-brief.md). Inhabit the persona's skill \
 ceilings honestly. Actually run the example.R/example.py scripts and record real \
-outputs and errors. Write journal.md, report.md, scores.json, and project/ into \
-runs/${id}/. When finished, print only the path to runs/${id}/report.md."
+outputs and errors. Produce ALL graded deliverables — in particular the project's \
+THREE separate 5-page-minimum reports (~1,800+ words of text each, figures excluded), \
+one per chosen case study, one per week, as project/report_weekN_caseNN.md; never \
+combine them or emit a single short report. Read docs/assignments.html and \
+docs/assignments/sample-report.md before drafting, and run the brief's acceptance gate \
+(three report_week*.md, each >=~1,800 words) before finishing. Write journal.md, \
+report.md, scores.json, and project/ into runs/${id}/. When finished, print only the \
+path to runs/${id}/report.md."
 
   # NOTE on flags:
   #  -p / --print           : non-interactive headless run
