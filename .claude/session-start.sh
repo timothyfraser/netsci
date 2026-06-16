@@ -19,6 +19,13 @@ else
   bash "$PROJECT_DIR/.claude/harness/prepare-env.sh" || true
 fi
 
+# Point reticulate (cases 10-11) at a Python that has numpy + pandas so it uses
+# the system interpreter instead of trying to provision one over the network
+# mid-lab. Appended once (guarded), since .Renviron persists across sessions.
+if command -v python3 >/dev/null 2>&1 && ! grep -q '^RETICULATE_PYTHON=' "$HOME/.Renviron" 2>/dev/null; then
+  echo "RETICULATE_PYTHON=$(command -v python3)" >> "$HOME/.Renviron"
+fi
+
 # Make API keys from the .env file available to R sessions (cheap; every session).
 {
   :  # add 'echo "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}"' style lines here to expose secrets to R
