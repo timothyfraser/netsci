@@ -125,6 +125,9 @@ results = pd.DataFrame({
     "betweenness":  run_strategy("betweenness", ks),
 })
 
+# Reading the table: each column is an attack strategy, each row a number
+# of removed DCs (k). LOWER coverage = MORE damage, so the strategy with
+# the smallest numbers is the most effective attack (compare across a row).
 print(results.round(3))
 row10 = results.loc[results["k"] == 10].iloc[0]
 print(f"🧪 At k=10: random={row10['random']:.3f}  out_degree={row10['out_degree']:.3f}"

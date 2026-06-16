@@ -125,6 +125,9 @@ results <- tibble(
   betweenness = run_strategy("betweenness", ks)
 )
 
+# Reading the table: each column is an attack strategy, each row a number
+# of removed DCs (k). LOWER coverage = MORE damage, so the strategy with
+# the smallest numbers is the most effective attack (compare across a row).
 results |> mutate(across(-k, ~round(., 3))) |> print()
 cat(sprintf("🧪 At k=10: random=%.3f  out_degree=%.3f  betweenness=%.3f\n",
             results$random[results$k == 10],
