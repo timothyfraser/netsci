@@ -1,6 +1,6 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-16 01:12 UTC_
+_Auto-generated NotebookLM source · 2026-06-16 04:37 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
@@ -512,6 +512,36 @@ Python:
 python code/01_build-a-network/example.py
 ```
 
+> **Run from the repo root.** These scripts resolve their data files with
+> `here::here()` (R) and repo-relative paths (Python), so they behave the
+> same on every machine — but only if your working directory is the repo
+> root. A "file not found" error almost always means you're inside `code/`
+> instead of at the top. (That's *why* the course uses `here::here()`: it
+> pins paths to the project root instead of wherever you happened to launch.)
+
+### Python note: building a graph from *string* node IDs
+
+`igraph`'s `Graph.DataFrame()` expects **integer** vertex IDs. If your own
+project data uses string names (e.g. `"E0004"`), it raises
+`TypeError: ... must be 0-based integers`. Map names to integers first, then
+keep the names as a vertex attribute:
+
+```python
+import igraph as ig
+
+names = nodes["node_id"].tolist()
+idx   = {name: i for i, name in enumerate(names)}      # string -> 0-based int
+g = ig.Graph(
+    n=len(names),
+    edges=[(idx[a], idx[b]) for a, b in zip(edges["from_id"], edges["to_id"])],
+    directed=False,
+)
+g.vs["name"] = names   # restore the original string IDs as a vertex attribute
+```
+
+(The lab's own `example.py` sidesteps this inside `functions.py`; you'll hit
+it the first time you build *your own* network for the project.)
+
 ## Learning check (submit this number)
 
 > **In the supplier-supplier one-mode projection, what is the degree of
@@ -777,6 +807,11 @@ g
 is_bip <- igraph::bipartite_mapping(g)$res
 cat(sprintf("✅ Bipartite? %s\n", if (is_bip) "True" else "False"))
 
+# Diagnostic: which logical `type` maps to which kind of node? Print the
+# cross-tab so you never have to guess (or trace functions.R) when you read
+# off proj1 vs proj2 later. FALSE = suppliers, TRUE = components.
+print(table(kind = igraph::V(g)$kind, type = igraph::V(g)$type))
+
 
 # 2. Inspect basic structure #################################################
 
@@ -869,18 +904,32 @@ print(proj_edges |> head(10))
 # rendering of a bipartite graph: you can read off the structure
 # without thinking about it.
 
-# Run inside an RStudio session to see the plot interactively; from
-# Rscript it goes to the default device.
-plot(
-  g,
-  layout       = igraph::layout_as_bipartite(g),
-  vertex.size  = ifelse(igraph::V(g)$kind == "supplier", 4, 2.5),
-  vertex.color = ifelse(igraph::V(g)$kind == "supplier", "#1f77b4", "#d62728"),
-  vertex.label = NA,
-  edge.color   = "#cccccc",
-  edge.width   = 0.4,
-  main         = "Bipartite supplier <-> component network"
-)
+# Wrap the plotting call so we can draw it once to the screen (RStudio /
+# in-browser R session) AND save a copy to a PNG you can open from a file
+# browser. Running from `Rscript` otherwise dumps plots into Rplots.pdf,
+# which is easy to miss.
+draw_bipartite <- function() {
+  plot(
+    g,
+    layout       = igraph::layout_as_bipartite(g),
+    vertex.size  = ifelse(igraph::V(g)$kind == "supplier", 4, 2.5),
+    vertex.color = ifelse(igraph::V(g)$kind == "supplier", "#1f77b4", "#d62728"),
+    vertex.label = NA,
+    edge.color   = "#cccccc",
+    edge.width   = 0.4,
+    main         = "Bipartite supplier <-> component network"
+  )
+}
+
+# Draw interactively (visible in RStudio / the in-browser R session)...
+draw_bipartite()
+
+# ...and also save a copy to file for terminal / Rscript users.
+png(here::here("code", "01_build-a-network", "bipartite_network.png"),
+    width = 7, height = 5, units = "in", res = 120)
+draw_bipartite()
+invisible(dev.off())
+cat("💾 Saved bipartite_network.png\n")
 
 
 # 5. Learning Check ##########################################################
@@ -1502,6 +1551,11 @@ stations |> head()
 nrow(edges)
 nrow(stations)
 cat(sprintf("✅ Loaded %d trip rows and %d stations.\n", nrow(edges), nrow(stations)))
+# Heads-up on "rows" vs "trips": each row is an AGGREGATE (a start/end/day
+# combination), and the `count` column holds how many trips it represents.
+# So total trips = sum(count), which is much larger than the row count.
+cat(sprintf("ℹ️  %d rows are aggregates; total trips = sum(count) = %d.\n",
+            nrow(edges), sum(edges$count, na.rm = TRUE)))
 
 
 # 1. Single-Node Join ########################################################
@@ -1587,6 +1641,15 @@ data <- edges |>
 data |> head()
 cat(sprintf("✅ After double-join + NA drop: %d rows.\n", nrow(data)))
 
+# How much did the NA drop actually remove? Report it as a share of TRIPS
+# (not rows), so you know whether dropping out-of-area stations is a rounding
+# error or a meaningful chunk of the data you're about to summarize.
+trips_all     <- sum(edges$count, na.rm = TRUE)
+trips_kept    <- sum(data$count,  na.rm = TRUE)
+pct_dropped   <- 100 * (trips_all - trips_kept) / trips_all
+cat(sprintf("ℹ️  NA-drop removed %.1f%% of all trips (out-of-area stations).\n",
+            pct_dropped))
+
 ## 2.2 An aggregate quantity of interest #####################################
 
 # How many trips happened between EACH of the four demographic
@@ -1609,7 +1672,7 @@ cat(sprintf("📊 Total trips across all four cells: %d\n", sum(stat$trips)))
 # is the simplest possible "network communication" visualization, and
 # it's often the most honest one.
 
-ggplot(stat, aes(x = start_black, y = end_black, fill = percent)) +
+p <- ggplot(stat, aes(x = start_black, y = end_black, fill = percent)) +
   geom_tile(color = "white") +
   geom_text(aes(label = percent), color = "white", size = 6) +
   scale_fill_viridis_c(option = "mako", begin = 0.2, end = 0.8) +
@@ -1620,6 +1683,13 @@ ggplot(stat, aes(x = start_black, y = end_black, fill = percent)) +
     subtitle = "AM rush 2021 — slim Bluebikes-flavored sample"
   ) +
   theme_classic(base_size = 13)
+
+# print() shows it in an interactive / in-browser session; ggsave() also
+# writes a file so terminal / Rscript users aren't left hunting in Rplots.pdf.
+print(p)
+ggsave(here::here("code", "02_joins", "demographic_flows.png"),
+       p, width = 6, height = 5, dpi = 120)
+cat("💾 Saved demographic_flows.png\n")
 
 
 # 4. Why renames matter (the silent-bug demo) ################################
@@ -2308,6 +2378,8 @@ station_pairs <- enriched |>
   arrange(desc(trips))
 nrow(station_pairs)
 cat(sprintf("📊 Resolution A: %d station pairs.\n", nrow(station_pairs)))
+# Context: only ~30k of the ~250,000 possible ordered station pairs ever
+# see a trip. That sparsity is real transit demand, not a data error.
 
 ## 2.2 Resolution B — neighborhood x neighborhood ############################
 
@@ -2350,15 +2422,21 @@ station_totals <- bind_rows(
   group_by(code) |>
   summarize(trips = sum(trips), .groups = "drop")
 
-ggplot(station_totals, aes(x = trips)) +
+# Each plot is assigned to an object, then both print()ed (visible in an
+# interactive / in-browser session) AND ggsave()d to a PNG, so terminal /
+# Rscript users aren't left wondering where the figures went (Rplots.pdf).
+p_a <- ggplot(station_totals, aes(x = trips)) +
   geom_histogram(bins = 40, fill = "#3a8bc6") +
   labs(x     = "trips touching this station (in or out)",
        y     = "# stations",
        title = "Resolution A — station-level trip volume") +
   theme_classic(base_size = 13)
+print(p_a)
+ggsave(here::here("code", "03_aggregation", "resolution_a_stations.png"),
+       p_a, width = 6, height = 4.5, dpi = 120)
 
 # Resolution B: 12x12 heatmap. Diagonal heavier = neighborhood stickiness.
-ggplot(nbhd_pairs,
+p_b <- ggplot(nbhd_pairs,
        aes(x = start_nbhd, y = end_nbhd, fill = trips)) +
   geom_tile(color = "white") +
   scale_fill_viridis(option = "mako") +
@@ -2367,9 +2445,12 @@ ggplot(nbhd_pairs,
        y     = "Ending neighborhood") +
   theme_classic(base_size = 12) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+print(p_b)
+ggsave(here::here("code", "03_aggregation", "resolution_b_neighborhood.png"),
+       p_b, width = 6, height = 5, dpi = 120)
 
 # Resolution C: 4x4 heatmap with the percentages drawn ON the cells.
-ggplot(q_pairs,
+p_c <- ggplot(q_pairs,
        aes(x = factor(start_quintile), y = factor(end_quintile),
            fill = percent)) +
   geom_tile(color = "white") +
@@ -2380,6 +2461,10 @@ ggplot(q_pairs,
        fill  = "% of trips",
        title = "Resolution C — trips between income quintiles") +
   theme_classic(base_size = 13)
+print(p_c)
+ggsave(here::here("code", "03_aggregation", "resolution_c_quintile.png"),
+       p_c, width = 6, height = 5, dpi = 120)
+cat("💾 Saved resolution_a/b/c PNGs.\n")
 
 
 # 4. The point ###############################################################
@@ -2391,6 +2476,10 @@ ggplot(q_pairs,
 #
 # Visualization is partly a tool for finding the question. The case
 # study calls this "aggregation reveals signal."
+#
+# The through-line: the "right" resolution is the one at which your quantity
+# of interest becomes legible. 30,125 station pairs is too fine to read; the
+# 4x4 quintile matrix is coarse enough that the equity pattern jumps out.
 
 
 # 5. Learning Check ##########################################################
@@ -2988,11 +3077,19 @@ cat(sprintf("✅ Loaded graph: %d vertices, %d edges.\n",
 # Betweenness is the slow one: it needs all-pairs shortest paths, so on
 # 500 nodes expect this to take ~30-60s. It has NOT hung.
 #
-# WEIGHT DIRECTION (easy to get backwards): igraph reads `weights` as
-# DISTANCE -- a higher weight means a LONGER, harder-to-traverse edge. Our
-# `weight` here is already a distance-like cost, so passing it raw is right.
-# If your weight is a STRENGTH (ridership, volume -- higher = "closer"),
-# pass 1 / weight instead, the way case 09 builds cost = 1 / ridership.
+# +-------------------------------------------------------------------------+
+# | /!\ WEIGHT DIRECTION -- THE #1 SILENT BUG IN WEIGHTED CENTRALITY         |
+# |                                                                         |
+# | igraph reads `weights` as DISTANCE: a higher weight means a LONGER,     |
+# | harder-to-traverse edge. Our `weight` here is already a distance-like   |
+# | cost, so passing it raw is correct.                                     |
+# |                                                                         |
+# | If YOUR weight is a STRENGTH (ridership, messages, volume -- higher =   |
+# | "closer"), pass 1 / weight instead, the way case 09 builds              |
+# | cost = 1 / ridership. Passing strength as-is RUNS WITHOUT ERROR and     |
+# | silently computes the wrong thing -- check this before you trust a      |
+# | weighted betweenness ranking.                                           |
+# +-------------------------------------------------------------------------+
 cat("🧪 Computing four centralities on 500 nodes (betweenness ~30-60s)...\n")
 cent <- tibble(
   node_id     = igraph::V(g)$name,
@@ -3034,6 +3131,11 @@ cat(sprintf("📊 Degree vs betweenness Spearman: %.3f\n",
 #
 # In our synthetic data we planted some "bridge" nodes — let's see if
 # this gap statistic recovers them.
+#
+# Read the gap as RELATIVE, not absolute: it's a difference of ranks, so
+# it only means "this node climbs N places when you rank by betweenness
+# instead of degree." A gap of 400 in a 500-node graph is dramatic; the
+# same 400 in a 50,000-node graph is mild. Always read it against n.
 
 cent <- cent |>
   mutate(
@@ -3057,16 +3159,32 @@ cat(sprintf("📝 #1 hidden bridge: %s (gap = %.0f)\n",
 V(g)$btwn <- cent$betweenness
 V(g)$col  <- ifelse(V(g)$kind == "bridge", "#d62728", "#1f77b4")
 
-plot(
-  g,
-  layout       = igraph::layout_with_fr(g, weights = E(g)$weight, niter = 200),
-  vertex.size  = 1 + 8 * (V(g)$btwn / max(V(g)$btwn)),
-  vertex.color = V(g)$col,
-  vertex.label = NA,
-  edge.color   = adjustcolor("grey50", alpha.f = 0.2),
-  edge.width   = 0.4,
-  main         = "Node size = betweenness. Red = planted bridges."
-)
+# Wrap the plot so we can both show it interactively AND save a copy to PNG
+# (Rscript otherwise sends it to Rplots.pdf). Fix the layout once so the
+# screen and file versions are identical.
+lay <- igraph::layout_with_fr(g, weights = E(g)$weight, niter = 200)
+draw_centrality <- function() {
+  plot(
+    g,
+    layout       = lay,
+    vertex.size  = 1 + 8 * (V(g)$btwn / max(V(g)$btwn)),
+    vertex.color = V(g)$col,
+    vertex.label = NA,
+    edge.color   = adjustcolor("grey50", alpha.f = 0.2),
+    edge.width   = 0.4,
+    main         = "Node size = betweenness. Red = planted bridges."
+  )
+}
+
+# Show interactively (RStudio / in-browser R session)...
+draw_centrality()
+
+# ...and save a copy for terminal / Rscript users.
+png(here::here("code", "04_centrality", "centrality_network.png"),
+    width = 7, height = 6, units = "in", res = 120)
+draw_centrality()
+invisible(dev.off())
+cat("💾 Saved centrality_network.png\n")
 
 
 # 5. Simulate: remove the top-5 by each metric ###############################
@@ -3083,15 +3201,28 @@ lcc_size <- function(g_in) {
 
 cat(sprintf("\n🧪 Original largest component: %d\n", lcc_size(g)))
 
-for (metric in c("degree", "betweenness", "closeness", "eigenvector")) {
+lcc_after <- sapply(c("degree", "betweenness", "closeness", "eigenvector"),
+                    function(metric) {
   top5 <- cent |>
     arrange(desc(.data[[metric]])) |>
     head(5) |>
     pull(node_id)
   g_test <- igraph::delete_vertices(g, top5)
-  cat(sprintf("   remove top-5 by %-12s -> LCC = %d\n",
-              metric, lcc_size(g_test)))
-}
+  size   <- lcc_size(g_test)
+  cat(sprintf("   remove top-5 by %-12s -> LCC = %d\n", metric, size))
+  size
+})
+
+# Land the takeaway so it isn't lost in the four lines above: the SMALLEST
+# surviving largest-component is the most damaging attack, i.e. the metric
+# most attuned to network criticality.
+worst <- names(which.min(lcc_after))
+cat(sprintf("📝 Most fragmenting metric: top-5 by %s (LCC = %d). %s\n",
+            worst, min(lcc_after),
+            if (worst == "betweenness")
+              "Betweenness finds the load-bearing bridges degree misses."
+            else
+              "Compare against betweenness — bridges aren't always the busiest nodes."))
 
 
 # 6. Learning Check ##########################################################
@@ -3176,11 +3307,19 @@ print(f"✅ Loaded graph: {g.vcount()} vertices, {g.ecount()} edges.")
 # Betweenness is the slow one: it needs all-pairs shortest paths, so on
 # 500 nodes expect this to take ~30-60s. It has NOT hung.
 #
-# WEIGHT DIRECTION (easy to get backwards): igraph reads `weights` as
-# DISTANCE -- a higher weight means a LONGER, harder-to-traverse edge. Our
-# `weight` here is already a distance-like cost, so passing it raw is right.
-# If your weight is a STRENGTH (ridership, volume -- higher = "closer"),
-# pass 1/weight instead, the way case 09 builds cost = 1/ridership.
+# +-------------------------------------------------------------------------+
+# | /!\ WEIGHT DIRECTION -- THE #1 SILENT BUG IN WEIGHTED CENTRALITY         |
+# |                                                                         |
+# | igraph reads `weights` as DISTANCE: a higher weight means a LONGER,     |
+# | harder-to-traverse edge. Our `weight` here is already a distance-like   |
+# | cost, so passing it raw is correct.                                     |
+# |                                                                         |
+# | If YOUR weight is a STRENGTH (ridership, messages, volume -- higher =   |
+# | "closer"), pass 1/weight instead, the way case 09 builds                |
+# | cost = 1/ridership. Passing strength as-is RUNS WITHOUT ERROR and       |
+# | silently computes the wrong thing -- check this before you trust a      |
+# | weighted betweenness ranking.                                           |
+# +-------------------------------------------------------------------------+
 print("🧪 Computing four centralities on 500 nodes (betweenness ~30-60s)...")
 cent = pd.DataFrame({
     "node_id":      g.vs["name"],
@@ -3612,6 +3751,14 @@ cat(sprintf("📊 Baseline supply coverage: %.3f\n", base))
 # directed network we use both weighted degree (capacity) and
 # betweenness. We hold these in a tidy table so the attack loop
 # below stays one-liner-clean.
+#
+# WHY DIRECTED HERE (but undirected in case 04)? Goods flow one way through
+# a supply chain (supplier -> DC -> retailer), so directed betweenness
+# counts only paths that respect that flow. Case 04's transit graph was
+# undirected because adjacency there implies mutual access. And we target
+# by OUT-degree, not in-degree: a DC that SUPPLIES many retailers
+# downstream is the real risk; how many suppliers feed INTO it matters
+# less for whether retailers stay covered.
 
 cent <- tibble(
   node_id     = igraph::V(g)$name,
@@ -3685,7 +3832,7 @@ cat(sprintf("🧪 At k=10: random=%.3f  out_degree=%.3f  betweenness=%.3f\n",
 results_long <- results |>
   pivot_longer(-k, names_to = "strategy", values_to = "coverage")
 
-ggplot(results_long,
+p <- ggplot(results_long,
        aes(x = k, y = coverage, color = strategy, shape = strategy)) +
   geom_line() +
   geom_point(size = 2.5) +
@@ -3694,6 +3841,12 @@ ggplot(results_long,
        y     = "supply coverage (fraction of retailers reachable)",
        title = "Targeted vs random DC failures") +
   theme_classic(base_size = 13)
+
+# Show interactively AND save a copy (Rscript otherwise hides it in Rplots.pdf).
+print(p)
+ggsave(here::here("code", "05_supply-chain", "attack_strategies.png"),
+       p, width = 6.5, height = 4.5, dpi = 120)
+cat("💾 Saved attack_strategies.png\n")
 
 
 # 5. Learning Check ##########################################################
@@ -3787,6 +3940,14 @@ print(f"📊 Baseline supply coverage: {base:.3f}")
 # directed network we use both weighted degree (capacity) and
 # betweenness. We hold these in a tidy table so the attack loop
 # below stays one-liner-clean.
+#
+# WHY DIRECTED HERE (but undirected in case 04)? Goods flow one way through
+# a supply chain (supplier -> DC -> retailer), so directed betweenness
+# counts only paths that respect that flow. Case 04's transit graph was
+# undirected because adjacency there implies mutual access. And we target
+# by OUT-degree, not in-degree: a DC that SUPPLIES many retailers
+# downstream is the real risk; how many suppliers feed INTO it matters
+# less for whether retailers stay covered.
 
 cent = pd.DataFrame({
     "node_id":     g.vs["name"],
@@ -4250,7 +4411,7 @@ cat(sprintf("✅ Loaded DSM: %d components, %d dependency edges.\n",
 # within a cluster. Fine for grouping; keep direction if you cared about
 # what cascades when one part fails.
 
-g_undirected <- igraph::as.undirected(g, mode = "collapse")
+g_undirected <- igraph::as_undirected(g, mode = "collapse")
 g_undirected
 
 # A quick word on MODULARITY, the score both algorithms maximize: it
@@ -4266,7 +4427,11 @@ cat(sprintf("📊 Louvain found %d modules. Modularity: %.3f\n",
             length(louvain), igraph::modularity(louvain)))
 
 # Fast-greedy: agglomerative — start with each node in its own community,
-# repeatedly merge the pair whose merge most increases modularity.
+# repeatedly merge the pair whose merge most increases modularity. It often
+# recovers FEWER modules than Louvain on dense graphs: once it has merged
+# greedily it never splits back, so adjacent planted modules get fused into
+# one and the recovered count comes in under the truth. That's an algorithm
+# property, not randomness — Louvain's node-moving phase avoids it here.
 fg <- igraph::cluster_fast_greedy(g_undirected)
 cat(sprintf("📊 Fast-greedy found %d modules. Modularity: %.3f\n",
             length(fg), igraph::modularity(fg)))
@@ -4277,6 +4442,9 @@ cat(sprintf("📊 Fast-greedy found %d modules. Modularity: %.3f\n",
 # Our synthetic data planted 8 modules. The Adjusted Rand Index (ARI)
 # measures how well two clusterings agree, corrected for chance:
 # 1.0 = perfect agreement, 0.0 = chance, < 0 = worse than chance.
+# Rough field convention for "how good is this recovery?": ARI > 0.8 is a
+# strong match, 0.5–0.8 partial, < 0.5 weak. So Louvain's 1.0 is a perfect
+# recovery; fast-greedy's lower score reflects the merged modules above.
 
 true_mod <- igraph::V(g)$true_module
 ari_louv <- igraph::compare(true_mod, louvain$membership, method = "adjusted.rand")
@@ -4296,13 +4464,27 @@ A        <- as.matrix(igraph::as_adjacency_matrix(g))
 A_sorted <- A[ord, ord]
 
 # Side-by-side base-R image() plots. Reverse the y-axis so row 1 lands
-# at the top, like an actual matrix.
-par(mfrow = c(1, 2))
-image(t(A)[, nrow(A):1], col = c("white", "black"), axes = FALSE,
-      main = "DSM — original order")
-image(t(A_sorted)[, nrow(A_sorted):1], col = c("white", "black"), axes = FALSE,
-      main = "DSM — reordered by Louvain")
-par(mfrow = c(1, 1))
+# at the top, like an actual matrix. Wrapped in a function so we can draw
+# it both to the screen and to a PNG (Rscript otherwise hides it in
+# Rplots.pdf).
+draw_dsm <- function() {
+  par(mfrow = c(1, 2))
+  image(t(A)[, nrow(A):1], col = c("white", "black"), axes = FALSE,
+        main = "DSM — original order")
+  image(t(A_sorted)[, nrow(A_sorted):1], col = c("white", "black"), axes = FALSE,
+        main = "DSM — reordered by Louvain")
+  par(mfrow = c(1, 1))
+}
+
+# Show interactively...
+draw_dsm()
+
+# ...and save a copy for terminal / Rscript users.
+png(here::here("code", "06_dsm-clustering", "dsm_reordering.png"),
+    width = 9, height = 5, units = "in", res = 120)
+draw_dsm()
+invisible(dev.off())
+cat("💾 Saved dsm_reordering.png\n")
 
 
 # 4. Cascade simulation ######################################################
@@ -4311,6 +4493,13 @@ par(mfrow = c(1, 1))
 # fail too. We bound to k hops because in a densely-coupled DSM an
 # unbounded cascade reaches everything. The interesting question:
 # how many fall in the FIRST FEW HOPS?
+#
+# Why can a cascade reach far beyond C037's own module even though Louvain
+# found clean modules? Because a cascade follows EDGES, not module walls.
+# Community detection only says edges are DENSER within modules, not that
+# none cross. C037 has a few cross-module dependency edges, and BFS happily
+# traverses them -- so a single hub failure jumps boundaries the clustering
+# drew.
 
 seed <- "C037"
 for (k in c(1, 2, 3)) {
@@ -4413,7 +4602,11 @@ louvain = g_undirected.community_multilevel()
 print(f"📊 Louvain found {len(louvain)} modules. Modularity: {louvain.modularity:.3f}")
 
 # Fast-greedy: agglomerative — start with each node in its own community,
-# repeatedly merge the pair whose merge most increases modularity.
+# repeatedly merge the pair whose merge most increases modularity. It often
+# recovers FEWER modules than Louvain on dense graphs: once it has merged
+# greedily it never splits back, so adjacent planted modules get fused into
+# one and the recovered count comes in under the truth. That's an algorithm
+# property, not randomness — Louvain's node-moving phase avoids it here.
 fg = g_undirected.community_fastgreedy().as_clustering()
 print(f"📊 Fast-greedy found {len(fg)} modules. Modularity: {fg.modularity:.3f}")
 
@@ -4423,6 +4616,9 @@ print(f"📊 Fast-greedy found {len(fg)} modules. Modularity: {fg.modularity:.3f
 # Our synthetic data planted 8 modules. The Adjusted Rand Index (ARI)
 # measures how well two clusterings agree, corrected for chance:
 # 1.0 = perfect agreement, 0.0 = chance, < 0 = worse than chance.
+# Rough field convention: ARI > 0.8 is a strong match, 0.5–0.8 partial,
+# < 0.5 weak. So Louvain's 1.0 is a perfect recovery; fast-greedy's lower
+# score reflects the merged modules noted above.
 # (igraph ships no ARI, so we borrow sklearn's one function for it.)
 
 from sklearn.metrics import adjusted_rand_score
@@ -4464,6 +4660,13 @@ print("💾 Saved dsm_reorder.png")
 # fail too. We bound to k hops because in a densely-coupled DSM an
 # unbounded cascade reaches everything. The interesting question:
 # how many components fall in the FIRST FEW HOPS?
+#
+# Why can a cascade reach far beyond C037's own module even though Louvain
+# found clean modules? Because a cascade follows EDGES, not module walls.
+# Community detection only says edges are DENSER within modules, not that
+# none cross. C037 has a few cross-module dependency edges, and BFS happily
+# traverses them -- so a single hub failure jumps boundaries the clustering
+# drew.
 
 seed = "C037"
 for k in [1, 2, 3]:
@@ -4905,6 +5108,15 @@ p_blocked <- mean(null_blocked >= observed)
 cat(sprintf("🧪 Block-permuted null: mean = %+.4f  sd = %.4f  p = %.3f\n",
             mean(null_blocked), sd(null_blocked), p_blocked))
 
+# Which direction is "good"? A LARGE p-value means FAIL TO REJECT — the
+# observed value is unremarkable under this null. A SMALL one means REJECT.
+cat(sprintf("ℹ️  p = %.3f is %s -> %s.\n", p_blocked,
+            if (p_blocked > 0.05) "LARGE" else "SMALL",
+            if (p_blocked > 0.05)
+              "FAIL TO REJECT: the observed assortativity is ordinary once neighborhood is held fixed"
+            else
+              "REJECT: homophily remains beyond what neighborhood explains"))
+
 
 # 4. Visualize ###############################################################
 
@@ -4913,7 +5125,7 @@ null_df <- bind_rows(
   tibble(null = "Block-permuted", value = null_blocked)
 )
 
-ggplot(null_df, aes(x = value, fill = null)) +
+p <- ggplot(null_df, aes(x = value, fill = null)) +
   geom_histogram(alpha = 0.6, position = "identity", bins = 30) +
   geom_vline(xintercept = observed, linetype = "dashed") +
   scale_fill_manual(values = c("Unblocked"      = "#3a8bc6",
@@ -4923,6 +5135,12 @@ ggplot(null_df, aes(x = value, fill = null)) +
        title = "Two null models, two p-values",
        fill  = "Null model") +
   theme_classic(base_size = 13)
+
+# Show interactively AND save a copy (Rscript otherwise hides it in Rplots.pdf).
+print(p)
+ggsave(here::here("code", "07_permutation", "two_null_distributions.png"),
+       p, width = 7, height = 4.5, dpi = 120)
+cat("💾 Saved two_null_distributions.png\n")
 
 
 # 5. The take-home ###########################################################
@@ -4937,6 +5155,27 @@ ggplot(null_df, aes(x = value, fill = null)) +
 # This is the canonical mistake the case study warns against. If you
 # fit the wrong null model, you get the wrong answer with great
 # confidence.
+#
+# WHY does the blocked null land so close to the observed value? Within a
+# segregated neighborhood almost everyone shares the same demo label, so
+# shuffling labels WITHIN a neighborhood barely changes the graph -- each
+# permuted network looks almost like the real one, and the null piles up
+# right around the observed statistic (so the observed looks ordinary). The
+# unblocked null also scrambles geography, destroying the segregation that
+# produced most of the assortativity in the first place -- so its null sits
+# far below the observed value and the observed looks extreme. Same number,
+# two nulls, opposite verdicts.
+#
+# WHICH NULL DO I REACH FOR ON MY OWN DATA? Decision rule:
+#   - Use a BLOCKED null when a known structural variable (here:
+#     neighborhood) already explains part of how the labels are
+#     distributed, and you want to test the signal that REMAINS after
+#     accounting for it. Block on the confounder.
+#   - Use the UNBLOCKED null only when no such confounder exists (labels
+#     are exchangeable across the whole graph).
+# If in doubt, ask: "Would I be fooled by ecological sorting?" If yes
+# (your groups cluster in space/teams/departments), block on that
+# variable — otherwise you'll mistake sorting for direct homophily.
 
 
 # 6. Learning Check ##########################################################
@@ -5067,6 +5306,15 @@ p_blocked = float(np.mean(null_blocked >= observed))
 print(f"🧪 Block-permuted null: mean = {null_blocked.mean():+.4f}  "
       f"sd = {null_blocked.std():.4f}  p = {p_blocked:.3f}")
 
+# Which direction is "good"? A LARGE p-value means FAIL TO REJECT — the
+# observed value is unremarkable under this null. A SMALL one means REJECT.
+if p_blocked > 0.05:
+    print(f"ℹ️  p = {p_blocked:.3f} is LARGE -> FAIL TO REJECT: the observed "
+          f"assortativity is ordinary once neighborhood is held fixed.")
+else:
+    print(f"ℹ️  p = {p_blocked:.3f} is SMALL -> REJECT: homophily remains "
+          f"beyond what neighborhood explains.")
+
 
 # 4. Visualize the two null distributions vs the observed ####################
 
@@ -5098,6 +5346,25 @@ print("💾 Saved permutation_nulls.png")
 # This is the canonical mistake the case study warns against. If you
 # fit the wrong null model, you get the wrong answer with great
 # confidence.
+#
+# WHY does the blocked null land so close to the observed value? Within a
+# segregated neighborhood almost everyone shares the same demo label, so
+# shuffling labels WITHIN a neighborhood barely changes the graph -- each
+# permuted network looks almost like the real one, and the null piles up
+# right around the observed statistic (so the observed looks ordinary). The
+# unblocked null also scrambles geography, destroying the segregation that
+# produced most of the assortativity in the first place -- so its null sits
+# far below the observed value and the observed looks extreme. Same number,
+# two nulls, opposite verdicts.
+#
+# WHICH NULL DO I REACH FOR ON MY OWN DATA? Decision rule:
+#   - Use a BLOCKED null when a known structural variable (here:
+#     neighborhood) already explains part of how the labels are
+#     distributed, and you want the signal that REMAINS after accounting
+#     for it. Block on the confounder.
+#   - Use the UNBLOCKED null only when no such confounder exists.
+# If in doubt, ask: "Would I be fooled by ecological sorting?" If your
+# groups cluster in space/teams/departments, block on that variable.
 
 
 # 6. Learning Check ##########################################################
@@ -5585,7 +5852,7 @@ cat(sprintf("✅ Buffer sample: %d nodes within 200 km of Miami, %d edges.\n",
 
 # 3. Compare ##################################################################
 
-bind_rows(
+p <- bind_rows(
   stats     |> mutate(strategy = "Population"),
   ego_stats |> mutate(strategy = "Ego-centric"),
   edge_stats|> mutate(strategy = "Edgewise"),
@@ -5598,6 +5865,14 @@ bind_rows(
        x     = NULL) +
   theme_classic(base_size = 12) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
+
+# This is the figure that makes the whole case: all three sample lines
+# against the population line. Show it AND save it (Rscript otherwise hides
+# it in Rplots.pdf, so the most important plot in the lab goes unseen).
+print(p)
+ggsave(here::here("code", "08_sampling", "sample_vs_population.png"),
+       p, width = 7, height = 4.5, dpi = 120)
+cat("💾 Saved sample_vs_population.png\n")
 
 
 # 4. Which strategy best preserves avg_edgeweight? ###########################
@@ -5623,9 +5898,16 @@ mad <- c(
   edgewise       = max_abs_dev(edge_stats),
   spatial_buffer = max_abs_dev(buf_stats)
 )
-print(mad)
+cat("Max |population - sample| in avg_edgeweight, by strategy (smaller = better):\n")
+print(round(mad, 3))
 winner <- names(which.min(mad))
-cat(sprintf("📊 Best preservation: %s\n", winner))
+cat(sprintf("📊 Best preservation (smallest max-absolute-deviation): %s\n", winner))
+
+# WHY does the spatial buffer usually win for this network? Evacuation flow
+# is spatially structured -- neighboring subdivisions surge together -- so a
+# geographic buffer captures a coherent, internally-intact subnetwork whose
+# per-node averages track the population. Ego and edgewise sampling slice
+# the graph arbitrarily, fragmenting that local structure.
 
 
 # 5. Learning Check ##########################################################
@@ -5822,7 +6104,13 @@ for k, v in mad.items():
     print(f"  {k:16s}: {v:.3f}")
 
 winner = min(mad, key=mad.get)
-print(f"📊 Best preservation: {winner}")
+print(f"📊 Best preservation (smallest max-absolute-deviation): {winner}")
+
+# WHY does the spatial buffer usually win for this network? Evacuation flow
+# is spatially structured -- neighboring subdivisions surge together -- so a
+# geographic buffer captures a coherent, internally-intact subnetwork whose
+# per-node averages track the population. Ego and edgewise sampling slice
+# the graph arbitrarily, fragmenting that local structure.
 
 
 # 5. Learning Check ##########################################################
@@ -6208,6 +6496,16 @@ cat(sprintf("✅ Loaded network: %d stations, %d edges.\n",
 base_apl <- weighted_apl(g)
 cat(sprintf("📊 Baseline weighted APL: %.5f\n", base_apl))
 
+# Quick overdispersion check before trusting Poisson. Poisson assumes
+# variance == mean. If the ratio is ~1, Poisson is a fair noise model; if
+# it's >> 1 the counts are overdispersed and Poisson understates
+# uncertainty (a negative-binomial draw would be better). One line tells
+# you whether the model below is appropriate for YOUR data.
+vmr <- var(igraph::E(g)$ridership) / mean(igraph::E(g)$ridership)
+cat(sprintf("🧪 Edge-weight variance/mean ratio: %.2f  (%s)\n", vmr,
+            if (vmr < 1.5) "≈1, Poisson is reasonable"
+            else "overdispersed — consider negative binomial"))
+
 
 # 2. Pick an intervention ####################################################
 #
@@ -6254,8 +6552,21 @@ cat(sprintf("🧪 Counterfactual APL change (mean):     %+.5f  (%+.2f%% of basel
             mean(diffs), 100 * mean(diffs) / base_mean))
 cat(sprintf("🧪 95%% CI on the change:                 [%+.5f, %+.5f]\n",
             ci[[1]], ci[[2]]))
+is_sig <- ci[[2]] < 0 || ci[[1]] > 0
 cat(sprintf("📊 Effect significant at 95%%?            %s\n",
-            if (ci[[2]] < 0 || ci[[1]] > 0) "True" else "False"))
+            if (is_sig) "True" else "False"))
+
+# What does the verdict MEAN? A CI that MISSES zero says the effect's
+# direction is real (still read the magnitude separately). A CI that
+# INCLUDES zero does NOT say "the intervention does nothing" — it says we
+# can't distinguish the effect from zero with this many replicates. The
+# true effect might be small, or we might just be underpowered. "We can't
+# tell" is itself a finding: it means gather more data before committing.
+cat(sprintf("ℹ️  Interpretation: %s\n",
+            if (is_sig)
+              "CI misses zero — the change is directionally real (check size vs baseline)."
+            else
+              "CI includes zero — can't distinguish from no effect (not proof of 'no effect')."))
 
 
 # 4. Visualize ###############################################################
@@ -6282,8 +6593,15 @@ p2 <- ggplot(tibble(d = diffs), aes(x = d)) +
        title = "Difference distribution + 95% CI") +
   theme_classic(base_size = 12)
 
+# Show interactively AND save copies (Rscript otherwise hides them in
+# Rplots.pdf).
 print(p1)
 print(p2)
+ggsave(here::here("code", "09_counterfactual", "mc_distributions.png"),
+       p1, width = 6.5, height = 4.5, dpi = 120)
+ggsave(here::here("code", "09_counterfactual", "mc_difference_ci.png"),
+       p2, width = 6.5, height = 4.5, dpi = 120)
+cat("💾 Saved mc_distributions.png and mc_difference_ci.png\n")
 
 
 # 5. Learning Check ##########################################################
@@ -6370,6 +6688,14 @@ print(f"✅ Loaded network: {g.vcount()} stations, {g.ecount()} edges.")
 base_apl = weighted_apl(g)
 print(f"📊 Baseline weighted APL: {base_apl:.5f}")
 
+# Quick overdispersion check before trusting Poisson. Poisson assumes
+# variance == mean. If the ratio is ~1, Poisson is a fair noise model; if
+# it's >> 1 the counts are overdispersed and Poisson understates
+# uncertainty (a negative-binomial draw would be better).
+vmr = float(np.var(edges["ridership"]) / np.mean(edges["ridership"]))
+note = "≈1, Poisson is reasonable" if vmr < 1.5 else "overdispersed — consider negative binomial"
+print(f"🧪 Edge-weight variance/mean ratio: {vmr:.2f}  ({note})")
+
 
 # 2. Pick an intervention ####################################################
 #
@@ -6416,6 +6742,18 @@ print(f"🧪 Counterfactual APL change (mean):     {diffs.mean():+.5f}  "
 print(f"🧪 95% CI on the change:                 [{ci_low:+.5f}, {ci_high:+.5f}]")
 sig = ci_high < 0 or ci_low > 0
 print(f"📊 Effect significant at 95%?            {'True' if sig else 'False'}")
+
+# What does the verdict MEAN? A CI that MISSES zero says the effect's
+# direction is real (still read the magnitude separately). A CI that
+# INCLUDES zero does NOT say "the intervention does nothing" — it says we
+# can't distinguish the effect from zero with this many replicates. "We
+# can't tell" is itself a finding: gather more data before committing.
+if sig:
+    print("ℹ️  Interpretation: CI misses zero — the change is directionally "
+          "real (check size vs baseline).")
+else:
+    print("ℹ️  Interpretation: CI includes zero — can't distinguish from no "
+          "effect (NOT proof of 'no effect').")
 
 
 # 4. Visualize the two distributions and the difference ######################
@@ -6842,6 +7180,24 @@ library(here)
 
 ## 0.2 Load helpers ##########################################################
 
+# PRE-FLIGHT CHECK (read this if you've never used reticulate). This is the
+# one lab that drives Python from R, so the only thing that can go wrong is
+# Python not being reachable. We check BEFORE sourcing functions.R (which
+# triggers the Python setup) so you get a friendly message instead of a
+# cryptic import error halfway through.
+#
+# If this stops with "Python not found":
+#   - reticulate::install_python()         # installs a private Python, or
+#   - Sys.setenv(RETICULATE_PYTHON = "/path/to/python-with-numpy")
+#   then restart R and re-run. On a current reticulate (>= 1.41) the numpy +
+#   pandas requirements are provisioned automatically (see functions.R).
+if (!reticulate::py_available(initialize = TRUE)) {
+  stop("Python not found for reticulate. Run reticulate::install_python() ",
+       "or set RETICULATE_PYTHON to a Python that has numpy + pandas, ",
+       "then restart R and re-run this script.")
+}
+cat("✅ reticulate found Python — bridging to the numpy GCN code.\n")
+
 # functions.R gives us the R-native loaders (load_tiny / load_large) and
 # the `gcn` Python module handle (gcn$adjacency / gcn$normalize /
 # gcn$gcn_layer). Sourcing it triggers the one-time Python setup.
@@ -6879,6 +7235,17 @@ print(A)
 A_norm <- gcn$normalize(A)
 cat("A_norm (symmetric-normalized):\n")
 print(round(A_norm, 3))
+
+# Make the normalization VISIBLE (gcn$normalize hides it behind one call).
+# The degree matrix D is diagonal, holding each node's degree; symmetric
+# normalization is literally D^{-1/2} %*% A %*% D^{-1/2}. Building it by hand
+# once demystifies the "scary" formula: it just divides every edge by
+# sqrt(deg_i * deg_j), which is what down-weights links to high-degree hubs.
+deg           <- rowSums(A)             # the diagonal of D (with self-loops)
+D_inv_sqrt    <- diag(1 / sqrt(deg))    # D^{-1/2}
+A_norm_byhand <- D_inv_sqrt %*% A %*% D_inv_sqrt
+cat(sprintf("   built two ways, max abs difference = %.2e (identical)\n",
+            max(abs(A_norm - A_norm_byhand))))
 
 
 # 2. Feature matrix and weight matrices ######################################
@@ -6922,6 +7289,13 @@ print(round(H2, 4))
 # Node 4 sits between two clusters in our 6-node toy. After two GCN
 # layers its embedding has absorbed features from both sides. Node 4 is
 # 0-indexed in Python, which is row 5 in 1-indexed R.
+#
+# What do the 3 numbers MEAN? Individually, nothing nameable. Embedding
+# dimensions are not "voltage" or "risk" -- in a trained GNN they're
+# whatever the optimizer found useful; here they're fixed by W1/W2. What
+# matters is RELATIVE: nodes with similar neighborhoods get similar
+# vectors, so the embedding is useful as ML input (case 11) even though no
+# single dimension has a human label.
 
 emb_node4 <- H2[5, ]
 cat("Final embedding for node 4 (the bottleneck):\n")
@@ -7063,6 +7437,17 @@ A_norm = normalize(A)
 print("A_norm (symmetric-normalized):")
 print(A_norm.round(3))
 
+# Make the normalization VISIBLE (normalize() hides it behind one call).
+# The degree matrix D is diagonal, holding each node's degree; symmetric
+# normalization is literally D^{-1/2} @ A @ D^{-1/2}. Building it by hand
+# once demystifies the "scary" formula: it just divides every edge by
+# sqrt(deg_i * deg_j), which is what down-weights links to high-degree hubs.
+deg            = A.sum(axis=1)             # the diagonal of D (with self-loops)
+D_inv_sqrt     = np.diag(1.0 / np.sqrt(deg))  # D^{-1/2}
+A_norm_by_hand = D_inv_sqrt @ A @ D_inv_sqrt
+print(f"   built two ways, max abs difference = "
+      f"{np.abs(A_norm - A_norm_by_hand).max():.2e} (identical)")
+
 
 # 2. Feature matrix and weight matrices ######################################
 #
@@ -7107,6 +7492,13 @@ print(H2.round(4))
 #
 # Node 4 sits between two clusters in our 6-node toy. After two GCN
 # layers its embedding has absorbed features from both sides.
+#
+# What do the 3 numbers MEAN? Individually, nothing nameable. Embedding
+# dimensions are not "voltage" or "risk" -- in a trained GNN they're
+# whatever the optimizer found useful; here they're fixed by W1/W2. What
+# matters is RELATIVE: nodes with similar neighborhoods get similar
+# vectors, so the embedding is useful as ML input (case 11) even though no
+# single dimension has a human label.
 
 print("Final embedding for node 4 (the bottleneck):")
 print(H2[4].round(4))
@@ -7654,6 +8046,12 @@ cat("✅ Added 4-week lag_rate feature.\n")
 # (in functions.R) reaches across to numpy: it builds the row-normalized
 # in-neighbor adjacency A and computes A %*% lag (1-hop neighbor average)
 # and A %*% A %*% lag (2-hop), per week. The result is two new columns.
+#
+# These embeddings are FIXED aggregations (just a matrix multiply), NOT a
+# trained GNN: no learned weights, no backprop. Same distinction as case 10
+# -- you computed a forward pass, you didn't train one. The structural
+# signal is real; the "learning" is not. A torch GNN would learn what to
+# aggregate; here we hard-code "average your neighbors' lag_rate."
 
 panel <- add_gnn_embeddings(panel, suppliers, edges)
 print(head(panel, 10))
@@ -7760,7 +8158,19 @@ cat(sprintf("🧪 AUC, raw + lag + GNN (1+2 hop):   %.4f\n", gnn_fit$auc))
 # counts how often the model splits on a feature; a GNN feature that adds
 # weak but INDEPENDENT signal can lift predictions without being split on
 # often. Low importance + real AUC lift = exactly that situation.
+#
+# Connecting back to Week 2 (Case 04): the gnn_1hop / gnn_2hop columns play
+# the same role betweenness/centrality did — they summarize a node's
+# structural position — except here that signal is LEARNED from the
+# neighbors' data (their lag_rate) rather than COMPUTED from pure topology.
+# A high gnn_1hop gain means "knowing your neighbors' recent disruption
+# rate helps predict your own."
 
+# Reading THIS table: individual-supplier features (capacity, geo_risk)
+# usually top it -- a supplier's own characteristics predict its own
+# disruption more than its neighbors' do. And gnn_1hop typically outranks
+# gnn_2hop, because 2-hop averages in more distant, noisier neighbors and
+# dilutes the signal. Structure helps; individual features still dominate.
 print(gnn_fit$imp)
 
 p <- ggplot(gnn_fit$imp, aes(x = Gain, y = reorder(Feature, Gain))) +
@@ -7872,6 +8282,12 @@ print(f"✅ Added 4-week lag_rate feature.")
 # my in-neighbors' lag_rate" into a single matrix product: A @ x.
 # Applying A twice gives the 2-hop average. This is the simplest
 # possible "graph convolution" — no learned weights, no nonlinearity.
+#
+# So these are FIXED aggregations, NOT a trained GNN: no learned weights,
+# no backprop. Same distinction as case 10 -- you computed a forward pass,
+# you didn't train one. A torch GNN would LEARN what to aggregate; here we
+# hard-code "average your neighbors' lag_rate." The structural signal is
+# real; the "learning" is not.
 
 A = build_adjacency(suppliers, edges)
 print(f"📊 Adjacency: {A.shape}, row-sum max = {A.sum(axis=1).max():.2f}")
@@ -7951,6 +8367,15 @@ print(f"🧪 AUC, raw + lag + GNN (1+2 hop):   {auc_gnn:.4f}")
 # counts how often the model splits on a feature; a GNN feature that adds
 # weak but INDEPENDENT signal can lift predictions without being split on
 # often. Low importance + real AUC lift = exactly that situation.
+#
+# Connecting back to case 04: gnn_1hop / gnn_2hop play the role betweenness
+# did — they summarize a node's structural position — except LEARNED from
+# the neighbors' data rather than COMPUTED from pure topology. Reading the
+# table: individual-supplier features (capacity, geo_risk) usually top it
+# (your own characteristics predict your own disruption more than your
+# neighbors' do), and gnn_1hop typically outranks gnn_2hop because 2-hop
+# averages in more distant, noisier neighbors. Structure helps; individual
+# features still dominate.
 
 imp = pd.DataFrame({
     "feature":    gnn_cols,
