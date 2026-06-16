@@ -10,10 +10,12 @@
 #   bash .claude/harness/run-students.sh              # all personas, sequential
 #   bash .claude/harness/run-students.sh priya sofia  # just these two
 #   PERMISSION_MODE=bypassPermissions bash .claude/harness/run-students.sh   # unattended
-#   JOURNAL_ONLY=1 bash .claude/harness/run-students.sh sofia   # cheap single run:
-#     ONE persona, journal-only (skips the 3 project reports + acceptance gate),
-#     journal flushed to disk per item. The path for "run one, grab the journal,
-#     hand it to a repo-fixing session." This is the budget-safe mode.
+#   BUNDLE=1 bash .claude/harness/run-students.sh sofia   # recommended single run:
+#     ONE persona -> ONE markdown file (runs/<id>/journal.md) holding the per-item
+#     journal AND the full text of the three project reports, flushed to disk as it
+#     goes. The "run one, grab the bundle, hand it to a repo-fixing session" path.
+#   JOURNAL_ONLY=1 bash .claude/harness/run-students.sh sofia   # cheapest fallback:
+#     journal only, no project reports. Use when budget is very tight.
 #
 # PREREQUISITES (see .claude/students/README-ai-students.md)
 #   - Run from the repo root, inside an isolated environment / container.
@@ -89,7 +91,35 @@ run_one() {
   echo ">> $id : starting (log -> $log)"
 
   local prompt
-  if [ "${JOURNAL_ONLY:-0}" = "1" ]; then
+  if [ "${BUNDLE:-0}" = "1" ]; then
+    # Bundled single-file run: ONE markdown file (runs/<id>/journal.md) that holds the
+    # per-item journal AND the full text of the three project reports. Everything is
+    # written to disk incrementally — each journal entry as you finish the item, each
+    # report appended the moment it is drafted — so a stalled or stopped run still
+    # yields every item completed so far. No separate report_week*.md files; the
+    # strict word-count acceptance gate is relaxed (completeness over padding) to keep
+    # one-agent runs affordable and unblock the report phase where full runs stall.
+    prompt="Use the student-${id} subagent to take SYSEN 5470 per its brief \
+(.claude/agents/_shared/student-brief.md), inhabiting the persona's skill ceilings \
+honestly — fumble where a real student like you would. PRODUCE EXACTLY ONE OUTPUT \
+FILE: runs/${id}/journal.md, and write to it incrementally ON DISK as you go (append \
+with Edit or a shell >> append; never hold content in memory to write at the end), so \
+the file survives an early stop. \
+PART 1 — JOURNAL: do Orientation and all three weeks of labs; ACTUALLY run each \
+example.R/example.py and record the real printed Learning Check answer (or the verbatim \
+error and how you recovered), do the sketch prompts, browse the interactive labs. After \
+EVERY single item, immediately append its entry to journal.md using the brief's journal \
+schema. \
+PART 2 — REPORTS: pick 3 of the 11 case studies (one per week), run project code for \
+each, then append the FULL TEXT of all THREE reports INTO THE SAME journal.md, under a \
+'# PROJECT REPORTS' heading with a '## Report — Week N · Case NN' subheading per report. \
+Follow the sample-report structure (Question / Network / Procedure / Results in prose / \
+What this tells me and what it doesn't). Each report should be a substantial write-up in \
+your own words (aim ~1,200-1,800 words; completeness over padding). Append each report \
+the moment it is finished — do not wait until all three are done. Do NOT create separate \
+project/report_week*.md files and do NOT run the strict acceptance gate. \
+Write scores.json when finished. Print only the path to runs/${id}/journal.md when done."
+  elif [ "${JOURNAL_ONLY:-0}" = "1" ]; then
     # Journal-focused run: the cheapest reliable path to a usable student-experience
     # log. SKIPS the three 1,800+ word project reports and the acceptance gate — the
     # largest token sink and the phase where full runs stall — because the JOURNAL is
