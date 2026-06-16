@@ -28,6 +28,17 @@ Both `example.R` and `example.py` use **identical section headers in identical
 order**, so if you started a case in one language and want to switch, the
 section you were on is in the same place in the other file.
 
+## Which track should I pick?
+
+Pick the one that matches your background and stay on it. **The two tracks are
+equal, first-class citizens — not an "original" and a "bolted-on port."** The R
+and Python scripts are written line-for-line parallel and compute the *same
+Learning Check answers* (see the parity note at the bottom), so neither track is
+at any disadvantage for grading. R appears first in some prose only because the
+course began in R; the Python track is fully supported. New to both? R +
+tidyverse is gentle for non-programmers; Python is the easier landing if you
+already write Python or SQL.
+
 ## How to install
 
 ### R

@@ -5,6 +5,12 @@
 > Skill: **Identify** · Data: synthetic bipartite supplier ↔ component
 > network (200 nodes, 577 edges)
 
+**New to "bipartite"?** It just means the network has **two kinds of nodes**, and
+edges only run *between* the kinds, never within. Here the kinds are suppliers and
+components: a supplier links to the components it makes, but suppliers never link
+directly to suppliers. The "one-mode projection" (below) collapses that into a
+supplier-to-supplier network where two suppliers connect if they share a component.
+
 ## What you'll learn
 
 How to take node and edge data sitting in two tables and turn them

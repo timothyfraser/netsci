@@ -94,6 +94,10 @@ print(
 # and track supply coverage as k grows from 0 to 15.
 
 dcs = cent.query("tier == 2").copy()
+# One seeded generator, created once and reused across every run_strategy
+# call below. Only the "random" strategy draws from it; "out_degree" and
+# "betweenness" are deterministic. Because we seed once here (not inside the
+# function) the whole script's random attacks are reproducible run-to-run.
 rng = np.random.default_rng(42)
 
 def run_strategy(strategy: str, ks: list[int]) -> list[float]:
@@ -121,6 +125,9 @@ results = pd.DataFrame({
     "betweenness":  run_strategy("betweenness", ks),
 })
 
+# Reading the table: each column is an attack strategy, each row a number
+# of removed DCs (k). LOWER coverage = MORE damage, so the strategy with
+# the smallest numbers is the most effective attack (compare across a row).
 print(results.round(3))
 row10 = results.loc[results["k"] == 10].iloc[0]
 print(f"🧪 At k=10: random={row10['random']:.3f}  out_degree={row10['out_degree']:.3f}"

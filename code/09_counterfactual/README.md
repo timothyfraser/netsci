@@ -80,6 +80,16 @@ zero.
    (e.g. R = 100, 500, 2000). Report how the CI width shrinks. Find
    the smallest R that gives a CI within 10% of the R=2000 width.
 
+### Decide your "threshold of practical significance" first
+
+Significance is not magnitude. Before you run anything, write down what size
+of change would actually make you act ("a >2% drop in weighted APL is worth a
+new settlement rail"). Then report your effect *against the baseline* — the
+script prints the baseline APL and the change as a % of it — so a tiny absolute
+number becomes interpretable. A CI that misses zero but sits below your
+threshold is "real but not worth it." For framing this in prose, see
+[`docs/assignments/sample-report.md`](../../docs/assignments/sample-report.md).
+
 ### Report
 
 - **Question.** One sentence: the intervention and the metric.

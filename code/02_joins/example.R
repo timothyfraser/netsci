@@ -78,7 +78,10 @@ cat(sprintf("✅ Loaded %d trip rows and %d stations.\n", nrow(edges), nrow(stat
 # The key insight: the ID variable has a different NAME in each table.
 #   - in `edges` it's called `start_code`
 #   - in `stations` it's called `code`
-# In dplyr we say `by = c("start_code" = "code")`.
+# In dplyr we say `by = c("start_code" = "code")`. Read the direction like
+# this: the name on the LEFT of `=` is the column in the LEFT (first) table,
+# the name on the RIGHT is the column in the RIGHT table. It looks like an
+# assignment but it isn't -- it's just "match this column to that column."
 edges |>
   left_join(by = c("start_code" = "code"), y = stations) |>
   head()

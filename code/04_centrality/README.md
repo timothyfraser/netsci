@@ -77,6 +77,15 @@ hiding in *your* network.
    should we audit first?"). Argue from the question to a single
    centrality measure. Then compute it and report the top 5.
 
+### Framing a real question (not just "compute centrality")
+
+The most common trap here is stopping at "I computed betweenness." Push to a
+*decision*: "which accounts should fraud analysts audit first?", "which
+stations would hurt most if they closed?" Name the decision, then let it pick
+the centrality (a centrality is only meaningful paired with the question it
+answers). For a worked example of carrying a question through a report in
+prose, see [`docs/assignments/sample-report.md`](../../docs/assignments/sample-report.md).
+
 ### Report
 
 - **Question.** One sentence.

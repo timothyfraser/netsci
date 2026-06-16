@@ -131,6 +131,10 @@ print(top_shared)
 # A bipartite projection answers exactly that. It produces two graphs:
 #   - supplier-by-supplier: two suppliers linked if they share >=1 component
 #   - component-by-component: two components linked if they share >=1 supplier
+# Order matters and trips people up: index 0 is the projection of the
+# `type=False` side and index 1 the `type=True` side. Here type=False is
+# suppliers, so index 0 = suppliers. If yours comes out swapped, check the
+# `type` vertex attribute rather than assuming the order.
 
 proj_suppliers, proj_components = g.bipartite_projection()
 print(f"🔗 Supplier projection:  {proj_suppliers.vcount()} nodes, {proj_suppliers.ecount()} edges")

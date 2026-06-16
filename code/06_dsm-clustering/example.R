@@ -53,12 +53,23 @@ cat(sprintf("✅ Loaded DSM: %d components, %d dependency edges.\n",
 
 # 1. Community detection #####################################################
 #
-# Louvain and fast-greedy both want an undirected graph. We make an
-# undirected copy whose edges mean "i and j depend on each other,
-# in either direction." Standard DSM preprocessing.
+# Louvain and fast-greedy both want an undirected graph, so we collapse
+# each directed dependency "A depends on B" into a plain "A and B are
+# linked." Why it's OK here: community detection asks "which components
+# clump together?", and two parts that depend on each other belong in the
+# same cluster regardless of which way the arrow points. What we give up:
+# the direction itself -- we can no longer tell driver from dependent
+# within a cluster. Fine for grouping; keep direction if you cared about
+# what cascades when one part fails.
 
 g_undirected <- igraph::as.undirected(g, mode = "collapse")
 g_undirected
+
+# A quick word on MODULARITY, the score both algorithms maximize: it
+# measures how much more edge weight falls inside communities than you'd
+# expect at random. It runs roughly -0.5 to 1; ~0 means "no more clustered
+# than random", and > ~0.3 is usually a meaningful community structure.
+# We planted 8 modules, so recovering 8 at a healthy modularity is the win.
 
 # Louvain (igraph's `cluster_louvain`): greedy modularity optimization,
 # moves nodes between communities to maximize modularity score.

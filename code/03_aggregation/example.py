@@ -94,7 +94,9 @@ print(nbhd_pairs.head())
 
 # Finally, aggregate to 4 x 4 income-quintile cells and compute a
 # percent column so we can read the equity question directly off the
-# matrix.
+# matrix. Why the diagonal matters: big diagonal cells mean trips stay
+# WITHIN an income level (riders don't cross economic boundaries); heavy
+# off-diagonal cells mean the system mixes income groups.
 q_pairs = (
     enriched
     .groupby(["start_quintile", "end_quintile"], as_index=False)["count"]

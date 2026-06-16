@@ -93,8 +93,12 @@ cat(sprintf("✅ Edge sample: %d edges.\n", nrow(edge_sample)))
 # geojson). sf is strict about NAs in coordinates.
 nodes_geo <- nodes |> filter(!is.na(x), !is.na(y))
 
-# Use Miami as our point of interest (POI). Project to a meter-based
-# CRS so the 200 km buffer is geometrically meaningful, then back.
+# Use Miami as our point of interest (POI). Why the projection dance?
+# EPSG:4326 is lat/lon in DEGREES, so a "200 km" buffer in degrees is
+# meaningless (a degree is a different distance at the equator vs Maine).
+# EPSG:3857 is in METERS, so we project there to draw the 200 km circle,
+# then project back to 4326 to match the node coordinates. Non-GIS
+# readers: switch to a meter ruler, measure, switch back.
 miami <- nodes_geo |> filter(geoid == "1208692158") |> slice(1)
 poi <- sf::st_as_sf(
   data.frame(x = miami$x, y = miami$y),
@@ -135,9 +139,12 @@ bind_rows(
 
 # 4. Which strategy best preserves avg_edgeweight? ###########################
 #
-# Preservation = max absolute deviation from the population time
-# series. Smaller deviation = better preservation. We pick the winner
-# by which strategy minimizes that max.
+# What makes one sample "better"? It tracks the true population most
+# closely. We score that as the max absolute deviation: over the whole
+# time series, the largest gap between the sample's average edge weight
+# and the population's. Smaller = better, and we pick the strategy that
+# minimizes it. (Worst-case gap is a simple, strict choice; you could
+# instead use mean-squared error or correlation for average-case fit.)
 
 max_abs_dev <- function(sample_stats) {
   merged <- inner_join(

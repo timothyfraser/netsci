@@ -35,6 +35,11 @@ library(igraph)
 library(ggplot2)
 library(here)
 
+# Heads-up: loading igraph (and others) prints "The following objects are
+# masked from ..." messages. Those are NORMAL, not errors -- they just tell
+# you which package's version of a same-named function now takes priority.
+# Ignore them and keep going.
+
 ## 0.2 Load helpers ##########################################################
 
 # `functions.R` lives next to this script and contains tiny wrappers
@@ -147,6 +152,9 @@ print(top_shared)
 # A bipartite projection answers exactly that. It produces two graphs:
 #   - supplier-by-supplier: two suppliers linked if they share >=1 component
 #   - component-by-component: two components linked if they share >=1 supplier
+# Order matters and trips people up: proj1 is the `type=FALSE` side and
+# proj2 the `type=TRUE` side. Here type=FALSE is suppliers. If yours comes
+# out swapped, check the `type` vertex attribute rather than the order.
 
 proj <- igraph::bipartite_projection(g)
 proj_suppliers  <- proj$proj1   # the "FALSE" side — suppliers
