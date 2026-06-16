@@ -47,15 +47,28 @@ ready() {
 do_prep() {
   echo "[prepare-env] preparing environment (one-time; this can take several minutes)..."
 
-  # 1. R itself. setup.sh is the canonical installer (R + system libs); if it
-  #    fails (e.g. CRAN's apt key is blocked), fall back to Ubuntu's r-base-core.
+  # 1. R itself + the system libraries the spatial/graph/ML packages link
+  #    against. setup.sh is the canonical installer (R + system libs via the
+  #    CRAN apt repo); run it when R is missing. EITHER WAY, ensure the system
+  #    -dev libraries AND the recommended R packages are present afterwards.
+  #    WHY THIS MATTERS: a bare `r-base-core` ships WITHOUT the recommended
+  #    packages (Matrix, MASS, ...) and without GDAL/GEOS/PROJ/udunits/BLAS, so
+  #    the SOURCE builds of sf/igraph/xgboost/reticulate fail. This apt step is
+  #    idempotent (a fast no-op once everything is installed), so it is safe to
+  #    run even when Rscript already exists (which is exactly when it used to be
+  #    skipped, leaving a half-built environment marked "ready").
   if ! command -v Rscript >/dev/null 2>&1; then
     echo "[prepare-env] Rscript not found -- running setup.sh..."
-    bash "$PROJECT_DIR/setup.sh" || echo "[prepare-env] setup.sh failed; trying Ubuntu r-base-core..."
+    bash "$PROJECT_DIR/setup.sh" || echo "[prepare-env] setup.sh failed; falling back to apt below..."
   fi
-  if ! command -v Rscript >/dev/null 2>&1; then
-    sudo apt-get install -y --no-install-recommends r-base-core || true
-  fi
+  sudo apt-get update -qq || true
+  sudo apt-get install -y --no-install-recommends \
+    r-base-core r-recommended \
+    gfortran libblas-dev liblapack-dev \
+    libudunits2-dev libgdal-dev libgeos-dev libproj-dev \
+    libxml2-dev libcurl4-openssl-dev libssl-dev libglpk-dev \
+    libfontconfig1-dev libharfbuzz-dev libfribidi-dev \
+    libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev || true
   if ! command -v Rscript >/dev/null 2>&1; then
     echo "[prepare-env] ERROR: R could not be installed (is CRAN or Ubuntu reachable?)."
     return 1
@@ -66,10 +79,18 @@ do_prep() {
     Rscript -e 'if (!requireNamespace("renv", quietly=TRUE)) install.packages("renv"); renv::restore(prompt = FALSE)' || true
   fi
 
-  # 3. Packages the code/<case>/example.R + harness/aggregate.R scripts need.
-  #    Prefer Posit PM binaries (fast); fall back to CRAN source.
+  # 3. Packages the code/<case>/example.{R,py} + harness/aggregate.R scripts
+  #    need. Set HTTPUserAgent so Posit PM serves prebuilt BINARIES (fast, no
+  #    compilation); fall back to CRAN source (which works now that the system
+  #    -dev libraries from step 1 are present). `arrow` is best-effort: the
+  #    coursework reads CSV/geojson, not parquet, so it is not required.
   Rscript -e '
-    options(repos = c(P3M = Sys.getenv("P3M_REPO"), CRAN = "https://cloud.r-project.org"))
+    options(
+      HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(),
+        paste(getRversion(), R.version$platform, R.version$arch, R.version$os)),
+      repos = c(P3M = Sys.getenv("P3M_REPO"), CRAN = "https://cloud.r-project.org"),
+      Ncpus = max(1L, parallel::detectCores() - 1L)
+    )
     need <- c("dplyr","readr","tidyr","tibble","stringr","arrow",
               "ggplot2","viridis","patchwork",
               "igraph","tidygraph","ggraph",
@@ -79,9 +100,29 @@ do_prep() {
     if (length(miss)) { message("[prepare-env] installing: ", paste(miss, collapse=", ")); install.packages(miss) }
   ' P3M_REPO="$P3M" || true
 
+  # 3b. reticulate (cases 10-11) drives Python from R, so it needs a Python with
+  #     numpy + pandas to point at. Best-effort; PEP-668 distros need the flag.
+  python3 -m pip install --break-system-packages -q numpy pandas >/dev/null 2>&1 \
+    || pip install -q numpy pandas >/dev/null 2>&1 || true
+
   # 4. Playwright Chromium (some personas browse the course site). Best-effort.
   npx -y @playwright/mcp@latest --version >/dev/null 2>&1 || true
   npx -y playwright install chromium --with-deps >/dev/null 2>&1 || true
+
+  # 5. Verify the packages the coursework actually runs really LOAD. If any are
+  #    missing, return non-zero so finish() does NOT write a false "ready"
+  #    marker. (The old hook marked ready unconditionally, so a run where every
+  #    compile failed still looked prepared -- exactly the trap we hit.)
+  Rscript -e '
+    crit <- c("dplyr","tidyr","readr","tibble","ggplot2","viridis",
+              "igraph","sf","xgboost","reticulate","here")
+    ok <- vapply(crit, requireNamespace, logical(1), quietly = TRUE)
+    if (any(!ok)) {
+      cat("[prepare-env] MISSING:", paste(crit[!ok], collapse = ", "), "\n")
+      quit(status = 1)
+    }
+    cat("[prepare-env] all critical R packages load.\n")
+  ' || return 1
 
   return 0
 }
