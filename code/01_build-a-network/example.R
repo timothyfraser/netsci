@@ -35,6 +35,11 @@ library(igraph)
 library(ggplot2)
 library(here)
 
+# Heads-up: loading igraph (and others) prints "The following objects are
+# masked from ..." messages. Those are NORMAL, not errors -- they just tell
+# you which package's version of a same-named function now takes priority.
+# Ignore them and keep going.
+
 ## 0.2 Load helpers ##########################################################
 
 # `functions.R` lives next to this script and contains tiny wrappers

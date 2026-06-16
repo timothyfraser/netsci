@@ -139,9 +139,12 @@ bind_rows(
 
 # 4. Which strategy best preserves avg_edgeweight? ###########################
 #
-# Preservation = max absolute deviation from the population time
-# series. Smaller deviation = better preservation. We pick the winner
-# by which strategy minimizes that max.
+# What makes one sample "better"? It tracks the true population most
+# closely. We score that as the max absolute deviation: over the whole
+# time series, the largest gap between the sample's average edge weight
+# and the population's. Smaller = better, and we pick the strategy that
+# minimizes it. (Worst-case gap is a simple, strict choice; you could
+# instead use mean-squared error or correlation for average-case fit.)
 
 max_abs_dev <- function(sample_stats) {
   merged <- inner_join(

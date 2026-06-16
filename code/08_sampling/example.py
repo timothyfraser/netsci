@@ -151,8 +151,12 @@ print("💾 Saved sampling_compare.png")
 
 # 4. Which strategy best preserves average edgeweight? #######################
 #
-# We measure preservation as the *maximum absolute deviation* from
-# the population time series. Smaller = better preservation.
+# What makes one sample "better"? It tracks the true population most
+# closely. We score that as the *maximum absolute deviation*: over the
+# whole time series, the largest gap between the sample's average edge
+# weight and the population's. Smaller = better. (Worst-case gap is a
+# simple, strict choice; you could instead use mean-squared error or
+# correlation if you cared about average rather than worst-case fit.)
 
 def max_abs_dev(sample_stats):
     merged = stats[["date_time", "avg_edgeweight"]].merge(

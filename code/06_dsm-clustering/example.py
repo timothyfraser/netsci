@@ -49,9 +49,14 @@ print(f"✅ Loaded DSM: {g.vcount()} components, {g.ecount()} dependency edges."
 
 # 1. Community detection #####################################################
 #
-# Louvain and fast-greedy both want an undirected graph. We make an
-# undirected copy whose edges represent "i and j depend on each other,
-# in either direction." This is the standard DSM preprocessing.
+# Louvain and fast-greedy both want an undirected graph, so we collapse
+# each directed dependency "A depends on B" into a plain "A and B are
+# linked." Why it's OK here: community detection asks "which components
+# clump together?", and two parts that depend on each other belong in the
+# same cluster regardless of which way the arrow points. What we give up:
+# the direction itself -- we can no longer tell driver from dependent
+# within a cluster. That's fine for grouping, but you'd keep direction if
+# you cared about, say, what cascades when one part fails.
 
 g_undirected = g.as_undirected(mode="collapse")
 print(g_undirected.summary())

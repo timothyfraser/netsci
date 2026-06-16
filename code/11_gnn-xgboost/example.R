@@ -163,6 +163,8 @@ cat(sprintf("🧪 AUC, raw features only:           %.4f\n", raw_fit$auc))
 cat(sprintf("🧪 AUC, raw + lag:                   %.4f\n", lag_fit$auc))
 cat(sprintf("🧪 AUC, raw + lag + GNN (1+2 hop):   %.4f\n", gnn_fit$auc))
 
+# AUC in plain English: the probability the model scores a truly disrupted
+# supplier higher than a healthy one. 0.5 = coin flip, 1.0 = perfect.
 # How to read these: the raw-only model is your NON-NETWORK baseline.
 # Watch AUC climb as lag (history) and then GNN (structure) features are
 # added. For rare-event, noisy disruption prediction ~0.65+ is competitive
