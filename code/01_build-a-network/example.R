@@ -192,18 +192,32 @@ print(proj_edges |> head(10))
 # rendering of a bipartite graph: you can read off the structure
 # without thinking about it.
 
-# Run inside an RStudio session to see the plot interactively; from
-# Rscript it goes to the default device.
-plot(
-  g,
-  layout       = igraph::layout_as_bipartite(g),
-  vertex.size  = ifelse(igraph::V(g)$kind == "supplier", 4, 2.5),
-  vertex.color = ifelse(igraph::V(g)$kind == "supplier", "#1f77b4", "#d62728"),
-  vertex.label = NA,
-  edge.color   = "#cccccc",
-  edge.width   = 0.4,
-  main         = "Bipartite supplier <-> component network"
-)
+# Wrap the plotting call so we can draw it once to the screen (RStudio /
+# in-browser R session) AND save a copy to a PNG you can open from a file
+# browser. Running from `Rscript` otherwise dumps plots into Rplots.pdf,
+# which is easy to miss.
+draw_bipartite <- function() {
+  plot(
+    g,
+    layout       = igraph::layout_as_bipartite(g),
+    vertex.size  = ifelse(igraph::V(g)$kind == "supplier", 4, 2.5),
+    vertex.color = ifelse(igraph::V(g)$kind == "supplier", "#1f77b4", "#d62728"),
+    vertex.label = NA,
+    edge.color   = "#cccccc",
+    edge.width   = 0.4,
+    main         = "Bipartite supplier <-> component network"
+  )
+}
+
+# Draw interactively (visible in RStudio / the in-browser R session)...
+draw_bipartite()
+
+# ...and also save a copy to file for terminal / Rscript users.
+png(here::here("code", "01_build-a-network", "bipartite_network.png"),
+    width = 7, height = 5, units = "in", res = 120)
+draw_bipartite()
+invisible(dev.off())
+cat("💾 Saved bipartite_network.png\n")
 
 
 # 5. Learning Check ##########################################################

@@ -122,7 +122,7 @@ cat(sprintf("✅ Buffer sample: %d nodes within 200 km of Miami, %d edges.\n",
 
 # 3. Compare ##################################################################
 
-bind_rows(
+p <- bind_rows(
   stats     |> mutate(strategy = "Population"),
   ego_stats |> mutate(strategy = "Ego-centric"),
   edge_stats|> mutate(strategy = "Edgewise"),
@@ -135,6 +135,14 @@ bind_rows(
        x     = NULL) +
   theme_classic(base_size = 12) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
+
+# This is the figure that makes the whole case: all three sample lines
+# against the population line. Show it AND save it (Rscript otherwise hides
+# it in Rplots.pdf, so the most important plot in the lab goes unseen).
+print(p)
+ggsave(here::here("code", "08_sampling", "sample_vs_population.png"),
+       p, width = 7, height = 4.5, dpi = 120)
+cat("💾 Saved sample_vs_population.png\n")
 
 
 # 4. Which strategy best preserves avg_edgeweight? ###########################

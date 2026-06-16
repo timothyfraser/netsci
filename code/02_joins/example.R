@@ -151,6 +151,15 @@ data <- edges |>
 data |> head()
 cat(sprintf("✅ After double-join + NA drop: %d rows.\n", nrow(data)))
 
+# How much did the NA drop actually remove? Report it as a share of TRIPS
+# (not rows), so you know whether dropping out-of-area stations is a rounding
+# error or a meaningful chunk of the data you're about to summarize.
+trips_all     <- sum(edges$count, na.rm = TRUE)
+trips_kept    <- sum(data$count,  na.rm = TRUE)
+pct_dropped   <- 100 * (trips_all - trips_kept) / trips_all
+cat(sprintf("ℹ️  NA-drop removed %.1f%% of all trips (out-of-area stations).\n",
+            pct_dropped))
+
 ## 2.2 An aggregate quantity of interest #####################################
 
 # How many trips happened between EACH of the four demographic
@@ -173,7 +182,7 @@ cat(sprintf("📊 Total trips across all four cells: %d\n", sum(stat$trips)))
 # is the simplest possible "network communication" visualization, and
 # it's often the most honest one.
 
-ggplot(stat, aes(x = start_black, y = end_black, fill = percent)) +
+p <- ggplot(stat, aes(x = start_black, y = end_black, fill = percent)) +
   geom_tile(color = "white") +
   geom_text(aes(label = percent), color = "white", size = 6) +
   scale_fill_viridis_c(option = "mako", begin = 0.2, end = 0.8) +
@@ -184,6 +193,13 @@ ggplot(stat, aes(x = start_black, y = end_black, fill = percent)) +
     subtitle = "AM rush 2021 — slim Bluebikes-flavored sample"
   ) +
   theme_classic(base_size = 13)
+
+# print() shows it in an interactive / in-browser session; ggsave() also
+# writes a file so terminal / Rscript users aren't left hunting in Rplots.pdf.
+print(p)
+ggsave(here::here("code", "02_joins", "demographic_flows.png"),
+       p, width = 6, height = 5, dpi = 120)
+cat("💾 Saved demographic_flows.png\n")
 
 
 # 4. Why renames matter (the silent-bug demo) ################################

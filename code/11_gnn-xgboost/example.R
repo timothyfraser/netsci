@@ -181,6 +181,13 @@ cat(sprintf("🧪 AUC, raw + lag + GNN (1+2 hop):   %.4f\n", gnn_fit$auc))
 # counts how often the model splits on a feature; a GNN feature that adds
 # weak but INDEPENDENT signal can lift predictions without being split on
 # often. Low importance + real AUC lift = exactly that situation.
+#
+# Connecting back to Week 2 (Case 04): the gnn_1hop / gnn_2hop columns play
+# the same role betweenness/centrality did — they summarize a node's
+# structural position — except here that signal is LEARNED from the
+# neighbors' data (their lag_rate) rather than COMPUTED from pure topology.
+# A high gnn_1hop gain means "knowing your neighbors' recent disruption
+# rate helps predict your own."
 
 print(gnn_fit$imp)
 

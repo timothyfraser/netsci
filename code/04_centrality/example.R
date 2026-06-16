@@ -113,6 +113,11 @@ cat(sprintf("📊 Degree vs betweenness Spearman: %.3f\n",
 #
 # In our synthetic data we planted some "bridge" nodes — let's see if
 # this gap statistic recovers them.
+#
+# Read the gap as RELATIVE, not absolute: it's a difference of ranks, so
+# it only means "this node climbs N places when you rank by betweenness
+# instead of degree." A gap of 400 in a 500-node graph is dramatic; the
+# same 400 in a 50,000-node graph is mild. Always read it against n.
 
 cent <- cent |>
   mutate(
@@ -136,16 +141,32 @@ cat(sprintf("📝 #1 hidden bridge: %s (gap = %.0f)\n",
 V(g)$btwn <- cent$betweenness
 V(g)$col  <- ifelse(V(g)$kind == "bridge", "#d62728", "#1f77b4")
 
-plot(
-  g,
-  layout       = igraph::layout_with_fr(g, weights = E(g)$weight, niter = 200),
-  vertex.size  = 1 + 8 * (V(g)$btwn / max(V(g)$btwn)),
-  vertex.color = V(g)$col,
-  vertex.label = NA,
-  edge.color   = adjustcolor("grey50", alpha.f = 0.2),
-  edge.width   = 0.4,
-  main         = "Node size = betweenness. Red = planted bridges."
-)
+# Wrap the plot so we can both show it interactively AND save a copy to PNG
+# (Rscript otherwise sends it to Rplots.pdf). Fix the layout once so the
+# screen and file versions are identical.
+lay <- igraph::layout_with_fr(g, weights = E(g)$weight, niter = 200)
+draw_centrality <- function() {
+  plot(
+    g,
+    layout       = lay,
+    vertex.size  = 1 + 8 * (V(g)$btwn / max(V(g)$btwn)),
+    vertex.color = V(g)$col,
+    vertex.label = NA,
+    edge.color   = adjustcolor("grey50", alpha.f = 0.2),
+    edge.width   = 0.4,
+    main         = "Node size = betweenness. Red = planted bridges."
+  )
+}
+
+# Show interactively (RStudio / in-browser R session)...
+draw_centrality()
+
+# ...and save a copy for terminal / Rscript users.
+png(here::here("code", "04_centrality", "centrality_network.png"),
+    width = 7, height = 6, units = "in", res = 120)
+draw_centrality()
+invisible(dev.off())
+cat("💾 Saved centrality_network.png\n")
 
 
 # 5. Simulate: remove the top-5 by each metric ###############################
@@ -162,15 +183,28 @@ lcc_size <- function(g_in) {
 
 cat(sprintf("\n🧪 Original largest component: %d\n", lcc_size(g)))
 
-for (metric in c("degree", "betweenness", "closeness", "eigenvector")) {
+lcc_after <- sapply(c("degree", "betweenness", "closeness", "eigenvector"),
+                    function(metric) {
   top5 <- cent |>
     arrange(desc(.data[[metric]])) |>
     head(5) |>
     pull(node_id)
   g_test <- igraph::delete_vertices(g, top5)
-  cat(sprintf("   remove top-5 by %-12s -> LCC = %d\n",
-              metric, lcc_size(g_test)))
-}
+  size   <- lcc_size(g_test)
+  cat(sprintf("   remove top-5 by %-12s -> LCC = %d\n", metric, size))
+  size
+})
+
+# Land the takeaway so it isn't lost in the four lines above: the SMALLEST
+# surviving largest-component is the most damaging attack, i.e. the metric
+# most attuned to network criticality.
+worst <- names(which.min(lcc_after))
+cat(sprintf("📝 Most fragmenting metric: top-5 by %s (LCC = %d). %s\n",
+            worst, min(lcc_after),
+            if (worst == "betweenness")
+              "Betweenness finds the load-bearing bridges degree misses."
+            else
+              "Compare against betweenness — bridges aren't always the busiest nodes."))
 
 
 # 6. Learning Check ##########################################################

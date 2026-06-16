@@ -42,6 +42,24 @@ library(here)
 
 ## 0.2 Load helpers ##########################################################
 
+# PRE-FLIGHT CHECK (read this if you've never used reticulate). This is the
+# one lab that drives Python from R, so the only thing that can go wrong is
+# Python not being reachable. We check BEFORE sourcing functions.R (which
+# triggers the Python setup) so you get a friendly message instead of a
+# cryptic import error halfway through.
+#
+# If this stops with "Python not found":
+#   - reticulate::install_python()         # installs a private Python, or
+#   - Sys.setenv(RETICULATE_PYTHON = "/path/to/python-with-numpy")
+#   then restart R and re-run. On a current reticulate (>= 1.41) the numpy +
+#   pandas requirements are provisioned automatically (see functions.R).
+if (!reticulate::py_available(initialize = TRUE)) {
+  stop("Python not found for reticulate. Run reticulate::install_python() ",
+       "or set RETICULATE_PYTHON to a Python that has numpy + pandas, ",
+       "then restart R and re-run this script.")
+}
+cat("✅ reticulate found Python — bridging to the numpy GCN code.\n")
+
 # functions.R gives us the R-native loaders (load_tiny / load_large) and
 # the `gcn` Python module handle (gcn$adjacency / gcn$normalize /
 # gcn$gcn_layer). Sourcing it triggers the one-time Python setup.

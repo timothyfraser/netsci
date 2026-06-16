@@ -140,7 +140,7 @@ cat(sprintf("🧪 At k=10: random=%.3f  out_degree=%.3f  betweenness=%.3f\n",
 results_long <- results |>
   pivot_longer(-k, names_to = "strategy", values_to = "coverage")
 
-ggplot(results_long,
+p <- ggplot(results_long,
        aes(x = k, y = coverage, color = strategy, shape = strategy)) +
   geom_line() +
   geom_point(size = 2.5) +
@@ -149,6 +149,12 @@ ggplot(results_long,
        y     = "supply coverage (fraction of retailers reachable)",
        title = "Targeted vs random DC failures") +
   theme_classic(base_size = 13)
+
+# Show interactively AND save a copy (Rscript otherwise hides it in Rplots.pdf).
+print(p)
+ggsave(here::here("code", "05_supply-chain", "attack_strategies.png"),
+       p, width = 6.5, height = 4.5, dpi = 120)
+cat("💾 Saved attack_strategies.png\n")
 
 
 # 5. Learning Check ##########################################################
