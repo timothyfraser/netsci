@@ -73,6 +73,13 @@ g_undirected
 
 # Louvain (igraph's `cluster_louvain`): greedy modularity optimization,
 # moves nodes between communities to maximize modularity score.
+#
+# Louvain is STOCHASTIC -- it visits nodes in a randomized order, so an
+# unseeded run usually recovers the 8 planted modules (modularity 0.470)
+# but occasionally merges two and reports 7 (~0.454). We seed for a
+# reproducible Learning Check; expect your own data to wobble by a module
+# or two between runs if you don't.
+set.seed(5470)
 louvain <- igraph::cluster_louvain(g_undirected)
 cat(sprintf("📊 Louvain found %d modules. Modularity: %.3f\n",
             length(louvain), igraph::modularity(louvain)))
