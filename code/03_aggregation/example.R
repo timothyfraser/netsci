@@ -72,6 +72,8 @@ station_pairs <- enriched |>
   arrange(desc(trips))
 nrow(station_pairs)
 cat(sprintf("📊 Resolution A: %d station pairs.\n", nrow(station_pairs)))
+# Context: only ~30k of the ~250,000 possible ordered station pairs ever
+# see a trip. That sparsity is real transit demand, not a data error.
 
 ## 2.2 Resolution B — neighborhood x neighborhood ############################
 
@@ -114,15 +116,21 @@ station_totals <- bind_rows(
   group_by(code) |>
   summarize(trips = sum(trips), .groups = "drop")
 
-ggplot(station_totals, aes(x = trips)) +
+# Each plot is assigned to an object, then both print()ed (visible in an
+# interactive / in-browser session) AND ggsave()d to a PNG, so terminal /
+# Rscript users aren't left wondering where the figures went (Rplots.pdf).
+p_a <- ggplot(station_totals, aes(x = trips)) +
   geom_histogram(bins = 40, fill = "#3a8bc6") +
   labs(x     = "trips touching this station (in or out)",
        y     = "# stations",
        title = "Resolution A — station-level trip volume") +
   theme_classic(base_size = 13)
+print(p_a)
+ggsave(here::here("code", "03_aggregation", "resolution_a_stations.png"),
+       p_a, width = 6, height = 4.5, dpi = 120)
 
 # Resolution B: 12x12 heatmap. Diagonal heavier = neighborhood stickiness.
-ggplot(nbhd_pairs,
+p_b <- ggplot(nbhd_pairs,
        aes(x = start_nbhd, y = end_nbhd, fill = trips)) +
   geom_tile(color = "white") +
   scale_fill_viridis(option = "mako") +
@@ -131,9 +139,12 @@ ggplot(nbhd_pairs,
        y     = "Ending neighborhood") +
   theme_classic(base_size = 12) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+print(p_b)
+ggsave(here::here("code", "03_aggregation", "resolution_b_neighborhood.png"),
+       p_b, width = 6, height = 5, dpi = 120)
 
 # Resolution C: 4x4 heatmap with the percentages drawn ON the cells.
-ggplot(q_pairs,
+p_c <- ggplot(q_pairs,
        aes(x = factor(start_quintile), y = factor(end_quintile),
            fill = percent)) +
   geom_tile(color = "white") +
@@ -144,6 +155,10 @@ ggplot(q_pairs,
        fill  = "% of trips",
        title = "Resolution C — trips between income quintiles") +
   theme_classic(base_size = 13)
+print(p_c)
+ggsave(here::here("code", "03_aggregation", "resolution_c_quintile.png"),
+       p_c, width = 6, height = 5, dpi = 120)
+cat("💾 Saved resolution_a/b/c PNGs.\n")
 
 
 # 4. The point ###############################################################
@@ -155,6 +170,10 @@ ggplot(q_pairs,
 #
 # Visualization is partly a tool for finding the question. The case
 # study calls this "aggregation reveals signal."
+#
+# The through-line: the "right" resolution is the one at which your quantity
+# of interest becomes legible. 30,125 station pairs is too fine to read; the
+# 4x4 quintile matrix is coarse enough that the equity pattern jumps out.
 
 
 # 5. Learning Check ##########################################################

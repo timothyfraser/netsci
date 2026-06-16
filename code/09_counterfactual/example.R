@@ -65,6 +65,16 @@ cat(sprintf("✅ Loaded network: %d stations, %d edges.\n",
 base_apl <- weighted_apl(g)
 cat(sprintf("📊 Baseline weighted APL: %.5f\n", base_apl))
 
+# Quick overdispersion check before trusting Poisson. Poisson assumes
+# variance == mean. If the ratio is ~1, Poisson is a fair noise model; if
+# it's >> 1 the counts are overdispersed and Poisson understates
+# uncertainty (a negative-binomial draw would be better). One line tells
+# you whether the model below is appropriate for YOUR data.
+vmr <- var(igraph::E(g)$ridership) / mean(igraph::E(g)$ridership)
+cat(sprintf("🧪 Edge-weight variance/mean ratio: %.2f  (%s)\n", vmr,
+            if (vmr < 1.5) "≈1, Poisson is reasonable"
+            else "overdispersed — consider negative binomial"))
+
 
 # 2. Pick an intervention ####################################################
 #
@@ -111,8 +121,21 @@ cat(sprintf("🧪 Counterfactual APL change (mean):     %+.5f  (%+.2f%% of basel
             mean(diffs), 100 * mean(diffs) / base_mean))
 cat(sprintf("🧪 95%% CI on the change:                 [%+.5f, %+.5f]\n",
             ci[[1]], ci[[2]]))
+is_sig <- ci[[2]] < 0 || ci[[1]] > 0
 cat(sprintf("📊 Effect significant at 95%%?            %s\n",
-            if (ci[[2]] < 0 || ci[[1]] > 0) "True" else "False"))
+            if (is_sig) "True" else "False"))
+
+# What does the verdict MEAN? A CI that MISSES zero says the effect's
+# direction is real (still read the magnitude separately). A CI that
+# INCLUDES zero does NOT say "the intervention does nothing" — it says we
+# can't distinguish the effect from zero with this many replicates. The
+# true effect might be small, or we might just be underpowered. "We can't
+# tell" is itself a finding: it means gather more data before committing.
+cat(sprintf("ℹ️  Interpretation: %s\n",
+            if (is_sig)
+              "CI misses zero — the change is directionally real (check size vs baseline)."
+            else
+              "CI includes zero — can't distinguish from no effect (not proof of 'no effect')."))
 
 
 # 4. Visualize ###############################################################
@@ -139,8 +162,15 @@ p2 <- ggplot(tibble(d = diffs), aes(x = d)) +
        title = "Difference distribution + 95% CI") +
   theme_classic(base_size = 12)
 
+# Show interactively AND save copies (Rscript otherwise hides them in
+# Rplots.pdf).
 print(p1)
 print(p2)
+ggsave(here::here("code", "09_counterfactual", "mc_distributions.png"),
+       p1, width = 6.5, height = 4.5, dpi = 120)
+ggsave(here::here("code", "09_counterfactual", "mc_difference_ci.png"),
+       p2, width = 6.5, height = 4.5, dpi = 120)
+cat("💾 Saved mc_distributions.png and mc_difference_ci.png\n")
 
 
 # 5. Learning Check ##########################################################

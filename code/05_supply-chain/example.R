@@ -67,6 +67,14 @@ cat(sprintf("📊 Baseline supply coverage: %.3f\n", base))
 # directed network we use both weighted degree (capacity) and
 # betweenness. We hold these in a tidy table so the attack loop
 # below stays one-liner-clean.
+#
+# WHY DIRECTED HERE (but undirected in case 04)? Goods flow one way through
+# a supply chain (supplier -> DC -> retailer), so directed betweenness
+# counts only paths that respect that flow. Case 04's transit graph was
+# undirected because adjacency there implies mutual access. And we target
+# by OUT-degree, not in-degree: a DC that SUPPLIES many retailers
+# downstream is the real risk; how many suppliers feed INTO it matters
+# less for whether retailers stay covered.
 
 cent <- tibble(
   node_id     = igraph::V(g)$name,
@@ -140,7 +148,7 @@ cat(sprintf("🧪 At k=10: random=%.3f  out_degree=%.3f  betweenness=%.3f\n",
 results_long <- results |>
   pivot_longer(-k, names_to = "strategy", values_to = "coverage")
 
-ggplot(results_long,
+p <- ggplot(results_long,
        aes(x = k, y = coverage, color = strategy, shape = strategy)) +
   geom_line() +
   geom_point(size = 2.5) +
@@ -149,6 +157,12 @@ ggplot(results_long,
        y     = "supply coverage (fraction of retailers reachable)",
        title = "Targeted vs random DC failures") +
   theme_classic(base_size = 13)
+
+# Show interactively AND save a copy (Rscript otherwise hides it in Rplots.pdf).
+print(p)
+ggsave(here::here("code", "05_supply-chain", "attack_strategies.png"),
+       p, width = 6.5, height = 4.5, dpi = 120)
+cat("💾 Saved attack_strategies.png\n")
 
 
 # 5. Learning Check ##########################################################

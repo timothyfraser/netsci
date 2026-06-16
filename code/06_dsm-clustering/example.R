@@ -62,7 +62,7 @@ cat(sprintf("✅ Loaded DSM: %d components, %d dependency edges.\n",
 # within a cluster. Fine for grouping; keep direction if you cared about
 # what cascades when one part fails.
 
-g_undirected <- igraph::as.undirected(g, mode = "collapse")
+g_undirected <- igraph::as_undirected(g, mode = "collapse")
 g_undirected
 
 # A quick word on MODULARITY, the score both algorithms maximize: it
@@ -78,7 +78,11 @@ cat(sprintf("📊 Louvain found %d modules. Modularity: %.3f\n",
             length(louvain), igraph::modularity(louvain)))
 
 # Fast-greedy: agglomerative — start with each node in its own community,
-# repeatedly merge the pair whose merge most increases modularity.
+# repeatedly merge the pair whose merge most increases modularity. It often
+# recovers FEWER modules than Louvain on dense graphs: once it has merged
+# greedily it never splits back, so adjacent planted modules get fused into
+# one and the recovered count comes in under the truth. That's an algorithm
+# property, not randomness — Louvain's node-moving phase avoids it here.
 fg <- igraph::cluster_fast_greedy(g_undirected)
 cat(sprintf("📊 Fast-greedy found %d modules. Modularity: %.3f\n",
             length(fg), igraph::modularity(fg)))
@@ -89,6 +93,9 @@ cat(sprintf("📊 Fast-greedy found %d modules. Modularity: %.3f\n",
 # Our synthetic data planted 8 modules. The Adjusted Rand Index (ARI)
 # measures how well two clusterings agree, corrected for chance:
 # 1.0 = perfect agreement, 0.0 = chance, < 0 = worse than chance.
+# Rough field convention for "how good is this recovery?": ARI > 0.8 is a
+# strong match, 0.5–0.8 partial, < 0.5 weak. So Louvain's 1.0 is a perfect
+# recovery; fast-greedy's lower score reflects the merged modules above.
 
 true_mod <- igraph::V(g)$true_module
 ari_louv <- igraph::compare(true_mod, louvain$membership, method = "adjusted.rand")
@@ -108,13 +115,27 @@ A        <- as.matrix(igraph::as_adjacency_matrix(g))
 A_sorted <- A[ord, ord]
 
 # Side-by-side base-R image() plots. Reverse the y-axis so row 1 lands
-# at the top, like an actual matrix.
-par(mfrow = c(1, 2))
-image(t(A)[, nrow(A):1], col = c("white", "black"), axes = FALSE,
-      main = "DSM — original order")
-image(t(A_sorted)[, nrow(A_sorted):1], col = c("white", "black"), axes = FALSE,
-      main = "DSM — reordered by Louvain")
-par(mfrow = c(1, 1))
+# at the top, like an actual matrix. Wrapped in a function so we can draw
+# it both to the screen and to a PNG (Rscript otherwise hides it in
+# Rplots.pdf).
+draw_dsm <- function() {
+  par(mfrow = c(1, 2))
+  image(t(A)[, nrow(A):1], col = c("white", "black"), axes = FALSE,
+        main = "DSM — original order")
+  image(t(A_sorted)[, nrow(A_sorted):1], col = c("white", "black"), axes = FALSE,
+        main = "DSM — reordered by Louvain")
+  par(mfrow = c(1, 1))
+}
+
+# Show interactively...
+draw_dsm()
+
+# ...and save a copy for terminal / Rscript users.
+png(here::here("code", "06_dsm-clustering", "dsm_reordering.png"),
+    width = 9, height = 5, units = "in", res = 120)
+draw_dsm()
+invisible(dev.off())
+cat("💾 Saved dsm_reordering.png\n")
 
 
 # 4. Cascade simulation ######################################################
@@ -123,6 +144,13 @@ par(mfrow = c(1, 1))
 # fail too. We bound to k hops because in a densely-coupled DSM an
 # unbounded cascade reaches everything. The interesting question:
 # how many fall in the FIRST FEW HOPS?
+#
+# Why can a cascade reach far beyond C037's own module even though Louvain
+# found clean modules? Because a cascade follows EDGES, not module walls.
+# Community detection only says edges are DENSER within modules, not that
+# none cross. C037 has a few cross-module dependency edges, and BFS happily
+# traverses them -- so a single hub failure jumps boundaries the clustering
+# drew.
 
 seed <- "C037"
 for (k in c(1, 2, 3)) {

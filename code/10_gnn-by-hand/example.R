@@ -42,6 +42,24 @@ library(here)
 
 ## 0.2 Load helpers ##########################################################
 
+# PRE-FLIGHT CHECK (read this if you've never used reticulate). This is the
+# one lab that drives Python from R, so the only thing that can go wrong is
+# Python not being reachable. We check BEFORE sourcing functions.R (which
+# triggers the Python setup) so you get a friendly message instead of a
+# cryptic import error halfway through.
+#
+# If this stops with "Python not found":
+#   - reticulate::install_python()         # installs a private Python, or
+#   - Sys.setenv(RETICULATE_PYTHON = "/path/to/python-with-numpy")
+#   then restart R and re-run. On a current reticulate (>= 1.41) the numpy +
+#   pandas requirements are provisioned automatically (see functions.R).
+if (!reticulate::py_available(initialize = TRUE)) {
+  stop("Python not found for reticulate. Run reticulate::install_python() ",
+       "or set RETICULATE_PYTHON to a Python that has numpy + pandas, ",
+       "then restart R and re-run this script.")
+}
+cat("✅ reticulate found Python — bridging to the numpy GCN code.\n")
+
 # functions.R gives us the R-native loaders (load_tiny / load_large) and
 # the `gcn` Python module handle (gcn$adjacency / gcn$normalize /
 # gcn$gcn_layer). Sourcing it triggers the one-time Python setup.
@@ -79,6 +97,17 @@ print(A)
 A_norm <- gcn$normalize(A)
 cat("A_norm (symmetric-normalized):\n")
 print(round(A_norm, 3))
+
+# Make the normalization VISIBLE (gcn$normalize hides it behind one call).
+# The degree matrix D is diagonal, holding each node's degree; symmetric
+# normalization is literally D^{-1/2} %*% A %*% D^{-1/2}. Building it by hand
+# once demystifies the "scary" formula: it just divides every edge by
+# sqrt(deg_i * deg_j), which is what down-weights links to high-degree hubs.
+deg           <- rowSums(A)             # the diagonal of D (with self-loops)
+D_inv_sqrt    <- diag(1 / sqrt(deg))    # D^{-1/2}
+A_norm_byhand <- D_inv_sqrt %*% A %*% D_inv_sqrt
+cat(sprintf("   built two ways, max abs difference = %.2e (identical)\n",
+            max(abs(A_norm - A_norm_byhand))))
 
 
 # 2. Feature matrix and weight matrices ######################################
@@ -122,6 +151,13 @@ print(round(H2, 4))
 # Node 4 sits between two clusters in our 6-node toy. After two GCN
 # layers its embedding has absorbed features from both sides. Node 4 is
 # 0-indexed in Python, which is row 5 in 1-indexed R.
+#
+# What do the 3 numbers MEAN? Individually, nothing nameable. Embedding
+# dimensions are not "voltage" or "risk" -- in a trained GNN they're
+# whatever the optimizer found useful; here they're fixed by W1/W2. What
+# matters is RELATIVE: nodes with similar neighborhoods get similar
+# vectors, so the embedding is useful as ML input (case 11) even though no
+# single dimension has a human label.
 
 emb_node4 <- H2[5, ]
 cat("Final embedding for node 4 (the bottleneck):\n")

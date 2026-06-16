@@ -70,6 +70,17 @@ A_norm = normalize(A)
 print("A_norm (symmetric-normalized):")
 print(A_norm.round(3))
 
+# Make the normalization VISIBLE (normalize() hides it behind one call).
+# The degree matrix D is diagonal, holding each node's degree; symmetric
+# normalization is literally D^{-1/2} @ A @ D^{-1/2}. Building it by hand
+# once demystifies the "scary" formula: it just divides every edge by
+# sqrt(deg_i * deg_j), which is what down-weights links to high-degree hubs.
+deg            = A.sum(axis=1)             # the diagonal of D (with self-loops)
+D_inv_sqrt     = np.diag(1.0 / np.sqrt(deg))  # D^{-1/2}
+A_norm_by_hand = D_inv_sqrt @ A @ D_inv_sqrt
+print(f"   built two ways, max abs difference = "
+      f"{np.abs(A_norm - A_norm_by_hand).max():.2e} (identical)")
+
 
 # 2. Feature matrix and weight matrices ######################################
 #
@@ -114,6 +125,13 @@ print(H2.round(4))
 #
 # Node 4 sits between two clusters in our 6-node toy. After two GCN
 # layers its embedding has absorbed features from both sides.
+#
+# What do the 3 numbers MEAN? Individually, nothing nameable. Embedding
+# dimensions are not "voltage" or "risk" -- in a trained GNN they're
+# whatever the optimizer found useful; here they're fixed by W1/W2. What
+# matters is RELATIVE: nodes with similar neighborhoods get similar
+# vectors, so the embedding is useful as ML input (case 11) even though no
+# single dimension has a human label.
 
 print("Final embedding for node 4 (the bottleneck):")
 print(H2[4].round(4))

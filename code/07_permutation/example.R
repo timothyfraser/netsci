@@ -111,6 +111,15 @@ p_blocked <- mean(null_blocked >= observed)
 cat(sprintf("🧪 Block-permuted null: mean = %+.4f  sd = %.4f  p = %.3f\n",
             mean(null_blocked), sd(null_blocked), p_blocked))
 
+# Which direction is "good"? A LARGE p-value means FAIL TO REJECT — the
+# observed value is unremarkable under this null. A SMALL one means REJECT.
+cat(sprintf("ℹ️  p = %.3f is %s -> %s.\n", p_blocked,
+            if (p_blocked > 0.05) "LARGE" else "SMALL",
+            if (p_blocked > 0.05)
+              "FAIL TO REJECT: the observed assortativity is ordinary once neighborhood is held fixed"
+            else
+              "REJECT: homophily remains beyond what neighborhood explains"))
+
 
 # 4. Visualize ###############################################################
 
@@ -119,7 +128,7 @@ null_df <- bind_rows(
   tibble(null = "Block-permuted", value = null_blocked)
 )
 
-ggplot(null_df, aes(x = value, fill = null)) +
+p <- ggplot(null_df, aes(x = value, fill = null)) +
   geom_histogram(alpha = 0.6, position = "identity", bins = 30) +
   geom_vline(xintercept = observed, linetype = "dashed") +
   scale_fill_manual(values = c("Unblocked"      = "#3a8bc6",
@@ -129,6 +138,12 @@ ggplot(null_df, aes(x = value, fill = null)) +
        title = "Two null models, two p-values",
        fill  = "Null model") +
   theme_classic(base_size = 13)
+
+# Show interactively AND save a copy (Rscript otherwise hides it in Rplots.pdf).
+print(p)
+ggsave(here::here("code", "07_permutation", "two_null_distributions.png"),
+       p, width = 7, height = 4.5, dpi = 120)
+cat("💾 Saved two_null_distributions.png\n")
 
 
 # 5. The take-home ###########################################################
@@ -143,6 +158,27 @@ ggplot(null_df, aes(x = value, fill = null)) +
 # This is the canonical mistake the case study warns against. If you
 # fit the wrong null model, you get the wrong answer with great
 # confidence.
+#
+# WHY does the blocked null land so close to the observed value? Within a
+# segregated neighborhood almost everyone shares the same demo label, so
+# shuffling labels WITHIN a neighborhood barely changes the graph -- each
+# permuted network looks almost like the real one, and the null piles up
+# right around the observed statistic (so the observed looks ordinary). The
+# unblocked null also scrambles geography, destroying the segregation that
+# produced most of the assortativity in the first place -- so its null sits
+# far below the observed value and the observed looks extreme. Same number,
+# two nulls, opposite verdicts.
+#
+# WHICH NULL DO I REACH FOR ON MY OWN DATA? Decision rule:
+#   - Use a BLOCKED null when a known structural variable (here:
+#     neighborhood) already explains part of how the labels are
+#     distributed, and you want to test the signal that REMAINS after
+#     accounting for it. Block on the confounder.
+#   - Use the UNBLOCKED null only when no such confounder exists (labels
+#     are exchangeable across the whole graph).
+# If in doubt, ask: "Would I be fooled by ecological sorting?" If yes
+# (your groups cluster in space/teams/departments), block on that
+# variable — otherwise you'll mistake sorting for direct homophily.
 
 
 # 6. Learning Check ##########################################################

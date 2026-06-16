@@ -110,6 +110,15 @@ p_blocked = float(np.mean(null_blocked >= observed))
 print(f"🧪 Block-permuted null: mean = {null_blocked.mean():+.4f}  "
       f"sd = {null_blocked.std():.4f}  p = {p_blocked:.3f}")
 
+# Which direction is "good"? A LARGE p-value means FAIL TO REJECT — the
+# observed value is unremarkable under this null. A SMALL one means REJECT.
+if p_blocked > 0.05:
+    print(f"ℹ️  p = {p_blocked:.3f} is LARGE -> FAIL TO REJECT: the observed "
+          f"assortativity is ordinary once neighborhood is held fixed.")
+else:
+    print(f"ℹ️  p = {p_blocked:.3f} is SMALL -> REJECT: homophily remains "
+          f"beyond what neighborhood explains.")
+
 
 # 4. Visualize the two null distributions vs the observed ####################
 
@@ -141,6 +150,25 @@ print("💾 Saved permutation_nulls.png")
 # This is the canonical mistake the case study warns against. If you
 # fit the wrong null model, you get the wrong answer with great
 # confidence.
+#
+# WHY does the blocked null land so close to the observed value? Within a
+# segregated neighborhood almost everyone shares the same demo label, so
+# shuffling labels WITHIN a neighborhood barely changes the graph -- each
+# permuted network looks almost like the real one, and the null piles up
+# right around the observed statistic (so the observed looks ordinary). The
+# unblocked null also scrambles geography, destroying the segregation that
+# produced most of the assortativity in the first place -- so its null sits
+# far below the observed value and the observed looks extreme. Same number,
+# two nulls, opposite verdicts.
+#
+# WHICH NULL DO I REACH FOR ON MY OWN DATA? Decision rule:
+#   - Use a BLOCKED null when a known structural variable (here:
+#     neighborhood) already explains part of how the labels are
+#     distributed, and you want the signal that REMAINS after accounting
+#     for it. Block on the confounder.
+#   - Use the UNBLOCKED null only when no such confounder exists.
+# If in doubt, ask: "Would I be fooled by ecological sorting?" If your
+# groups cluster in space/teams/departments, block on that variable.
 
 
 # 6. Learning Check ##########################################################
