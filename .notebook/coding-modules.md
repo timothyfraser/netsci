@@ -1,6 +1,6 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-16 05:29 UTC_
+_Auto-generated NotebookLM source · 2026-06-16 05:37 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
@@ -4422,6 +4422,13 @@ g_undirected
 
 # Louvain (igraph's `cluster_louvain`): greedy modularity optimization,
 # moves nodes between communities to maximize modularity score.
+#
+# Louvain is STOCHASTIC -- it visits nodes in a randomized order, so an
+# unseeded run usually recovers the 8 planted modules (modularity 0.470)
+# but occasionally merges two and reports 7 (~0.454). We seed for a
+# reproducible Learning Check; expect your own data to wobble by a module
+# or two between runs if you don't.
+set.seed(5470)
 louvain <- igraph::cluster_louvain(g_undirected)
 cat(sprintf("📊 Louvain found %d modules. Modularity: %.3f\n",
             length(louvain), igraph::modularity(louvain)))
@@ -4552,6 +4559,7 @@ Steps:
 
 # `igraph` for community detection + matrix conversion. `numpy` for
 # matrix reordering. `matplotlib.imshow` for the DSM heatmap.
+import random
 import pandas as pd
 import numpy as np
 import igraph as ig
@@ -4598,6 +4606,13 @@ print(g_undirected.summary())
 
 # Louvain (igraph's `community_multilevel`): greedy modularity
 # optimization, moves nodes between communities to maximize modularity.
+#
+# Louvain is STOCHASTIC -- it visits nodes in a randomized order, so an
+# unseeded run usually recovers the 8 planted modules (modularity 0.470)
+# but can occasionally merge two and report 7 (~0.454). We seed for a
+# reproducible Learning Check; expect your own data to wobble by a module
+# or two between runs if you don't.
+random.seed(5470)
 louvain = g_undirected.community_multilevel()
 print(f"📊 Louvain found {len(louvain)} modules. Modularity: {louvain.modularity:.3f}")
 
