@@ -93,31 +93,35 @@ run_one() {
   local prompt
   if [ "${BUNDLE:-0}" = "1" ]; then
     # Bundled single-file run: ONE markdown file (runs/<id>/journal.md) that holds the
-    # per-item journal AND the full text of the three project reports. Everything is
-    # written to disk incrementally — each journal entry as you finish the item, each
-    # report appended the moment it is drafted — so a stalled or stopped run still
-    # yields every item completed so far. No separate report_week*.md files; the
-    # strict word-count acceptance gate is relaxed (completeness over padding) to keep
-    # one-agent runs affordable and unblock the report phase where full runs stall.
+    # per-item journal AND the full text of the three project reports, INTERSPERSED in
+    # the course's real weekly cadence (one project report per week, due each Monday —
+    # NOT batched at the end). Everything is written to disk incrementally — each
+    # journal entry as you finish the item, each week's report the moment it is drafted
+    # — so a stalled or stopped run still yields every item completed so far. No
+    # separate report_week*.md files; the strict word-count acceptance gate is relaxed
+    # (completeness over padding) to keep one-agent runs affordable.
     prompt="Use the student-${id} subagent to take SYSEN 5470 per its brief \
 (.claude/agents/_shared/student-brief.md), inhabiting the persona's skill ceilings \
 honestly — fumble where a real student like you would. PRODUCE EXACTLY ONE OUTPUT \
-FILE: runs/${id}/journal.md, and write to it incrementally ON DISK as you go (append \
-with Edit or a shell >> append; never hold content in memory to write at the end), so \
-the file survives an early stop. \
-PART 1 — JOURNAL: do Orientation and all three weeks of labs; ACTUALLY run each \
+FILE: runs/${id}/journal.md, written incrementally ON DISK as you go (append with Edit \
+or a shell >> append; never hold content in memory to write at the end), so the file \
+survives an early stop. \
+FOLLOW THE COURSE'S REAL WEEKLY CADENCE — do NOT batch the project reports at the end. \
+The course runs three Monday-to-Monday weeks; every Monday 9am you submit that week's \
+sketch, case-study + code Learning Checks, AND that week's ONE project case-study \
+report. So up front pick 3 of the 11 case studies (one per week) and a project network \
+(100+ nodes), then work WEEK BY WEEK. \
+FOR EACH WEEK (1, then 2, then 3): (a) do that week's labs — ACTUALLY run each \
 example.R/example.py and record the real printed Learning Check answer (or the verbatim \
-error and how you recovered), do the sketch prompts, browse the interactive labs. After \
-EVERY single item, immediately append its entry to journal.md using the brief's journal \
-schema. \
-PART 2 — REPORTS: pick 3 of the 11 case studies (one per week), run project code for \
-each, then append the FULL TEXT of all THREE reports INTO THE SAME journal.md, under a \
-'# PROJECT REPORTS' heading with a '## Report — Week N · Case NN' subheading per report. \
-Follow the sample-report structure (Question / Network / Procedure / Results in prose / \
-What this tells me and what it doesn't). Each report should be a substantial write-up in \
-your own words (aim ~1,200-1,800 words; completeness over padding). Append each report \
-the moment it is finished — do not wait until all three are done. Do NOT create separate \
-project/report_week*.md files and do NOT run the strict acceptance gate. \
+error and how you recovered), do the week's sketch prompts, browse the interactive labs; \
+append each item's entry to journal.md immediately using the brief's journal schema; \
+then (b) write THAT WEEK'S project case-study report and append its FULL TEXT into the \
+same journal.md under a '## Project Report — Week N · Case NN' heading BEFORE moving on \
+to the next week. Each report follows the sample-report structure (Question / Network / \
+Procedure / Results in prose / What this tells me and what it doesn't) — a substantial \
+write-up in your own words (aim ~1,200-1,800 words; completeness over padding). Log the \
+real deadline pressure of producing a report alongside that week's labs. Do NOT create \
+separate project/report_week*.md files and do NOT run the strict acceptance gate. \
 Write scores.json when finished. Print only the path to runs/${id}/journal.md when done."
   elif [ "${JOURNAL_ONLY:-0}" = "1" ]; then
     # Journal-focused run: the cheapest reliable path to a usable student-experience
