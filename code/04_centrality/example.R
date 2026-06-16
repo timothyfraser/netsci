@@ -66,6 +66,12 @@ cat(sprintf("✅ Loaded graph: %d vertices, %d edges.\n",
 # All four computed in one tidy table, so we can compare them directly.
 # Betweenness is the slow one: it needs all-pairs shortest paths, so on
 # 500 nodes expect this to take ~30-60s. It has NOT hung.
+#
+# WEIGHT DIRECTION (easy to get backwards): igraph reads `weights` as
+# DISTANCE -- a higher weight means a LONGER, harder-to-traverse edge. Our
+# `weight` here is already a distance-like cost, so passing it raw is right.
+# If your weight is a STRENGTH (ridership, volume -- higher = "closer"),
+# pass 1 / weight instead, the way case 09 builds cost = 1 / ridership.
 cat("🧪 Computing four centralities on 500 nodes (betweenness ~30-60s)...\n")
 cent <- tibble(
   node_id     = igraph::V(g)$name,

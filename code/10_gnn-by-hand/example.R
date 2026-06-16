@@ -2,6 +2,14 @@
 #' @title Case Study 10 — GNN by Hand (R via reticulate)
 #' @author <your-name-here>
 #' @description
+#' First, what are we even producing? An EMBEDDING. Where centrality
+#' (case 04) gave each node a single number, an embedding gives each node
+#' a *vector* — a bundle of several numbers — that captures the node's
+#' structural neighborhood. Why not just use betweenness? Because a
+#' bundle of numbers carries far more about a node's surroundings than
+#' any one score, and it drops straight into a machine-learning model as
+#' features (exactly what case 11 does to predict disruptions).
+#'
 #' The case study lab walked you through a hand-computed forward pass.
 #' Here we do it on the same 6-node toy network — but from R. R has no
 #' mature Graph Neural Network library, so rather than re-derive the math

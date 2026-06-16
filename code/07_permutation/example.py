@@ -3,8 +3,15 @@
 The lab walked you through a key idea: when you compute a network
 statistic (homophily, assortativity, mean within-group edge weight),
 you need a NULL MODEL to know if the value you saw is "real" or just
-noise. The null model says "what would we expect if labels were
-random?"
+noise.
+
+What is a null model? It asks: what values would our statistic take if
+the effect we're testing did NOT exist? We build that "no-effect" world
+by shuffling labels many times and recomputing the statistic each time;
+that spread of shuffled values is the null distribution. If our real,
+observed value sits comfortably inside that spread, we can't tell it
+apart from chance ("fail to reject"); if it sits far out in the tail,
+we can.
 
 But — and this is the crucial part — *random with respect to what?*
 If your network has community structure that you're not controlling

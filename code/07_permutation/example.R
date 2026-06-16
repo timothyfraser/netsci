@@ -7,6 +7,13 @@
 #' weight), you need a NULL MODEL to know if the value you saw is
 #' "real" or just noise.
 #'
+#' What is a null model? It asks: what values would our statistic take
+#' if the effect we're testing did NOT exist? We build that "no-effect"
+#' world by shuffling labels many times and recomputing the statistic
+#' each time; that spread is the null distribution. If our observed
+#' value sits comfortably inside it, we can't tell it apart from chance
+#' ("fail to reject"); if it sits far out in the tail, we can.
+#'
 #' But — *random with respect to what?* If your network has community
 #' structure that you're not controlling for, shuffling labels
 #' everywhere gives you a too-easy null. The right comparison is

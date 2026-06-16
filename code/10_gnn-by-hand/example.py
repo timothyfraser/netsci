@@ -1,5 +1,13 @@
 """Case Study 10 — GNN by Hand (Python track).
 
+First, what are we even producing? An EMBEDDING. Where centrality (case
+04) gave each node a single number, an embedding gives each node a
+*vector* -- a bundle of several numbers -- that captures the node's
+structural neighborhood. Why bother instead of just using betweenness?
+Because a bundle of numbers carries far more about a node's surroundings
+than any one score, and it drops straight into a machine-learning model
+as features (that's exactly what case 11 does to predict disruptions).
+
 The case study lab walked you through a hand-computed forward pass.
 Here we do it in pure numpy on the same 6-node toy network. No
 torch, no torch_geometric. Just the math.
