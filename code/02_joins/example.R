@@ -66,6 +66,11 @@ stations |> head()
 nrow(edges)
 nrow(stations)
 cat(sprintf("✅ Loaded %d trip rows and %d stations.\n", nrow(edges), nrow(stations)))
+# Heads-up on "rows" vs "trips": each row is an AGGREGATE (a start/end/day
+# combination), and the `count` column holds how many trips it represents.
+# So total trips = sum(count), which is much larger than the row count.
+cat(sprintf("ℹ️  %d rows are aggregates; total trips = sum(count) = %d.\n",
+            nrow(edges), sum(edges$count, na.rm = TRUE)))
 
 
 # 1. Single-Node Join ########################################################

@@ -111,6 +111,15 @@ p_blocked <- mean(null_blocked >= observed)
 cat(sprintf("🧪 Block-permuted null: mean = %+.4f  sd = %.4f  p = %.3f\n",
             mean(null_blocked), sd(null_blocked), p_blocked))
 
+# Which direction is "good"? A LARGE p-value means FAIL TO REJECT — the
+# observed value is unremarkable under this null. A SMALL one means REJECT.
+cat(sprintf("ℹ️  p = %.3f is %s -> %s.\n", p_blocked,
+            if (p_blocked > 0.05) "LARGE" else "SMALL",
+            if (p_blocked > 0.05)
+              "FAIL TO REJECT: the observed assortativity is ordinary once neighborhood is held fixed"
+            else
+              "REJECT: homophily remains beyond what neighborhood explains"))
+
 
 # 4. Visualize ###############################################################
 
@@ -149,6 +158,16 @@ cat("💾 Saved two_null_distributions.png\n")
 # This is the canonical mistake the case study warns against. If you
 # fit the wrong null model, you get the wrong answer with great
 # confidence.
+#
+# WHY does the blocked null land so close to the observed value? Within a
+# segregated neighborhood almost everyone shares the same demo label, so
+# shuffling labels WITHIN a neighborhood barely changes the graph -- each
+# permuted network looks almost like the real one, and the null piles up
+# right around the observed statistic (so the observed looks ordinary). The
+# unblocked null also scrambles geography, destroying the segregation that
+# produced most of the assortativity in the first place -- so its null sits
+# far below the observed value and the observed looks extreme. Same number,
+# two nulls, opposite verdicts.
 #
 # WHICH NULL DO I REACH FOR ON MY OWN DATA? Decision rule:
 #   - Use a BLOCKED null when a known structural variable (here:

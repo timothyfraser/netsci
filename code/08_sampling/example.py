@@ -175,7 +175,13 @@ for k, v in mad.items():
     print(f"  {k:16s}: {v:.3f}")
 
 winner = min(mad, key=mad.get)
-print(f"📊 Best preservation: {winner}")
+print(f"📊 Best preservation (smallest max-absolute-deviation): {winner}")
+
+# WHY does the spatial buffer usually win for this network? Evacuation flow
+# is spatially structured -- neighboring subdivisions surge together -- so a
+# geographic buffer captures a coherent, internally-intact subnetwork whose
+# per-node averages track the population. Ego and edgewise sampling slice
+# the graph arbitrarily, fragmenting that local structure.
 
 
 # 5. Learning Check ##########################################################

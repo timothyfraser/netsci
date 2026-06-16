@@ -75,6 +75,12 @@ print(f"✅ Added 4-week lag_rate feature.")
 # my in-neighbors' lag_rate" into a single matrix product: A @ x.
 # Applying A twice gives the 2-hop average. This is the simplest
 # possible "graph convolution" — no learned weights, no nonlinearity.
+#
+# So these are FIXED aggregations, NOT a trained GNN: no learned weights,
+# no backprop. Same distinction as case 10 -- you computed a forward pass,
+# you didn't train one. A torch GNN would LEARN what to aggregate; here we
+# hard-code "average your neighbors' lag_rate." The structural signal is
+# real; the "learning" is not.
 
 A = build_adjacency(suppliers, edges)
 print(f"📊 Adjacency: {A.shape}, row-sum max = {A.sum(axis=1).max():.2f}")
@@ -154,6 +160,15 @@ print(f"🧪 AUC, raw + lag + GNN (1+2 hop):   {auc_gnn:.4f}")
 # counts how often the model splits on a feature; a GNN feature that adds
 # weak but INDEPENDENT signal can lift predictions without being split on
 # often. Low importance + real AUC lift = exactly that situation.
+#
+# Connecting back to case 04: gnn_1hop / gnn_2hop play the role betweenness
+# did — they summarize a node's structural position — except LEARNED from
+# the neighbors' data rather than COMPUTED from pure topology. Reading the
+# table: individual-supplier features (capacity, geo_risk) usually top it
+# (your own characteristics predict your own disruption more than your
+# neighbors' do), and gnn_1hop typically outranks gnn_2hop because 2-hop
+# averages in more distant, noisier neighbors. Structure helps; individual
+# features still dominate.
 
 imp = pd.DataFrame({
     "feature":    gnn_cols,

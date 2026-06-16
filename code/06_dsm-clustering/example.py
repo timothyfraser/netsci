@@ -73,7 +73,11 @@ louvain = g_undirected.community_multilevel()
 print(f"📊 Louvain found {len(louvain)} modules. Modularity: {louvain.modularity:.3f}")
 
 # Fast-greedy: agglomerative — start with each node in its own community,
-# repeatedly merge the pair whose merge most increases modularity.
+# repeatedly merge the pair whose merge most increases modularity. It often
+# recovers FEWER modules than Louvain on dense graphs: once it has merged
+# greedily it never splits back, so adjacent planted modules get fused into
+# one and the recovered count comes in under the truth. That's an algorithm
+# property, not randomness — Louvain's node-moving phase avoids it here.
 fg = g_undirected.community_fastgreedy().as_clustering()
 print(f"📊 Fast-greedy found {len(fg)} modules. Modularity: {fg.modularity:.3f}")
 
@@ -83,6 +87,9 @@ print(f"📊 Fast-greedy found {len(fg)} modules. Modularity: {fg.modularity:.3f
 # Our synthetic data planted 8 modules. The Adjusted Rand Index (ARI)
 # measures how well two clusterings agree, corrected for chance:
 # 1.0 = perfect agreement, 0.0 = chance, < 0 = worse than chance.
+# Rough field convention: ARI > 0.8 is a strong match, 0.5–0.8 partial,
+# < 0.5 weak. So Louvain's 1.0 is a perfect recovery; fast-greedy's lower
+# score reflects the merged modules noted above.
 # (igraph ships no ARI, so we borrow sklearn's one function for it.)
 
 from sklearn.metrics import adjusted_rand_score
@@ -124,6 +131,13 @@ print("💾 Saved dsm_reorder.png")
 # fail too. We bound to k hops because in a densely-coupled DSM an
 # unbounded cascade reaches everything. The interesting question:
 # how many components fall in the FIRST FEW HOPS?
+#
+# Why can a cascade reach far beyond C037's own module even though Louvain
+# found clean modules? Because a cascade follows EDGES, not module walls.
+# Community detection only says edges are DENSER within modules, not that
+# none cross. C037 has a few cross-module dependency edges, and BFS happily
+# traverses them -- so a single hub failure jumps boundaries the clustering
+# drew.
 
 seed = "C037"
 for k in [1, 2, 3]:

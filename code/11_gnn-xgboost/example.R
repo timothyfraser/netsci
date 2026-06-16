@@ -75,6 +75,12 @@ cat("✅ Added 4-week lag_rate feature.\n")
 # (in functions.R) reaches across to numpy: it builds the row-normalized
 # in-neighbor adjacency A and computes A %*% lag (1-hop neighbor average)
 # and A %*% A %*% lag (2-hop), per week. The result is two new columns.
+#
+# These embeddings are FIXED aggregations (just a matrix multiply), NOT a
+# trained GNN: no learned weights, no backprop. Same distinction as case 10
+# -- you computed a forward pass, you didn't train one. The structural
+# signal is real; the "learning" is not. A torch GNN would learn what to
+# aggregate; here we hard-code "average your neighbors' lag_rate."
 
 panel <- add_gnn_embeddings(panel, suppliers, edges)
 print(head(panel, 10))
@@ -189,6 +195,11 @@ cat(sprintf("🧪 AUC, raw + lag + GNN (1+2 hop):   %.4f\n", gnn_fit$auc))
 # A high gnn_1hop gain means "knowing your neighbors' recent disruption
 # rate helps predict your own."
 
+# Reading THIS table: individual-supplier features (capacity, geo_risk)
+# usually top it -- a supplier's own characteristics predict its own
+# disruption more than its neighbors' do. And gnn_1hop typically outranks
+# gnn_2hop, because 2-hop averages in more distant, noisier neighbors and
+# dilutes the signal. Structure helps; individual features still dominate.
 print(gnn_fit$imp)
 
 p <- ggplot(gnn_fit$imp, aes(x = Gain, y = reorder(Feature, Gain))) +

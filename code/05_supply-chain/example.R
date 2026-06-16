@@ -67,6 +67,14 @@ cat(sprintf("📊 Baseline supply coverage: %.3f\n", base))
 # directed network we use both weighted degree (capacity) and
 # betweenness. We hold these in a tidy table so the attack loop
 # below stays one-liner-clean.
+#
+# WHY DIRECTED HERE (but undirected in case 04)? Goods flow one way through
+# a supply chain (supplier -> DC -> retailer), so directed betweenness
+# counts only paths that respect that flow. Case 04's transit graph was
+# undirected because adjacency there implies mutual access. And we target
+# by OUT-degree, not in-degree: a DC that SUPPLIES many retailers
+# downstream is the real risk; how many suppliers feed INTO it matters
+# less for whether retailers stay covered.
 
 cent <- tibble(
   node_id     = igraph::V(g)$name,

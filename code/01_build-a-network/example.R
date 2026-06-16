@@ -100,6 +100,11 @@ g
 is_bip <- igraph::bipartite_mapping(g)$res
 cat(sprintf("✅ Bipartite? %s\n", if (is_bip) "True" else "False"))
 
+# Diagnostic: which logical `type` maps to which kind of node? Print the
+# cross-tab so you never have to guess (or trace functions.R) when you read
+# off proj1 vs proj2 later. FALSE = suppliers, TRUE = components.
+print(table(kind = igraph::V(g)$kind, type = igraph::V(g)$type))
+
 
 # 2. Inspect basic structure #################################################
 

@@ -64,6 +64,14 @@ print(f"✅ Loaded network: {g.vcount()} stations, {g.ecount()} edges.")
 base_apl = weighted_apl(g)
 print(f"📊 Baseline weighted APL: {base_apl:.5f}")
 
+# Quick overdispersion check before trusting Poisson. Poisson assumes
+# variance == mean. If the ratio is ~1, Poisson is a fair noise model; if
+# it's >> 1 the counts are overdispersed and Poisson understates
+# uncertainty (a negative-binomial draw would be better).
+vmr = float(np.var(edges["ridership"]) / np.mean(edges["ridership"]))
+note = "≈1, Poisson is reasonable" if vmr < 1.5 else "overdispersed — consider negative binomial"
+print(f"🧪 Edge-weight variance/mean ratio: {vmr:.2f}  ({note})")
+
 
 # 2. Pick an intervention ####################################################
 #
@@ -110,6 +118,18 @@ print(f"🧪 Counterfactual APL change (mean):     {diffs.mean():+.5f}  "
 print(f"🧪 95% CI on the change:                 [{ci_low:+.5f}, {ci_high:+.5f}]")
 sig = ci_high < 0 or ci_low > 0
 print(f"📊 Effect significant at 95%?            {'True' if sig else 'False'}")
+
+# What does the verdict MEAN? A CI that MISSES zero says the effect's
+# direction is real (still read the magnitude separately). A CI that
+# INCLUDES zero does NOT say "the intervention does nothing" — it says we
+# can't distinguish the effect from zero with this many replicates. "We
+# can't tell" is itself a finding: gather more data before committing.
+if sig:
+    print("ℹ️  Interpretation: CI misses zero — the change is directionally "
+          "real (check size vs baseline).")
+else:
+    print("ℹ️  Interpretation: CI includes zero — can't distinguish from no "
+          "effect (NOT proof of 'no effect').")
 
 
 # 4. Visualize the two distributions and the difference ######################

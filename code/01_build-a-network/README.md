@@ -61,6 +61,36 @@ Python:
 python code/01_build-a-network/example.py
 ```
 
+> **Run from the repo root.** These scripts resolve their data files with
+> `here::here()` (R) and repo-relative paths (Python), so they behave the
+> same on every machine — but only if your working directory is the repo
+> root. A "file not found" error almost always means you're inside `code/`
+> instead of at the top. (That's *why* the course uses `here::here()`: it
+> pins paths to the project root instead of wherever you happened to launch.)
+
+### Python note: building a graph from *string* node IDs
+
+`igraph`'s `Graph.DataFrame()` expects **integer** vertex IDs. If your own
+project data uses string names (e.g. `"E0004"`), it raises
+`TypeError: ... must be 0-based integers`. Map names to integers first, then
+keep the names as a vertex attribute:
+
+```python
+import igraph as ig
+
+names = nodes["node_id"].tolist()
+idx   = {name: i for i, name in enumerate(names)}      # string -> 0-based int
+g = ig.Graph(
+    n=len(names),
+    edges=[(idx[a], idx[b]) for a, b in zip(edges["from_id"], edges["to_id"])],
+    directed=False,
+)
+g.vs["name"] = names   # restore the original string IDs as a vertex attribute
+```
+
+(The lab's own `example.py` sidesteps this inside `functions.py`; you'll hit
+it the first time you build *your own* network for the project.)
+
 ## Learning check (submit this number)
 
 > **In the supplier-supplier one-mode projection, what is the degree of

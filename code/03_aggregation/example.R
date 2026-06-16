@@ -72,6 +72,8 @@ station_pairs <- enriched |>
   arrange(desc(trips))
 nrow(station_pairs)
 cat(sprintf("📊 Resolution A: %d station pairs.\n", nrow(station_pairs)))
+# Context: only ~30k of the ~250,000 possible ordered station pairs ever
+# see a trip. That sparsity is real transit demand, not a data error.
 
 ## 2.2 Resolution B — neighborhood x neighborhood ############################
 

@@ -67,11 +67,19 @@ cat(sprintf("✅ Loaded graph: %d vertices, %d edges.\n",
 # Betweenness is the slow one: it needs all-pairs shortest paths, so on
 # 500 nodes expect this to take ~30-60s. It has NOT hung.
 #
-# WEIGHT DIRECTION (easy to get backwards): igraph reads `weights` as
-# DISTANCE -- a higher weight means a LONGER, harder-to-traverse edge. Our
-# `weight` here is already a distance-like cost, so passing it raw is right.
-# If your weight is a STRENGTH (ridership, volume -- higher = "closer"),
-# pass 1 / weight instead, the way case 09 builds cost = 1 / ridership.
+# +-------------------------------------------------------------------------+
+# | /!\ WEIGHT DIRECTION -- THE #1 SILENT BUG IN WEIGHTED CENTRALITY         |
+# |                                                                         |
+# | igraph reads `weights` as DISTANCE: a higher weight means a LONGER,     |
+# | harder-to-traverse edge. Our `weight` here is already a distance-like   |
+# | cost, so passing it raw is correct.                                     |
+# |                                                                         |
+# | If YOUR weight is a STRENGTH (ridership, messages, volume -- higher =   |
+# | "closer"), pass 1 / weight instead, the way case 09 builds              |
+# | cost = 1 / ridership. Passing strength as-is RUNS WITHOUT ERROR and     |
+# | silently computes the wrong thing -- check this before you trust a      |
+# | weighted betweenness ranking.                                           |
+# +-------------------------------------------------------------------------+
 cat("🧪 Computing four centralities on 500 nodes (betweenness ~30-60s)...\n")
 cent <- tibble(
   node_id     = igraph::V(g)$name,

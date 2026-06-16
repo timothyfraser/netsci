@@ -168,9 +168,16 @@ mad <- c(
   edgewise       = max_abs_dev(edge_stats),
   spatial_buffer = max_abs_dev(buf_stats)
 )
-print(mad)
+cat("Max |population - sample| in avg_edgeweight, by strategy (smaller = better):\n")
+print(round(mad, 3))
 winner <- names(which.min(mad))
-cat(sprintf("📊 Best preservation: %s\n", winner))
+cat(sprintf("📊 Best preservation (smallest max-absolute-deviation): %s\n", winner))
+
+# WHY does the spatial buffer usually win for this network? Evacuation flow
+# is spatially structured -- neighboring subdivisions surge together -- so a
+# geographic buffer captures a coherent, internally-intact subnetwork whose
+# per-node averages track the population. Ego and edgewise sampling slice
+# the graph arbitrarily, fragmenting that local structure.
 
 
 # 5. Learning Check ##########################################################

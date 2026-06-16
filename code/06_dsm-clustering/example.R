@@ -144,6 +144,13 @@ cat("💾 Saved dsm_reordering.png\n")
 # fail too. We bound to k hops because in a densely-coupled DSM an
 # unbounded cascade reaches everything. The interesting question:
 # how many fall in the FIRST FEW HOPS?
+#
+# Why can a cascade reach far beyond C037's own module even though Louvain
+# found clean modules? Because a cascade follows EDGES, not module walls.
+# Community detection only says edges are DENSER within modules, not that
+# none cross. C037 has a few cross-module dependency edges, and BFS happily
+# traverses them -- so a single hub failure jumps boundaries the clustering
+# drew.
 
 seed <- "C037"
 for (k in c(1, 2, 3)) {
