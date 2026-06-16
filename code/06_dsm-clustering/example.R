@@ -60,6 +60,12 @@ cat(sprintf("✅ Loaded DSM: %d components, %d dependency edges.\n",
 g_undirected <- igraph::as.undirected(g, mode = "collapse")
 g_undirected
 
+# A quick word on MODULARITY, the score both algorithms maximize: it
+# measures how much more edge weight falls inside communities than you'd
+# expect at random. It runs roughly -0.5 to 1; ~0 means "no more clustered
+# than random", and > ~0.3 is usually a meaningful community structure.
+# We planted 8 modules, so recovering 8 at a healthy modularity is the win.
+
 # Louvain (igraph's `cluster_louvain`): greedy modularity optimization,
 # moves nodes between communities to maximize modularity score.
 louvain <- igraph::cluster_louvain(g_undirected)

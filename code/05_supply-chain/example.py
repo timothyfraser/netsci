@@ -94,6 +94,10 @@ print(
 # and track supply coverage as k grows from 0 to 15.
 
 dcs = cent.query("tier == 2").copy()
+# One seeded generator, created once and reused across every run_strategy
+# call below. Only the "random" strategy draws from it; "out_degree" and
+# "betweenness" are deterministic. Because we seed once here (not inside the
+# function) the whole script's random attacks are reproducible run-to-run.
 rng = np.random.default_rng(42)
 
 def run_strategy(strategy: str, ks: list[int]) -> list[float]:

@@ -86,6 +86,9 @@ cat("✅ Added 1-hop and 2-hop GNN embeddings of lag_rate.\n")
 # Join the suppliers table (tier, capacity, region, geo_risk) onto the
 # panel and one-hot encode region. XGBoost can take factors directly, but
 # we keep the encoding explicit so the feature columns are obvious.
+# We deliberately keep ALL region columns (no dropped reference level). A
+# linear model would have collinearity here, but tree models like XGBoost
+# don't care, and keeping every level makes the importance plot readable.
 
 dat <- panel |>
   left_join(suppliers, by = "supplier_id") |>
@@ -160,12 +163,24 @@ cat(sprintf("🧪 AUC, raw features only:           %.4f\n", raw_fit$auc))
 cat(sprintf("🧪 AUC, raw + lag:                   %.4f\n", lag_fit$auc))
 cat(sprintf("🧪 AUC, raw + lag + GNN (1+2 hop):   %.4f\n", gnn_fit$auc))
 
+# How to read these: the raw-only model is your NON-NETWORK baseline.
+# Watch AUC climb as lag (history) and then GNN (structure) features are
+# added. For rare-event, noisy disruption prediction ~0.65+ is competitive
+# -- don't expect the 0.80+ you'd see on a clean churn model.
+cat(sprintf("📊 Lift from GNN structure: %+.4f AUC over the lag model\n",
+            gnn_fit$auc - lag_fit$auc))
+
 
 # 6. Feature importance ######################################################
 #
 # What does the full model think the most important features are? A high
 # gain on `gnn_1hop` or `gnn_2hop` is the visible signature of the GNN
 # piece earning its keep.
+#
+# Heads-up: a feature can rank LOW here yet still raise AUC. Importance
+# counts how often the model splits on a feature; a GNN feature that adds
+# weak but INDEPENDENT signal can lift predictions without being split on
+# often. Low importance + real AUC lift = exactly that situation.
 
 print(gnn_fit$imp)
 

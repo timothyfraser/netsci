@@ -96,6 +96,9 @@ print(top_btwn_dcs)
 # and track supply coverage as k grows from 0 to 15.
 
 dcs <- cent |> filter(tier == 2)
+# Seed once here (not inside run_strategy). Only the "random" strategy
+# draws; "out_degree" and "betweenness" are deterministic. Seeding at this
+# scope makes the whole script's random attacks reproducible run-to-run.
 set.seed(42)  # deterministic random-attack ordering
 
 run_strategy <- function(strategy, ks) {

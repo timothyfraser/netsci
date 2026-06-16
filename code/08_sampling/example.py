@@ -91,8 +91,12 @@ print(f"✅ Edge sample: {len(edge_sample)} edges.")
 
 ## 2.3 Spatial buffer: keep edges where BOTH endpoints are within 200 km of Miami
 
-# Use Miami as our point of interest (POI). Project to a meter-based
-# CRS so the 200 km buffer is geometrically meaningful, then back.
+# Use Miami as our point of interest (POI). Why the projection dance?
+# EPSG:4326 is lat/lon in DEGREES, so a "200 km" buffer in degrees is
+# meaningless (a degree is a different distance at the equator vs Maine).
+# EPSG:3857 is in METERS, so we project there to draw the 200 km circle,
+# then project back to 4326 to match the node coordinates. Non-GIS
+# readers: switch to a meter ruler, measure, switch back.
 miami_geoid = "1208692158"
 miami_row = nodes[nodes["geoid"] == miami_geoid].iloc[0]
 poi = gpd.GeoSeries([Point(miami_row["x"], miami_row["y"])], crs="EPSG:4326")

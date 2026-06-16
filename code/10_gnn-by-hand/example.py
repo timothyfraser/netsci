@@ -49,7 +49,10 @@ print(f"✅ Loaded tiny network: {len(nodes)} nodes, {len(edges)} edges.")
 # Self-loops let each node "send a message to itself" so its own
 # features survive into the next layer. Symmetric normalization
 # D^{-1/2} A D^{-1/2} stops high-degree nodes from dominating their
-# neighbors. These two preprocessing tricks are the heart of a GCN.
+# neighbors -- same intuition as degree-normalizing a count in stats:
+# divide out how connected a node is so the average isn't swamped by a
+# few hubs. Despite the scary notation it's just a rescaling trick.
+# These two preprocessing steps are the heart of a GCN.
 
 A = adjacency(nodes, edges, add_self_loops=True)
 print("A (with self-loops):")
@@ -86,6 +89,9 @@ W2 = np.array([
 # 3. Forward pass ############################################################
 #
 # H_{l+1} = activation(A_norm @ H_l @ W_l). The activation is ReLU.
+# Why two layers? One layer mixes in each node's IMMEDIATE neighbors
+# (1 hop). Stacking a second layer mixes in neighbors-of-neighbors
+# (2 hops), so node 4 below can "see" both clusters it sits between.
 
 H1 = gcn_layer(A_norm, X,  W1, activation="relu")
 print("H1 (after layer 1, ReLU):")

@@ -12,6 +12,13 @@
 #' everywhere gives you a too-easy null. The right comparison is
 #' often a BLOCK permutation: shuffle labels within community.
 #'
+#' If you know regression, a blocking variable is just a covariate you
+#' control for. Block permutation holds that confounder fixed (it
+#' shuffles labels only WITHIN each block) so you test the within-block
+#' signal you actually care about; the unblocked null controls for
+#' nothing, which is exactly why it looks "too significant" when
+#' neighborhoods are segregated.
+#'
 #' We'll do both, on a synthetic network engineered to make the two
 #' nulls disagree dramatically.
 
@@ -83,6 +90,10 @@ cat(sprintf("🧪 Unblocked null: mean = %+.4f  sd = %.4f  p = %.3f\n",
 # neighborhood-level composition. A more conservative null, because
 # some apparent "homophily" comes from the fact that A's and B's
 # already live in different neighborhoods.
+#
+# Stats analogy: block_by = "neighborhood" == "control for neighborhood".
+# We destroy only the within-neighborhood demo signal (what we're testing)
+# while holding the neighborhood composition (the confounder) fixed.
 
 null_blocked <- numeric(n_perm)
 for (i in seq_len(n_perm)) {

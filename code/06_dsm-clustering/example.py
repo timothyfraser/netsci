@@ -56,6 +56,12 @@ print(f"✅ Loaded DSM: {g.vcount()} components, {g.ecount()} dependency edges."
 g_undirected = g.as_undirected(mode="collapse")
 print(g_undirected.summary())
 
+# A quick word on MODULARITY, the score both algorithms maximize: it
+# measures how much more edge weight falls inside communities than you'd
+# expect at random. It runs roughly -0.5 to 1; ~0 means "no more clustered
+# than random", and > ~0.3 is usually a meaningful community structure.
+# We planted 8 modules, so recovering 8 at a healthy modularity is the win.
+
 # Louvain (igraph's `community_multilevel`): greedy modularity
 # optimization, moves nodes between communities to maximize modularity.
 louvain = g_undirected.community_multilevel()
@@ -72,6 +78,7 @@ print(f"📊 Fast-greedy found {len(fg)} modules. Modularity: {fg.modularity:.3f
 # Our synthetic data planted 8 modules. The Adjusted Rand Index (ARI)
 # measures how well two clusterings agree, corrected for chance:
 # 1.0 = perfect agreement, 0.0 = chance, < 0 = worse than chance.
+# (igraph ships no ARI, so we borrow sklearn's one function for it.)
 
 from sklearn.metrics import adjusted_rand_score
 true_module = np.array(g.vs["true_module"])
