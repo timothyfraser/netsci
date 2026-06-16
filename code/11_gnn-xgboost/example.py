@@ -140,7 +140,6 @@ print(f"🧪 AUC, raw + lag + GNN (1+2 hop):   {auc_gnn:.4f}")
 # Watch AUC climb as lag (history) and then GNN (structure) features are
 # added. For rare-event, noisy disruption prediction ~0.65+ is competitive
 # -- don't expect the 0.80+ you'd see on a clean churn model.
-print(f"📊 Lift from GNN structure: {auc_gnn - auc_lag:+.4f} AUC over the lag model")
 
 
 # 6. Feature importance ######################################################
