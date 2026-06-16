@@ -10,6 +10,10 @@
 #   bash .claude/harness/run-students.sh              # all personas, sequential
 #   bash .claude/harness/run-students.sh priya sofia  # just these two
 #   PERMISSION_MODE=bypassPermissions bash .claude/harness/run-students.sh   # unattended
+#   JOURNAL_ONLY=1 bash .claude/harness/run-students.sh sofia   # cheap single run:
+#     ONE persona, journal-only (skips the 3 project reports + acceptance gate),
+#     journal flushed to disk per item. The path for "run one, grab the journal,
+#     hand it to a repo-fixing session." This is the budget-safe mode.
 #
 # PREREQUISITES (see .claude/students/README-ai-students.md)
 #   - Run from the repo root, inside an isolated environment / container.
@@ -84,7 +88,27 @@ run_one() {
   local log="logs/${id}-${STAMP}.log"
   echo ">> $id : starting (log -> $log)"
 
-  local prompt="Use the student-${id} subagent to take SYSEN 5470 in full, exactly per \
+  local prompt
+  if [ "${JOURNAL_ONLY:-0}" = "1" ]; then
+    # Journal-focused run: the cheapest reliable path to a usable student-experience
+    # log. SKIPS the three 1,800+ word project reports and the acceptance gate — the
+    # largest token sink and the phase where full runs stall — because the JOURNAL is
+    # the deliverable handed to the repo-fixing session. The journal is flushed to disk
+    # after every item, so a stopped or stalled run still yields usable results.
+    prompt="Use the student-${id} subagent to take SYSEN 5470 per its brief \
+(.claude/agents/_shared/student-brief.md), inhabiting the persona's skill ceilings \
+honestly — fumble where a real student like you would. Do Orientation and all three \
+weeks of labs: ACTUALLY run each example.R/example.py and record the real printed \
+Learning Check answer (or the verbatim error and how you recovered), do the sketch \
+prompts, and browse the interactive labs top-to-bottom. THE JOURNAL IS THE ONLY \
+REQUIRED DELIVERABLE: after EVERY single item, IMMEDIATELY append its entry to \
+runs/${id}/journal.md ON DISK using the brief's journal schema, BEFORE starting the \
+next item — never hold journal content in memory, so the journal survives an early \
+stop. Do NOT write the three project/report_weekN_caseNN.md reports and do NOT run the \
+acceptance gate; skip those project deliverables entirely for this run. Write \
+scores.json when you finish. Print only the path to runs/${id}/journal.md when done."
+  else
+    prompt="Use the student-${id} subagent to take SYSEN 5470 in full, exactly per \
 its brief (.claude/agents/_shared/student-brief.md). Inhabit the persona's skill \
 ceilings honestly. Actually run the example.R/example.py scripts and record real \
 outputs and errors. Produce ALL graded deliverables — in particular the project's \
@@ -95,6 +119,7 @@ docs/assignments/sample-report.md before drafting, and run the brief's acceptanc
 (three report_week*.md, each >=~1,800 words) before finishing. Write journal.md, \
 report.md, scores.json, and project/ into runs/${id}/. When finished, print only the \
 path to runs/${id}/report.md."
+  fi
 
   # NOTE on flags:
   #  -p / --print           : non-interactive headless run
