@@ -3,14 +3,27 @@
 The lab walked you through a key idea: when you compute a network
 statistic (homophily, assortativity, mean within-group edge weight),
 you need a NULL MODEL to know if the value you saw is "real" or just
-noise. The null model says "what would we expect if labels were
-random?"
+noise.
+
+What is a null model? It asks: what values would our statistic take if
+the effect we're testing did NOT exist? We build that "no-effect" world
+by shuffling labels many times and recomputing the statistic each time;
+that spread of shuffled values is the null distribution. If our real,
+observed value sits comfortably inside that spread, we can't tell it
+apart from chance ("fail to reject"); if it sits far out in the tail,
+we can.
 
 But — and this is the crucial part — *random with respect to what?*
 If your network has community structure that you're not controlling
 for, shuffling labels everywhere can give you a too-easy null. The
 right comparison is often a **block permutation**: shuffle labels
 within community.
+
+If you know regression, a blocking variable is just a covariate you
+control for. Block permutation holds that confounder fixed (it shuffles
+labels only WITHIN each block) so you test the within-block signal you
+actually care about; the unblocked null controls for nothing, which is
+exactly why it looks "too significant" when neighborhoods are segregated.
 
 We'll do both, on a synthetic network with planted demographic
 homophily AND planted neighborhood-demo correlation.
@@ -83,6 +96,10 @@ print(f"🧪 Unblocked null: mean = {null_unblocked.mean():+.4f}  "
 # neighborhood-level composition. A more conservative null, because
 # some apparent "homophily" comes from the fact that A's and B's
 # already live in different neighborhoods.
+#
+# Stats analogy: `block_by="neighborhood"` == "control for neighborhood".
+# We destroy only the within-neighborhood demo signal (what we're testing)
+# while holding the neighborhood composition (the confounder) fixed.
 
 null_blocked = np.empty(n_perm)
 for i in range(n_perm):

@@ -91,8 +91,12 @@ print(f"✅ Edge sample: {len(edge_sample)} edges.")
 
 ## 2.3 Spatial buffer: keep edges where BOTH endpoints are within 200 km of Miami
 
-# Use Miami as our point of interest (POI). Project to a meter-based
-# CRS so the 200 km buffer is geometrically meaningful, then back.
+# Use Miami as our point of interest (POI). Why the projection dance?
+# EPSG:4326 is lat/lon in DEGREES, so a "200 km" buffer in degrees is
+# meaningless (a degree is a different distance at the equator vs Maine).
+# EPSG:3857 is in METERS, so we project there to draw the 200 km circle,
+# then project back to 4326 to match the node coordinates. Non-GIS
+# readers: switch to a meter ruler, measure, switch back.
 miami_geoid = "1208692158"
 miami_row = nodes[nodes["geoid"] == miami_geoid].iloc[0]
 poi = gpd.GeoSeries([Point(miami_row["x"], miami_row["y"])], crs="EPSG:4326")
@@ -147,8 +151,12 @@ print("💾 Saved sampling_compare.png")
 
 # 4. Which strategy best preserves average edgeweight? #######################
 #
-# We measure preservation as the *maximum absolute deviation* from
-# the population time series. Smaller = better preservation.
+# What makes one sample "better"? It tracks the true population most
+# closely. We score that as the *maximum absolute deviation*: over the
+# whole time series, the largest gap between the sample's average edge
+# weight and the population's. Smaller = better. (Worst-case gap is a
+# simple, strict choice; you could instead use mean-squared error or
+# correlation if you cared about average rather than worst-case fit.)
 
 def max_abs_dev(sample_stats):
     merged = stats[["date_time", "avg_edgeweight"]].merge(

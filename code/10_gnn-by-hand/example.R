@@ -2,6 +2,14 @@
 #' @title Case Study 10 — GNN by Hand (R via reticulate)
 #' @author <your-name-here>
 #' @description
+#' First, what are we even producing? An EMBEDDING. Where centrality
+#' (case 04) gave each node a single number, an embedding gives each node
+#' a *vector* — a bundle of several numbers — that captures the node's
+#' structural neighborhood. Why not just use betweenness? Because a
+#' bundle of numbers carries far more about a node's surroundings than
+#' any one score, and it drops straight into a machine-learning model as
+#' features (exactly what case 11 does to predict disruptions).
+#'
 #' The case study lab walked you through a hand-computed forward pass.
 #' Here we do it on the same 6-node toy network — but from R. R has no
 #' mature Graph Neural Network library, so rather than re-derive the math
@@ -58,8 +66,11 @@ cat(sprintf("✅ Loaded tiny network: %d nodes, %d edges.\n",
 # Self-loops let each node "send a message to itself" so its own
 # features survive into the next layer. Symmetric normalization
 # D^{-1/2} A D^{-1/2} stops high-degree nodes from dominating their
-# neighbors. These two preprocessing tricks are the heart of a GCN — and
-# both come straight from functions.py via the `gcn` handle.
+# neighbors -- same intuition as degree-normalizing a count in stats:
+# divide out how connected a node is so the average isn't swamped by a
+# few hubs. Despite the scary notation it's just a rescaling trick.
+# These steps are the heart of a GCN -- both come straight from
+# functions.py via the `gcn` handle.
 
 A <- gcn$adjacency(nodes, edges, add_self_loops = TRUE)
 cat("A (with self-loops):\n")
@@ -93,6 +104,9 @@ W2 <- matrix(c( 0.6,  0.1, -0.4,
 #
 # H_{l+1} = ReLU(A_norm %*% H_l %*% W_l). The matmul-and-activate happens
 # inside gcn$gcn_layer(), the same numpy function example.py calls.
+# Why two layers? One layer mixes in each node's IMMEDIATE neighbors
+# (1 hop). Stacking a second layer mixes in neighbors-of-neighbors
+# (2 hops), so node 4 below can "see" both clusters it sits between.
 
 H1 <- gcn$gcn_layer(A_norm, X,  W1, activation = "relu")
 cat("H1 (after layer 1, ReLU):\n")

@@ -50,14 +50,29 @@ cat(sprintf("✅ Loaded graph: %d vertices, %d edges.\n",
 
 # 1. Four centrality measures ################################################
 #
-# Each one captures a DIFFERENT intuition for "important":
-#   - DEGREE: how many neighbors. Local. Hub-detection.
-#   - BETWEENNESS: how often this node lies on a shortest path between
-#     two other nodes. Global. Bridge-detection.
-#   - CLOSENESS: 1 / mean distance to every other node. Reach.
-#   - EIGENVECTOR: central if your neighbors are central. Influence.
+# "Most central" is meaningless on its own -- central BY WHICH MEASURE,
+# FOR WHICH QUESTION? Reach for:
+#   - DEGREE: how many neighbors. Local. "Who is busiest right now?"
+#   - BETWEENNESS: how often this node sits on a shortest path between
+#     others. Global. "Who is a chokepoint / bridge whose loss splits the
+#     network?" This is the one that finds load-bearing nodes.
+#   - CLOSENESS: 1 / mean distance to everyone. "Who can reach the whole
+#     network fastest?" (good for response / diffusion questions).
+#   - EIGENVECTOR: central if your neighbors are central (recursive).
+#     "Who sits in the well-connected core?" Prefer it over betweenness
+#     when you care about being embedded among important nodes, not about
+#     controlling the flow between them.
 
 # All four computed in one tidy table, so we can compare them directly.
+# Betweenness is the slow one: it needs all-pairs shortest paths, so on
+# 500 nodes expect this to take ~30-60s. It has NOT hung.
+#
+# WEIGHT DIRECTION (easy to get backwards): igraph reads `weights` as
+# DISTANCE -- a higher weight means a LONGER, harder-to-traverse edge. Our
+# `weight` here is already a distance-like cost, so passing it raw is right.
+# If your weight is a STRENGTH (ridership, volume -- higher = "closer"),
+# pass 1 / weight instead, the way case 09 builds cost = 1 / ridership.
+cat("🧪 Computing four centralities on 500 nodes (betweenness ~30-60s)...\n")
 cent <- tibble(
   node_id     = igraph::V(g)$name,
   kind        = igraph::V(g)$kind,
@@ -75,6 +90,9 @@ cent |> head()
 # Different measures rank the SAME node differently. The Spearman
 # correlation between two centrality vectors tells you how much the
 # two measures agree on the *order* of nodes (not their magnitudes).
+# The printed matrix is symmetric, with rows and columns in the SAME
+# order (degree, betweenness, closeness, eigenvector) -- read cell
+# (i, j) as "how much measures i and j agree on the ranking."
 
 corr_mat <- cent |>
   select(degree, betweenness, closeness, eigenvector) |>

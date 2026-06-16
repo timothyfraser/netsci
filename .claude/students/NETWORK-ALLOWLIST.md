@@ -18,6 +18,7 @@ block below is intentionally comment-free.
 ## Paste this (defaults ON — only the gaps the defaults miss)
 
 ```
+packagemanager.posit.co
 cloud.r-project.org
 cran.r-project.org
 cdn.playwright.dev
@@ -40,7 +41,8 @@ so the list above is everything else the run needs.
 
 | Domain(s) | Why |
 |---|---|
-| `cloud.r-project.org`, `cran.r-project.org` | R itself + every `install.packages()`. CRAN is **not** in the default Trusted list — this is the #1 thing that silently breaks R in cloud sessions. `cloud.r-project.org` is a CDN that serves the apt repo, the signing key, and all package downloads. |
+| `packagemanager.posit.co` | Posit Package Manager — **prebuilt binary** R packages. `prepare-env.sh` prefers it because it's far faster than compiling from CRAN source. Not in the default Trusted list. |
+| `cloud.r-project.org`, `cran.r-project.org` | R itself + the `install.packages()` fallback when Posit is unavailable. CRAN is **not** in the default Trusted list — this (or Posit) is the #1 thing that silently breaks R in cloud sessions. `cloud.r-project.org` is a CDN that serves the apt repo, the signing key, and source package downloads. (If both Posit and CRAN are blocked, only Ubuntu's `r-cran-*` debs via `*.ubuntu.com` are available — enough for most cases but not `xgboost`.) |
 | `cdn.playwright.dev`, `playwright.azureedge.net` | Chromium binary download for the Playwright MCP server (npm itself is in the defaults). |
 | `timothyfraser.com`, `*.timothyfraser.com` | The live course site the personas browse. **Optional** — the site is mirrored in the repo under `docs/`, so you can drop these and the labs still work offline. |
 | `fonts.googleapis.com`, `fonts.gstatic.com`, `cdn.jsdelivr.net`, `cdnjs.cloudflare.com` | Fonts/CDN assets the rendered course site pulls. Optional, paired with the course-site lines. |

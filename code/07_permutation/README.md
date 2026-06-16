@@ -81,6 +81,16 @@ disagree.
    share of edges that are within-group). Show the same
    blocked/unblocked comparison still applies.
 
+### Choosing your blocking variable
+
+The hard part isn't the code — it's justifying the block. A clean rule:
+**your blocking variable is the confounder you most need to rule out.**
+Write your claim as "X relates to Y *beyond what Z explains*" — Z is your
+block. If a skeptic could say "that's just because of Z," put Z in the
+block. For a worked example of carrying a question and its controls
+through a report in prose, see
+[`docs/assignments/sample-report.md`](../../docs/assignments/sample-report.md).
+
 ### Report
 
 - **Question.** One sentence.

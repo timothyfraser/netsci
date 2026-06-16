@@ -1,6 +1,6 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-14 03:41 UTC_
+_Auto-generated NotebookLM source · 2026-06-16 01:12 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
@@ -456,6 +456,12 @@ files in `assignments/`, `pages/`, or `build/` — they're regenerated.
 > Skill: **Identify** · Data: synthetic bipartite supplier ↔ component
 > network (200 nodes, 577 edges)
 
+**New to "bipartite"?** It just means the network has **two kinds of nodes**, and
+edges only run *between* the kinds, never within. Here the kinds are suppliers and
+components: a supplier links to the components it makes, but suppliers never link
+directly to suppliers. The "one-mode projection" (below) collapses that into a
+supplier-to-supplier network where two suppliers connect if they share a component.
+
 ## What you'll learn
 
 How to take node and edge data sitting in two tables and turn them
@@ -706,6 +712,11 @@ library(igraph)
 library(ggplot2)
 library(here)
 
+# Heads-up: loading igraph (and others) prints "The following objects are
+# masked from ..." messages. Those are NORMAL, not errors -- they just tell
+# you which package's version of a same-named function now takes priority.
+# Ignore them and keep going.
+
 ## 0.2 Load helpers ##########################################################
 
 # `functions.R` lives next to this script and contains tiny wrappers
@@ -818,6 +829,9 @@ print(top_shared)
 # A bipartite projection answers exactly that. It produces two graphs:
 #   - supplier-by-supplier: two suppliers linked if they share >=1 component
 #   - component-by-component: two components linked if they share >=1 supplier
+# Order matters and trips people up: proj1 is the `type=FALSE` side and
+# proj2 the `type=TRUE` side. Here type=FALSE is suppliers. If yours comes
+# out swapped, check the `type` vertex attribute rather than the order.
 
 proj <- igraph::bipartite_projection(g)
 proj_suppliers  <- proj$proj1   # the "FALSE" side — suppliers
@@ -1024,6 +1038,10 @@ print(top_shared)
 # A bipartite projection answers exactly that. It produces two graphs:
 #   - supplier-by-supplier: two suppliers linked if they share >=1 component
 #   - component-by-component: two components linked if they share >=1 supplier
+# Order matters and trips people up: index 0 is the projection of the
+# `type=False` side and index 1 the `type=True` side. Here type=False is
+# suppliers, so index 0 = suppliers. If yours comes out swapped, check the
+# `type` vertex attribute rather than assuming the order.
 
 proj_suppliers, proj_components = g.bipartite_projection()
 print(f"🔗 Supplier projection:  {proj_suppliers.vcount()} nodes, {proj_suppliers.ecount()} edges")
@@ -1496,7 +1514,10 @@ cat(sprintf("✅ Loaded %d trip rows and %d stations.\n", nrow(edges), nrow(stat
 # The key insight: the ID variable has a different NAME in each table.
 #   - in `edges` it's called `start_code`
 #   - in `stations` it's called `code`
-# In dplyr we say `by = c("start_code" = "code")`.
+# In dplyr we say `by = c("start_code" = "code")`. Read the direction like
+# this: the name on the LEFT of `=` is the column in the LEFT (first) table,
+# the name on the RIGHT is the column in the RIGHT table. It looks like an
+# assignment but it isn't -- it's just "match this column to that column."
 edges |>
   left_join(by = c("start_code" = "code"), y = stations) |>
   head()
@@ -1721,7 +1742,10 @@ print(f"✅ Loaded {len(edges)} trip rows and {len(stations)} stations.")
 #   - in `edges` it's called `start_code`
 #   - in `stations` it's called `code`
 # In pandas we say  left_on="start_code", right_on="code"  (or rename
-# `code` -> `start_code` first, which is what most pipelines do).
+# `code` -> `start_code` first, which is what most pipelines do). The names
+# say it plainly: left_on is the column in the LEFT (first) table, right_on
+# is the column in the RIGHT table. (R's dplyr writes the same idea as
+# by = c("start_code" = "code") -- left name = left table, right = right.)
 print(
     edges
     .merge(stations, left_on="start_code", right_on="code", how="left")
@@ -2300,7 +2324,9 @@ cat(sprintf("📊 Resolution B: %d neighborhood pairs.\n", nrow(nbhd_pairs)))
 
 # Finally, aggregate to 4 x 4 income-quintile cells and compute a
 # percent column so we can read the equity question directly off the
-# matrix.
+# matrix. Why the diagonal matters: big diagonal cells mean trips stay
+# WITHIN an income level (riders don't cross economic boundaries); heavy
+# off-diagonal cells mean the system mixes income groups.
 q_pairs <- enriched |>
   group_by(start_quintile, end_quintile) |>
   summarize(trips = sum(count, na.rm = TRUE), .groups = "drop") |>
@@ -2485,7 +2511,9 @@ print(nbhd_pairs.head())
 
 # Finally, aggregate to 4 x 4 income-quintile cells and compute a
 # percent column so we can read the equity question directly off the
-# matrix.
+# matrix. Why the diagonal matters: big diagonal cells mean trips stay
+# WITHIN an income level (riders don't cross economic boundaries); heavy
+# off-diagonal cells mean the system mixes income groups.
 q_pairs = (
     enriched
     .groupby(["start_quintile", "end_quintile"], as_index=False)["count"]
@@ -2740,6 +2768,15 @@ hiding in *your* network.
    should we audit first?"). Argue from the question to a single
    centrality measure. Then compute it and report the top 5.
 
+### Framing a real question (not just "compute centrality")
+
+The most common trap here is stopping at "I computed betweenness." Push to a
+*decision*: "which accounts should fraud analysts audit first?", "which
+stations would hurt most if they closed?" Name the decision, then let it pick
+the centrality (a centrality is only meaningful paired with the question it
+answers). For a worked example of carrying a question through a report in
+prose, see [`docs/assignments/sample-report.md`](../../docs/assignments/sample-report.md).
+
 ### Report
 
 - **Question.** One sentence.
@@ -2934,14 +2971,29 @@ cat(sprintf("✅ Loaded graph: %d vertices, %d edges.\n",
 
 # 1. Four centrality measures ################################################
 #
-# Each one captures a DIFFERENT intuition for "important":
-#   - DEGREE: how many neighbors. Local. Hub-detection.
-#   - BETWEENNESS: how often this node lies on a shortest path between
-#     two other nodes. Global. Bridge-detection.
-#   - CLOSENESS: 1 / mean distance to every other node. Reach.
-#   - EIGENVECTOR: central if your neighbors are central. Influence.
+# "Most central" is meaningless on its own -- central BY WHICH MEASURE,
+# FOR WHICH QUESTION? Reach for:
+#   - DEGREE: how many neighbors. Local. "Who is busiest right now?"
+#   - BETWEENNESS: how often this node sits on a shortest path between
+#     others. Global. "Who is a chokepoint / bridge whose loss splits the
+#     network?" This is the one that finds load-bearing nodes.
+#   - CLOSENESS: 1 / mean distance to everyone. "Who can reach the whole
+#     network fastest?" (good for response / diffusion questions).
+#   - EIGENVECTOR: central if your neighbors are central (recursive).
+#     "Who sits in the well-connected core?" Prefer it over betweenness
+#     when you care about being embedded among important nodes, not about
+#     controlling the flow between them.
 
 # All four computed in one tidy table, so we can compare them directly.
+# Betweenness is the slow one: it needs all-pairs shortest paths, so on
+# 500 nodes expect this to take ~30-60s. It has NOT hung.
+#
+# WEIGHT DIRECTION (easy to get backwards): igraph reads `weights` as
+# DISTANCE -- a higher weight means a LONGER, harder-to-traverse edge. Our
+# `weight` here is already a distance-like cost, so passing it raw is right.
+# If your weight is a STRENGTH (ridership, volume -- higher = "closer"),
+# pass 1 / weight instead, the way case 09 builds cost = 1 / ridership.
+cat("🧪 Computing four centralities on 500 nodes (betweenness ~30-60s)...\n")
 cent <- tibble(
   node_id     = igraph::V(g)$name,
   kind        = igraph::V(g)$kind,
@@ -2959,6 +3011,9 @@ cent |> head()
 # Different measures rank the SAME node differently. The Spearman
 # correlation between two centrality vectors tells you how much the
 # two measures agree on the *order* of nodes (not their magnitudes).
+# The printed matrix is symmetric, with rows and columns in the SAME
+# order (degree, betweenness, closeness, eigenvector) -- read cell
+# (i, j) as "how much measures i and j agree on the ranking."
 
 corr_mat <- cent |>
   select(degree, betweenness, closeness, eigenvector) |>
@@ -3104,15 +3159,29 @@ print(f"✅ Loaded graph: {g.vcount()} vertices, {g.ecount()} edges.")
 
 # 1. Four centrality measures ################################################
 #
-# Each one captures a DIFFERENT intuition for "important":
-#   - DEGREE: how many neighbors. Local. Hub-detection.
-#   - BETWEENNESS: how often this node lies on a shortest path
-#     between two other nodes. Global. Bridge-detection.
-#   - CLOSENESS: 1 / mean distance to every other node. Reach.
-#   - EIGENVECTOR: a node is central if its neighbors are central.
-#     Recursive. Influence.
+# "Most central" is meaningless on its own -- central BY WHICH MEASURE,
+# FOR WHICH QUESTION? Reach for:
+#   - DEGREE: how many neighbors. Local. "Who is busiest right now?"
+#   - BETWEENNESS: how often this node sits on a shortest path between
+#     others. Global. "Who is a chokepoint / bridge whose loss splits the
+#     network?" This is the one that finds load-bearing nodes.
+#   - CLOSENESS: 1 / mean distance to everyone. "Who can reach the whole
+#     network fastest?" (good for response / diffusion questions).
+#   - EIGENVECTOR: a node is central if its neighbors are central
+#     (recursive). "Who sits in the well-connected core?" Prefer it over
+#     betweenness when you care about being embedded among important
+#     nodes, not about controlling the flow between them.
 
 # All four computed in one tidy table, so we can compare them directly.
+# Betweenness is the slow one: it needs all-pairs shortest paths, so on
+# 500 nodes expect this to take ~30-60s. It has NOT hung.
+#
+# WEIGHT DIRECTION (easy to get backwards): igraph reads `weights` as
+# DISTANCE -- a higher weight means a LONGER, harder-to-traverse edge. Our
+# `weight` here is already a distance-like cost, so passing it raw is right.
+# If your weight is a STRENGTH (ridership, volume -- higher = "closer"),
+# pass 1/weight instead, the way case 09 builds cost = 1/ridership.
+print("🧪 Computing four centralities on 500 nodes (betweenness ~30-60s)...")
 cent = pd.DataFrame({
     "node_id":      g.vs["name"],
     "kind":         g.vs["kind"],
@@ -3129,7 +3198,10 @@ print(cent.head())
 #
 # Different measures rank the SAME node differently. The Spearman
 # correlation between two centrality vectors tells you how much they
-# agree on the *order* of nodes (not their magnitudes).
+# agree on the *order* of nodes (not their magnitudes). The printed
+# matrix is symmetric, with rows and columns in the SAME order (degree,
+# betweenness, closeness, eigenvector) -- read cell (i, j) as "how much
+# measures i and j agree on the ranking."
 
 corr = cent[["degree", "betweenness", "closeness", "eigenvector"]].corr(method="spearman")
 print(corr.round(3))
@@ -3569,6 +3641,9 @@ print(top_btwn_dcs)
 # and track supply coverage as k grows from 0 to 15.
 
 dcs <- cent |> filter(tier == 2)
+# Seed once here (not inside run_strategy). Only the "random" strategy
+# draws; "out_degree" and "betweenness" are deterministic. Seeding at this
+# scope makes the whole script's random attacks reproducible run-to-run.
 set.seed(42)  # deterministic random-attack ordering
 
 run_strategy <- function(strategy, ks) {
@@ -3595,6 +3670,9 @@ results <- tibble(
   betweenness = run_strategy("betweenness", ks)
 )
 
+# Reading the table: each column is an attack strategy, each row a number
+# of removed DCs (k). LOWER coverage = MORE damage, so the strategy with
+# the smallest numbers is the most effective attack (compare across a row).
 results |> mutate(across(-k, ~round(., 3))) |> print()
 cat(sprintf("🧪 At k=10: random=%.3f  out_degree=%.3f  betweenness=%.3f\n",
             results$random[results$k == 10],
@@ -3736,6 +3814,10 @@ print(
 # and track supply coverage as k grows from 0 to 15.
 
 dcs = cent.query("tier == 2").copy()
+# One seeded generator, created once and reused across every run_strategy
+# call below. Only the "random" strategy draws from it; "out_degree" and
+# "betweenness" are deterministic. Because we seed once here (not inside the
+# function) the whole script's random attacks are reproducible run-to-run.
 rng = np.random.default_rng(42)
 
 def run_strategy(strategy: str, ks: list[int]) -> list[float]:
@@ -3763,6 +3845,9 @@ results = pd.DataFrame({
     "betweenness":  run_strategy("betweenness", ks),
 })
 
+# Reading the table: each column is an attack strategy, each row a number
+# of removed DCs (k). LOWER coverage = MORE damage, so the strategy with
+# the smallest numbers is the most effective attack (compare across a row).
 print(results.round(3))
 row10 = results.loc[results["k"] == 10].iloc[0]
 print(f"🧪 At k=10: random={row10['random']:.3f}  out_degree={row10['out_degree']:.3f}"
@@ -4156,12 +4241,23 @@ cat(sprintf("✅ Loaded DSM: %d components, %d dependency edges.\n",
 
 # 1. Community detection #####################################################
 #
-# Louvain and fast-greedy both want an undirected graph. We make an
-# undirected copy whose edges mean "i and j depend on each other,
-# in either direction." Standard DSM preprocessing.
+# Louvain and fast-greedy both want an undirected graph, so we collapse
+# each directed dependency "A depends on B" into a plain "A and B are
+# linked." Why it's OK here: community detection asks "which components
+# clump together?", and two parts that depend on each other belong in the
+# same cluster regardless of which way the arrow points. What we give up:
+# the direction itself -- we can no longer tell driver from dependent
+# within a cluster. Fine for grouping; keep direction if you cared about
+# what cascades when one part fails.
 
 g_undirected <- igraph::as.undirected(g, mode = "collapse")
 g_undirected
+
+# A quick word on MODULARITY, the score both algorithms maximize: it
+# measures how much more edge weight falls inside communities than you'd
+# expect at random. It runs roughly -0.5 to 1; ~0 means "no more clustered
+# than random", and > ~0.3 is usually a meaningful community structure.
+# We planted 8 modules, so recovering 8 at a healthy modularity is the win.
 
 # Louvain (igraph's `cluster_louvain`): greedy modularity optimization,
 # moves nodes between communities to maximize modularity score.
@@ -4293,12 +4389,23 @@ print(f"✅ Loaded DSM: {g.vcount()} components, {g.ecount()} dependency edges."
 
 # 1. Community detection #####################################################
 #
-# Louvain and fast-greedy both want an undirected graph. We make an
-# undirected copy whose edges represent "i and j depend on each other,
-# in either direction." This is the standard DSM preprocessing.
+# Louvain and fast-greedy both want an undirected graph, so we collapse
+# each directed dependency "A depends on B" into a plain "A and B are
+# linked." Why it's OK here: community detection asks "which components
+# clump together?", and two parts that depend on each other belong in the
+# same cluster regardless of which way the arrow points. What we give up:
+# the direction itself -- we can no longer tell driver from dependent
+# within a cluster. That's fine for grouping, but you'd keep direction if
+# you cared about, say, what cascades when one part fails.
 
 g_undirected = g.as_undirected(mode="collapse")
 print(g_undirected.summary())
+
+# A quick word on MODULARITY, the score both algorithms maximize: it
+# measures how much more edge weight falls inside communities than you'd
+# expect at random. It runs roughly -0.5 to 1; ~0 means "no more clustered
+# than random", and > ~0.3 is usually a meaningful community structure.
+# We planted 8 modules, so recovering 8 at a healthy modularity is the win.
 
 # Louvain (igraph's `community_multilevel`): greedy modularity
 # optimization, moves nodes between communities to maximize modularity.
@@ -4316,6 +4423,7 @@ print(f"📊 Fast-greedy found {len(fg)} modules. Modularity: {fg.modularity:.3f
 # Our synthetic data planted 8 modules. The Adjusted Rand Index (ARI)
 # measures how well two clusterings agree, corrected for chance:
 # 1.0 = perfect agreement, 0.0 = chance, < 0 = worse than chance.
+# (igraph ships no ARI, so we borrow sklearn's one function for it.)
 
 from sklearn.metrics import adjusted_rand_score
 true_module = np.array(g.vs["true_module"])
@@ -4558,6 +4666,16 @@ disagree.
    share of edges that are within-group). Show the same
    blocked/unblocked comparison still applies.
 
+### Choosing your blocking variable
+
+The hard part isn't the code — it's justifying the block. A clean rule:
+**your blocking variable is the confounder you most need to rule out.**
+Write your claim as "X relates to Y *beyond what Z explains*" — Z is your
+block. If a skeptic could say "that's just because of Z," put Z in the
+block. For a worked example of carrying a question and its controls
+through a report in prose, see
+[`docs/assignments/sample-report.md`](../../docs/assignments/sample-report.md).
+
 ### Report
 
 - **Question.** One sentence.
@@ -4683,10 +4801,24 @@ if __name__ == "__main__":
 #' weight), you need a NULL MODEL to know if the value you saw is
 #' "real" or just noise.
 #'
+#' What is a null model? It asks: what values would our statistic take
+#' if the effect we're testing did NOT exist? We build that "no-effect"
+#' world by shuffling labels many times and recomputing the statistic
+#' each time; that spread is the null distribution. If our observed
+#' value sits comfortably inside it, we can't tell it apart from chance
+#' ("fail to reject"); if it sits far out in the tail, we can.
+#'
 #' But — *random with respect to what?* If your network has community
 #' structure that you're not controlling for, shuffling labels
 #' everywhere gives you a too-easy null. The right comparison is
 #' often a BLOCK permutation: shuffle labels within community.
+#'
+#' If you know regression, a blocking variable is just a covariate you
+#' control for. Block permutation holds that confounder fixed (it
+#' shuffles labels only WITHIN each block) so you test the within-block
+#' signal you actually care about; the unblocked null controls for
+#' nothing, which is exactly why it looks "too significant" when
+#' neighborhoods are segregated.
 #'
 #' We'll do both, on a synthetic network engineered to make the two
 #' nulls disagree dramatically.
@@ -4759,6 +4891,10 @@ cat(sprintf("🧪 Unblocked null: mean = %+.4f  sd = %.4f  p = %.3f\n",
 # neighborhood-level composition. A more conservative null, because
 # some apparent "homophily" comes from the fact that A's and B's
 # already live in different neighborhoods.
+#
+# Stats analogy: block_by = "neighborhood" == "control for neighborhood".
+# We destroy only the within-neighborhood demo signal (what we're testing)
+# while holding the neighborhood composition (the confounder) fixed.
 
 null_blocked <- numeric(n_perm)
 for (i in seq_len(n_perm)) {
@@ -4824,14 +4960,27 @@ cat("\n🎉 Done. Move on to the case study report when you're ready.\n")
 The lab walked you through a key idea: when you compute a network
 statistic (homophily, assortativity, mean within-group edge weight),
 you need a NULL MODEL to know if the value you saw is "real" or just
-noise. The null model says "what would we expect if labels were
-random?"
+noise.
+
+What is a null model? It asks: what values would our statistic take if
+the effect we're testing did NOT exist? We build that "no-effect" world
+by shuffling labels many times and recomputing the statistic each time;
+that spread of shuffled values is the null distribution. If our real,
+observed value sits comfortably inside that spread, we can't tell it
+apart from chance ("fail to reject"); if it sits far out in the tail,
+we can.
 
 But — and this is the crucial part — *random with respect to what?*
 If your network has community structure that you're not controlling
 for, shuffling labels everywhere can give you a too-easy null. The
 right comparison is often a **block permutation**: shuffle labels
 within community.
+
+If you know regression, a blocking variable is just a covariate you
+control for. Block permutation holds that confounder fixed (it shuffles
+labels only WITHIN each block) so you test the within-block signal you
+actually care about; the unblocked null controls for nothing, which is
+exactly why it looks "too significant" when neighborhoods are segregated.
 
 We'll do both, on a synthetic network with planted demographic
 homophily AND planted neighborhood-demo correlation.
@@ -4904,6 +5053,10 @@ print(f"🧪 Unblocked null: mean = {null_unblocked.mean():+.4f}  "
 # neighborhood-level composition. A more conservative null, because
 # some apparent "homophily" comes from the fact that A's and B's
 # already live in different neighborhoods.
+#
+# Stats analogy: `block_by="neighborhood"` == "control for neighborhood".
+# We destroy only the within-neighborhood demo signal (what we're testing)
+# while holding the neighborhood composition (the confounder) fixed.
 
 null_blocked = np.empty(n_perm)
 for i in range(n_perm):
@@ -5403,8 +5556,12 @@ cat(sprintf("✅ Edge sample: %d edges.\n", nrow(edge_sample)))
 # geojson). sf is strict about NAs in coordinates.
 nodes_geo <- nodes |> filter(!is.na(x), !is.na(y))
 
-# Use Miami as our point of interest (POI). Project to a meter-based
-# CRS so the 200 km buffer is geometrically meaningful, then back.
+# Use Miami as our point of interest (POI). Why the projection dance?
+# EPSG:4326 is lat/lon in DEGREES, so a "200 km" buffer in degrees is
+# meaningless (a degree is a different distance at the equator vs Maine).
+# EPSG:3857 is in METERS, so we project there to draw the 200 km circle,
+# then project back to 4326 to match the node coordinates. Non-GIS
+# readers: switch to a meter ruler, measure, switch back.
 miami <- nodes_geo |> filter(geoid == "1208692158") |> slice(1)
 poi <- sf::st_as_sf(
   data.frame(x = miami$x, y = miami$y),
@@ -5445,9 +5602,12 @@ bind_rows(
 
 # 4. Which strategy best preserves avg_edgeweight? ###########################
 #
-# Preservation = max absolute deviation from the population time
-# series. Smaller deviation = better preservation. We pick the winner
-# by which strategy minimizes that max.
+# What makes one sample "better"? It tracks the true population most
+# closely. We score that as the max absolute deviation: over the whole
+# time series, the largest gap between the sample's average edge weight
+# and the population's. Smaller = better, and we pick the strategy that
+# minimizes it. (Worst-case gap is a simple, strict choice; you could
+# instead use mean-squared error or correlation for average-case fit.)
 
 max_abs_dev <- function(sample_stats) {
   merged <- inner_join(
@@ -5578,8 +5738,12 @@ print(f"✅ Edge sample: {len(edge_sample)} edges.")
 
 ## 2.3 Spatial buffer: keep edges where BOTH endpoints are within 200 km of Miami
 
-# Use Miami as our point of interest (POI). Project to a meter-based
-# CRS so the 200 km buffer is geometrically meaningful, then back.
+# Use Miami as our point of interest (POI). Why the projection dance?
+# EPSG:4326 is lat/lon in DEGREES, so a "200 km" buffer in degrees is
+# meaningless (a degree is a different distance at the equator vs Maine).
+# EPSG:3857 is in METERS, so we project there to draw the 200 km circle,
+# then project back to 4326 to match the node coordinates. Non-GIS
+# readers: switch to a meter ruler, measure, switch back.
 miami_geoid = "1208692158"
 miami_row = nodes[nodes["geoid"] == miami_geoid].iloc[0]
 poi = gpd.GeoSeries([Point(miami_row["x"], miami_row["y"])], crs="EPSG:4326")
@@ -5634,8 +5798,12 @@ print("💾 Saved sampling_compare.png")
 
 # 4. Which strategy best preserves average edgeweight? #######################
 #
-# We measure preservation as the *maximum absolute deviation* from
-# the population time series. Smaller = better preservation.
+# What makes one sample "better"? It tracks the true population most
+# closely. We score that as the *maximum absolute deviation*: over the
+# whole time series, the largest gap between the sample's average edge
+# weight and the population's. Smaller = better. (Worst-case gap is a
+# simple, strict choice; you could instead use mean-squared error or
+# correlation if you cared about average rather than worst-case fit.)
 
 def max_abs_dev(sample_stats):
     merged = stats[["date_time", "avg_edgeweight"]].merge(
@@ -5873,6 +6041,16 @@ zero.
    (e.g. R = 100, 500, 2000). Report how the CI width shrinks. Find
    the smallest R that gives a CI within 10% of the R=2000 width.
 
+### Decide your "threshold of practical significance" first
+
+Significance is not magnitude. Before you run anything, write down what size
+of change would actually make you act ("a >2% drop in weighted APL is worth a
+new settlement rail"). Then report your effect *against the baseline* — the
+script prints the baseline APL and the change as a % of it — so a tiny absolute
+number becomes interpretable. A CI that misses zero but sits below your
+threshold is "real but not worth it." For framing this in prose, see
+[`docs/assignments/sample-report.md`](../../docs/assignments/sample-report.md).
+
 ### Report
 
 - **Question.** One sentence: the intervention and the metric.
@@ -5978,6 +6156,13 @@ if __name__ == "__main__":
 #' replicate and compare distributions. The 95% CI on the difference
 #' tells you whether the effect is real.
 #'
+#' Why Poisson? Edge weights here are COUNTS (rides), and Poisson is the
+#' natural noise model for counts: its variance equals its mean, and it
+#' never goes negative the way a Normal draw could. Caveat worth knowing:
+#' if your counts are overdispersed (variance > mean, common in real
+#' data), Poisson understates uncertainty and a negative-binomial draw
+#' is better.
+#'
 #' We use a 180-station synthetic bikeshare network. The metric is
 #' weighted average path length (lower is better). The intervention
 #' adds a new direct edge between two stations that are currently
@@ -6059,7 +6244,14 @@ counterfactual_apls <- mc_apls(edges, nodes, R = R, extra = intervention, seed =
 
 diffs <- counterfactual_apls - baseline_apls
 ci    <- quantile(diffs, probs = c(0.025, 0.975))
-cat(sprintf("🧪 Counterfactual APL change (mean):     %+.5f\n", mean(diffs)))
+
+# Significance is not magnitude. A CI that misses zero says the effect is
+# real, not that it's big. Always read the change against the baseline APL
+# so a tiny absolute number (e.g. -0.001) becomes interpretable as a %.
+base_mean <- mean(baseline_apls)
+cat(sprintf("📊 Baseline weighted APL:                %.4f\n", base_mean))
+cat(sprintf("🧪 Counterfactual APL change (mean):     %+.5f  (%+.2f%% of baseline)\n",
+            mean(diffs), 100 * mean(diffs) / base_mean))
 cat(sprintf("🧪 95%% CI on the change:                 [%+.5f, %+.5f]\n",
             ci[[1]], ci[[2]]))
 cat(sprintf("📊 Effect significant at 95%%?            %s\n",
@@ -6124,6 +6316,12 @@ Poisson centered at observed values, R times, and look at the
 distribution of your metric. Apply the intervention to each replicate
 and compare distributions. The 95% CI on the difference tells you
 whether the effect is real.
+
+Why Poisson? Edge weights here are COUNTS (rides), and Poisson is the
+natural noise model for counts: its variance equals its mean, and it
+never goes negative the way a Normal draw could. Caveat worth knowing:
+if your counts are overdispersed (variance > mean, common in real data),
+Poisson understates uncertainty and a negative-binomial draw is better.
 
 We use a 180-station synthetic bikeshare network. The metric is
 weighted average path length (lower is better — fewer "hops" between
@@ -6207,7 +6405,14 @@ counterfactual_apls = mc_apls(edges, nodes, R=R, extra=intervention, seed=1)
 
 diffs = counterfactual_apls - baseline_apls
 ci_low, ci_high = np.quantile(diffs, [0.025, 0.975])
-print(f"🧪 Counterfactual APL change (mean):     {diffs.mean():+.5f}")
+
+# Significance is not magnitude. A CI that misses zero says the effect is
+# real, not that it's big. Always read the change against the baseline APL
+# so a tiny absolute number (e.g. -0.001) becomes interpretable as a %.
+base_mean = baseline_apls.mean()
+print(f"📊 Baseline weighted APL:                {base_mean:.4f}")
+print(f"🧪 Counterfactual APL change (mean):     {diffs.mean():+.5f}  "
+      f"({100 * diffs.mean() / base_mean:+.2f}% of baseline)")
 print(f"🧪 95% CI on the change:                 [{ci_low:+.5f}, {ci_high:+.5f}]")
 sig = ci_high < 0 or ci_low > 0
 print(f"📊 Effect significant at 95%?            {'True' if sig else 'False'}")
@@ -6597,6 +6802,14 @@ if __name__ == "__main__":
 #' @title Case Study 10 — GNN by Hand (R via reticulate)
 #' @author <your-name-here>
 #' @description
+#' First, what are we even producing? An EMBEDDING. Where centrality
+#' (case 04) gave each node a single number, an embedding gives each node
+#' a *vector* — a bundle of several numbers — that captures the node's
+#' structural neighborhood. Why not just use betweenness? Because a
+#' bundle of numbers carries far more about a node's surroundings than
+#' any one score, and it drops straight into a machine-learning model as
+#' features (exactly what case 11 does to predict disruptions).
+#'
 #' The case study lab walked you through a hand-computed forward pass.
 #' Here we do it on the same 6-node toy network — but from R. R has no
 #' mature Graph Neural Network library, so rather than re-derive the math
@@ -6653,8 +6866,11 @@ cat(sprintf("✅ Loaded tiny network: %d nodes, %d edges.\n",
 # Self-loops let each node "send a message to itself" so its own
 # features survive into the next layer. Symmetric normalization
 # D^{-1/2} A D^{-1/2} stops high-degree nodes from dominating their
-# neighbors. These two preprocessing tricks are the heart of a GCN — and
-# both come straight from functions.py via the `gcn` handle.
+# neighbors -- same intuition as degree-normalizing a count in stats:
+# divide out how connected a node is so the average isn't swamped by a
+# few hubs. Despite the scary notation it's just a rescaling trick.
+# These steps are the heart of a GCN -- both come straight from
+# functions.py via the `gcn` handle.
 
 A <- gcn$adjacency(nodes, edges, add_self_loops = TRUE)
 cat("A (with self-loops):\n")
@@ -6688,6 +6904,9 @@ W2 <- matrix(c( 0.6,  0.1, -0.4,
 #
 # H_{l+1} = ReLU(A_norm %*% H_l %*% W_l). The matmul-and-activate happens
 # inside gcn$gcn_layer(), the same numpy function example.py calls.
+# Why two layers? One layer mixes in each node's IMMEDIATE neighbors
+# (1 hop). Stacking a second layer mixes in neighbors-of-neighbors
+# (2 hops), so node 4 below can "see" both clusters it sits between.
 
 H1 <- gcn$gcn_layer(A_norm, X,  W1, activation = "relu")
 cat("H1 (after layer 1, ReLU):\n")
@@ -6774,6 +6993,14 @@ cat("\n🎉 Done. Move on to the case study report when you're ready.\n")
 ```python
 """Case Study 10 — GNN by Hand (Python track).
 
+First, what are we even producing? An EMBEDDING. Where centrality (case
+04) gave each node a single number, an embedding gives each node a
+*vector* -- a bundle of several numbers -- that captures the node's
+structural neighborhood. Why bother instead of just using betweenness?
+Because a bundle of numbers carries far more about a node's surroundings
+than any one score, and it drops straight into a machine-learning model
+as features (that's exactly what case 11 does to predict disruptions).
+
 The case study lab walked you through a hand-computed forward pass.
 Here we do it in pure numpy on the same 6-node toy network. No
 torch, no torch_geometric. Just the math.
@@ -6823,7 +7050,10 @@ print(f"✅ Loaded tiny network: {len(nodes)} nodes, {len(edges)} edges.")
 # Self-loops let each node "send a message to itself" so its own
 # features survive into the next layer. Symmetric normalization
 # D^{-1/2} A D^{-1/2} stops high-degree nodes from dominating their
-# neighbors. These two preprocessing tricks are the heart of a GCN.
+# neighbors -- same intuition as degree-normalizing a count in stats:
+# divide out how connected a node is so the average isn't swamped by a
+# few hubs. Despite the scary notation it's just a rescaling trick.
+# These two preprocessing steps are the heart of a GCN.
 
 A = adjacency(nodes, edges, add_self_loops=True)
 print("A (with self-loops):")
@@ -6860,6 +7090,9 @@ W2 = np.array([
 # 3. Forward pass ############################################################
 #
 # H_{l+1} = activation(A_norm @ H_l @ W_l). The activation is ReLU.
+# Why two layers? One layer mixes in each node's IMMEDIATE neighbors
+# (1 hop). Stacking a second layer mixes in neighbors-of-neighbors
+# (2 hops), so node 4 below can "see" both clusters it sits between.
 
 H1 = gcn_layer(A_norm, X,  W1, activation="relu")
 print("H1 (after layer 1, ReLU):")
@@ -7432,6 +7665,9 @@ cat("✅ Added 1-hop and 2-hop GNN embeddings of lag_rate.\n")
 # Join the suppliers table (tier, capacity, region, geo_risk) onto the
 # panel and one-hot encode region. XGBoost can take factors directly, but
 # we keep the encoding explicit so the feature columns are obvious.
+# We deliberately keep ALL region columns (no dropped reference level). A
+# linear model would have collinearity here, but tree models like XGBoost
+# don't care, and keeping every level makes the importance plot readable.
 
 dat <- panel |>
   left_join(suppliers, by = "supplier_id") |>
@@ -7506,12 +7742,24 @@ cat(sprintf("🧪 AUC, raw features only:           %.4f\n", raw_fit$auc))
 cat(sprintf("🧪 AUC, raw + lag:                   %.4f\n", lag_fit$auc))
 cat(sprintf("🧪 AUC, raw + lag + GNN (1+2 hop):   %.4f\n", gnn_fit$auc))
 
+# AUC in plain English: the probability the model scores a truly disrupted
+# supplier higher than a healthy one. 0.5 = coin flip, 1.0 = perfect.
+# How to read these: the raw-only model is your NON-NETWORK baseline.
+# Watch AUC climb as lag (history) and then GNN (structure) features are
+# added. For rare-event, noisy disruption prediction ~0.65+ is competitive
+# -- don't expect the 0.80+ you'd see on a clean churn model.
+
 
 # 6. Feature importance ######################################################
 #
 # What does the full model think the most important features are? A high
 # gain on `gnn_1hop` or `gnn_2hop` is the visible signature of the GNN
 # piece earning its keep.
+#
+# Heads-up: a feature can rank LOW here yet still raise AUC. Importance
+# counts how often the model splits on a feature; a GNN feature that adds
+# weak but INDEPENDENT signal can lift predictions without being split on
+# often. Low importance + real AUC lift = exactly that situation.
 
 print(gnn_fit$imp)
 
@@ -7636,7 +7884,10 @@ print("✅ Added 1-hop and 2-hop GNN embeddings of lag_rate.")
 # 3. Merge static features ###################################################
 
 panel = panel.merge(suppliers, on="supplier_id", how="left")
-# one-hot region (XGBoost can handle this directly but we keep it explicit)
+# one-hot region (XGBoost can handle this directly but we keep it explicit).
+# We deliberately keep ALL region columns (no drop_first). A linear model
+# would have collinearity here, but tree models like XGBoost don't care and
+# keeping every level makes the feature-importance plot below readable.
 panel = pd.concat([panel, pd.get_dummies(panel["region"], prefix="region")],
                   axis=1)
 
@@ -7682,12 +7933,24 @@ print(f"🧪 AUC, raw features only:           {auc_raw:.4f}")
 print(f"🧪 AUC, raw + lag:                   {auc_lag:.4f}")
 print(f"🧪 AUC, raw + lag + GNN (1+2 hop):   {auc_gnn:.4f}")
 
+# AUC in plain English: the probability the model scores a truly disrupted
+# supplier higher than a healthy one. 0.5 = coin flip, 1.0 = perfect.
+# How to read these: the raw-only model is your NON-NETWORK baseline.
+# Watch AUC climb as lag (history) and then GNN (structure) features are
+# added. For rare-event, noisy disruption prediction ~0.65+ is competitive
+# -- don't expect the 0.80+ you'd see on a clean churn model.
+
 
 # 6. Feature importance ######################################################
 #
 # What does the full model think the most important features are?
 # A high gain on `gnn_1hop` or `gnn_2hop` is the visible signature
 # of the GNN piece earning its keep.
+#
+# Heads-up: a feature can rank LOW here yet still raise AUC. Importance
+# counts how often the model splits on a feature; a GNN feature that adds
+# weak but INDEPENDENT signal can lift predictions without being split on
+# often. Low importance + real AUC lift = exactly that situation.
 
 imp = pd.DataFrame({
     "feature":    gnn_cols,
@@ -7929,6 +8192,17 @@ code/NN_<name>/
 Both `example.R` and `example.py` use **identical section headers in identical
 order**, so if you started a case in one language and want to switch, the
 section you were on is in the same place in the other file.
+
+## Which track should I pick?
+
+Pick the one that matches your background and stay on it. **The two tracks are
+equal, first-class citizens — not an "original" and a "bolted-on port."** The R
+and Python scripts are written line-for-line parallel and compute the *same
+Learning Check answers* (see the parity note at the bottom), so neither track is
+at any disadvantage for grading. R appears first in some prose only because the
+course began in R; the Python track is fully supported. New to both? R +
+tidyverse is gentle for non-programmers; Python is the easier landing if you
+already write Python or SQL.
 
 ## How to install
 

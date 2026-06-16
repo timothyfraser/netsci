@@ -72,7 +72,10 @@ print(f"✅ Loaded {len(edges)} trip rows and {len(stations)} stations.")
 #   - in `edges` it's called `start_code`
 #   - in `stations` it's called `code`
 # In pandas we say  left_on="start_code", right_on="code"  (or rename
-# `code` -> `start_code` first, which is what most pipelines do).
+# `code` -> `start_code` first, which is what most pipelines do). The names
+# say it plainly: left_on is the column in the LEFT (first) table, right_on
+# is the column in the RIGHT table. (R's dplyr writes the same idea as
+# by = c("start_code" = "code") -- left name = left table, right = right.)
 print(
     edges
     .merge(stations, left_on="start_code", right_on="code", how="left")

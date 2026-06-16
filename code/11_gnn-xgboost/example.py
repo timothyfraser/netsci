@@ -87,7 +87,10 @@ print("✅ Added 1-hop and 2-hop GNN embeddings of lag_rate.")
 # 3. Merge static features ###################################################
 
 panel = panel.merge(suppliers, on="supplier_id", how="left")
-# one-hot region (XGBoost can handle this directly but we keep it explicit)
+# one-hot region (XGBoost can handle this directly but we keep it explicit).
+# We deliberately keep ALL region columns (no drop_first). A linear model
+# would have collinearity here, but tree models like XGBoost don't care and
+# keeping every level makes the feature-importance plot below readable.
 panel = pd.concat([panel, pd.get_dummies(panel["region"], prefix="region")],
                   axis=1)
 
@@ -133,12 +136,24 @@ print(f"🧪 AUC, raw features only:           {auc_raw:.4f}")
 print(f"🧪 AUC, raw + lag:                   {auc_lag:.4f}")
 print(f"🧪 AUC, raw + lag + GNN (1+2 hop):   {auc_gnn:.4f}")
 
+# AUC in plain English: the probability the model scores a truly disrupted
+# supplier higher than a healthy one. 0.5 = coin flip, 1.0 = perfect.
+# How to read these: the raw-only model is your NON-NETWORK baseline.
+# Watch AUC climb as lag (history) and then GNN (structure) features are
+# added. For rare-event, noisy disruption prediction ~0.65+ is competitive
+# -- don't expect the 0.80+ you'd see on a clean churn model.
+
 
 # 6. Feature importance ######################################################
 #
 # What does the full model think the most important features are?
 # A high gain on `gnn_1hop` or `gnn_2hop` is the visible signature
 # of the GNN piece earning its keep.
+#
+# Heads-up: a feature can rank LOW here yet still raise AUC. Importance
+# counts how often the model splits on a feature; a GNN feature that adds
+# weak but INDEPENDENT signal can lift predictions without being split on
+# often. Low importance + real AUC lift = exactly that situation.
 
 imp = pd.DataFrame({
     "feature":    gnn_cols,

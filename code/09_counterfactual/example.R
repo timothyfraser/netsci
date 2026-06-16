@@ -13,6 +13,13 @@
 #' replicate and compare distributions. The 95% CI on the difference
 #' tells you whether the effect is real.
 #'
+#' Why Poisson? Edge weights here are COUNTS (rides), and Poisson is the
+#' natural noise model for counts: its variance equals its mean, and it
+#' never goes negative the way a Normal draw could. Caveat worth knowing:
+#' if your counts are overdispersed (variance > mean, common in real
+#' data), Poisson understates uncertainty and a negative-binomial draw
+#' is better.
+#'
 #' We use a 180-station synthetic bikeshare network. The metric is
 #' weighted average path length (lower is better). The intervention
 #' adds a new direct edge between two stations that are currently
@@ -94,7 +101,14 @@ counterfactual_apls <- mc_apls(edges, nodes, R = R, extra = intervention, seed =
 
 diffs <- counterfactual_apls - baseline_apls
 ci    <- quantile(diffs, probs = c(0.025, 0.975))
-cat(sprintf("🧪 Counterfactual APL change (mean):     %+.5f\n", mean(diffs)))
+
+# Significance is not magnitude. A CI that misses zero says the effect is
+# real, not that it's big. Always read the change against the baseline APL
+# so a tiny absolute number (e.g. -0.001) becomes interpretable as a %.
+base_mean <- mean(baseline_apls)
+cat(sprintf("📊 Baseline weighted APL:                %.4f\n", base_mean))
+cat(sprintf("🧪 Counterfactual APL change (mean):     %+.5f  (%+.2f%% of baseline)\n",
+            mean(diffs), 100 * mean(diffs) / base_mean))
 cat(sprintf("🧪 95%% CI on the change:                 [%+.5f, %+.5f]\n",
             ci[[1]], ci[[2]]))
 cat(sprintf("📊 Effect significant at 95%%?            %s\n",

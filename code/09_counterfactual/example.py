@@ -11,6 +11,12 @@ distribution of your metric. Apply the intervention to each replicate
 and compare distributions. The 95% CI on the difference tells you
 whether the effect is real.
 
+Why Poisson? Edge weights here are COUNTS (rides), and Poisson is the
+natural noise model for counts: its variance equals its mean, and it
+never goes negative the way a Normal draw could. Caveat worth knowing:
+if your counts are overdispersed (variance > mean, common in real data),
+Poisson understates uncertainty and a negative-binomial draw is better.
+
 We use a 180-station synthetic bikeshare network. The metric is
 weighted average path length (lower is better — fewer "hops" between
 stations, weighted by ridership). The intervention is adding a new
@@ -93,7 +99,14 @@ counterfactual_apls = mc_apls(edges, nodes, R=R, extra=intervention, seed=1)
 
 diffs = counterfactual_apls - baseline_apls
 ci_low, ci_high = np.quantile(diffs, [0.025, 0.975])
-print(f"🧪 Counterfactual APL change (mean):     {diffs.mean():+.5f}")
+
+# Significance is not magnitude. A CI that misses zero says the effect is
+# real, not that it's big. Always read the change against the baseline APL
+# so a tiny absolute number (e.g. -0.001) becomes interpretable as a %.
+base_mean = baseline_apls.mean()
+print(f"📊 Baseline weighted APL:                {base_mean:.4f}")
+print(f"🧪 Counterfactual APL change (mean):     {diffs.mean():+.5f}  "
+      f"({100 * diffs.mean() / base_mean:+.2f}% of baseline)")
 print(f"🧪 95% CI on the change:                 [{ci_low:+.5f}, {ci_high:+.5f}]")
 sig = ci_high < 0 or ci_low > 0
 print(f"📊 Effect significant at 95%?            {'True' if sig else 'False'}")
