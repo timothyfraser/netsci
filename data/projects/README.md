@@ -31,9 +31,15 @@ Each dataset folder contains:
 | [`opensource-deps`](opensource-deps/) | 400 | 2,251 | ✓ | ✓ | — | — | An open-source package dependency graph. |
 | [`trade-commodity`](trade-commodity/) | 140 | 1,210 | ✓ | ✓ | — | ✓ | International commodity trade across a supply shock. |
 | [`reorg-comms`](reorg-comms/) | 250 | 7,926 | ✓ | ✓ | — | ✓ | Corporate communication before / during / after a reorg + layoff. |
+| [`satellite-constellation`](satellite-constellation/) | 298 | 733 | — | ✓ | — | — | Multi-operator LEO satellite comms: orbits, inter-satellite links, ground stations. |
+| [`drone-components`](drone-components/) | 183 | 617 | ✓ | ✓ | — | — | A drone's functional component + software dependency graph (what needs what to fly). |
+| [`transit-multimodal`](transit-multimodal/) | 152 | 384 | — | ✓ | — | — | A city's bus + metro network with neighborhood nodes (hub-spoke + ring). |
 
-All 12 are larger than the lab datasets, mostly weighted, and several are temporal
-(`period`/`day`/`hour`/`week` columns), bipartite, or multimodal (`kind` column).
+All 15 are larger than the lab datasets, mostly weighted, and several are temporal
+(`period`/`day`/`hour`/`week` columns), bipartite, or multimodal (`kind`/`mode`
+columns). `satellite-constellation` and `transit-multimodal` are multi-layer (link
+type / transit mode); `transit-multimodal` is purpose-built for counterfactual
+"add-one-edge" connectivity analysis.
 
 ## How to use them
 

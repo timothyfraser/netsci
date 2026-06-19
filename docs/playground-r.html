@@ -462,6 +462,9 @@
             <option value="opensource-deps">Open-Source Deps (400 nodes)</option>
             <option value="trade-commodity">Trade · Commodity (140 nodes)</option>
             <option value="reorg-comms">Reorg Comms (250 nodes)</option>
+            <option value="satellite-constellation">Satellite Constellation (298 nodes)</option>
+            <option value="drone-components">Drone Components (183 nodes)</option>
+            <option value="transit-multimodal">Transit · Multimodal (152 nodes)</option>
           </optgroup>
         </select>
         <input type="file" id="file-upload" multiple accept=".csv,.tsv,.txt,.json" style="display: none;">
@@ -562,6 +565,9 @@ const SAMPLE_CONFIGS = {
   'opensource-deps':      { proj: true, files: ['opensource-deps-nodes.csv', 'opensource-deps-edges.csv'], title: 'Open-Source Deps', directed: 'TRUE',  weight: 'import_count' },
   'trade-commodity':      { proj: true, files: ['trade-commodity-nodes.csv', 'trade-commodity-edges.csv'], title: 'Trade Commodity', directed: 'TRUE',  weight: 'tonnes' },
   'reorg-comms':          { proj: true, files: ['reorg-comms-nodes.csv', 'reorg-comms-edges.csv'], title: 'Reorg Comms', directed: 'TRUE',  weight: 'message_count' },
+  'satellite-constellation': { proj: true, files: ['satellite-constellation-nodes.csv', 'satellite-constellation-edges.csv'], title: 'Satellite Constellation', directed: 'FALSE', weight: 'capacity_gbps' },
+  'drone-components':     { proj: true, files: ['drone-components-nodes.csv', 'drone-components-edges.csv'], title: 'Drone Components', directed: 'TRUE',  weight: 'coupling_strength' },
+  'transit-multimodal':   { proj: true, files: ['transit-multimodal-nodes.csv', 'transit-multimodal-edges.csv', 'transit-multimodal-lines.csv'], title: 'Transit Multimodal', directed: 'FALSE', weight: 'capacity' },
 };
 function sampleSnippet(key) {
   const cfg = SAMPLE_CONFIGS[key];
