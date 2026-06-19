@@ -86,7 +86,7 @@
   },
 
   "surveys": [
-    { "key": "intro-survey", "name": "Intro Course Survey",       "icon": "📝", "group": "participation", "module": "getting-started", "week": 1, "url": null },
+    { "key": "intro-survey", "name": "Intro Course Survey",       "icon": "📝", "group": "participation", "module": "getting-started", "week": 1, "url": "https://docs.google.com/forms/d/e/1FAIpQLSdC_XqTxuBI-NDTXiEzU65Z0hH2oO0S2HsHbuKYwTtjRAeU6w/viewform?usp=sharing&ouid=116043209775835785592" },
     { "key": "midterm-eval", "name": "Midterm Course Evaluation", "icon": "📋", "group": "participation", "module": "week2",           "week": 2, "url": null },
     { "key": "final-eval",   "name": "Final Course Evaluation",   "icon": "📚", "group": "participation", "module": "week3",           "week": 3, "url": null }
   ],
@@ -113,6 +113,7 @@
       { "icon": "📖", "label": "Glossary",            "desc": "Every term, defined in plain language.", "path": "help/glossary.html" },
       { "icon": "❓", "label": "FAQ & Troubleshooting","desc": "Common errors and how to get unstuck fast.", "path": "help/faq.html" },
       { "icon": "☎️", "label": "Office Hours",        "desc": "Book one of your three required virtual sessions.", "path": "help/office-hours.html" },
+      { "icon": "💬", "label": "Ed Discussion",       "desc": "Ask questions and connect with classmates and the instructor.", "url": "https://edstem.org/us/courses/99843" },
       { "icon": "📁", "label": "Course GitHub Repo",  "desc": "All the example.R / example.py code and dataset folders.", "url": "https://github.com/timothyfraser/netsci" }
     ]}
   ],

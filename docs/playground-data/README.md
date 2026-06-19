@@ -14,6 +14,8 @@ WASM virtual filesystem when you pick a sample from the loader dropdown.
 | `lakeside` | 15 | 19 | The 15-station Lakeside Bikeshare network from the **Counterfactual Monte Carlo** lab. Edges weighted by Q1 ridership. |
 | `riverdale` | 18 | 21 | The 18-station Riverdale Metro & Bus network from the **Centrality & Criticality** lab. Edges weighted by typical riders/day. |
 | `supply-chain` | 16 | 30 | The 16-factory supply chain from the **Network Joins** lab. Three tiers (Tier 1 final assembly, Tier 2 subassembly, Tier 3 raw). Volume-weighted shipment lanes. |
+| `amazon-last-mile` | 313 | 2,142 | **Project dataset.** One week of package flow, hubs → stations → zones. Directed, weighted (`packages`), temporal (`day`). Mirrored from `data/projects/amazon-last-mile/`. |
+| `uber-manhattan` | 370 | 3,000 | **Project dataset.** Bipartite drivers ↔ riders for one day downtown. Weighted by `fare`; ships a `zones.csv` lookup. Mirrored from `data/projects/uber-manhattan/`. |
 
 ## Columns
 

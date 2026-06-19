@@ -1,0 +1,26 @@
+zone_id,name,neighborhood,avenue,street,x,y,median_income,nightlife
+Z01,FiDi,Financial District,3,1,2.88,1.09,156437,0
+Z02,Battery Park,Battery Park City,1,1,0.77,0.84,168524,0
+Z03,Tribeca,Tribeca,2,2,1.96,2.0,171822,0
+Z04,Civic Center,Civic Center,4,2,4.11,2.09,105175,0
+Z05,Chinatown,Chinatown,5,3,5.14,3.06,74728,0
+Z06,Two Bridges,Two Bridges,6,2,6.04,1.88,58925,0
+Z07,Lower East Side,Lower East Side,6,4,5.99,3.98,84027,1
+Z08,SoHo,SoHo,3,4,3.15,3.98,158352,0
+Z09,Little Italy,Little Italy,4,4,3.96,4.06,115573,0
+Z10,Nolita,Nolita,5,4,5.05,4.05,147123,1
+Z11,Hudson Square,Hudson Square,2,5,1.95,4.94,164133,0
+Z12,Greenwich Vlg,Greenwich Village,3,6,3.07,6.14,151689,0
+Z13,West Village,West Village,2,6,1.9,5.9,167088,1
+Z14,East Village,East Village,6,6,6.09,6.07,103204,1
+Z15,NoHo,NoHo,4,6,4.03,6.01,144475,0
+Z16,Bowery,Bowery,5,5,5.1,5.03,106749,0
+Z17,Meatpacking,Meatpacking,1,7,1.01,7.03,170631,1
+Z18,Chelsea,Chelsea,2,8,1.83,7.96,157650,0
+Z19,Flatiron,Flatiron,4,8,3.92,7.97,151637,0
+Z20,Union Square,Union Square,4,7,3.9,7.12,158959,0
+Z21,Gramercy,Gramercy,5,8,4.96,8.02,137737,0
+Z22,Kips Bay,Kips Bay,6,8,6.09,8.1,126489,0
+Z23,Murray Hill,Murray Hill,6,9,5.94,9.1,135810,0
+Z24,Stuy Town,Stuyvesant Town,7,7,6.85,6.86,114669,0
+ZJFK,JFK Airport,JFK Airport,12,-6,14.0,-6.0,,0

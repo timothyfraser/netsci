@@ -404,6 +404,10 @@
           <option value="lakeside">Lakeside Bikeshare (15 nodes)</option>
           <option value="riverdale">Riverdale Metro (18 nodes)</option>
           <option value="supply-chain">Supply Chain (16 factories)</option>
+          <optgroup label="Project datasets (larger)">
+            <option value="amazon-last-mile">Amazon Last-Mile (313 nodes)</option>
+            <option value="uber-manhattan">Uber Manhattan (370 nodes)</option>
+          </optgroup>
         </select>
         <input type="file" id="file-upload" multiple accept=".csv,.tsv,.txt,.json" style="display: none;">
         <button class="pg-btn" id="btn-upload">⬆ Upload CSV</button>
@@ -496,9 +500,39 @@ const SAMPLE_CONFIGS = {
   lakeside:      { files: ['lakeside-nodes.csv',      'lakeside-edges.csv'],      title: 'Lakeside Bikeshare'         , directed: 'False' },
   riverdale:     { files: ['riverdale-nodes.csv',     'riverdale-edges.csv'],     title: 'Riverdale Metro'            , directed: 'False' },
   'supply-chain':{ files: ['supply-chain-nodes.csv',  'supply-chain-edges.csv'],  title: 'Supply Chain'               , directed: 'True'  },
+  'amazon-last-mile': { files: ['amazon-last-mile-nodes.csv', 'amazon-last-mile-edges.csv'], title: 'Amazon Last-Mile', directed: 'True' },
+  'uber-manhattan':   { files: ['uber-manhattan-nodes.csv', 'uber-manhattan-edges.csv', 'uber-manhattan-zones.csv'], title: 'Uber Manhattan', directed: 'False' },
 };
 function sampleSnippet(key) {
   const cfg = SAMPLE_CONFIGS[key];
+  if (key === 'amazon-last-mile') {
+    return `# ${cfg.title} loaded (directed, weighted, temporal).
+import pandas as pd, networkx as nx
+nodes = pd.read_csv("amazon-last-mile-nodes.csv")
+edges = pd.read_csv("amazon-last-mile-edges.csv")
+# Package flow hub -> station -> zone, one row per (origin, dest, day).
+G = nx.from_pandas_edgelist(edges, source="from_id", target="to_id",
+                            edge_attr=True, create_using=nx.MultiDiGraph)
+for _, r in nodes.iterrows():
+    G.nodes[r.node_id].update(r.to_dict())
+print("Nodes:", G.number_of_nodes(), "Edges:", G.number_of_edges())
+# Tip: each node has a 'kind' (hub/station/zone); zones carry median_income.
+`;
+  }
+  if (key === 'uber-manhattan') {
+    return `# ${cfg.title} loaded (bipartite, weighted).
+import pandas as pd, networkx as nx
+nodes = pd.read_csv("uber-manhattan-nodes.csv")
+edges = pd.read_csv("uber-manhattan-edges.csv")
+zones = pd.read_csv("uber-manhattan-zones.csv")  # lookup: join on *_zone columns
+# Bipartite drivers <-> riders; rides weighted by fare (repeat pairs allowed).
+G = nx.from_pandas_edgelist(edges, source="driver_id", target="rider_id",
+                            edge_attr=True, create_using=nx.MultiGraph)
+for _, r in nodes.iterrows():
+    G.nodes[r.node_id].update(r.to_dict())
+print("Nodes:", G.number_of_nodes(), "Edges:", G.number_of_edges())
+`;
+  }
   if (key === 'supply-chain') {
     return `# ${cfg.title} loaded.
 import pandas as pd, networkx as nx
