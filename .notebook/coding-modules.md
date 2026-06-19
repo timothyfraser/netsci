@@ -1,10 +1,10 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-19 02:55 UTC_
+_Auto-generated NotebookLM source · 2026-06-19 10:41 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
-**81 files included.**
+**121 files included.**
 
 ---
 
@@ -8776,9 +8776,19 @@ Each dataset folder contains:
 |---|---:|---:|:--:|:--:|:--:|:--:|---|
 | [`amazon-last-mile`](amazon-last-mile/) | 313 | 2,142 | ✓ | ✓ | — | ✓ | A week of package flow: hubs → stations → delivery zones. |
 | [`uber-manhattan`](uber-manhattan/) | 370 | 3,000 | — | ✓ | ✓ | ✓ | A day of driver↔rider ride-matching across downtown Manhattan. |
+| [`semiconductor-supply`](semiconductor-supply/) | 368 | 739 | ✓ | ✓ | — | — | Multi-tier global chip supply chain, raw materials → products. |
+| [`aerospace-components`](aerospace-components/) | 300 | 777 | ✓ | ✓ | — | — | An aircraft's bill-of-materials + supplier network. |
+| [`mutualaid-quake`](mutualaid-quake/) | 250 | 2,935 | ✓ | ✓ | — | ✓ | Neighborhood mutual aid before / during / after an earthquake. |
+| [`financial-contagion`](financial-contagion/) | 220 | 1,701 | ✓ | ✓ | — | ✓ | Interbank exposure network across a financial crisis. |
+| [`airline-delays`](airline-delays/) | 200 | 2,244 | ✓ | ✓ | — | ✓ | Domestic route network with delay propagation over a day. |
+| [`power-grid`](power-grid/) | 300 | 422 | — | ✓ | — | — | A regional electrical transmission grid. |
+| [`campus-contact`](campus-contact/) | 300 | 3,699 | — | ✓ | — | ✓ | Campus face-to-face contact network during an outbreak. |
+| [`opensource-deps`](opensource-deps/) | 400 | 2,251 | ✓ | ✓ | — | — | An open-source package dependency graph. |
+| [`trade-commodity`](trade-commodity/) | 140 | 1,210 | ✓ | ✓ | — | ✓ | International commodity trade across a supply shock. |
+| [`reorg-comms`](reorg-comms/) | 250 | 7,926 | ✓ | ✓ | — | ✓ | Corporate communication before / during / after a reorg + layoff. |
 
-*More datasets are on the way (semiconductor & aerospace supply chains, mutual-aid
-during a disaster, financial contagion, airline delays, power grid, and more).*
+All 12 are larger than the lab datasets, mostly weighted, and several are temporal
+(`period`/`day`/`hour`/`week` columns), bipartite, or multimodal (`kind` column).
 
 ## How to use them
 
@@ -8871,6 +8881,1098 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+```
+
+---
+
+## `data/projects/aerospace-components/README.md`
+
+# aerospace-components
+
+*The bill-of-materials and supplier network behind one commercial aircraft
+program — detail parts and firms roll up through sub-assemblies into major
+systems.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Directed (supply / build flow: detail parts & suppliers → final assembly) |
+| **Weights** | Weighted (`qty_per_aircraft` — units installed per airframe) |
+| **Modality** | Multimodal — 2 node kinds (`part` across BOM tiers 1–4, `supplier`) |
+| **Temporal** | No — a single program snapshot |
+| **Nodes** | 300 (258 part + 42 supplier) |
+| **Edges** | 777 (399 `is_part_of` roll-ups + 378 `supplies`) |
+| **Files** | `nodes.csv`, `edges.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+"Program X" is a stylized commercial-aircraft bill of materials. There are two
+kinds of node:
+
+- **`part`** — components and assemblies, with a `tier` giving BOM depth:
+  tier 1 = major system assemblies, tier 2 = sub-assemblies, tier 3 = components,
+  tier 4 = detail parts (fasteners, seals, fittings, bushings);
+- **`supplier`** — firms that make or provide parts.
+
+Edges are directed and point *up the build* toward the final airframe:
+
+- `supplies` — a firm supplies a part (`supplier → part`);
+- `is_part_of` — a deeper part rolls up into the assembly above it
+  (`child part → parent part`).
+
+Each edge carries `qty_per_aircraft` (the install quantity, an edge weight).
+Parts carry a `system` (engine, avionics, fuselage, landing_gear, hydraulics,
+interior), a `safety_critical` flag, a `single_source` flag, a `defect_rate`, and
+a `cert_level`. Suppliers carry a `supplier_region` and a `defect_rate`.
+
+This is a dependency-and-risk network. It rewards students who trace
+dependencies *through* the BOM rather than counting connections. Some questions
+to chew on:
+
+- Which node, if it failed, would ground the most safety-critical assemblies?
+  Would degree point you to it, or do you need to trace the build paths and run a
+  knock-out / criticality analysis? Are the biggest suppliers the riskiest ones?
+- Some safety-critical parts look dual-sourced. Are they *actually* redundant, or
+  does the apparent redundancy collapse a hop or two upstream?
+- Are defect rates spread evenly, or do they cluster — and if they cluster, by
+  what (tier, system, region, a particular broker)? Does the pattern survive
+  controlling for tier?
+- Where does the heaviest certification burden sit, and is that the same place as
+  the program's structural weak point?
+
+> **Note.** The interesting findings here are deliberately *not* documented. "Deep
+> parts have more parents" is the starting point, not a finding. Push past it —
+> degree and a single sourcing column will both mislead you.
+
+## `nodes.csv`
+
+One row per node. Supplier rows leave the part-only columns (`tier`, `system`,
+`cert_level`) blank; part rows leave `supplier_region` blank.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique key. `A1##`/`A2###` assembly parts, `C3###`/`C4###` components & detail parts, `S###` suppliers. Referenced by edges. | character | `A117`, `A2014`, `C4004`, `S031` |
+| `kind` | Node kind | Whether the node is a part or a supplier firm. | character | `part`, `supplier` |
+| `tier` | BOM tier | Build depth for parts: 1 = major assembly … 4 = detail part. Blank for suppliers. | integer | `1`, `3`, `4` |
+| `system` | Aircraft system | Which system the part belongs to (blank for suppliers). | character | `engine`, `hydraulics`, `avionics` |
+| `safety_critical` | Safety-critical flag | 1 if failure of this part is flight-safety relevant. | integer | `0`, `1` |
+| `single_source` | Single-source flag | 1 if the part has only one qualified supplier. | integer | `0`, `1` |
+| `supplier_region` | Supplier region | Home region of the supplier firm (blank for parts). | character | `USA`, `Europe`, `Japan`, `Mexico`, `China`, `India` |
+| `defect_rate` | Defect rate | Observed fraction of units rejected / nonconforming. | double | `0.0029`, `0.0271`, `0.0807` |
+| `cert_level` | Certification level | Highest certification the part is built to (blank for suppliers). | character | `standard`, `DO-178C`, `AS9100`, `NADCAP` |
+| `label` | Display name | Human-readable label. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Hydraulics Major Assy 17`, `Supplier 031 (Europe)` |
+
+## `edges.csv`
+
+One row per supply or roll-up relationship. Directed toward the final assembly.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | Source node ID | The supplier, or the deeper (child) part. | character | `S032`, `C4004` |
+| `to_id` | Target node ID | The supplied part, or the parent assembly it rolls into. | character | `A2037`, `C3083` |
+| `qty_per_aircraft` | Quantity per aircraft | Units of `from_id` installed per airframe (the edge weight). | integer | `10`, `22`, `120` |
+| `relation` | Relation type | `supplies` (firm → part) or `is_part_of` (child part → parent). | character | `supplies`, `is_part_of` |
+
+## Load it
+
+```bash
+Rscript data/projects/aerospace-components/load.R     # R    (igraph)
+python  data/projects/aerospace-components/load.py     # Python (python-igraph)
+```
+
+Both build a directed, weighted `igraph` graph and print a one-screen summary. In
+the [R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**aerospace-components** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/aerospace-components>
+
+---
+
+## `data/projects/aerospace-components/_generate.py`
+
+```python
+"""Generate the `aerospace-components` project network (deterministic).
+
+A bill-of-materials + supplier network for one commercial aircraft program.
+Two node kinds:
+  - part      components and assemblies, with a tier 1..4 BOM depth
+              (1 = final-assembly-level, 4 = small detail parts/fasteners/seals)
+  - supplier  firms that make / provide parts
+
+Edges are directed `supplies` / `is-part-of` relations pointing UP the build
+toward the final assembly:
+  - supplier -> part   (a firm supplies a part)
+  - part(child, deeper tier) -> part(parent, shallower tier)  (sub-assembly
+    rolls up into its parent assembly)
+The edge weight is `qty_per_aircraft` (units installed per airframe).
+
+Node attributes: kind, tier, system, safety_critical, single_source,
+supplier_region, defect_rate, cert_level, label.
+
+Design parameters (the only record of the planted structure):
+  - NAIL_SUPPLIER: a tiny tier-3/4 fastener/seal supplier sits on the build path
+    of MULTIPLE safety-critical assemblies. Low degree, high betweenness, and
+    single_source -- the "for want of a nail" hidden critical path.
+  - FAKE_DUAL: a safety-critical part has TWO apparent direct suppliers, but
+    BOTH draw their key sub-part from the SAME upstream sub-supplier, so the
+    redundancy is an illusion (visible only 2 hops up).
+  - COUNTERFEIT_BROKER: parts sourced through one broker/region carry an
+    elevated defect_rate and fan out across several systems.
+  - CERT_ON_PATH: high cert_level concentrates on the critical (nail) path.
+
+Run:
+    python data/projects/aerospace-components/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+SYSTEMS = ["engine", "avionics", "fuselage", "landing_gear", "hydraulics", "interior"]
+REGIONS = ["USA", "Europe", "Japan", "Mexico", "China", "India"]
+CERTS = ["standard", "DO-178C", "AS9100", "NADCAP"]
+
+# BOM shape: counts of parts per tier (tier1 shallow .. tier4 deep)
+N_T1 = 18     # major assemblies (one+ per system)
+N_T2 = 60     # sub-assemblies
+N_T3 = 110    # components
+N_T4 = 70     # detail parts (fasteners, seals, fittings)
+N_SUPPLIERS = 42
+
+# --- planted parameters -----------------------------------------------------
+COUNTERFEIT_REGION = "China"     # broker region with elevated defect rate
+COUNTERFEIT_BROKER_EXTRA = 0.045  # added mean defect_rate for broker parts
+BASE_DEFECT = 0.012
+CERT_PATH_BONUS = 2              # cert-level steps added on the critical path
+N_SAFETY_VIA_NAIL = 7           # how many safety-critical assemblies the nail feeds
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    rows = []   # node rows
+
+    # ----- tier-1 major assemblies (one per system, then extras) -----------
+    t1 = []
+    for i in range(N_T1):
+        sysn = SYSTEMS[i % len(SYSTEMS)]
+        pid = f"A1{i+1:02d}"
+        t1.append(pid)
+        rows.append({"node_id": pid, "kind": "part", "tier": 1, "system": sysn,
+                     "safety_critical": int(sysn in ("engine", "landing_gear", "hydraulics")),
+                     "single_source": 0, "supplier_region": pd.NA,
+                     "defect_rate": pd.NA, "cert_level": pd.NA,
+                     "label": f"{sysn.title()} Major Assy {i+1:02d}"})
+
+    # ----- tier-2 sub-assemblies -------------------------------------------
+    t2 = []
+    for i in range(N_T2):
+        sysn = SYSTEMS[rng.integers(0, len(SYSTEMS))]
+        pid = f"A2{i+1:03d}"
+        t2.append(pid)
+        rows.append({"node_id": pid, "kind": "part", "tier": 2, "system": sysn,
+                     "safety_critical": int(rng.random() < 0.35 and
+                                            sysn in ("engine", "landing_gear", "hydraulics", "avionics")),
+                     "single_source": 0, "supplier_region": pd.NA,
+                     "defect_rate": pd.NA, "cert_level": pd.NA,
+                     "label": f"{sysn.title()} Sub-Assy {i+1:03d}"})
+
+    # ----- tier-3 components ------------------------------------------------
+    t3 = []
+    for i in range(N_T3):
+        sysn = SYSTEMS[rng.integers(0, len(SYSTEMS))]
+        pid = f"C3{i+1:03d}"
+        t3.append(pid)
+        rows.append({"node_id": pid, "kind": "part", "tier": 3, "system": sysn,
+                     "safety_critical": int(rng.random() < 0.25),
+                     "single_source": 0, "supplier_region": pd.NA,
+                     "defect_rate": pd.NA, "cert_level": pd.NA,
+                     "label": f"{sysn.title()} Component {i+1:03d}"})
+
+    # ----- tier-4 detail parts (fasteners, seals, fittings) ----------------
+    t4 = []
+    detail_kinds = ["fastener", "seal", "fitting", "bushing", "o_ring", "bolt", "rivet"]
+    for i in range(N_T4):
+        sysn = SYSTEMS[rng.integers(0, len(SYSTEMS))]
+        pid = f"C4{i+1:03d}"
+        t4.append(pid)
+        dk = detail_kinds[i % len(detail_kinds)]
+        rows.append({"node_id": pid, "kind": "part", "tier": 4, "system": sysn,
+                     "safety_critical": int(rng.random() < 0.15),
+                     "single_source": int(rng.random() < 0.45),
+                     "supplier_region": pd.NA, "defect_rate": pd.NA,
+                     "cert_level": pd.NA, "label": f"{dk.title()} {i+1:03d}"})
+
+    # ----- suppliers --------------------------------------------------------
+    sup = []
+    for i in range(N_SUPPLIERS):
+        reg = rng.choice(REGIONS, p=np.array([0.34, 0.26, 0.12, 0.12, 0.10, 0.06]))
+        sid = f"S{i+1:03d}"
+        sup.append(sid)
+        rows.append({"node_id": sid, "kind": "supplier", "tier": pd.NA,
+                     "system": pd.NA, "safety_critical": 0,
+                     "single_source": 0, "supplier_region": reg,
+                     "defect_rate": pd.NA, "cert_level": pd.NA,
+                     "label": f"Supplier {i+1:03d} ({reg})"})
+
+    nodes = pd.DataFrame(rows)
+    region_of = dict(zip(nodes.node_id, nodes.supplier_region))
+    sysd = dict(zip(nodes.node_id, nodes.system))
+    sc = dict(zip(nodes.node_id, nodes.safety_critical))
+
+    eds = []
+
+    def add_edge(frm, to, qty, rel):
+        eds.append({"from_id": frm, "to_id": to,
+                    "qty_per_aircraft": int(max(qty, 1)), "relation": rel})
+
+    # ---- BOM roll-up: deeper tier -> shallower tier -----------------------
+    # each tier-2 rolls into 1 tier-1 (prefer same system)
+    for p in t2:
+        parents = [a for a in t1 if sysd[a] == sysd[p]] or t1
+        add_edge(p, rng.choice(parents), rng.integers(1, 6), "is_part_of")
+    # each tier-3 rolls into 1-2 tier-2
+    for p in t3:
+        cand = [a for a in t2 if sysd[a] == sysd[p]] or t2
+        for par in rng.choice(cand, size=int(rng.integers(1, 3)), replace=False):
+            add_edge(p, par, rng.integers(1, 12), "is_part_of")
+    # each tier-4 rolls into 1-3 tier-3
+    for p in t4:
+        cand = [a for a in t3 if sysd[a] == sysd[p]] or t3
+        for par in rng.choice(cand, size=int(rng.integers(1, 4)), replace=False):
+            add_edge(p, par, rng.integers(2, 40), "is_part_of")
+
+    # reserve the four planted suppliers so the default wiring never touches
+    # them (keeps the nail tiny and the fake-dual pair clean).
+    nail_supplier = sup[0]
+    sup_a, sup_b, shared_subsupplier = sup[1], sup[2], sup[3]
+    reserved = {nail_supplier, sup_a, sup_b, shared_subsupplier}
+    open_sup = [s for s in sup if s not in reserved]
+    # the nail supplier is deliberately NOT in the broker region (keep stories
+    # separable); give it an ordinary region.
+    nodes.loc[nodes.node_id == nail_supplier, "supplier_region"] = "USA"
+    region_of[nail_supplier] = "USA"
+
+    # ---- suppliers -> parts (who makes what) ------------------------------
+    # default: each non-trivial part has 1-2 suppliers (dual-source common)
+    part_ids = t1 + t2 + t3 + t4
+    supplied_by = {}
+    for p in part_ids:
+        n_sup = 1 if rng.random() < 0.5 else 2
+        chosen = list(rng.choice(open_sup, size=n_sup, replace=False))
+        supplied_by[p] = chosen
+        for s in chosen:
+            add_edge(s, p, rng.integers(1, 20), "supplies")
+
+    # =========================================================================
+    # PLANTED (a): the "nail" -- a tiny tier-4 supplier on many critical paths
+    # =========================================================================
+    # pick a small tier-4 seal/fastener part and make ONE supplier its sole
+    # source; that part rolls up into several safety-critical assemblies.
+    nail_part = t4[3]                         # a single detail part
+    nodes.loc[nodes.node_id == nail_part, "single_source"] = 1
+    # the nail supplier ONLY makes the nail part (low degree). Clear any prior
+    # suppliers of the nail part, then set the sole source.
+    eds = [e for e in eds if not (e["relation"] == "supplies" and e["to_id"] == nail_part)]
+    add_edge(nail_supplier, nail_part, 120, "supplies")
+    supplied_by[nail_part] = [nail_supplier]
+    # route the nail part up into N safety-critical tier-3 components that each
+    # belong to a DIFFERENT safety-critical assembly chain
+    # ensure targets are (or become) safety_critical and roll into sc tier-2/1
+    targets = list(rng.choice(t3, size=N_SAFETY_VIA_NAIL, replace=False))
+    for c in targets:
+        nodes.loc[nodes.node_id == c, "safety_critical"] = 1
+        add_edge(nail_part, c, rng.integers(8, 30), "is_part_of")
+        # make sure c rolls into a safety-critical tier-2 -> tier-1 path
+        par2 = rng.choice(t2)
+        nodes.loc[nodes.node_id == par2, "safety_critical"] = 1
+        add_edge(c, par2, rng.integers(1, 6), "is_part_of")
+        par1 = rng.choice(t1)
+        nodes.loc[nodes.node_id == par1, "safety_critical"] = 1
+        add_edge(par2, par1, rng.integers(1, 4), "is_part_of")
+
+    # =========================================================================
+    # PLANTED (b): fake dual-sourcing -- a safety-critical part with two
+    # apparent suppliers that BOTH depend on the same upstream sub-supplier.
+    # =========================================================================
+    dual_part = t2[5]
+    nodes.loc[nodes.node_id == dual_part, "safety_critical"] = 1
+    # clear any existing suppliers of dual_part, set exactly two (sup_a, sup_b
+    # were reserved above)
+    eds = [e for e in eds if not (e["relation"] == "supplies" and e["to_id"] == dual_part)]
+    add_edge(sup_a, dual_part, 4, "supplies")
+    add_edge(sup_b, dual_part, 4, "supplies")
+    supplied_by[dual_part] = [sup_a, sup_b]
+    # both sup_a and sup_b draw a key sub-component from the SAME tier-3 part,
+    # which is itself single-sourced from one hidden sub-supplier.
+    shared_subpart = t3[7]
+    nodes.loc[nodes.node_id == shared_subpart, "single_source"] = 1
+    eds = [e for e in eds if not (e["relation"] == "supplies" and e["to_id"] == shared_subpart)]
+    add_edge(shared_subsupplier, shared_subpart, 16, "supplies")
+    # the shared sub-part feeds parts that sup_a and sup_b make. Represent the
+    # supplier dependence as: shared_subpart -> two intermediate parts, each of
+    # which is_part_of the dual_part, and each made by sup_a / sup_b.
+    int_a, int_b = t3[8], t3[9]
+    # sup_a is the sole supplier of int_a, sup_b of int_b: drop any prior
+    # suppliers of these two intermediates first, then set the sole sources.
+    eds = [e for e in eds if not (e["relation"] == "supplies"
+                                  and e["to_id"] in (int_a, int_b))]
+    nodes.loc[nodes.node_id.isin([int_a, int_b]), "single_source"] = 1
+    add_edge(shared_subpart, int_a, 6, "is_part_of")
+    add_edge(shared_subpart, int_b, 6, "is_part_of")
+    add_edge(int_a, dual_part, 2, "is_part_of")
+    add_edge(int_b, dual_part, 2, "is_part_of")
+    add_edge(sup_a, int_a, 3, "supplies")
+    add_edge(sup_b, int_b, 3, "supplies")
+
+    # =========================================================================
+    # PLANTED (c): counterfeit-risk cluster -- one broker region's parts have
+    # elevated defect rates and fan out across several systems.
+    # =========================================================================
+    broker_suppliers = [s for s in sup if region_of[s] == COUNTERFEIT_REGION]
+    if not broker_suppliers:
+        broker_suppliers = [sup[-1]]
+        nodes.loc[nodes.node_id == sup[-1], "supplier_region"] = COUNTERFEIT_REGION
+        region_of[sup[-1]] = COUNTERFEIT_REGION
+
+    # ---- assign defect_rate & cert_level to PARTS -------------------------
+    # a part's defect_rate reflects (mainly) its supplier region + part tier +
+    # noise. Parts sourced from the broker region carry the planted bump.
+    edge_df = pd.DataFrame(eds)
+    sup_edges = edge_df[edge_df.relation == "supplies"]
+    part_to_sups = sup_edges.groupby("to_id")["from_id"].apply(list).to_dict()
+
+    for p in part_ids:
+        srcs = part_to_sups.get(p, [])
+        regs = [region_of[s] for s in srcs if pd.notna(region_of.get(s))]
+        broker = any(r == COUNTERFEIT_REGION for r in regs)
+        tier = int(nodes.loc[nodes.node_id == p, "tier"].iloc[0])
+        base = BASE_DEFECT + 0.004 * (tier - 1)
+        if broker:
+            base += COUNTERFEIT_BROKER_EXTRA
+        dr = float(np.clip(base + rng.normal(0, 0.010), 0.001, 0.20))
+        nodes.loc[nodes.node_id == p, "defect_rate"] = round(dr, 4)
+        # cert level: higher for safety-critical & shallow tiers, plus noise
+        base_cert = 0
+        if sc.get(p, 0) or nodes.loc[nodes.node_id == p, "safety_critical"].iloc[0]:
+            base_cert += 1
+        if tier <= 2:
+            base_cert += 1
+        base_cert += int(rng.random() < 0.3)
+        nodes.loc[nodes.node_id == p, "cert_level"] = CERTS[min(base_cert, len(CERTS) - 1)]
+
+    # suppliers carry the mean defect_rate of what they ship (noisy proxy)
+    for s in sup:
+        myparts = sup_edges[sup_edges.from_id == s]["to_id"].tolist()
+        if myparts:
+            mdr = nodes.loc[nodes.node_id.isin(myparts), "defect_rate"].astype(float).mean()
+            nodes.loc[nodes.node_id == s, "defect_rate"] = round(float(mdr), 4)
+
+    # =========================================================================
+    # PLANTED (d): certification bottleneck -- bump cert on the nail path.
+    # =========================================================================
+    crit_path = {nail_part} | set(targets)
+    for c in crit_path:
+        cur = nodes.loc[nodes.node_id == c, "cert_level"].iloc[0]
+        i0 = CERTS.index(cur) if cur in CERTS else 0
+        nodes.loc[nodes.node_id == c, "cert_level"] = CERTS[min(i0 + CERT_PATH_BONUS, len(CERTS) - 1)]
+
+    edges = pd.DataFrame(eds)
+
+    # final column order
+    nodes = nodes[["node_id", "kind", "tier", "system", "safety_critical",
+                   "single_source", "supplier_region", "defect_rate",
+                   "cert_level", "label"]]
+    edges = edges[["from_id", "to_id", "qty_per_aircraft", "relation"]]
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+
+    kc = nodes.kind.value_counts()
+    print(f"aerospace-components: {len(nodes)} nodes "
+          f"({kc.get('part',0)} part + {kc.get('supplier',0)} supplier), "
+          f"{len(edges)} edges.")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/aerospace-components/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `aerospace-components` project network (R)
+#' @description
+#'
+#' Reads the two CSVs in this folder and builds a directed, weighted igraph
+#' object: the bill-of-materials + supplier network for a commercial aircraft
+#' program (detail parts & suppliers roll up toward the final assembly). Run it
+#' straight (`Rscript load.R`) for a quick summary, or `source()` it and call
+#' `load_aero()` in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "aerospace-components")
+
+#' Load the node table (one row per part / supplier).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per supply / roll-up relationship).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the directed, weighted graph.
+#'
+#' Edges are weighted by `qty_per_aircraft` and point up the build toward the
+#' final assembly. The `relation` edge attribute is `supplies` (firm -> part) or
+#' `is_part_of` (child part -> parent). Trace what depends on a node with
+#' `subcomponent(g, v, mode = "out")`, or knock a supplier out to see how many
+#' safety-critical assemblies lose their supply.
+load_aero <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = TRUE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$qty_per_aircraft
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n✈️  aerospace-components (R)\n")
+  cat("   Parts & suppliers roll up toward final assembly; weighted by qty/aircraft.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_aero(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d nodes (%d parts + %d suppliers) and %d edges.\n",
+              nrow(nodes), sum(nodes$kind == "part"),
+              sum(nodes$kind == "supplier"), nrow(edges)))
+  cat(sprintf("🔗 Directed: %s | safety-critical parts: %d | single-source parts: %d\n",
+              is_directed(g), sum(nodes$safety_critical == 1, na.rm = TRUE),
+              sum(nodes$single_source == 1, na.rm = TRUE)))
+  cat(sprintf("🧩 Relations: %d supplies + %d is_part_of\n",
+              sum(edges$relation == "supplies"), sum(edges$relation == "is_part_of")))
+  cat("🎉 Graph ready. `g` is a directed, weighted igraph (weight = qty_per_aircraft).\n")
+}
+```
+
+---
+
+## `data/projects/aerospace-components/load.py`
+
+```python
+"""Load the `aerospace-components` project network (Python).
+
+Reads the two CSVs in this folder and builds a directed, weighted python-igraph
+object: the bill-of-materials + supplier network for a commercial aircraft
+program (detail parts & suppliers roll up toward the final assembly). Run it
+straight (``python load.py``) for a quick summary, or import ``load_aero()`` into
+your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per part / supplier."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per supply / roll-up relationship."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_aero(nodes: pd.DataFrame | None = None,
+              edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the directed, weighted graph (edge weight = ``qty_per_aircraft``).
+
+    Edges point up the build toward the final assembly. The ``relation`` edge
+    attribute is ``supplies`` (firm -> part) or ``is_part_of`` (child part ->
+    parent). Trace what depends on a node with ``g.subcomponent(v, mode="out")``,
+    or delete a supplier to see how many safety-critical assemblies lose supply.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=True, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["qty_per_aircraft"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n✈️  aerospace-components (Python)")
+    print("   Parts & suppliers roll up toward final assembly; "
+          "weighted by qty/aircraft.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_aero(nodes, edges)
+
+    kinds = nodes["kind"].value_counts()
+    print(f"✅ Loaded {len(nodes)} nodes "
+          f"({kinds.get('part',0)} parts + {kinds.get('supplier',0)} suppliers) "
+          f"and {len(edges)} edges.")
+    print(f"🔗 Directed: {g.is_directed()} | "
+          f"safety-critical parts: {int(nodes['safety_critical'].fillna(0).sum())} | "
+          f"single-source parts: {int(nodes['single_source'].fillna(0).sum())}")
+    rel = edges["relation"].value_counts()
+    print(f"🧩 Relations: {rel.get('supplies',0)} supplies + "
+          f"{rel.get('is_part_of',0)} is_part_of")
+    print("🎉 Graph ready. Object `g` is a directed, weighted igraph "
+          "(weight = qty_per_aircraft).")
+```
+
+---
+
+## `data/projects/airline-delays/README.md`
+
+# airline-delays
+
+*One operating day of a domestic carrier's route network, sliced into four time
+blocks: directed flights between airports, each carrying a flight count and an
+average departure delay.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Directed (flights fly origin → destination) |
+| **Weights** | Weighted (`number_of_flights` per edge; `delay_min` quality field) |
+| **Modality** | Unimodal — one node kind (`airport`) |
+| **Temporal** | Yes — one row per (origin, destination, **block**: morning/midday/afternoon/evening) |
+| **Nodes** | 200 airports (6 hubs) |
+| **Edges** | 2,244 (561 directed routes × 4 blocks) |
+| **Files** | `nodes.csv`, `edges.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+"Meridian Air" flies a domestic schedule across five regions. Each **airport** is
+a node; each directed **flight route** is an edge, recorded in four time blocks
+across one day (morning → midday → afternoon → evening). An edge's weight is the
+number of flights on that leg in that block, and each edge also carries the
+average departure `delay_min` for that leg and block. Airports carry a hub flag,
+region, runway count, a weather-exposure score, and rough map coordinates.
+
+This is a flow-and-resilience network with a temporal dimension. It rewards
+students who track how disruption moves through a system. Some questions to chew
+on:
+
+- The day is not uniform. Does delay stay put, or does a bad block at one airport
+  show up somewhere else in the *next* block?
+- Are all the big hubs equally fragile, or does one shrug off trouble that
+  flattens another?
+- If you had to protect one airport to keep regions reachable, which would it be —
+  and would flight volume, degree, or betweenness point you to the same node?
+- When delays correlate between two airports, is it because they are close
+  together on the map, or because they are wired together by routes?
+- Which airports are big because they are *busy* versus big because they are
+  *structurally important*?
+
+> **Note.** The interesting findings here are deliberately *not* documented.
+> "Busy hubs handle more flights" is the starting point, not a finding. Push past
+> it.
+
+## `nodes.csv`
+
+One row per airport.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique 3-letter airport code (fictional). Referenced by edges. | character | `ABK`, `AGC`, `AAY` |
+| `kind` | Node kind | Always `airport` (single-mode network). | character | `airport` |
+| `label` | Display name | Human-readable label. (`name` is avoided — python-igraph reserves it for the ID.) | character | `ABK International`, `AFO Regional` |
+| `region` | Region | Geographic region the airport sits in. | character | `Northeast`, `Midwest`, `West` |
+| `hub` | Hub flag | 1 if the airport is a hub, else 0. | integer | `0`, `1` |
+| `runways` | Runways | Number of runways (capacity proxy). | integer | `2`, `5` |
+| `weather_exposure` | Weather exposure | Propensity to weather disruption, 0–1. | double | `0.31`, `0.74` |
+| `x` | X coordinate | Horizontal position on a 0–100 map grid. | double | `54.12`, `13.88` |
+| `y` | Y coordinate | Vertical position on a 0–100 map grid. | double | `60.40`, `49.07` |
+
+## `edges.csv`
+
+One row per (origin, destination, block). Directed.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | Origin airport ID | Departing airport. | character | `ABK`, `AGC` |
+| `to_id` | Destination airport ID | Arriving airport. | character | `AAB`, `AEZ` |
+| `block` | Time block | Part of the operating day: `morning`, `midday`, `afternoon`, `evening`. | character | `midday`, `evening` |
+| `number_of_flights` | Number of flights | Flights on that leg in that block (the edge weight). | integer | `3`, `11` |
+| `seats` | Seats | Total scheduled seats on that leg in that block. | integer | `412`, `1830` |
+| `delay_min` | Average departure delay | Mean departure delay on that leg in that block, minutes. | double | `8.4`, `61.2` |
+
+## Load it
+
+```bash
+Rscript data/projects/airline-delays/load.R     # R    (igraph)
+python  data/projects/airline-delays/load.py     # Python (python-igraph)
+```
+
+Both build a directed, weighted `igraph` graph and print a one-screen summary. In
+the [R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**airline-delays** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/airline-delays>
+
+---
+
+## `data/projects/airline-delays/_generate.py`
+
+```python
+"""Generate the `airline-delays` project network (deterministic).
+
+A domestic airline route network for a fictional carrier "Meridian Air" across
+one operating day, sliced into four time blocks:
+  - ~200 airport nodes (kind = "airport")
+Edges are directed scheduled flights origin -> destination, one row per
+(origin, destination, block), weighted by `number_of_flights`, each carrying an
+average departure `delay_min` for that leg in that block.
+
+Design parameters (the only record of the planted structure):
+  - WX_HUB: one major hub suffers a weather event in the MIDDAY block; its
+    outbound delay_min spikes that block and PROPAGATES downstream -- airports
+    directly fed by it show elevated delay in the NEXT (afternoon) block
+    (a measurable temporal lag), then it partially clears by evening.
+  - RESILIENT_HUB: a second major hub absorbs/reroutes and shows little
+    propagation, so hubs are not equally fragile.
+  - CONNECTOR: a mid-size airport with few flights but high betweenness; it is
+    the only bridge between two regional clusters, so removing it disconnects
+    regional pairs more than removing a high-flight point-to-point airport.
+  - DELAY_ALONG_EDGES: delay travels along routes, not by raw geography -- the
+    propagation coupling is via the directed edges, with noise added so distance
+    does not predict delay correlation.
+
+Run:
+    python data/projects/airline-delays/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+N_AIRPORTS = 200
+BLOCKS = ["morning", "midday", "afternoon", "evening"]
+REGIONS = ["Northeast", "Southeast", "Midwest", "West", "Mountain"]
+
+# --- planted parameters -----------------------------------------------------
+N_HUBS = 6                 # designated hubs (high degree)
+WX_HUB_IDX = 0             # the fragile hub hit by weather at midday
+RESILIENT_HUB_IDX = 1      # the hub that absorbs the shock
+WX_DELAY_SPIKE = 58.0      # extra outbound delay (min) at WX hub during midday
+PROPAGATE_FRAC = 0.62      # share of WX-hub outbound delay inherited next block
+RESILIENT_ABSORB = 0.88    # resilient hub damps its own propagated delay
+BASE_DELAY = 7.0           # baseline avg delay (min) on a normal leg
+BLOCK_LOAD = {"morning": 0.9, "midday": 1.0, "afternoon": 1.15, "evening": 1.05}
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # ----- airport positions & regions -------------------------------------
+    # Five regional clusters laid out across a 0-100 map, each a Gaussian blob.
+    centers = {
+        "Northeast": (82, 78),
+        "Southeast": (74, 22),
+        "Midwest":   (54, 60),
+        "West":      (14, 50),
+        "Mountain":  (34, 40),
+    }
+    region_of = rng.choice(REGIONS, size=N_AIRPORTS,
+                           p=[0.22, 0.20, 0.22, 0.20, 0.16])
+    xs = np.empty(N_AIRPORTS)
+    ys = np.empty(N_AIRPORTS)
+    for i in range(N_AIRPORTS):
+        cx, cy = centers[region_of[i]]
+        xs[i] = np.clip(cx + rng.normal(0, 9), 0, 100)
+        ys[i] = np.clip(cy + rng.normal(0, 9), 0, 100)
+
+    # ----- pick hubs & the connector ---------------------------------------
+    # Hubs: one per region plus an extra, chosen as the most central within
+    # their own region blob so they read as natural hubs.
+    hub_idx = []
+    for r in REGIONS:
+        members = np.where(region_of == r)[0]
+        cx, cy = centers[r]
+        d = np.hypot(xs[members] - cx, ys[members] - cy)
+        hub_idx.append(int(members[np.argmin(d)]))
+    # one extra hub in the busiest region (Midwest)
+    mid_members = np.where(region_of == "Midwest")[0]
+    extra = int(mid_members[np.argsort(np.hypot(
+        xs[mid_members] - centers["Midwest"][0],
+        ys[mid_members] - centers["Midwest"][1]))[1]])
+    hub_idx.append(extra)
+    hub_idx = list(dict.fromkeys(hub_idx))[:N_HUBS]
+    hub_set = set(hub_idx)
+
+    wx_hub = hub_idx[WX_HUB_IDX]
+    resilient_hub = hub_idx[RESILIENT_HUB_IDX]
+
+    # The connector: a non-hub airport that we will MAKE the sole bridge between
+    # two regions (West <-> Mountain). Pick a modest airport near the gap.
+    west_members = np.where(region_of == "West")[0]
+    # closest West airport to the Mountain center, but not a hub
+    cand = [m for m in west_members if m not in hub_set]
+    cand = sorted(cand, key=lambda m: np.hypot(
+        xs[m] - centers["Mountain"][0], ys[m] - centers["Mountain"][1]))
+    connector = int(cand[0])
+
+    is_hub = np.zeros(N_AIRPORTS, dtype=int)
+    for h in hub_idx:
+        is_hub[h] = 1
+
+    runways = np.where(is_hub == 1,
+                       rng.integers(4, 7, N_AIRPORTS),
+                       rng.integers(1, 4, N_AIRPORTS))
+    # weather exposure: spatial gradient (more in the West/Mountain) + noise
+    wx_grad = 0.30 + 0.004 * (100 - xs) + 0.002 * ys
+    weather_exposure = np.clip(wx_grad + rng.normal(0, 0.08, N_AIRPORTS), 0.02, 0.98)
+
+    codes = _airport_codes(N_AIRPORTS)
+    nodes = pd.DataFrame({
+        "node_id": codes,
+        "kind": "airport",
+        "label": [f"{codes[i]} Regional" if not is_hub[i] else f"{codes[i]} International"
+                  for i in range(N_AIRPORTS)],
+        "region": region_of,
+        "hub": is_hub,
+        "runways": runways,
+        "weather_exposure": weather_exposure.round(3),
+        "x": xs.round(2),
+        "y": ys.round(2),
+    })
+
+    # ----- build the directed route topology -------------------------------
+    # Routes: (a) hub-and-spoke within region, (b) hub-to-hub trunk routes,
+    # (c) some point-to-point, (d) the connector as the ONLY West<->Mountain link.
+    route_pairs: set[tuple[int, int]] = set()
+
+    def add(a, b):
+        if a != b:
+            route_pairs.add((a, b))
+
+    # (a) each non-hub connects to the 1-2 nearest hubs in its own region
+    for i in range(N_AIRPORTS):
+        if is_hub[i]:
+            continue
+        same = [h for h in hub_idx if region_of[h] == region_of[i]]
+        if not same:
+            same = hub_idx
+        same = sorted(same, key=lambda h: np.hypot(xs[h] - xs[i], ys[h] - ys[i]))
+        for h in same[:2]:
+            add(i, h)
+            add(h, i)
+
+    # (b) hub-to-hub trunk routes among the "core" hubs (every region EXCEPT
+    # West). The West hub is deliberately NOT trunked to the core -- the whole
+    # West region reaches the rest of the network ONLY through the connector.
+    west_hub = [h for h in hub_idx if region_of[h] == "West"][0]
+    mtn_hub = [h for h in hub_idx if region_of[h] == "Mountain"][0]
+    core_hubs = [h for h in hub_idx if h != west_hub]
+    for a in core_hubs:
+        for b in core_hubs:
+            add(a, b)
+
+    # (c) point-to-point: a high-volume non-hub "big P2P airport" with many
+    # direct spokes. Its spokes ALSO attach to the regional hub, so removing the
+    # big airport does NOT fragment the network -- it just removes volume.
+    nonhub = [i for i in range(N_AIRPORTS)
+              if not is_hub[i] and i != connector and region_of[i] != "West"]
+    big_p2p = int(max(nonhub, key=lambda i: runways[i] * 1.0 + rng.random()))
+    bp_hub = [h for h in hub_idx if region_of[h] == region_of[big_p2p]][0]
+    same_region = [i for i in range(N_AIRPORTS)
+                   if region_of[i] == region_of[big_p2p] and i != big_p2p
+                   and not is_hub[i]]
+    for j in rng.choice(same_region, size=min(14, len(same_region)), replace=False):
+        add(big_p2p, int(j))
+        add(int(j), big_p2p)
+        add(bp_hub, int(j))          # also reachable via the hub (redundant)
+        add(int(j), bp_hub)
+
+    # scattered intra-region P2P (never crosses into/out of West)
+    for i in range(N_AIRPORTS):
+        if region_of[i] == "West":
+            continue
+        if rng.random() < 0.25:
+            same = [j for j in range(N_AIRPORTS)
+                    if region_of[j] == region_of[i] and j != i
+                    and region_of[j] != "West"]
+            if same:
+                j = int(rng.choice(same))
+                add(i, j)
+
+    # (d) the connector: the SOLE gateway in/out of the West region. West hub
+    # <-> connector <-> Mountain hub (the Mountain hub is part of the core mesh).
+    # The connector itself sits in the West region with modest degree.
+    add(west_hub, connector)
+    add(connector, west_hub)
+    add(mtn_hub, connector)
+    add(connector, mtn_hub)
+    # a couple of West spokes also feed the connector so it has some local degree
+    west_spokes = [i for i in np.where(region_of == "West")[0]
+                   if not is_hub[i] and i != connector]
+    for j in rng.choice(west_spokes, size=min(3, len(west_spokes)), replace=False):
+        add(connector, int(j))
+        add(int(j), connector)
+
+    # ----- assign per-block delays -----------------------------------------
+    # First pass: baseline delays per (edge, block) with weather noise.
+    # Then a SECOND pass propagates the WX hub's midday outbound spike to its
+    # downstream airports' delays in the AFTERNOON block.
+    edges_list = sorted(route_pairs)
+
+    # outbound delay contributed to each origin airport, per block (we average
+    # over its outgoing legs to get an airport-level "delay state").
+    # Build base edge delays first.
+    base_delay = {}  # (a,b,block) -> delay
+    for (a, b) in edges_list:
+        for blk in BLOCKS:
+            d = (BASE_DELAY * BLOCK_LOAD[blk]
+                 + 9.0 * weather_exposure[a]            # exposed origins delay more
+                 + rng.normal(0, 4.0))
+            base_delay[(a, b, blk)] = max(0.0, d)
+
+    # WX hub weather event at MIDDAY: spike all its outbound legs.
+    for (a, b) in edges_list:
+        if a == wx_hub:
+            base_delay[(a, b, "midday")] += WX_DELAY_SPIKE + rng.normal(0, 5)
+
+    # airport-level midday outbound delay state (mean of outgoing legs)
+    def airport_block_delay(node, blk):
+        outs = [base_delay[(a, b, blk)] for (a, b) in edges_list if a == node]
+        return float(np.mean(outs)) if outs else 0.0
+
+    wx_midday_state = airport_block_delay(wx_hub, "midday")
+
+    # downstream set of the WX hub (direct successors)
+    downstream = sorted({b for (a, b) in edges_list if a == wx_hub})
+
+    # PROPAGATION: each downstream airport inherits a fraction of the WX hub's
+    # midday delay into the AFTERNOON block, scaled by edge flow share. The
+    # resilient hub damps it heavily.
+    for node in downstream:
+        absorb = RESILIENT_ABSORB if node == resilient_hub else 0.0
+        inherited = PROPAGATE_FRAC * (1 - absorb) * wx_midday_state
+        # apply to that airport's OWN outbound legs in the afternoon
+        for (a, b) in edges_list:
+            if a == node:
+                base_delay[(a, b, "afternoon")] += inherited + rng.normal(0, 3)
+        # WX hub itself partially clears by afternoon (storm passing)
+    # WX hub clears: afternoon outbound returns toward normal, evening normal.
+    for (a, b) in edges_list:
+        if a == wx_hub:
+            # afternoon still somewhat elevated, evening near-normal
+            base_delay[(a, b, "afternoon")] = (
+                base_delay[(a, b, "afternoon")] * 0.35
+                + BASE_DELAY * BLOCK_LOAD["afternoon"])
+
+    # ----- flight volumes ---------------------------------------------------
+    rows = []
+    for (a, b) in edges_list:
+        # base flights scale with whether endpoints are hubs and runways
+        base_flights = 1 + (3 if is_hub[a] else 0) + (3 if is_hub[b] else 0)
+        base_flights += runways[a] // 2
+        if a == big_p2p or b == big_p2p:
+            base_flights += 6           # the big point-to-point airport is busy
+        if a == connector or b == connector:
+            base_flights = max(1, base_flights - 2)   # connector is LOW volume
+        for blk in BLOCKS:
+            nf = max(1, int(round(base_flights * BLOCK_LOAD[blk]
+                                  + rng.normal(0, 1.0))))
+            dly = round(base_delay[(a, b, blk)] + rng.normal(0, 1.5), 1)
+            dly = max(0.0, dly)
+            seats = int(nf * rng.integers(70, 200))
+            rows.append({
+                "from_id": codes[a],
+                "to_id": codes[b],
+                "block": blk,
+                "number_of_flights": nf,
+                "seats": seats,
+                "delay_min": dly,
+            })
+
+    edges = pd.DataFrame(rows)
+    # order blocks chronologically for readability
+    blk_order = {b: i for i, b in enumerate(BLOCKS)}
+    edges["_o"] = edges["block"].map(blk_order)
+    edges = edges.sort_values(["from_id", "to_id", "_o"]).drop(columns="_o").reset_index(drop=True)
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+    print(f"airline-delays: {len(nodes)} nodes "
+          f"({int(nodes.hub.sum())} hubs), {len(edges)} edges "
+          f"({len(edges_list)} directed routes x {len(BLOCKS)} blocks).")
+
+
+def _airport_codes(n: int) -> list[str]:
+    """Deterministic unique 3-letter airport codes AAA, AAB, ... (not real)."""
+    codes = []
+    i = 0
+    while len(codes) < n:
+        a = i // (26 * 26)
+        b = (i // 26) % 26
+        c = i % 26
+        codes.append(chr(65 + a) + chr(65 + b) + chr(65 + c))
+        i += 1
+    return codes
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/airline-delays/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `airline-delays` project network (R)
+#' @description
+#'
+#' Reads the two CSVs in this folder and builds a directed, weighted igraph
+#' object: one day of scheduled flights between airports, sliced into four time
+#' blocks. Run it straight (`Rscript load.R`) for a quick summary, or `source()`
+#' it and call `load_airline()` to get the graph in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "airline-delays")
+
+#' Load the node table (one row per airport).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per origin x destination x block).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the directed, weighted graph.
+#'
+#' Edges are weighted by `number_of_flights`. Because the data is temporal (a
+#' `block` column), an edge between the same pair appears up to 4 times; igraph
+#' keeps them as parallel edges, so filter to one `block` first if you want a
+#' simple graph.
+load_airline <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = TRUE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$number_of_flights
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n✈️  airline-delays (R)\n")
+  cat("   Directed flights between airports, weighted by flights, in 4 time blocks.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_airline(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d airports (%d hubs) and %d edges (%d routes x 4 blocks).\n",
+              nrow(nodes), sum(nodes$hub == 1), nrow(edges),
+              nrow(unique(edges[, c("from_id", "to_id")]))))
+  cat(sprintf("\U0001F517 Directed: %s | total flights: %s\n",
+              is_directed(g), format(sum(edges$number_of_flights), big.mark = ",")))
+  cat("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.\n")
+}
+```
+
+---
+
+## `data/projects/airline-delays/load.py`
+
+```python
+"""Load the `airline-delays` project network (Python).
+
+Reads the two CSVs in this folder and builds a directed, weighted python-igraph
+object: one day of scheduled flights between airports, sliced into four time
+blocks. Run it straight (``python load.py``) for a quick summary, or import
+``load_airline()`` into your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per airport."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per origin x destination x block."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_airline(nodes: pd.DataFrame | None = None,
+                 edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the directed, weighted graph (edge weight = ``number_of_flights``).
+
+    The data is temporal (a ``block`` column), so an edge between the same pair of
+    airports appears up to 4 times as parallel edges. Filter to one ``block``
+    first if you want a simple graph.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=True, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["number_of_flights"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n✈️  airline-delays (Python)")
+    print("   Directed flights between airports, weighted by flights, in 4 time blocks.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_airline(nodes, edges)
+
+    n_routes = edges[["from_id", "to_id"]].drop_duplicates().shape[0]
+    print(f"✅ Loaded {len(nodes)} airports ({int(nodes['hub'].sum())} hubs) "
+          f"and {len(edges)} edges ({n_routes} routes x 4 blocks).")
+    print(f"🔗 Directed: {g.is_directed()} | total flights: "
+          f"{edges['number_of_flights'].sum():,}")
+    print("🎉 Graph ready. Object `g` is a directed, weighted igraph.")
 ```
 
 ---
@@ -9314,6 +10416,4238 @@ if __name__ == "__main__":
 
 ---
 
+## `data/projects/campus-contact/README.md`
+
+# campus-contact
+
+*Four weeks of face-to-face proximity on a university campus, recorded as a
+respiratory illness moves through the population.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Undirected (a contact links two people who were co-located) |
+| **Weights** | Weighted (`contact_minutes` per pair per week) |
+| **Modality** | One node kind (`person`) with a `kind` role (student / faculty / staff) |
+| **Temporal** | Yes — one row per (person, person, **week** 1–4); `status.csv` is per (person, week) |
+| **Nodes** | 300 (252 students + 26 faculty + 22 staff) |
+| **Edges** | 3,699 contact-weeks |
+| **Files** | `nodes.csv`, `edges.csv`, `status.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+A campus **contact-tracing** network. Wearable proximity sensors logged who spent
+time near whom, aggregated into weekly co-location contacts. Each edge carries the
+total minutes a pair spent in proximity that week (`contact_minutes`), and edges
+are tagged by `week` (1–4). Over the same four weeks a respiratory illness spread
+through campus; the companion `status.csv` records, for every person and week,
+whether they were infected by then. People carry a role (`kind`), a `unit` (their
+dorm or academic department), and — for students — a class `year`.
+
+This is the natural home for **community detection**, **centrality / criticality**,
+**network-aware inference**, and **diffusion** questions. Some things worth digging
+into:
+
+- The contact graph is far from uniform. Does it break into communities, and do
+  those communities line up with anything in `nodes.csv`?
+- If you had to name the one person whose removal would most have slowed the spread
+  between groups, who is it — and would degree alone have told you?
+- Roles are not interchangeable. Do students, faculty, and staff sit in the same
+  structural position, or do some of them do something the others don't?
+- The four weeks are not the same. Does the contact structure change partway
+  through, and does anything about the outbreak change at the same time?
+- Who tends to get infected first? Is being infected early random, or is it
+  predictable from where you sit in the network?
+
+> **Note.** The interesting findings here are deliberately *not* documented. "People
+> in the same dorm see each other a lot" is the starting point, not a finding. Push
+> past it.
+
+## `nodes.csv`
+
+One row per person. The `year` column is blank for faculty and staff.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique key. `P###`. Referenced by edges and by `status.csv`. | character | `P001`, `P218`, `P300` |
+| `kind` | Role | Which population the person belongs to. | character | `student`, `faculty`, `staff` |
+| `unit` | Unit | Dorm (students) or department (faculty/staff) the person belongs to. | character | `West Hall`, `Engineering`, `Annex` |
+| `year` | Class year | Student class year 1–4 (blank for faculty/staff). | integer | `1`, `4` |
+| `label` | Display name | Human-readable label. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Student 042`, `Faculty 03` |
+
+## `edges.csv`
+
+One row per (person, person, week). Undirected co-location contact.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | First person ID | One endpoint of the contact (joins to `nodes.csv`). | character | `P059` |
+| `to_id` | Second person ID | The other endpoint (joins to `nodes.csv`). | character | `P088` |
+| `week` | Study week | Week of the study, 1–4. | integer | `1`, `3` |
+| `contact_minutes` | Contact minutes | Total minutes the pair spent in proximity that week (the edge weight). | integer | `44`, `19`, `207` |
+
+## `status.csv`
+
+Infection status, one row per (person, week). Not a node list — join it onto
+`nodes.csv` on `node_id` (and filter or pivot on `week`).
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Person this status row describes (joins to `nodes.csv`). | character | `P001` |
+| `week` | Study week | Week the status was observed, 1–4. | integer | `1`, `4` |
+| `infected` | Infected flag | 1 if the person had been infected by this week (cumulative), else 0. | integer | `0`, `1` |
+
+## Load it
+
+```bash
+Rscript data/projects/campus-contact/load.R     # R    (igraph)
+python  data/projects/campus-contact/load.py     # Python (python-igraph)
+```
+
+Both build an undirected, weighted `igraph` graph (edge weight = `contact_minutes`)
+and print a one-screen summary. Because the data is temporal, a pair can appear up
+to four times (one per week) as parallel edges — filter to one `week` for a simple
+graph. In the [R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**campus-contact** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/campus-contact>
+
+---
+
+## `data/projects/campus-contact/_generate.py`
+
+```python
+"""Generate the `campus-contact` project network (deterministic).
+
+A face-to-face proximity / co-location contact network on a university campus,
+recorded over four weeks as a respiratory illness spreads:
+  - ~300 people (kind = student / faculty / staff)
+  - undirected co-location contacts, one row per (person, person, week)
+weighted by `contact_minutes` (time the two spent in proximity that week).
+A companion `status.csv` records each person's infection state per week.
+
+Design parameters (the only record of the planted structure):
+  - N_UNITS: people belong to ~8 units (dorms for students, departments for
+    faculty/staff); contacts cluster strongly WITHIN unit -> high modularity.
+  - BRIDGE: faculty are the main inter-unit links between student clusters; ONE
+    individual (the "connector") is a cross-unit bridge with extreme betweenness
+    relative to their degree, touching the most units.
+  - SEED_UNIT: the outbreak seeds inside the connector's unit; it jumps to other
+    units mainly THROUGH the connector (their removal would have contained it).
+  - INTERVENTION (week 3): the highest-degree contacts are cut sharply (a
+    structural change); top contacts' degree drops, and infection growth flattens
+    afterward.
+  - HUB_EARLY: high-degree hubs get infected earlier than average (degree predicts
+    early infection -> negative degree~infection-week correlation).
+
+Run:
+    python data/projects/campus-contact/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+N_PEOPLE = 300
+WEEKS = [1, 2, 3, 4]
+
+# --- planted parameters -----------------------------------------------------
+# units: 6 student residences + 2 academic departments. Faculty/staff sit in the
+# two departments; students sit in the dorms. Faculty bridge dorms <-> depts.
+DORMS = ["West Hall", "East Hall", "North Hall", "South Hall", "Gradflat", "Annex"]
+DEPTS = ["Engineering", "Sciences"]
+UNITS = DORMS + DEPTS
+
+WITHIN_BASE = 0.16        # baseline P(contact) within the same unit (high)
+BETWEEN_BASE = 0.006      # baseline P(contact) across units (low) -> modularity
+FACULTY_CROSS = 0.030     # faculty get extra cross-unit contact probability
+CONNECTOR_CROSS = 0.55    # the connector blankets MANY units (bridge)
+
+INTERVENTION_WEEK = 3     # high-degree contacts cut starting this week
+TOP_CUT_FRAC = 0.10       # fraction of highest-degree people whose ties get cut
+CUT_KEEP_PROB = 0.22      # of a cut person's ties, keep only this share at/after wk3
+
+SEED_INFECTIONS = 12      # initial cases in the connector's seed unit (week 1)
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # ----- people ----------------------------------------------------------
+    # roles: mostly students, some faculty/staff. Faculty/staff live in depts.
+    roles = []
+    units = []
+    years = []
+    # assign first the dept people (faculty + staff), then dorm students
+    n_faculty = 26
+    n_staff = 22
+    n_students = N_PEOPLE - n_faculty - n_staff   # 252
+    for _ in range(n_faculty):
+        roles.append("faculty")
+        units.append(rng.choice(DEPTS))
+        years.append(0)                      # 0 = not a student year
+    for _ in range(n_staff):
+        roles.append("staff")
+        units.append(rng.choice(DEPTS))
+        years.append(0)
+    for _ in range(n_students):
+        roles.append("student")
+        units.append(rng.choice(DORMS))
+        years.append(int(rng.integers(1, 5)))   # class year 1..4
+
+    roles = np.array(roles)
+    units = np.array(units)
+    years = np.array(years)
+
+    node_id = np.array([f"P{i:03d}" for i in range(1, N_PEOPLE + 1)])
+    labels = []
+    fac_n = stf_n = stu_n = 0
+    for r in roles:
+        if r == "faculty":
+            fac_n += 1; labels.append(f"Faculty {fac_n:02d}")
+        elif r == "staff":
+            stf_n += 1; labels.append(f"Staff {stf_n:02d}")
+        else:
+            stu_n += 1; labels.append(f"Student {stu_n:03d}")
+    labels = np.array(labels)
+
+    unit_of = dict(zip(node_id, units))
+    role_of = dict(zip(node_id, roles))
+
+    # ----- choose the connector (cross-unit bridge) ------------------------
+    # a faculty member who will touch many units.
+    faculty_ids = node_id[roles == "faculty"]
+    connector = str(rng.choice(faculty_ids))
+    seed_unit = unit_of[connector]
+
+    # ----- build per-week contacts -----------------------------------------
+    # We construct a base contact propensity per person (sociability) so that
+    # hubs exist; then draw weekly edges from a unit-block model plus bridges.
+    sociability = rng.lognormal(mean=0.0, sigma=0.5, size=N_PEOPLE)
+    sociability = sociability / sociability.mean()
+    soc_of = dict(zip(node_id, sociability))
+
+    # identify the eventual top-degree people for the intervention. We estimate
+    # expected degree from sociability + role and cut the top fraction.
+    # faculty / connector are naturally high; intervention targets the busiest.
+    expected_deg = sociability.copy()
+    expected_deg[roles == "faculty"] *= 1.5
+    expected_deg[node_id == connector] *= 3.0
+    # rank by expected degree but EXCLUDE the connector from the cut: the
+    # connector's bridging ties persist, so its criticality (and the "removal
+    # would have contained it" counterfactual) stays intact through the study.
+    order = [int(i) for i in np.argsort(-expected_deg) if node_id[i] != connector]
+    n_cut = max(1, int(TOP_CUT_FRAC * N_PEOPLE))
+    cut_ids = set(node_id[order[:n_cut]].tolist())
+
+    idx_of = {nid: i for i, nid in enumerate(node_id)}
+
+    edge_rows = []
+    for week in WEEKS:
+        intervened = week >= INTERVENTION_WEEK
+        # draw a fresh set of contacts for the week
+        seen = {}
+        # within-unit contacts (block model)
+        for u in UNITS:
+            members = node_id[units == u]
+            m = len(members)
+            for a in range(m):
+                for b in range(a + 1, m):
+                    ia, ib = members[a], members[b]
+                    p = WITHIN_BASE * np.sqrt(soc_of[ia] * soc_of[ib])
+                    if rng.random() < p:
+                        _add(seen, ia, ib, rng)
+        # the connector is a guaranteed bridge: each week it makes ties into
+        # EVERY other unit (a few members each), giving it max units-touched and
+        # extreme betweenness relative to its degree. These bridge ties are the
+        # only short paths between many unit pairs.
+        for u in UNITS:
+            if u == unit_of[connector]:
+                continue
+            cand = node_id[(units == u)]
+            k = min(len(cand), int(rng.integers(2, 5)))
+            for ib in rng.choice(cand, size=k, replace=False):
+                _add(seen, connector, str(ib), rng)
+
+        # cross-unit contacts: rare in general, more for faculty, lots for connector
+        all_ids = node_id
+        for ia in all_ids:
+            # connector reaches across many units
+            if ia == connector:
+                cross_p = CONNECTOR_CROSS
+            elif role_of[ia] == "faculty":
+                cross_p = FACULTY_CROSS
+            elif role_of[ia] == "staff":
+                cross_p = BETWEEN_BASE * 2
+            else:
+                cross_p = BETWEEN_BASE
+            # number of cross attempts scales with sociability
+            n_try = rng.poisson(cross_p * 60 * soc_of[ia])
+            for _ in range(n_try):
+                ib = str(rng.choice(all_ids))
+                if ib == ia or unit_of[ib] == unit_of[ia]:
+                    continue
+                _add(seen, ia, ib, rng)
+
+        # apply intervention (week 3+): (1) cut most ties touching the top-degree
+        # people -> their degree collapses; (2) a campus-wide reduction in contact
+        # intensity (everyone meets a bit less) -> dampens the contact_minutes that
+        # drive transmission, so the outbreak's growth flattens.
+        for (ia, ib), mins in list(seen.items()):
+            if intervened and (ia in cut_ids or ib in cut_ids):
+                if rng.random() > CUT_KEEP_PROB:
+                    del seen[(ia, ib)]
+        if intervened:
+            # the campus restrictions escalate: week 3 is partial, week 4 tighter.
+            damp = 0.30 if week == 3 else 0.16
+            for key in list(seen.keys()):
+                seen[key] = int(max(3, seen[key] * damp))
+
+        for (ia, ib), mins in seen.items():
+            edge_rows.append({
+                "from_id": ia, "to_id": ib, "week": week,
+                "contact_minutes": mins,
+            })
+
+    edges = pd.DataFrame(edge_rows)
+
+    # ----- infection dynamics over weeks -----------------------------------
+    # SIR-ish on the realized weekly contact graph, seeded in the connector unit.
+    infected_week = {nid: 0 for nid in node_id}     # 0 = never infected (within study)
+    state = {nid: "S" for nid in node_id}
+
+    # seed: cases in the seed unit, weighted toward more-social members (the
+    # outbreak takes hold among the busiest people first -> hubs infected early).
+    seed_pool = np.array([n for n in node_id[units == seed_unit] if n != connector])
+    w = np.array([soc_of[n] ** 2 for n in seed_pool]); w = w / w.sum()
+    seeds = rng.choice(seed_pool, size=min(SEED_INFECTIONS, len(seed_pool)),
+                       replace=False, p=w)
+    # a few stray introductions campus-wide, weighted to the most-social people,
+    # so connectivity (not just being in the seed unit) governs early infection.
+    others = np.array([n for n in node_id if n not in set(seeds) and n != connector])
+    wo = np.array([soc_of[n] ** 3 for n in others]); wo = wo / wo.sum()
+    sparks = rng.choice(others, size=4, replace=False, p=wo)
+    for s in list(seeds) + list(sparks):
+        state[s] = "I"
+        infected_week[s] = 1
+
+    # transmission probability per contact-minute; hubs more exposed naturally
+    BETA = 0.0027
+    for week in WEEKS:
+        wk_edges = edges[edges["week"] == week]
+        # build adjacency for this week
+        contacts = {}
+        for r in wk_edges.itertuples():
+            contacts.setdefault(r.from_id, []).append((r.to_id, r.contact_minutes))
+            contacts.setdefault(r.to_id, []).append((r.from_id, r.contact_minutes))
+        newly = []
+        for person, nbrs in contacts.items():
+            if state[person] != "S":
+                continue
+            # force of infection from infected neighbors this week
+            foi = 0.0
+            for (nb, mins) in nbrs:
+                if state[nb] == "I":
+                    foi += BETA * mins
+            # hubs (high sociability) get strongly extra exposure -> infected
+            # earlier than peripheral people (friendship-paradox flavored).
+            foi *= (0.10 + 4.0 * soc_of[person])
+            if rng.random() < 1 - np.exp(-foi):
+                newly.append(person)
+        for p in newly:
+            state[p] = "I"
+            infected_week[p] = week
+
+    # status long table: node_id, week, infected (cumulative 0/1)
+    status_rows = []
+    for nid in node_id:
+        iw = infected_week[nid]
+        for week in WEEKS:
+            status_rows.append({
+                "node_id": nid, "week": week,
+                "infected": int(iw != 0 and week >= iw),
+            })
+    status = pd.DataFrame(status_rows)
+
+    # ----- nodes table -----------------------------------------------------
+    nodes = pd.DataFrame({
+        "node_id": node_id,
+        "kind": roles,
+        "unit": units,
+        "year": [y if y > 0 else pd.NA for y in years],
+        "label": labels,
+    })
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+    status.to_csv(HERE / "status.csv", index=False)
+    n_ever = sum(1 for v in infected_week.values() if v != 0)
+    print(f"campus-contact: {len(nodes)} nodes "
+          f"({(roles=='student').sum()} student + {(roles=='faculty').sum()} faculty + "
+          f"{(roles=='staff').sum()} staff), {len(edges)} edge-weeks, "
+          f"{len(UNITS)} units, {n_ever} ever-infected.")
+
+
+def _add(seen, ia, ib, rng):
+    """Add an undirected contact with contact-minutes; merge duplicates."""
+    key = (ia, ib) if ia < ib else (ib, ia)
+    mins = int(np.clip(rng.gamma(shape=2.0, scale=22.0), 3, 600))
+    if key in seen:
+        seen[key] += mins
+    else:
+        seen[key] = mins
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/campus-contact/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `campus-contact` project network (R)
+#' @description
+#'
+#' Reads the CSVs in this folder and builds an undirected, weighted igraph
+#' object: weekly face-to-face co-location contacts on a campus over four weeks.
+#' Run it straight (`Rscript load.R`) for a quick summary, or `source()` it and
+#' call `load_campus()` to get the graph in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "campus-contact")
+
+#' Load the node table (one row per person).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per person x person x week).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the infection-status table (one row per person x week).
+load_status <- function() {
+  read.csv(file.path(.dir(), "status.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the undirected, weighted contact graph.
+#'
+#' Edges are weighted by `contact_minutes`. Because the data is temporal (a
+#' `week` column), a pair can appear up to 4 times as parallel edges; filter to
+#' one `week` first if you want a simple graph.
+load_campus <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = FALSE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$contact_minutes
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n\U0001F9A0 campus-contact (R)\n")
+  cat("   Weekly face-to-face contacts on campus; weighted by contact minutes.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  status <- load_status()
+  g <- load_campus(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d people (%d students, %d faculty, %d staff) and %d contact-weeks.\n",
+              nrow(nodes), sum(nodes$kind == "student"),
+              sum(nodes$kind == "faculty"), sum(nodes$kind == "staff"), nrow(edges)))
+  cat(sprintf("\U0001F517 Directed: %s | total contact minutes: %s\n",
+              is_directed(g), format(sum(edges$contact_minutes), big.mark = ",")))
+  inf <- tapply(status$infected, status$week, sum)
+  cat(sprintf("\U0001F4C8 Cumulative infected by week: %s\n",
+              paste(sprintf("wk%d=%d", as.integer(names(inf)), inf), collapse = "  ")))
+  cat("\U0001F389 Graph ready. Object `g` is an undirected, weighted igraph.\n")
+}
+```
+
+---
+
+## `data/projects/campus-contact/load.py`
+
+```python
+"""Load the `campus-contact` project network (Python).
+
+Reads the CSVs in this folder and builds an undirected, weighted python-igraph
+object: weekly face-to-face co-location contacts on a campus over four weeks.
+Run it straight (``python load.py``) for a quick summary, or import
+``load_campus()`` into your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per person."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per person x person x week."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_status() -> pd.DataFrame:
+    """Infection-status table: one row per person x week."""
+    return pd.read_csv(HERE / "status.csv")
+
+
+def load_campus(nodes: pd.DataFrame | None = None,
+                edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the undirected, weighted contact graph (edge weight = ``contact_minutes``).
+
+    The data is temporal (a ``week`` column), so a pair can appear up to 4 times
+    as parallel edges. Filter to one ``week`` first if you want a simple graph.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=False, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["contact_minutes"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n\U0001F9A0 campus-contact (Python)")
+    print("   Weekly face-to-face contacts on campus; weighted by contact minutes.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    status = load_status()
+    g = load_campus(nodes, edges)
+
+    kinds = nodes["kind"].value_counts()
+    print(f"✅ Loaded {len(nodes)} people "
+          f"({kinds.get('student',0)} students, {kinds.get('faculty',0)} faculty, "
+          f"{kinds.get('staff',0)} staff) and {len(edges)} contact-weeks.")
+    print(f"\U0001F517 Directed: {g.is_directed()} | total contact minutes: "
+          f"{edges['contact_minutes'].sum():,}")
+    inf = status.groupby("week")["infected"].sum()
+    print("\U0001F4C8 Cumulative infected by week: "
+          + "  ".join(f"wk{w}={c}" for w, c in inf.items()))
+    print("\U0001F389 Graph ready. Object `g` is an undirected, weighted igraph.")
+```
+
+---
+
+## `data/projects/financial-contagion/README.md`
+
+# financial-contagion
+
+*A directed interbank exposure network across three periods of a financial
+crisis: who lent to whom, before the storm, during the crash, and in the calmer
+aftermath.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Directed (exposure runs creditor → debtor) |
+| **Weights** | Weighted (`exposure` = dollars at risk on each link) |
+| **Modality** | Single-mode — one node kind (firms), typed by `type` |
+| **Temporal** | Yes — one row per (creditor, debtor, **period**: before / during / after) |
+| **Nodes** | 220 firms (111 banks, 71 hedge funds, 34 insurers, 4 CCPs) |
+| **Edges** | 1,701 (before 838 · during 609 · after 254) |
+| **Files** | `nodes.csv`, `edges.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+Banks, hedge funds, insurers, and central counterparties (**CCPs**) lend to and
+borrow from one another, forming a web of **financial exposures**. Each directed
+edge points from a **creditor** to a **debtor** and carries the dollar size of
+the exposure — the amount the lender stands to lose if the borrower can't pay.
+The network is recorded across three periods: a calm, densely interlinked
+**before**; the **during** of a crisis as positions unwind; and the sparser
+**after** of a tentative recovery. Each firm carries its size (`assets`), its
+`leverage`, its `type`, and its home `region`.
+
+This is a network for **systemic risk, criticality, and cascade** questions.
+Some things worth investigating:
+
+- If one firm fails, who is exposed — and does the damage stop there, or ripple
+  outward? Can you measure how far a shock travels?
+- Degree tells you who has the most counterparties. But who actually sits *between*
+  everyone else — whose failure would sever the most connections? Are those the
+  same firms?
+- Exposures look fine one firm at a time. Do they look fine in aggregate? Are
+  lots of firms quietly crowded into the same handful of borrowers?
+- Did everyone get caught off guard, or did some firms pull back *before* the
+  crash? How would you tell who saw it coming?
+- How does the network reshape itself afterward? Is recovery a return to the old
+  structure, or a flight toward something safer?
+
+> **Note.** The interesting findings here are deliberately *not* documented. "Big
+> firms have more exposures" is the starting point, not a finding. Look for the
+> structure that size and volume don't explain.
+
+## `nodes.csv`
+
+One row per firm.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique firm key. Referenced by edges. | character | `F001`, `F063` |
+| `type` | Firm type | Kind of financial institution. | character | `bank`, `hedge_fund`, `insurer`, `ccp` |
+| `assets` | Total assets | Balance-sheet size in $ billions (firm "size"). | double | `6.71`, `39.82` |
+| `leverage` | Leverage ratio | Assets-to-equity ratio; higher = more fragile. | double | `10.07`, `38.0` |
+| `region` | Region | Home region of the firm. | character | `NorthAm`, `Europe`, `Asia`, `LatAm` |
+| `label` | Display name | Human-readable label. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Bank 002`, `CCP 029` |
+
+## `edges.csv`
+
+One row per (creditor, debtor, period). Directed: exposure runs from `from_id`
+(the creditor / lender) to `to_id` (the debtor / borrower).
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | Creditor node ID | The lending firm (bears the loss if the debtor fails; joins to `nodes.csv`). | character | `F001`, `F108` |
+| `to_id` | Debtor node ID | The borrowing firm (joins to `nodes.csv`). | character | `F062`, `F079` |
+| `period` | Period | Phase of the crisis the exposure was recorded in. | character | `before`, `during`, `after` |
+| `exposure` | Exposure | Dollars at risk on this link (the edge weight; arbitrary units). | double | `4.34`, `2.30` |
+
+## Load it
+
+```bash
+Rscript data/projects/financial-contagion/load.R     # R    (igraph)
+python  data/projects/financial-contagion/load.py     # Python (python-igraph)
+```
+
+Both build a directed, weighted `igraph` graph and print a one-screen summary. In
+the [R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**financial-contagion** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/financial-contagion>
+
+---
+
+## `data/projects/financial-contagion/_generate.py`
+
+```python
+"""Generate the `financial-contagion` project network (deterministic).
+
+A directed interbank / financial-exposure network across three periods of a
+crisis:
+  - period = "before"   (calm; dense interlinked exposures)
+  - period = "during"   (the crash; one firm fails and a cascade unwinds)
+  - period = "after"    (recovery; sparser, flight-to-quality star structure)
+
+Nodes are financial firms; an edge is a directed exposure (a loan / credit line)
+from a creditor to a debtor, weighted by exposure dollars, one row per
+(creditor, debtor, period).
+
+Node attributes: type (bank / hedge_fund / insurer / ccp), assets (size),
+leverage, region, label.
+
+Design parameters (the only record of the planted structure):
+  - FAIL_NODE: one over-leveraged, mid-size firm fails DURING. Its creditor
+    edges vanish, and several of THOSE creditors then drop edges too (a
+    measurable cascade radius around it).
+  - CCP_HUB: a central counterparty has modest degree but the highest
+    betweenness (a hidden systemic hub intermediating most flows).
+  - HERD: a large cluster of firms all lend to the same handful of debtors
+    (correlated / overlapping common exposure).
+  - FRONT_RUNNERS: a few firms sharply cut outgoing exposure before->during
+    (they saw it coming) while everyone else stays exposed until the crash.
+  - FLIGHT: surviving firms rewire toward low-leverage bank/ccp nodes AFTER;
+    the network is sparser and more star-like.
+
+Run:
+    python data/projects/financial-contagion/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+N_FIRMS = 220
+PERIODS = ["before", "during", "after"]
+REGIONS = ["NorthAm", "Europe", "Asia", "LatAm"]
+TYPES = ["bank", "hedge_fund", "insurer", "ccp"]
+
+# --- planted parameters -----------------------------------------------------
+N_CCP = 4                       # central counterparties (systemic intermediaries)
+N_HERD = 55                     # firms in the common-exposure herd
+N_HERD_TARGETS = 5              # the handful of debtors the herd all lends to
+N_FRONT_RUNNERS = 8             # firms that cut exposure pre-crash
+FRONT_RUNNER_CUT = 0.20         # they keep only ~20% of out-exposure during
+FAIL_LEVERAGE = 38.0            # leverage of the firm that fails (top-decile)
+CASCADE_DROP = 0.55            # share of failed-firm creditors who then cut too
+DENSIFY = {"before": 1.0, "during": 0.72, "after": 0.40}  # tie-rate by period
+
+
+def _gini(x: np.ndarray) -> float:
+    x = np.sort(np.asarray(x, dtype=float))
+    n = len(x)
+    if n == 0 or x.sum() == 0:
+        return 0.0
+    idx = np.arange(1, n + 1)
+    return float((2 * (idx * x).sum() - (n + 1) * x.sum()) / (n * x.sum()))
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # ----- firms -----------------------------------------------------------
+    ftype = rng.choice(["bank", "hedge_fund", "insurer"],
+                       size=N_FIRMS, p=[0.5, 0.32, 0.18])
+    # designate the central counterparties
+    ccp_idx = rng.choice(N_FIRMS, N_CCP, replace=False)
+    ftype = ftype.astype(object)
+    for c in ccp_idx:
+        ftype[c] = "ccp"
+
+    # assets (size, $B), log-normalish; banks & ccp larger on average
+    base_assets = rng.lognormal(mean=2.4, sigma=0.9, size=N_FIRMS)
+    for i in range(N_FIRMS):
+        if ftype[i] == "bank":
+            base_assets[i] *= 1.8
+        elif ftype[i] == "ccp":
+            base_assets[i] *= 2.4
+        elif ftype[i] == "hedge_fund":
+            base_assets[i] *= 0.7
+    assets = np.clip(base_assets, 0.5, None)
+
+    # leverage: hedge funds high, banks moderate, insurers/ccp low; noisy.
+    lev = np.empty(N_FIRMS)
+    for i in range(N_FIRMS):
+        if ftype[i] == "hedge_fund":
+            lev[i] = np.clip(rng.normal(14, 6), 3, 45)
+        elif ftype[i] == "bank":
+            lev[i] = np.clip(rng.normal(9, 3), 2, 22)
+        elif ftype[i] == "insurer":
+            lev[i] = np.clip(rng.normal(6, 2), 1.5, 14)
+        else:  # ccp
+            lev[i] = np.clip(rng.normal(3, 1), 1.2, 6)
+
+    region = rng.choice(REGIONS, N_FIRMS)
+
+    firms = pd.DataFrame({
+        "node_id": [f"F{i:03d}" for i in range(1, N_FIRMS + 1)],
+        "type": ftype,
+        "assets": assets.round(2),
+        "leverage": lev.round(2),
+        "region": region,
+        "label": [f"{('CCP' if t == 'ccp' else str(t).replace('_', ' ').title())} {i:03d}"
+                  for i, t in zip(range(1, N_FIRMS + 1), ftype)],
+    })
+    node_ids = list(firms.node_id)
+    idx_of = {n: i for i, n in enumerate(node_ids)}
+    ccp_ids = [node_ids[c] for c in ccp_idx]
+
+    # ----- choose the failing firm: mid-size, top-decile leverage ----------
+    mid_mask = (assets > np.quantile(assets, 0.35)) & (assets < np.quantile(assets, 0.65))
+    cand = np.where(mid_mask & (ftype == "hedge_fund"))[0]
+    if len(cand) == 0:
+        cand = np.where(mid_mask)[0]
+    fail_i = int(cand[np.argmax(lev[cand])])
+    # force its leverage to the planted top-decile value
+    lev[fail_i] = FAIL_LEVERAGE
+    firms.loc[fail_i, "leverage"] = FAIL_LEVERAGE
+    fail_id = node_ids[fail_i]
+
+    # ----- structural sets -------------------------------------------------
+    # herd: a cluster of firms all lending to the same few debtors
+    herd_ids = list(rng.choice([n for n in node_ids if n != fail_id],
+                               N_HERD, replace=False))
+    herd_targets = list(rng.choice([n for n in node_ids
+                                    if n not in herd_ids and n != fail_id],
+                                   N_HERD_TARGETS, replace=False))
+    # front-runners: firms that cut outgoing exposure pre-crash
+    front_runners = set(rng.choice([n for n in node_ids if n != fail_id],
+                                   N_FRONT_RUNNERS, replace=False))
+    # low-leverage "quality" nodes (flight destinations after the crash)
+    quality_ids = [n for n in node_ids
+                   if firms.at[idx_of[n], "type"] in ("bank", "ccp")
+                   and firms.at[idx_of[n], "leverage"] <= 7]
+
+    # ----- systemic hub design --------------------------------------------
+    # One CCP is the SYSTEMIC bridge: firms split into two camps, and almost the
+    # only path between them runs through this CCP. That gives it the highest
+    # betweenness while its degree stays modest (a hidden systemic hub).
+    systemic_ccp = ccp_ids[0]
+    sys_i = idx_of[systemic_ccp]
+    camp = rng.integers(0, 2, N_FIRMS)        # camp 0 / camp 1
+    camp[sys_i] = -1                          # the hub belongs to neither camp
+    camp_of = {n: int(camp[idx_of[n]]) for n in node_ids}
+    # a modest set of "gateway" firms in each camp connect to the systemic CCP
+    camp0 = [n for n in node_ids if camp_of[n] == 0]
+    camp1 = [n for n in node_ids if camp_of[n] == 1]
+    gateways0 = list(rng.choice(camp0, min(9, len(camp0)), replace=False))
+    gateways1 = list(rng.choice(camp1, min(9, len(camp1)), replace=False))
+    gateways = set(gateways0 + gateways1)
+
+    # base "connectivity" per node ~ assets (bigger firms have more links)
+    connect = assets / assets.mean()
+
+    def exposure_amt(creditor, debtor):
+        a = assets[idx_of[creditor]]
+        return float(rng.gamma(2.0, 1.0) * (1.0 + 0.15 * a))
+
+    rows = []
+
+    def add_edge(seen, creditor, debtor, period, scale=1.0):
+        if creditor == debtor:
+            return
+        # the failed firm has no exposures (in OR out) once it fails
+        if period in ("during", "after") and debtor == fail_id:
+            return
+        amt = exposure_amt(creditor, debtor) * scale
+        key = debtor
+        if key in seen:
+            seen[key] += amt
+        else:
+            seen[key] = amt
+
+    # who lent TO the failed firm "before" (its creditors) -> needed for cascade
+    fail_creditors_before = []
+
+    for period in PERIODS:
+        rate = DENSIFY[period]
+        for creditor in node_ids:
+            # the failed firm has NO outgoing/incoming edges during & after
+            if period in ("during", "after") and creditor == fail_id:
+                continue
+
+            base_deg = max(0.4, 2.6 * connect[idx_of[creditor]] * rate)
+
+            # front-runners slash their out-exposure during the crash
+            if period == "during" and creditor in front_runners:
+                base_deg *= FRONT_RUNNER_CUT
+
+            n_ties = rng.poisson(base_deg)
+            seen = {}
+
+            # ---- systemic CCP as the bridge between the two camps -----------
+            # gateways route exposure THROUGH the systemic CCP; the CCP re-lends
+            # into the OTHER camp. Few links, but it sits on most cross-camp
+            # paths -> highest betweenness, modest degree.
+            if period in ("before", "during"):
+                if creditor in gateways:
+                    add_edge(seen, creditor, systemic_ccp, period)
+                if creditor == systemic_ccp:
+                    # lend a modest amount into both camps' gateways
+                    for t in (gateways0 + gateways1):
+                        if rng.random() < 0.55:
+                            add_edge(seen, creditor, t, period)
+
+            # other (non-systemic) CCPs are ordinary clearing nodes
+            if creditor in ccp_ids and creditor != systemic_ccp:
+                targets = rng.choice([n for n in node_ids if n != creditor],
+                                     size=min(6, n_ties + 3), replace=False)
+                for t in targets:
+                    add_edge(seen, creditor, t, period)
+
+            # ---- herd: herd members lend to the shared targets --------------
+            if creditor in herd_ids and period in ("before", "during"):
+                for t in herd_targets:
+                    if rng.random() < 0.75:
+                        add_edge(seen, creditor, t, period, scale=1.3)
+
+            # ---- ordinary exposures (mostly within one's own camp) ----------
+            my_camp = camp_of[creditor]
+            same_camp = camp0 if my_camp == 0 else (camp1 if my_camp == 1
+                                                    else node_ids)
+            for _ in range(int(n_ties)):
+                if period == "after":
+                    # FLIGHT TO QUALITY: route toward low-leverage bank/ccp
+                    if quality_ids and rng.random() < 0.7:
+                        debtor = str(rng.choice(quality_ids))
+                    else:
+                        debtor = str(rng.choice(node_ids))
+                else:
+                    # before/during: lend mostly within camp (keeps the systemic
+                    # CCP as the scarce cross-camp bridge), weighted by size
+                    pool = same_camp if rng.random() < 0.9 else node_ids
+                    w = np.array([connect[idx_of[n]] for n in pool], dtype=float)
+                    debtor = str(rng.choice(pool, p=w / w.sum()))
+                add_edge(seen, creditor, debtor, period)
+
+            # before: some firms lend to the failing firm (its creditors)
+            if period == "before" and creditor != fail_id and rng.random() < 0.18:
+                add_edge(seen, creditor, fail_id, period, scale=1.4)
+                fail_creditors_before.append(creditor)
+
+            for debtor, amt in seen.items():
+                rows.append({
+                    "from_id": creditor,       # creditor (lender)
+                    "to_id": debtor,           # debtor (borrower)
+                    "period": period,
+                    "exposure": round(amt, 2),
+                })
+
+    # ---- cascade: a share of the failed firm's creditors DROP edges during -
+    # We model this by removing a fraction of those creditors' DURING out-edges.
+    edges = pd.DataFrame(rows)
+    fail_creditors_before = list(dict.fromkeys(fail_creditors_before))
+    cascade_hit = set(rng.choice(
+        fail_creditors_before,
+        max(1, int(len(fail_creditors_before) * CASCADE_DROP)),
+        replace=False)) if fail_creditors_before else set()
+
+    keep = np.ones(len(edges), dtype=bool)
+    for i, r in edges.iterrows():
+        if r["period"] == "during" and r["from_id"] in cascade_hit:
+            # each cascade-hit creditor drops ~60% of its during edges
+            if rng.random() < 0.6:
+                keep[i] = False
+    edges = edges[keep].reset_index(drop=True)
+
+    firms.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+    by_p = edges.period.value_counts().to_dict()
+    print(f"financial-contagion: {len(firms)} nodes "
+          f"({(firms.type=='bank').sum()} banks, {(firms.type=='hedge_fund').sum()} hedge funds, "
+          f"{(firms.type=='insurer').sum()} insurers, {(firms.type=='ccp').sum()} ccps), "
+          f"{len(edges)} edges "
+          f"(before={by_p.get('before',0)}, during={by_p.get('during',0)}, "
+          f"after={by_p.get('after',0)}); exposure Gini(before)="
+          f"{_gini(edges[edges.period=='before'].groupby('to_id').exposure.sum().values):.2f}.")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/financial-contagion/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `financial-contagion` project network (R)
+#' @description
+#'
+#' Reads the two CSVs in this folder and builds a directed, weighted igraph
+#' object: directed financial exposures (creditor -> debtor) among ~220 firms
+#' across three periods of a crisis (before / during / after). Run it straight
+#' (`Rscript load.R`) for a quick summary, or `source()` it and call
+#' `load_contagion()` to get the graph in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "financial-contagion")
+
+#' Load the node table (one row per firm).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per creditor x debtor x period).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the directed, weighted graph.
+#'
+#' Edges are weighted by `exposure` (dollars at risk). Because the data is
+#' temporal (a `period` column: before/during/after), an exposure between the
+#' same pair can appear up to 3 times; igraph keeps them as parallel edges, so
+#' filter to one `period` first if you want a single-period graph.
+load_contagion <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = TRUE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$exposure
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n\U0001F3E6 financial-contagion (R)\n")
+  cat("   Directed creditor -> debtor exposures; before / during / after a crisis.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_contagion(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d nodes (%d banks, %d hedge funds, %d insurers, %d ccps) and %d edges.\n",
+              nrow(nodes), sum(nodes$type == "bank"), sum(nodes$type == "hedge_fund"),
+              sum(nodes$type == "insurer"), sum(nodes$type == "ccp"), nrow(edges)))
+  for (p in c("before", "during", "after")) {
+    cat(sprintf("   period %-7s: %d exposures\n", p, sum(edges$period == p)))
+  }
+  cat(sprintf("\U0001F517 Directed: %s | total exposure: %s\n",
+              is_directed(g), format(round(sum(edges$exposure)), big.mark = ",")))
+  cat("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.\n")
+}
+```
+
+---
+
+## `data/projects/financial-contagion/load.py`
+
+```python
+"""Load the `financial-contagion` project network (Python).
+
+Reads the two CSVs in this folder and builds a directed, weighted python-igraph
+object: directed financial exposures (creditor -> debtor) among ~220 firms across
+three periods of a crisis (before / during / after). Run it straight
+(``python load.py``) for a quick summary, or import ``load_contagion()`` into
+your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per firm."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per creditor x debtor x period."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_contagion(nodes: pd.DataFrame | None = None,
+                   edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the directed, weighted graph (edge weight = ``exposure``).
+
+    The data is temporal (a ``period`` column: before/during/after), so an
+    exposure between the same pair can appear up to 3 times as parallel edges.
+    Filter to one ``period`` first if you want a single-period graph.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=True, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["exposure"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n\U0001F3E6 financial-contagion (Python)")
+    print("   Directed creditor -> debtor exposures; before / during / after a crisis.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_contagion(nodes, edges)
+
+    t = nodes["type"].value_counts()
+    print(f"✅ Loaded {len(nodes)} nodes "
+          f"({t.get('bank',0)} banks, {t.get('hedge_fund',0)} hedge funds, "
+          f"{t.get('insurer',0)} insurers, {t.get('ccp',0)} ccps) "
+          f"and {len(edges)} edges.")
+    for p in ("before", "during", "after"):
+        print(f"   period {p:<7}: {(edges['period']==p).sum()} exposures")
+    print(f"\U0001F517 Directed: {g.is_directed()} | total exposure: "
+          f"{round(edges['exposure'].sum()):,}")
+    print("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.")
+```
+
+---
+
+## `data/projects/mutualaid-quake/README.md`
+
+# mutualaid-quake
+
+*Who helped whom in fictional "Eastvale" before, during, and after an
+earthquake: a directed neighborhood mutual-aid network of residents and local
+organizations.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Directed (aid flows from giver → receiver) |
+| **Weights** | Weighted (`amount` of aid per edge; `acts` = number of helping acts) |
+| **Modality** | Multimodal — 2 node kinds (`resident`, `org`) |
+| **Temporal** | Yes — one row per (giver, receiver, **period**: before / during / after) |
+| **Nodes** | 250 (222 residents + 28 orgs) |
+| **Edges** | 2,935 (before 325 · during 1,899 · after 711) |
+| **Files** | `nodes.csv`, `edges.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+When the ground shook in **Eastvale**, neighbors started helping neighbors. This
+network records directed acts of **mutual aid** — food, shelter, information, and
+money passed from a giver to a receiver — across three periods: the ordinary days
+**before** the quake, the acute shock **during** it, and the **after** recovery.
+Nodes are individual **residents** (with block, income, tenure, age, and whether
+they were civically active before the quake) and local **organizations** —
+churches, schools, nonprofits, community centers. Eight sub-neighborhood blocks
+(`B1`–`B8`) carve up the town. Each edge carries how much aid moved and how many
+separate helping acts it represents.
+
+This is a network for studying **social capital, brokerage, and recovery**. Some
+questions worth chewing on:
+
+- Who becomes a hub when disaster strikes? Are the people and places that carry
+  the load *during* the shock the same ones who were central *before*?
+- Does the *structure* of a sub-neighborhood predict how it fares afterward? Why
+  do some blocks bounce back while one seems to stay starved?
+- Money isn't everything. Is the wealthiest block also the best connected — or
+  could resources and connectedness pull apart?
+- Who sits on the most paths during the crisis? Are the key brokers obvious from
+  their pre-quake standing, or do new leaders emerge?
+- Does the surge of helping fade completely afterward, or does some of it stick —
+  and does it stick evenly everywhere?
+
+> **Note.** The interesting findings here are deliberately *not* documented.
+> "Everyone helps more during a disaster" is the starting point, not a finding.
+> Push past the obvious densification.
+
+## `nodes.csv`
+
+One row per node. Org rows leave the resident-only demographic columns blank.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique key. `P###` resident, `O###` organization. Referenced by edges. | character | `P001`, `O014` |
+| `kind` | Node kind | Whether this node is a person or an organization. | character | `resident`, `org` |
+| `block` | Sub-neighborhood block | Which of the eight Eastvale blocks the node sits in. | character | `B1`, `B6`, `B8` |
+| `income` | Household income | Resident annual household income, USD (blank for orgs). | integer | `62711`, `143919` |
+| `tenure` | Housing tenure | Whether the resident owns or rents (blank for orgs). | character | `homeowner`, `renter` |
+| `age` | Age | Resident age in years (blank for orgs). | integer | `26`, `71` |
+| `prior_civic` | Prior civic engagement | 1 if active in community orgs before the quake, else 0 (orgs are always 1). | integer | `0`, `1` |
+| `label` | Display name | Human-readable label. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Resident 001`, `Nonprofit 01` |
+
+## `edges.csv`
+
+One row per (giver, receiver, period). Directed: aid flows from `from_id` to
+`to_id`.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | Giver node ID | Node providing the aid (joins to `nodes.csv`). | character | `P002`, `O014` |
+| `to_id` | Receiver node ID | Node receiving the aid (joins to `nodes.csv`). | character | `P211`, `O014` |
+| `period` | Period | Phase of the disaster the aid occurred in. | character | `before`, `during`, `after` |
+| `amount` | Aid amount | Total aid given on this edge in the period (the edge weight; arbitrary units). | double | `20.9`, `120.8` |
+| `acts` | Helping acts | Number of distinct helping acts that make up this edge. | integer | `1`, `2` |
+| `aid_type` | Aid type | Dominant kind of aid exchanged. | character | `food`, `shelter`, `info`, `money` |
+| `cross_block` | Cross-block flag | 1 if giver and receiver are in different blocks, else 0. | integer | `0`, `1` |
+
+## Load it
+
+```bash
+Rscript data/projects/mutualaid-quake/load.R     # R    (igraph)
+python  data/projects/mutualaid-quake/load.py     # Python (python-igraph)
+```
+
+Both build a directed, weighted `igraph` graph and print a one-screen summary. In
+the [R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**mutualaid-quake** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/mutualaid-quake>
+
+---
+
+## `data/projects/mutualaid-quake/_generate.py`
+
+```python
+"""Generate the `mutualaid-quake` project network (deterministic).
+
+A neighborhood mutual-aid network in fictional "Eastvale" spanning three periods
+of an earthquake disaster:
+  - period = "before"   (ordinary times, sparse helping)
+  - period = "during"   (the shock; helping surges)
+  - period = "after"    (recovery; partly persistent)
+
+Nodes are people and organizations across eight sub-neighborhood blocks (B1..B8):
+  - ~residents (kind = "resident")
+  - ~orgs      (kind = "org") churches, schools, nonprofits, community centers
+  -> ~250 nodes total.
+
+Edges are directed acts of aid GIVEN from giver to receiver (food / shelter /
+info / money), weighted by amount/frequency, one row per (giver, receiver,
+period).
+
+Design parameters (the only record of the planted structure):
+  - CIVIC_ACTIVATION: orgs and prior-civic residents are ordinary "before" but
+    their out/in strength jumps far more than others "during" (latent social
+    capital activates) and decays only partly "after".
+  - BRIDGE_RECOVERY: blocks with more cross-block bridging ties receive more aid
+    "after" (bridging predicts recovery); STARVED_BLOCK has almost no bridges and
+    stays starved.
+  - ENCLAVE_BLOCK: one high-income block is internally cohesive but barely linked
+    to the rest (external-tie share low despite high income).
+  - BROKERS: a few residents with low "before" centrality have the highest
+    betweenness "during" (emergent informal leaders / brokers).
+  - DENSIFY/PERSIST: edge counts rise "during" then partly persist "after"
+    (new ties formed = social capital), non-uniformly across blocks.
+
+Run:
+    python data/projects/mutualaid-quake/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+N_RESIDENTS = 222
+N_ORGS = 28                       # -> 250 nodes
+BLOCKS = [f"B{i}" for i in range(1, 9)]
+PERIODS = ["before", "during", "after"]
+AID_TYPES = ["food", "shelter", "info", "money"]
+
+# --- planted parameters -----------------------------------------------------
+PRIOR_CIVIC_RATE = 0.20          # share of residents civically active pre-quake
+CIVIC_ACTIVATION = 3.4           # multiplier on "during" giving for orgs/civic
+CIVIC_PERSIST = 1.6              # residual "after" multiplier for them
+ENCLAVE_BLOCK = "B6"             # affluent, internally cohesive, externally sparse
+ENCLAVE_EXTERNAL_DAMP = 0.12     # enclave cross-block ties scaled way down
+STARVED_BLOCK = "B8"             # isolated; almost no bridges; recovers poorly
+N_BROKERS = 9                    # emergent informal leaders during the shock
+DENSIFY = {"before": 1.0, "during": 3.2, "after": 1.7}  # base tie-rate by period
+
+# per-block "bridging propensity": how readily a block forms cross-block ties.
+# High-bridge blocks recover better "after"; enclave & starved are low.
+BRIDGE_PROPENSITY = {
+    "B1": 1.30, "B2": 1.15, "B3": 1.45, "B4": 1.00,
+    "B5": 0.85, "B6": 0.25, "B7": 1.20, "B8": 0.18,
+}
+# block base income centers (USD), gives a spatial-ish gradient + noise
+BLOCK_INCOME = {
+    "B1": 62000, "B2": 54000, "B3": 71000, "B4": 48000,
+    "B5": 58000, "B6": 138000, "B7": 66000, "B8": 41000,
+}
+
+
+def _gini(x: np.ndarray) -> float:
+    x = np.sort(np.asarray(x, dtype=float))
+    n = len(x)
+    if n == 0 or x.sum() == 0:
+        return 0.0
+    idx = np.arange(1, n + 1)
+    return float((2 * (idx * x).sum() - (n + 1) * x.sum()) / (n * x.sum()))
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # ----- residents -------------------------------------------------------
+    # assign residents to blocks (enclave & starved a bit smaller)
+    block_w = np.array([1.0, 1.0, 1.0, 1.1, 1.0, 0.75, 1.0, 0.7])
+    block_w /= block_w.sum()
+    res_block = rng.choice(BLOCKS, N_RESIDENTS, p=block_w)
+
+    income = np.array([
+        np.clip(BLOCK_INCOME[b] + rng.normal(0, 11000), 18000, 240000)
+        for b in res_block
+    ])
+    tenure = np.where(
+        rng.random(N_RESIDENTS) < (0.35 + 0.0000035 * (income - 40000)),
+        "homeowner", "renter")
+    age = np.clip(rng.normal(44, 16, N_RESIDENTS), 18, 92).round(0).astype(int)
+    # prior civic engagement: more likely for homeowners & longer-lived; noisy.
+    civic_p = np.clip(
+        PRIOR_CIVIC_RATE
+        + 0.10 * (tenure == "homeowner")
+        + 0.004 * (age - 44)
+        + rng.normal(0, 0.05, N_RESIDENTS),
+        0.02, 0.85)
+    prior_civic = (rng.random(N_RESIDENTS) < civic_p).astype(int)
+
+    residents = pd.DataFrame({
+        "node_id": [f"P{i:03d}" for i in range(1, N_RESIDENTS + 1)],
+        "kind": "resident",
+        "block": res_block,
+        "income": income.round(0).astype(int),
+        "tenure": tenure,
+        "age": age,
+        "prior_civic": prior_civic,
+        "label": [f"Resident {i:03d}" for i in range(1, N_RESIDENTS + 1)],
+    })
+
+    # ----- orgs ------------------------------------------------------------
+    org_kinds = ["church", "school", "nonprofit", "community_center"]
+    org_block = rng.choice(BLOCKS, N_ORGS)
+    org_type = rng.choice(org_kinds, N_ORGS)
+    orgs = pd.DataFrame({
+        "node_id": [f"O{i:03d}" for i in range(1, N_ORGS + 1)],
+        "kind": "org",
+        "block": org_block,
+        "income": pd.NA,
+        "tenure": pd.NA,
+        "age": pd.NA,
+        "prior_civic": 1,            # orgs are civic by definition
+        "label": [f"{t.replace('_', ' ').title()} {i:02d}"
+                  for i, t in zip(range(1, N_ORGS + 1), org_type)],
+    })
+
+    nodes = pd.concat([residents, orgs], ignore_index=True)
+    node_ids = list(nodes.node_id)
+    block_of = dict(zip(nodes.node_id, nodes.block))
+    is_org = dict(zip(nodes.node_id, nodes.kind == "org"))
+    civic_of = dict(zip(nodes.node_id, nodes.prior_civic.fillna(0).astype(int)))
+
+    # "latent capacity" = how central a node becomes during the shock.
+    # orgs and prior-civic residents have high latent capacity (the planted hubs).
+    by_block = {b: [n for n in node_ids if block_of[n] == b] for b in BLOCKS}
+
+    # emergent brokers: pick low-civic ordinary residents (not orgs, not civic)
+    ordinary = [n for n in node_ids
+                if not is_org[n] and civic_of[n] == 0]
+    broker_set = set(rng.choice(ordinary, N_BROKERS, replace=False))
+
+    latent = {}
+    for n in node_ids:
+        base = rng.gamma(2.0, 0.5)
+        if is_org[n]:
+            base *= CIVIC_ACTIVATION
+        elif civic_of[n] == 1:
+            base *= (CIVIC_ACTIVATION * 0.7)
+        latent[n] = base
+
+    # per-node small "popularity" used to weight who receives aid generally
+    popularity = {n: rng.gamma(2.0, 1.0) for n in node_ids}
+
+    # ----- build edges -----------------------------------------------------
+    # We sample directed giver->receiver ties per period. The number of ties a
+    # node initiates scales with its period-specific "giving capacity".
+    rows = []
+
+    def giving_capacity(n, period):
+        # baseline ordinary capacity (small, gamma) + activation during shock
+        base = 0.6 + 0.5 * rng.gamma(1.5, 1.0)
+        cap = base
+        if period == "during":
+            if is_org[n] or civic_of[n] == 1:
+                cap *= CIVIC_ACTIVATION
+            else:
+                cap *= 1.5            # general densification for everyone
+        elif period == "after":
+            if is_org[n] or civic_of[n] == 1:
+                cap *= CIVIC_PERSIST
+            else:
+                cap *= 1.05
+        return cap
+
+    def pick_receiver(giver, period):
+        gb = block_of[giver]
+        # decide same-block vs cross-block (a "bridge")
+        bridge_pref = BRIDGE_PROPENSITY[gb]
+        # enclave gives almost no external ties
+        if gb == ENCLAVE_BLOCK:
+            bridge_pref *= ENCLAVE_EXTERNAL_DAMP
+        p_bridge = np.clip(0.35 * bridge_pref, 0.02, 0.85)
+        cross = rng.random() < p_bridge
+        if cross:
+            others = [b for b in BLOCKS if b != gb]
+            # starved block is rarely chosen as a bridge target (few bridges in)
+            w = np.array([0.2 if b == STARVED_BLOCK else 1.0 for b in others])
+            tb = rng.choice(others, p=w / w.sum())
+            pool = by_block[tb]
+        else:
+            pool = [x for x in by_block[gb] if x != giver]
+        if not pool:
+            return None
+        # receivers weighted by popularity; brokers attract more flow DURING
+        wts = np.array([popularity[x] for x in pool], dtype=float)
+        if period == "during":
+            for k, x in enumerate(pool):
+                if x in broker_set:
+                    wts[k] *= 4.0      # brokers sit on many during-shock paths
+        wts /= wts.sum()
+        return str(rng.choice(pool, p=wts))
+
+    for period in PERIODS:
+        rate = DENSIFY[period]
+        for giver in node_ids:
+            cap = giving_capacity(giver, period) * rate
+            n_ties = rng.poisson(max(cap, 0.05))
+            # brokers initiate extra bridging ties during the shock
+            if period == "during" and giver in broker_set:
+                n_ties += rng.poisson(4.0)
+            seen = {}
+            for _ in range(int(n_ties)):
+                recv = pick_receiver(giver, period)
+                if recv is None or recv == giver:
+                    continue
+                key = recv
+                # amount of aid (weight): orgs/civic give larger amounts during
+                amt = rng.gamma(2.0, 18.0)
+                if period == "during" and (is_org[giver] or civic_of[giver] == 1):
+                    amt *= 1.5
+                aid = rng.choice(AID_TYPES, p=[0.4, 0.2, 0.25, 0.15])
+                if key in seen:
+                    seen[key]["amount"] += amt
+                    seen[key]["acts"] += 1
+                else:
+                    seen[key] = {"amount": amt, "acts": 1, "aid_type": aid}
+            for recv, d in seen.items():
+                rows.append({
+                    "from_id": giver,
+                    "to_id": recv,
+                    "period": period,
+                    "amount": round(float(d["amount"]), 1),
+                    "acts": int(d["acts"]),
+                    "aid_type": d["aid_type"],
+                    "cross_block": int(block_of[giver] != block_of[recv]),
+                })
+
+    edges = pd.DataFrame(rows)
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+    by_p = edges.period.value_counts().to_dict()
+    print(f"mutualaid-quake: {len(nodes)} nodes "
+          f"({(nodes.kind=='resident').sum()} residents + {(nodes.kind=='org').sum()} orgs), "
+          f"{len(edges)} edges "
+          f"(before={by_p.get('before',0)}, during={by_p.get('during',0)}, "
+          f"after={by_p.get('after',0)}); aid Gini(during)="
+          f"{_gini(edges[edges.period=='during'].groupby('to_id').amount.sum().values):.2f}.")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/mutualaid-quake/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `mutualaid-quake` project network (R)
+#' @description
+#'
+#' Reads the two CSVs in this folder and builds a directed, weighted igraph
+#' object: acts of mutual aid given between residents and organizations in
+#' fictional "Eastvale" across three periods of an earthquake. Run it straight
+#' (`Rscript load.R`) for a quick summary, or `source()` it and call
+#' `load_mutualaid()` to get the graph in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "mutualaid-quake")
+
+#' Load the node table (one row per resident / org).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per giver x receiver x period).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the directed, weighted graph.
+#'
+#' Edges are weighted by `amount` (aid given). Because the data is temporal (a
+#' `period` column with before/during/after), an edge between the same pair can
+#' appear up to 3 times; igraph keeps them as parallel edges, so filter to one
+#' `period` first if you want a single-period graph.
+load_mutualaid <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = TRUE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$amount
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n\U0001F91D mutualaid-quake (R)\n")
+  cat("   Directed aid between residents & orgs; before / during / after a quake.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_mutualaid(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d nodes (%d residents, %d orgs) and %d edges.\n",
+              nrow(nodes), sum(nodes$kind == "resident"),
+              sum(nodes$kind == "org"), nrow(edges)))
+  for (p in c("before", "during", "after")) {
+    cat(sprintf("   period %-7s: %d ties\n", p, sum(edges$period == p)))
+  }
+  cat(sprintf("\U0001F517 Directed: %s | total aid given: %s\n",
+              is_directed(g), format(round(sum(edges$amount)), big.mark = ",")))
+  cat("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.\n")
+}
+```
+
+---
+
+## `data/projects/mutualaid-quake/load.py`
+
+```python
+"""Load the `mutualaid-quake` project network (Python).
+
+Reads the two CSVs in this folder and builds a directed, weighted python-igraph
+object: acts of mutual aid given between residents and organizations in fictional
+"Eastvale" across three periods of an earthquake. Run it straight
+(``python load.py``) for a quick summary, or import ``load_mutualaid()`` into
+your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per resident / org."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per giver x receiver x period."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_mutualaid(nodes: pd.DataFrame | None = None,
+                   edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the directed, weighted graph (edge weight = ``amount``).
+
+    The data is temporal (a ``period`` column: before/during/after), so an edge
+    between the same pair can appear up to 3 times as parallel edges. Filter to
+    one ``period`` first if you want a single-period graph.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=True, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["amount"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n\U0001F91D mutualaid-quake (Python)")
+    print("   Directed aid between residents & orgs; before / during / after a quake.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_mutualaid(nodes, edges)
+
+    kinds = nodes["kind"].value_counts()
+    print(f"✅ Loaded {len(nodes)} nodes "
+          f"({kinds.get('resident',0)} residents, {kinds.get('org',0)} orgs) "
+          f"and {len(edges)} edges.")
+    for p in ("before", "during", "after"):
+        print(f"   period {p:<7}: {(edges['period']==p).sum()} ties")
+    print(f"\U0001F517 Directed: {g.is_directed()} | total aid given: "
+          f"{round(edges['amount'].sum()):,}")
+    print("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.")
+```
+
+---
+
+## `data/projects/opensource-deps/README.md`
+
+# opensource-deps
+
+*A snapshot of an open-source software ecosystem's dependency graph: which
+packages depend on which, and how heavily.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Directed (`from` depends on → `to`) |
+| **Weights** | Weighted (`import_count` = how heavily the dependency is used) |
+| **Modality** | One node kind (`package`) |
+| **Temporal** | No — a single snapshot |
+| **Nodes** | 400 packages |
+| **Edges** | 2,251 "depends on" relationships |
+| **Files** | `nodes.csv`, `edges.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+Every node is a software **package**; a directed edge `A → B` means *package A
+depends on package B* (A imports and calls into B). The edge weight,
+`import_count`, is how many call sites in A reach into B — a proxy for how heavily
+A leans on that dependency. Each package carries its `ecosystem_area` (web, data,
+build, test, crypto), its number of `maintainers`, its `weekly_downloads`, and how
+many `months_since_update` it has gone without a release.
+
+This is a directed-graph **criticality, reachability, and reverse-dependency**
+playground. Some things worth investigating:
+
+- Direct in-degree (how many packages name you as a dependency) is the obvious
+  importance measure. But is it the *right* one? What happens if you count how many
+  packages can reach you *transitively* — and does that change who looks critical?
+- If one package were compromised or yanked, how much of the ecosystem would feel
+  it? Is the biggest blast radius attached to a big, well-known library — or
+  something small?
+- Risk is not just about reach. Combine reach with `maintainers` and
+  `months_since_update`: is there a package the whole ecosystem leans on that
+  almost nobody is maintaining?
+- Out-degree tells a different story than in-degree. Is any package unusually
+  fragile because it depends on a huge number of others?
+- Look for packages that look almost identical and sit at the same depth, each
+  with a large but *different* set of dependents. What would happen if a project
+  needed both?
+
+> **Note.** The interesting findings here are deliberately *not* documented.
+> "Popular libraries are depended on a lot" is the starting point, not a finding.
+> Look at what direct degree alone hides.
+
+## `nodes.csv`
+
+One row per package.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique key. `pkg###`. Referenced by edges. | character | `pkg001`, `pkg007`, `pkg400` |
+| `ecosystem_area` | Ecosystem area | Functional area the package serves. | character | `web`, `data`, `crypto` |
+| `maintainers` | Maintainer count | Number of active maintainers on the package. | integer | `1`, `4`, `10` |
+| `weekly_downloads` | Weekly downloads | Registry downloads in a typical week. | integer | `8532`, `154618` |
+| `months_since_update` | Months since update | Months since the last release. | double | `0.1`, `12.4`, `57.0` |
+| `label` | Display name | Human-readable label. (`name` is avoided — python-igraph reserves it for the ID.) | character | `web-lib-001`, `tiny-pad` |
+
+## `edges.csv`
+
+One row per dependency. Directed: `from_id` depends on `to_id`.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | Dependent package ID | The package that has the dependency (joins to `nodes.csv`). | character | `pkg042` |
+| `to_id` | Dependency package ID | The package being depended on (joins to `nodes.csv`). | character | `pkg007` |
+| `import_count` | Import count | Number of call sites through which `from_id` uses `to_id` (the edge weight). | integer | `1`, `7`, `30` |
+
+## Load it
+
+```bash
+Rscript data/projects/opensource-deps/load.R     # R    (igraph)
+python  data/projects/opensource-deps/load.py     # Python (python-igraph)
+```
+
+Both build a directed, weighted `igraph` graph (edge weight = `import_count`) and
+print a one-screen summary. In the
+[R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**opensource-deps** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/opensource-deps>
+
+---
+
+## `data/projects/opensource-deps/_generate.py`
+
+```python
+"""Generate the `opensource-deps` project network (deterministic).
+
+A package dependency graph for a fictional open-source ecosystem:
+  - ~400 packages (kind = "package")
+  - directed "depends on" edges (package -> the dependency it imports)
+weighted by `import_count` (how many call sites use that dependency = how
+heavily it is used).
+
+Design parameters (the only record of the planted structure):
+  - LEFTPAD: one tiny utility package has LOW direct in-degree relative to the
+    big libraries, but a HUGE transitive in-degree (almost the whole ecosystem
+    can reach it) -> the hidden critical supply-chain node.
+  - ABANDONED: a package with very high downstream reach has months_since_update
+    in the top decile AND maintainers == 1 (bus-factor risk on a critical node).
+  - GOD_PKG: one package depends on an unusually large number of others (huge
+    out-degree) -> fragile, breaks if any dependency breaks.
+  - DIAMOND: a popular lower-level library exists as TWO version nodes (v1 / v2);
+    many packages depend on one or the other -> a version-conflict hotspot.
+
+Run:
+    python data/projects/opensource-deps/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+N_PACKAGES = 400
+AREAS = ["web", "data", "build", "test", "crypto"]
+
+# --- planted parameters -----------------------------------------------------
+N_FOUNDATION = 8       # a few low-level libraries everyone leans on
+GOD_OUT_DEGREE = 55    # the "god package" depends on this many others (outlier)
+DIAMOND_DEPENDENTS = 70  # how many packages point at each version of the diamond lib
+LEFTPAD_DIRECT = 6     # the left-pad node's small DIRECT in-degree (looks minor)
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # ----- packages --------------------------------------------------------
+    area = rng.choice(AREAS, size=N_PACKAGES, p=[0.34, 0.26, 0.16, 0.16, 0.08])
+    node_id = np.array([f"pkg{i:03d}" for i in range(1, N_PACKAGES + 1)])
+
+    # a "level" 0..3: lower levels are more foundational (depended on more).
+    # foundation libs are level 0; leaves (apps) are level 3.
+    level = rng.choice([0, 1, 2, 3], size=N_PACKAGES, p=[0.06, 0.24, 0.40, 0.30])
+
+    # popularity (weekly downloads) is heavy-tailed and higher for low levels.
+    base_pop = rng.lognormal(mean=9.0, sigma=1.6, size=N_PACKAGES)
+    pop_mult = np.array([4.0, 2.2, 1.2, 0.7])[level]
+    weekly_downloads = (base_pop * pop_mult).astype(int)
+
+    maintainers = np.clip(rng.poisson(2.4, N_PACKAGES) + 1, 1, 18)
+    months_since_update = np.clip(rng.gamma(2.0, 4.0, N_PACKAGES), 0, 60).round(1)
+
+    labels = np.array([f"{a}-lib-{i:03d}" for i, a in zip(range(1, N_PACKAGES + 1), area)])
+
+    # ----- pick the special nodes ------------------------------------------
+    foundation = node_id[level == 0]
+    # left-pad: a tiny utility, force it to look like a low-level helper but we
+    # will route nearly everything through it transitively while keeping its
+    # DIRECT in-degree small.
+    leftpad = "pkg007"
+    god_pkg = "pkg400"            # the god package (will get huge out-degree)
+    # diamond: two version nodes of one popular library
+    diamond_v1 = "pkg010"
+    diamond_v2 = "pkg011"
+    abandoned = "pkg015"         # high-reach + stale + single maintainer
+
+    idx = {nid: i for i, nid in enumerate(node_id)}
+
+    # force attributes for the planted nodes
+    level[idx[leftpad]] = 0
+    area[idx[leftpad]] = "build"
+    maintainers[idx[leftpad]] = 2
+    months_since_update[idx[leftpad]] = 7.0
+    weekly_downloads[idx[leftpad]] = int(weekly_downloads.mean() * 0.6)  # modest!
+    labels[idx[leftpad]] = "tiny-pad"
+
+    level[idx[diamond_v1]] = 0
+    level[idx[diamond_v2]] = 0
+    area[idx[diamond_v1]] = "data"
+    area[idx[diamond_v2]] = "data"
+    labels[idx[diamond_v1]] = "coreutil-v1"
+    labels[idx[diamond_v2]] = "coreutil-v2"
+    weekly_downloads[idx[diamond_v1]] = int(weekly_downloads.mean() * 3.5)
+    weekly_downloads[idx[diamond_v2]] = int(weekly_downloads.mean() * 3.0)
+
+    level[idx[god_pkg]] = 3
+    area[idx[god_pkg]] = "web"
+    labels[idx[god_pkg]] = "kitchen-sink"
+
+    # abandoned-but-critical: stale + single maintainer + (high reach engineered below)
+    level[idx[abandoned]] = 0
+    maintainers[idx[abandoned]] = 1
+    months_since_update[idx[abandoned]] = 57.0
+    area[idx[abandoned]] = "crypto"
+    weekly_downloads[idx[abandoned]] = int(weekly_downloads.mean() * 2.0)
+    labels[idx[abandoned]] = "oldcrypto"
+
+    # ----- build dependency edges ------------------------------------------
+    # General rule: a package depends mostly on packages at a LOWER level
+    # (more foundational), a few at the same level, weighted by popularity.
+    edges = {}   # (src,dst) -> import_count
+
+    def add_edge(src, dst, w=None):
+        if src == dst:
+            return
+        key = (src, dst)
+        if w is None:
+            w = int(np.clip(rng.gamma(2.0, 3.0), 1, 60))
+        edges[key] = edges.get(key, 0) + w
+
+    pop_norm = weekly_downloads / weekly_downloads.max()
+
+    for i in range(N_PACKAGES):
+        src = node_id[i]
+        if src in (leftpad, god_pkg):
+            continue   # handled specially
+        lv = level[i]
+        # number of direct dependencies grows with level (apps depend on more)
+        n_deps = {0: rng.integers(0, 3), 1: rng.integers(1, 5),
+                  2: rng.integers(2, 8), 3: rng.integers(3, 11)}[lv]
+        # candidate targets: lower or equal level
+        cand_mask = (level <= lv) & (node_id != src)
+        cand = node_id[cand_mask]
+        if len(cand) == 0:
+            continue
+        cand_pop = pop_norm[cand_mask] + 0.02
+        w = cand_pop / cand_pop.sum()
+        chosen = rng.choice(cand, size=min(n_deps, len(cand)), replace=False, p=w)
+        for dst in chosen:
+            add_edge(src, str(dst))
+
+    # ----- LEFT-PAD: keep direct in-degree small, transitive in-degree huge --
+    # Strategy: make the FOUNDATION libraries (which everything reaches) all
+    # depend on left-pad. So anyone who depends on a foundation lib transitively
+    # reaches left-pad, but left-pad's own direct dependents are just the few
+    # foundation libs + a handful -> small direct in-degree.
+    foundation_deps = [f for f in foundation if f not in (leftpad,)]
+    # pick a small set of direct dependents = the foundation libs (a handful)
+    direct_dependents = list(rng.choice(foundation_deps,
+                                        size=min(LEFTPAD_DIRECT, len(foundation_deps)),
+                                        replace=False))
+    for d in direct_dependents:
+        add_edge(str(d), leftpad, w=int(rng.integers(2, 8)))
+    # ensure the diamond version libs (which sit at the top of reachability) also
+    # depend on left-pad, so left-pad inherits all of THEIR ancestors too. This
+    # pushes left-pad's TRANSITIVE in-degree above every other node while its
+    # DIRECT in-degree stays small.
+    for d in (diamond_v1, diamond_v2):
+        add_edge(d, leftpad, w=int(rng.integers(2, 8)))
+    # to make transitive reach huge, ensure MOST mid/high-level packages depend
+    # (directly) on at least one of these foundation libs -> they all reach
+    # left-pad through it.
+    midhigh = node_id[level >= 1]
+    for src in midhigh:
+        if src in (leftpad, god_pkg):
+            continue
+        # 80% of mid/high packages get wired to a foundation lib (the conduit)
+        if rng.random() < 0.80:
+            dst = str(rng.choice(direct_dependents))
+            add_edge(str(src), dst)
+
+    # ----- GOD PACKAGE: depends on a huge number of others -----------------
+    god_targets = rng.choice([n for n in node_id if n != god_pkg],
+                             size=GOD_OUT_DEGREE, replace=False)
+    for dst in god_targets:
+        add_edge(god_pkg, str(dst))
+
+    # ----- DIAMOND: two versions, each with many distinct dependents --------
+    pool = [n for n in node_id if n not in (diamond_v1, diamond_v2, leftpad, god_pkg)]
+    rng.shuffle(pool)
+    v1_dependents = pool[:DIAMOND_DEPENDENTS]
+    v2_dependents = pool[DIAMOND_DEPENDENTS:2 * DIAMOND_DEPENDENTS]
+    for s in v1_dependents:
+        add_edge(str(s), diamond_v1, w=int(rng.integers(1, 20)))
+    for s in v2_dependents:
+        add_edge(str(s), diamond_v2, w=int(rng.integers(1, 20)))
+
+    # ----- ABANDONED-but-critical: give it high downstream reach -----------
+    # make many mid-level libs depend on it so a large fraction reaches it.
+    abandoned_direct = rng.choice([n for n in node_id[level >= 1]
+                                   if n not in (abandoned, god_pkg)],
+                                  size=45, replace=False)
+    for s in abandoned_direct:
+        add_edge(str(s), abandoned, w=int(rng.integers(1, 12)))
+
+    # ----- guarantee LEFT-PAD tops transitive in-degree --------------------
+    # Build the directed graph, find the few nodes with reach above left-pad, and
+    # make THEM depend on left-pad: left-pad then inherits all their ancestors and
+    # ends up with the single largest transitive in-degree, while its direct
+    # in-degree stays an order of magnitude below the big libraries.
+    import igraph as _ig
+    _erows = [(s, d) for (s, d) in edges.keys()]
+    _g = _ig.Graph(directed=True)
+    _g.add_vertices(list(node_id))
+    _g.add_edges([(s, d) for (s, d) in _erows])
+    def _trans_in(graph, name):
+        return len(graph.subcomponent(name, mode="in")) - 1
+    lp_reach = _trans_in(_g, leftpad)
+    # nodes whose reach >= left-pad's (excluding itself); make them depend on it
+    above = []
+    for nm in node_id:
+        if nm == leftpad:
+            continue
+        if _trans_in(_g, nm) >= lp_reach:
+            above.append(nm)
+    for nm in above:
+        add_edge(str(nm), leftpad, w=int(rng.integers(1, 5)))
+
+    # ----- emit ------------------------------------------------------------
+    edge_rows = [{"from_id": s, "to_id": d, "import_count": w}
+                 for (s, d), w in edges.items()]
+    edges_df = pd.DataFrame(edge_rows)
+
+    nodes = pd.DataFrame({
+        "node_id": node_id,
+        "ecosystem_area": area,
+        "maintainers": maintainers,
+        "weekly_downloads": weekly_downloads,
+        "months_since_update": months_since_update,
+        "label": labels,
+    })
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges_df.to_csv(HERE / "edges.csv", index=False)
+    print(f"opensource-deps: {len(nodes)} packages, {len(edges_df)} dependency edges "
+          f"(areas: {dict(pd.Series(area).value_counts())}).")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/opensource-deps/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `opensource-deps` project network (R)
+#' @description
+#'
+#' Reads the two CSVs in this folder and builds a directed, weighted igraph
+#' object: a software-package dependency graph (`A -> B` means A depends on B).
+#' Run it straight (`Rscript load.R`) for a quick summary, or `source()` it and
+#' call `load_deps()` to get the graph in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "opensource-deps")
+
+#' Load the node table (one row per package).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per dependency).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the directed, weighted dependency graph.
+#'
+#' Edges are weighted by `import_count`. Direction is `from_id -> to_id`,
+#' i.e. `from_id` depends on `to_id`.
+load_deps <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = TRUE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$import_count
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n\U0001F4E6 opensource-deps (R)\n")
+  cat("   Package dependency graph; A -> B means A depends on B, weighted by imports.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_deps(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d packages and %d dependency edges.\n",
+              nrow(nodes), nrow(edges)))
+  cat(sprintf("\U0001F517 Directed: %s | total import call-sites: %s\n",
+              is_directed(g), format(sum(edges$import_count), big.mark = ",")))
+  ind <- igraph::degree(g, mode = "in")
+  outd <- igraph::degree(g, mode = "out")
+  cat(sprintf("\U0001F4CA Max direct in-degree: %d (%s) | max out-degree: %d (%s)\n",
+              max(ind), names(which.max(ind)), max(outd), names(which.max(outd))))
+  cat("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.\n")
+}
+```
+
+---
+
+## `data/projects/opensource-deps/load.py`
+
+```python
+"""Load the `opensource-deps` project network (Python).
+
+Reads the two CSVs in this folder and builds a directed, weighted python-igraph
+object: a software-package dependency graph (``A -> B`` means A depends on B).
+Run it straight (``python load.py``) for a quick summary, or import
+``load_deps()`` into your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per package."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per dependency (from_id depends on to_id)."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_deps(nodes: pd.DataFrame | None = None,
+              edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the directed, weighted dependency graph (edge weight = ``import_count``).
+
+    Direction is ``from_id -> to_id``: ``from_id`` depends on ``to_id``.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=True, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["import_count"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n\U0001F4E6 opensource-deps (Python)")
+    print("   Package dependency graph; A -> B means A depends on B, weighted by imports.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_deps(nodes, edges)
+
+    print(f"✅ Loaded {len(nodes)} packages and {len(edges)} dependency edges.")
+    print(f"\U0001F517 Directed: {g.is_directed()} | total import call-sites: "
+          f"{edges['import_count'].sum():,}")
+    indeg = g.indegree()
+    outdeg = g.outdegree()
+    names = g.vs["name"]
+    i_max = max(range(len(indeg)), key=lambda i: indeg[i])
+    o_max = max(range(len(outdeg)), key=lambda i: outdeg[i])
+    print(f"\U0001F4CA Max direct in-degree: {indeg[i_max]} ({names[i_max]}) | "
+          f"max out-degree: {outdeg[o_max]} ({names[o_max]})")
+    print("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.")
+```
+
+---
+
+## `data/projects/power-grid/README.md`
+
+# power-grid
+
+*A regional electrical transmission grid: buses (generators, substations, loads)
+wired together by undirected transmission lines, each rated by capacity.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Undirected (a transmission line carries power either way) |
+| **Weights** | Weighted (`capacity_mw` per line; `length_km` attribute) |
+| **Modality** | Single mode (`bus`), with a `kind` tag — `generator` / `substation` / `load` |
+| **Temporal** | No — a single static snapshot of the grid |
+| **Nodes** | 300 buses (57 generators + 101 substations + 142 loads) |
+| **Edges** | 422 transmission lines |
+| **Files** | `nodes.csv`, `edges.csv`, `regions.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+This is the transmission grid of a fictional utility split into three control
+areas. Each **bus** is a node — a generating plant, a switching substation, or a
+load center that draws power. Each undirected **transmission line** is an edge,
+rated by its MW carrying `capacity_mw` and tagged with a `length_km`. Buses carry
+a `capacity_mw` field (generation nameplate for generators, peak draw for loads),
+a `voltage_kv` level, a region, and map coordinates. A companion `regions.csv`
+names the three control areas.
+
+This is a criticality-and-resilience network. It rewards students who ask what
+happens when a piece fails. Some questions to chew on:
+
+- If exactly one line went out, which one would hurt the most — and does line
+  capacity, line length, or its position in the network tell you which?
+- Where is the power *made* versus where is it *used*? Does the geography line up,
+  and if not, what carries the difference?
+- Is the whole grid built the same way, or are some areas looped-and-redundant
+  while others hang off a single feed?
+- Which bus is more important than it looks — central to the flow of power without
+  being one of the biggest or most-connected nodes?
+- If you had a maintenance budget for exactly one upgrade, where would betweenness,
+  degree, and capacity each tell you to spend it — and would they agree?
+
+> **Note.** The interesting findings here are deliberately *not* documented. "Big
+> substations have more lines" is the starting point, not a finding. Push past it.
+
+## `nodes.csv`
+
+One row per bus.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique bus key. Referenced by edges. | character | `BUS0001`, `BUS0252` |
+| `kind` | Bus kind | Role of the bus on the grid. | character | `generator`, `substation`, `load` |
+| `region` | Control area | Which of the three control areas the bus sits in (join to `regions.csv`). | character | `A`, `B`, `C` |
+| `label` | Display name | Human-readable label. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Load 0001`, `Generator 0252` |
+| `x` | X coordinate | Horizontal position on a 0–100 map grid. | double | `16.56`, `90.12` |
+| `y` | Y coordinate | Vertical position on a 0–100 map grid. | double | `63.25`, `70.40` |
+| `capacity_mw` | Capacity (MW) | Generation nameplate for generators, peak load draw for loads; ~0 for pass-through substations. | integer | `64`, `235`, `812` |
+| `voltage_kv` | Voltage level | Nominal operating voltage of the bus, kilovolts. | integer | `69`, `230`, `500` |
+
+## `edges.csv`
+
+One row per transmission line. Undirected (`from_id`/`to_id` ordering is arbitrary).
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | Endpoint bus ID | One end of the line. | character | `BUS0092`, `BUS0023` |
+| `to_id` | Endpoint bus ID | Other end of the line. | character | `BUS0098`, `BUS0092` |
+| `capacity_mw` | Line capacity (MW) | Thermal carrying capacity of the line (the edge weight). | integer | `202`, `1500`, `1800` |
+| `length_km` | Line length | Physical length of the line, kilometers. | double | `14.04`, `3.53` |
+
+## `regions.csv`
+
+Lookup table for the three control areas. Not a node list — join it onto
+`nodes.csv` on `region`.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `region` | Region code | Control-area code, matches `nodes.region`. | character | `A`, `B`, `C` |
+| `name` | Region name | Human-readable control-area name. | character | `Metro East Control Area`, `High Plains Control Area` |
+| `center_x` | Center X | Approximate map-grid X of the area's center. | integer | `28`, `90` |
+| `center_y` | Center Y | Approximate map-grid Y of the area's center. | integer | `55`, `70` |
+
+## Load it
+
+```bash
+Rscript data/projects/power-grid/load.R     # R    (igraph)
+python  data/projects/power-grid/load.py     # Python (python-igraph)
+```
+
+Both build an undirected, weighted `igraph` graph and print a one-screen summary.
+In the [R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**power-grid** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/power-grid>
+
+---
+
+## `data/projects/power-grid/_generate.py`
+
+```python
+"""Generate the `power-grid` project network (deterministic).
+
+A regional electrical transmission grid (static -- no time dimension):
+  - ~300 bus nodes (kind = "generator" | "substation" | "load")
+Edges are undirected transmission lines, weighted by line `capacity_mw`, each
+with a `length_km`. A companion `regions.csv` lists the three control areas.
+
+Design parameters (the only record of the planted structure):
+  - INTERTIE: ONE high-capacity interconnect line ties region C (a remote
+    generation area) to the rest of the grid. It carries very high edge
+    betweenness; removing it severs C from the load centers.
+  - GEN_LOAD_MISMATCH: generators are concentrated in region C (a remote
+    renewable cluster) while load concentrates in regions A and B, so power must
+    traverse a few long high-capacity corridors -- the critical path.
+  - RADIAL_TAILS: region B has radial (tree-like, single-feed) tails that lose
+    power if one upstream line fails; region A's core is meshed (looped,
+    redundant) and does not.
+  - BRIDGE_SUB: a hidden bridge substation with high betweenness but modest
+    degree sits between two otherwise weakly connected clusters inside region A.
+
+Run:
+    python data/projects/power-grid/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+# region sizes (sum ~ 300)
+N_A = 130      # meshed urban load region
+N_B = 110      # mixed region with radial tails
+N_C = 60       # remote generation region
+REGIONS = ["A", "B", "C"]
+
+# --- planted parameters -----------------------------------------------------
+VOLT_LEVELS = [69, 138, 230, 345, 500]
+INTERTIE_CAP = 1800           # MW on the single C<->grid intertie
+CORRIDOR_CAP = 1500           # MW on the long generation corridors
+MESH_EXTRA_EDGES = 110        # extra loops added to region A's core (meshing)
+RADIAL_FRACTION = 0.55        # fraction of region B that is radial tails
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # region centers on a 0-100 map; C is remote (far right)
+    centers = {"A": (28, 55), "B": (52, 30), "C": (90, 70)}
+
+    rows = []
+    nid = 1
+
+    def make_node(region, kind, cx, cy, spread, cap_lo, cap_hi):
+        nonlocal nid
+        x = float(np.clip(cx + rng.normal(0, spread), 0, 100))
+        y = float(np.clip(cy + rng.normal(0, spread), 0, 100))
+        node_id = f"BUS{nid:04d}"
+        nid += 1
+        cap = int(rng.integers(cap_lo, cap_hi)) if cap_hi > cap_lo else 0
+        rows.append({
+            "node_id": node_id, "kind": kind, "region": region,
+            "label": f"{kind.capitalize()} {node_id[3:]}",
+            "x": round(x, 2), "y": round(y, 2),
+            "capacity_mw": cap,
+            "voltage_kv": int(rng.choice(VOLT_LEVELS,
+                              p=[0.30, 0.30, 0.20, 0.13, 0.07])),
+        })
+        return node_id
+
+    # ----- region A: meshed urban load + a few generators ------------------
+    a_ids = []
+    for _ in range(N_A):
+        roll = rng.random()
+        if roll < 0.08:
+            kind, cap = "generator", (150, 600)
+        elif roll < 0.45:
+            kind, cap = "substation", (0, 1)
+        else:
+            kind, cap = "load", (40, 320)        # capacity_mw = peak load draw
+        a_ids.append(make_node("A", kind, *centers["A"], 11, *cap))
+
+    # ----- region B: mixed, with radial tails ------------------------------
+    b_ids = []
+    for _ in range(N_B):
+        roll = rng.random()
+        if roll < 0.06:
+            kind, cap = "generator", (120, 450)
+        elif roll < 0.40:
+            kind, cap = "substation", (0, 1)
+        else:
+            kind, cap = "load", (30, 260)
+        b_ids.append(make_node("B", kind, *centers["B"], 12, *cap))
+
+    # ----- region C: remote GENERATION cluster (renewables) ----------------
+    c_ids = []
+    for _ in range(N_C):
+        roll = rng.random()
+        if roll < 0.62:
+            kind, cap = "generator", (200, 900)   # lots of generation
+        elif roll < 0.85:
+            kind, cap = "substation", (0, 1)
+        else:
+            kind, cap = "load", (10, 80)          # very little load out here
+        c_ids.append(make_node("C", kind, *centers["C"], 9, *cap))
+
+    nodes = pd.DataFrame(rows)
+    pos = {r.node_id: (r.x, r.y) for r in nodes.itertuples()}
+
+    def dist(a, b):
+        (ax, ay), (bx, by) = pos[a], pos[b]
+        return float(np.hypot(ax - bx, ay - by))
+
+    edges_set: dict[tuple[str, str], dict] = {}
+
+    def add_line(a, b, cap, kind="line"):
+        if a == b:
+            return
+        key = (a, b) if a < b else (b, a)
+        if key in edges_set:
+            return
+        d = dist(a, b)
+        edges_set[key] = {
+            "from_id": key[0], "to_id": key[1],
+            "capacity_mw": int(cap),
+            "length_km": round(d * 1.4 + rng.uniform(0, 2), 2),
+        }
+
+    def nearest_within(node, pool, k):
+        ds = sorted((dist(node, p), p) for p in pool if p != node)
+        return [p for _, p in ds[:k]]
+
+    # ----- region A core: build a connected MESH (redundant loops) ---------
+    # First a spanning backbone (nearest-neighbor chain), then many extra loops.
+    a_sorted = sorted(a_ids, key=lambda n: pos[n][0] + pos[n][1])
+    for i in range(1, len(a_sorted)):
+        # connect each to a nearby earlier node (keeps it connected + local)
+        prev = nearest_within(a_sorted[i], a_sorted[:i], 1)[0]
+        add_line(a_sorted[i], prev, rng.integers(200, 700))
+    # extra meshing edges among nearby A nodes -> loops, triangles, redundancy
+    added = 0
+    attempts = 0
+    while added < MESH_EXTRA_EDGES and attempts < MESH_EXTRA_EDGES * 8:
+        attempts += 1
+        u = rng.choice(a_ids)
+        cand = nearest_within(u, a_ids, 6)
+        v = rng.choice(cand)
+        key = (u, v) if u < v else (v, u)
+        if key not in edges_set:
+            add_line(u, v, rng.integers(250, 800))
+            added += 1
+
+    # ----- region B: a meshed sub-core PLUS radial (tree) tails ------------
+    n_radial = int(N_B * RADIAL_FRACTION)
+    b_core = b_ids[:N_B - n_radial]
+    b_tails = b_ids[N_B - n_radial:]
+    # core: small mesh
+    b_core_sorted = sorted(b_core, key=lambda n: pos[n][0] + pos[n][1])
+    for i in range(1, len(b_core_sorted)):
+        prev = nearest_within(b_core_sorted[i], b_core_sorted[:i], 1)[0]
+        add_line(b_core_sorted[i], prev, rng.integers(180, 600))
+    for _ in range(18):
+        u = rng.choice(b_core)
+        v = rng.choice(nearest_within(u, b_core, 5))
+        add_line(u, v, rng.integers(200, 550))
+    # tails: each radial node hangs off exactly ONE upstream node (a tree) ->
+    # single feed, no redundancy. Attach to nearest already-connected B node.
+    connected_b = list(b_core)
+    for t in b_tails:
+        parent = nearest_within(t, connected_b, 1)[0]
+        add_line(t, parent, rng.integers(60, 200))   # thinner radial feeders
+        connected_b.append(t)
+
+    # ----- region C: internal collector network (radial-ish to a C hub) ----
+    # choose a C substation as the collector hub
+    c_subs = [n for n in c_ids
+              if nodes.loc[nodes.node_id == n, "kind"].iloc[0] == "substation"]
+    c_hub = c_subs[0] if c_subs else c_ids[0]
+    c_sorted = sorted(c_ids, key=lambda n: dist(n, c_hub))
+    connected_c = [c_hub]
+    for n in c_sorted:
+        if n == c_hub:
+            continue
+        parent = nearest_within(n, connected_c, 1)[0]
+        add_line(n, parent, rng.integers(150, 500))
+        connected_c.append(n)
+    # a little meshing inside C so it isn't a pure tree
+    for _ in range(10):
+        u = rng.choice(c_ids)
+        v = rng.choice(nearest_within(u, c_ids, 4))
+        add_line(u, v, rng.integers(150, 450))
+
+    # ----- A <-> B coupling: a few normal-capacity ties (redundant) --------
+    # pick the closest A/B node pairs and connect a handful (so A-B is robust)
+    ab_pairs = sorted(
+        ((dist(a, b), a, b) for a in a_ids for b in b_ids),
+        key=lambda t: t[0])[:6]
+    for _, a, b in ab_pairs:
+        add_line(a, b, rng.integers(400, 900))
+
+    # ----- THE GENERATION CORRIDORS + SINGLE INTERTIE to region C ----------
+    # Region C connects to the rest of the grid through ONE intertie line into a
+    # region-B gateway substation, plus long high-capacity corridors carry C's
+    # generation toward the A/B load centers. The intertie is the sole electrical
+    # path from C to everything else.
+    # gateway on the grid side: the region-B node closest to the C hub
+    gateway = min(b_ids, key=lambda n: dist(n, c_hub))
+    # the single intertie line (very high capacity, long)
+    add_line(c_hub, gateway, INTERTIE_CAP)
+    # long corridors: from gateway deep into A's core (high-capacity backbone)
+    a_core_targets = sorted(a_ids, key=lambda n: dist(n, gateway))[:3]
+    corridor_prev = gateway
+    for tgt in a_core_targets:
+        add_line(corridor_prev, tgt, CORRIDOR_CAP)
+        corridor_prev = tgt
+
+    # ----- BRIDGE SUBSTATION inside region A -------------------------------
+    # Split region A loosely into two halves by x; route nearly all cross-half
+    # A traffic through ONE substation with modest degree (a hidden bridge).
+    a_x = {n: pos[n][0] for n in a_ids}
+    median_x = np.median(list(a_x.values()))
+    left = [n for n in a_ids if a_x[n] < median_x]
+    right = [n for n in a_ids if a_x[n] >= median_x]
+    # remove any existing left-right A edges to force the bottleneck
+    to_drop = []
+    for key in list(edges_set.keys()):
+        u, v = key
+        if u in a_x and v in a_x:
+            lu = u in left
+            lv = v in left
+            if lu != lv:
+                to_drop.append(key)
+    # keep the bridge edges only: pick a bridge substation near the divide
+    a_subs = [n for n in a_ids
+              if nodes.loc[nodes.node_id == n, "kind"].iloc[0] == "substation"]
+    bridge = min(a_subs, key=lambda n: abs(a_x[n] - median_x))
+    for key in to_drop:
+        del edges_set[key]
+    # connect the bridge to ONE node on each side (deliberately modest degree)
+    bl = nearest_within(bridge, left, 1)
+    br = nearest_within(bridge, right, 1)
+    for n in bl + br:
+        add_line(bridge, n, rng.integers(300, 700))
+
+    # repair: dropping the cross-divide A edges can orphan a few nodes. Reconnect
+    # any now-isolated A node to its nearest SAME-SIDE neighbor (never across the
+    # divide), so the bridge stays the sole left<->right path but no bus is dead.
+    incident = set()
+    for (u, v) in edges_set:
+        incident.add(u)
+        incident.add(v)
+    for n in a_ids:
+        if n in incident:
+            continue
+        side = left if n in left else right
+        side_pool = [m for m in side if m != n and m != bridge]
+        parent = nearest_within(n, side_pool, 1)[0]
+        add_line(n, parent, rng.integers(200, 600))
+
+    edges = pd.DataFrame(list(edges_set.values()))
+
+    # ----- regions lookup table --------------------------------------------
+    regions = pd.DataFrame({
+        "region": REGIONS,
+        "name": ["Metro East Control Area", "Central Valley Control Area",
+                 "High Plains Control Area"],
+        "center_x": [centers[r][0] for r in REGIONS],
+        "center_y": [centers[r][1] for r in REGIONS],
+    })
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+    regions.to_csv(HERE / "regions.csv", index=False)
+    kc = nodes.kind.value_counts()
+    print(f"power-grid: {len(nodes)} buses "
+          f"({kc.get('generator',0)} generators + {kc.get('substation',0)} substations + "
+          f"{kc.get('load',0)} loads), {len(edges)} lines, {len(regions)} regions.")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/power-grid/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `power-grid` project network (R)
+#' @description
+#'
+#' Reads the CSVs in this folder and builds an undirected, weighted igraph
+#' object: a regional electrical transmission grid of buses and lines. Run it
+#' straight (`Rscript load.R`) for a quick summary, or `source()` it and call
+#' `load_grid()` to get the graph in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "power-grid")
+
+#' Load the node table (one row per bus).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per transmission line).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the control-area lookup table (join onto nodes by `region`).
+load_regions <- function() {
+  read.csv(file.path(.dir(), "regions.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the undirected, weighted grid graph.
+#'
+#' Edges are weighted by line `capacity_mw`. The graph is a single static
+#' snapshot (no time dimension).
+load_grid <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = FALSE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$capacity_mw
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n\U0001F50C power-grid (R)\n")
+  cat("   Undirected transmission grid; lines weighted by capacity (MW).\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_grid(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d buses (%d generators, %d substations, %d loads) and %d lines.\n",
+              nrow(nodes), sum(nodes$kind == "generator"),
+              sum(nodes$kind == "substation"), sum(nodes$kind == "load"), nrow(edges)))
+  cat(sprintf("\U0001F517 Directed: %s | total line capacity: %s MW\n",
+              is_directed(g), format(sum(edges$capacity_mw), big.mark = ",")))
+  cat("\U0001F389 Graph ready. Object `g` is an undirected, weighted igraph.\n")
+}
+```
+
+---
+
+## `data/projects/power-grid/load.py`
+
+```python
+"""Load the `power-grid` project network (Python).
+
+Reads the CSVs in this folder and builds an undirected, weighted python-igraph
+object: a regional electrical transmission grid of buses and lines. Run it
+straight (``python load.py``) for a quick summary, or import ``load_grid()`` into
+your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per bus."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per transmission line."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_regions() -> pd.DataFrame:
+    """Control-area lookup table (join onto nodes by ``region``)."""
+    return pd.read_csv(HERE / "regions.csv")
+
+
+def load_grid(nodes: pd.DataFrame | None = None,
+              edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the undirected, weighted grid graph (edge weight = ``capacity_mw``).
+
+    The graph is a single static snapshot (no time dimension).
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=False, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["capacity_mw"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n🔌 power-grid (Python)")
+    print("   Undirected transmission grid; lines weighted by capacity (MW).\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_grid(nodes, edges)
+
+    kinds = nodes["kind"].value_counts()
+    print(f"✅ Loaded {len(nodes)} buses "
+          f"({kinds.get('generator',0)} generators, {kinds.get('substation',0)} substations, "
+          f"{kinds.get('load',0)} loads) and {len(edges)} lines.")
+    print(f"🔗 Directed: {g.is_directed()} | total line capacity: "
+          f"{edges['capacity_mw'].sum():,} MW")
+    print("🎉 Graph ready. Object `g` is an undirected, weighted igraph.")
+```
+
+---
+
+## `data/projects/reorg-comms/README.md`
+
+# reorg-comms
+
+*Internal employee communication (email + chat volume) at a ~250-person company,
+observed before, during, and after a reorganization and layoff.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Directed (message flow: sender → receiver) |
+| **Weights** | Weighted (`message_count` per edge) |
+| **Modality** | Unimodal — one node kind (`employee`) |
+| **Temporal** | Yes — one row per (sender, receiver, **period**): `before` / `during` / `after` |
+| **Nodes** | 250 (employees across 8 departments) |
+| **Edges** | 7,926 (≈2,562 before + ≈3,511 during + ≈1,853 after) |
+| **Files** | `nodes.csv`, `edges.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+A directed, weighted communication network for a fictional company. Each
+**employee** belongs to a department and sits somewhere on the formal org chart
+(`level` and `manager_id`); a directed **message edge** carries a
+`message_count` from a sender to a receiver. The company is observed across three
+**periods** — a stable org (`before`), the middle of a reorganization and layoff
+(`during`), and the settled, smaller org (`after`). The node table records each
+employee's department, level, tenure, location, formal manager, and whether they
+were laid off.
+
+This is a communication, influence, and resilience network with an organizational
+shock you can study as a natural experiment. Some questions to chew on:
+
+- Does the org chart predict who actually holds communication power? Are the most
+  *connected* people the same as the most *senior* people?
+- Is there anyone whose departure would quietly sever communication between two
+  parts of the company — and does their job title hint at that importance?
+- Some people left in the layoff. Were they interchangeable, or did the company
+  lose connective tissue it did not realize it had?
+- Compare the three periods. Did the company talk more or less under stress? Did
+  the *shape* of who-talks-to-whom change after the teams were redrawn?
+- If you wanted to keep two departments talking after a reorg, who would you make
+  sure to keep?
+
+> **Note.** The interesting findings here are deliberately *not* documented.
+> "Senior people send more messages" is the starting point, not a finding. Push
+> past it — and remember that the formal hierarchy and the real one need not match.
+
+## `nodes.csv`
+
+One row per employee.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique employee key (`E###`). Referenced by edges and by `manager_id`. | character | `E001`, `E004`, `E250` |
+| `kind` | Node kind | Node type (all employees in this network). | character | `employee` |
+| `label` | Display name | Human-readable label. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Emp 001`, `Emp 004` |
+| `dept` | Department | Organizational unit the employee belongs to. | character | `Engineering`, `Sales`, `Finance` |
+| `level` | Job level | Seniority tier on the formal hierarchy. | character | `ic`, `manager`, `director`, `vp` |
+| `tenure_months` | Tenure | Months the employee has been at the company. | integer | `9`, `45`, `173` |
+| `location` | Work location | Where the employee is based. | character | `HQ`, `Remote`, `EU Office`, `APAC Office` |
+| `manager_id` | Manager node ID | `node_id` of the employee's formal manager (blank for department heads). | character | `E002`, `E227`, *(blank)* |
+| `laid_off` | Laid off | 1 if the employee was let go in the layoff, else 0. | integer | `0`, `1` |
+
+## `edges.csv`
+
+One row per (sender, receiver, period). Directed; a pair can appear up to three
+times (once per period).
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `sender_id` | Sender node ID | Employee who sent the messages. | character | `E001`, `E004` |
+| `receiver_id` | Receiver node ID | Employee who received the messages. | character | `E004`, `E017` |
+| `period` | Period | Org era: `before`, `during`, or `after` the reorganization. | character | `before`, `during`, `after` |
+| `message_count` | Message count | Number of messages sent on that edge in that period (the edge weight). | integer | `1`, `2`, `41` |
+
+## Load it
+
+```bash
+Rscript data/projects/reorg-comms/load.R     # R    (igraph)
+python  data/projects/reorg-comms/load.py     # Python (python-igraph)
+```
+
+Both build a directed, weighted `igraph` graph and print a one-screen summary. In
+the [R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**reorg-comms** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/reorg-comms>
+
+---
+
+## `data/projects/reorg-comms/_generate.py`
+
+```python
+"""Generate the `reorg-comms` project network (deterministic).
+
+Internal corporate communication (email + chat volume) among ~250 employees of a
+fictional company, observed across three periods around a reorganization + layoff:
+  - period = "before"  : stable org
+  - period = "during"  : reorg announced, layoffs happening (anxiety spike)
+  - period = "after"   : new teams settled, headcount reduced
+
+Nodes are employees (kind = "employee"); edges are directed messages
+sender -> receiver for a given period, weighted by message_count.
+
+Design parameters (the only record of the planted structure):
+  - INFORMAL_BROKER: a long-tenured low-`level` IC who is one of the top brokers
+    by betweenness — informal influence the formal org chart (manager_id tree)
+    does not show.
+  - BOTTLENECK_MGR: one manager who sits on the only communication path between
+    two large departments (very high betweenness); most cross-dept info routes
+    through them.
+  - LOAD_BEARING_LEAVERS: several laid-off employees were high-betweenness
+    connectors; removing the laid_off set fragments cross-dept comms far more
+    than removing a random equal-size set.
+  - SILOING: cross-department edges fall and within-(new-)team edges rise from
+    before -> after (modularity by dept rises after the reorg).
+  - VOLUME_SPIKE: total message volume peaks DURING (uncertainty / anxiety).
+
+Run:
+    python data/projects/reorg-comms/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+PERIODS = ["before", "during", "after"]
+
+N_EMP = 250
+DEPTS = ["Engineering", "Product", "Sales", "Marketing",
+         "Finance", "Operations", "Support", "HR"]
+LOCATIONS = ["HQ", "Remote", "EU Office", "APAC Office"]
+
+# --- planted parameters -----------------------------------------------------
+LAYOFF_RATE = 0.18          # fraction of employees laid off
+VOLUME_DURING = 1.55        # message-volume multiplier DURING (anxiety spike)
+VOLUME_AFTER = 0.82         # message-volume multiplier AFTER (smaller org, calmer)
+CROSS_DEPT_BEFORE = 0.32    # share of comms that cross departments BEFORE
+CROSS_DEPT_AFTER = 0.14     # share that cross departments AFTER (siloing)
+N_LOAD_BEARING = 7          # laid-off employees who were key connectors
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # ----- departments & levels -------------------------------------------
+    # department sizes (Engineering & Sales are the two big ones the bottleneck
+    # manager will sit between).
+    dept_sizes = np.array([60, 28, 55, 22, 18, 25, 27, 15])
+    dept_sizes = dept_sizes * N_EMP // dept_sizes.sum()
+    # fix rounding so they sum to N_EMP
+    dept_sizes[0] += N_EMP - dept_sizes.sum()
+    dept_of = []
+    for d, n in zip(DEPTS, dept_sizes):
+        dept_of += [d] * int(n)
+    dept_of = np.array(dept_of)
+    rng.shuffle(dept_of)
+
+    emp_ids = [f"E{i:03d}" for i in range(1, N_EMP + 1)]
+
+    # levels: mostly ICs, some managers, fewer directors, few VPs
+    level = rng.choice(["ic", "manager", "director", "vp"],
+                       size=N_EMP, p=[0.70, 0.18, 0.09, 0.03])
+    tenure = rng.integers(2, 180, N_EMP)
+    location = rng.choice(LOCATIONS, size=N_EMP, p=[0.45, 0.30, 0.15, 0.10])
+
+    # ----- build a formal org chart (manager_id tree) per department -------
+    # each dept gets a head (director or vp), managers report to head, ICs report
+    # to managers. manager_id is the FORMAL reporting line.
+    manager_id = [""] * N_EMP
+    idx_by_dept = {d: [i for i in range(N_EMP) if dept_of[i] == d] for d in DEPTS}
+    for d in DEPTS:
+        members = idx_by_dept[d]
+        # head = highest level member (prefer vp, then director, then manager)
+        order = {"vp": 0, "director": 1, "manager": 2, "ic": 3}
+        members_sorted = sorted(members, key=lambda i: order[level[i]])
+        head = members_sorted[0]
+        # ensure head is at least director
+        if level[head] not in ("director", "vp"):
+            level[head] = "director"
+        mgrs = [i for i in members if level[i] == "manager" and i != head]
+        if not mgrs:
+            # promote a couple ICs to manager so there is a middle layer
+            cand = [i for i in members if level[i] == "ic" and i != head][:2]
+            for c in cand:
+                level[c] = "manager"
+            mgrs = cand
+        for m in mgrs:
+            manager_id[m] = emp_ids[head]
+        ics = [i for i in members if i not in mgrs and i != head]
+        for i in ics:
+            manager_id[i] = emp_ids[int(rng.choice(mgrs))] if mgrs else emp_ids[head]
+        # head reports to nobody (blank) -> top of the dept
+
+    # ----- planted special people -----------------------------------------
+    eng = idx_by_dept["Engineering"]
+    sales = idx_by_dept["Sales"]
+
+    # INFORMAL_BROKER: a long-tenured IC in Engineering (low level, high influence)
+    eng_ics = [i for i in eng if level[i] == "ic"]
+    informal_broker = max(eng_ics, key=lambda i: tenure[i])
+    tenure[informal_broker] = max(tenure[informal_broker], 160)  # very senior IC
+
+    # BOTTLENECK_MGR: a manager who alone bridges Engineering <-> Sales.
+    eng_mgrs = [i for i in eng if level[i] == "manager"]
+    bottleneck_mgr = eng_mgrs[0]
+
+    nodes = pd.DataFrame({
+        "node_id": emp_ids,
+        "kind": "employee",
+        "label": [f"Emp {i:03d}" for i in range(1, N_EMP + 1)],
+        "dept": dept_of,
+        "level": level,
+        "tenure_months": tenure,
+        "location": location,
+        "manager_id": manager_id,
+    })
+
+    # ----- layoffs ---------------------------------------------------------
+    n_layoff = int(round(N_EMP * LAYOFF_RATE))
+    # LOAD_BEARING_LEAVERS: pick some cross-dept connectors to be laid off, plus
+    # the rest at random. (Connectors = people we will wire as cross-dept bridges.)
+    # We designate bridge people first, then ensure several are laid off.
+    # Cross-dept bridge pool: a handful per department.
+    bridge_pool = []
+    for d in DEPTS:
+        members = [i for i in idx_by_dept[d]
+                   if i not in (informal_broker, bottleneck_mgr)]
+        bridge_pool += list(rng.choice(members, size=3, replace=False))
+    load_bearing = list(rng.choice(bridge_pool, size=N_LOAD_BEARING, replace=False))
+    # rest of layoffs random, excluding protected key people we want to keep
+    protected = {informal_broker, bottleneck_mgr}
+    pool = [i for i in range(N_EMP)
+            if i not in load_bearing and i not in protected]
+    extra = list(rng.choice(pool, size=n_layoff - len(load_bearing), replace=False))
+    laid_off_idx = set(load_bearing) | set(extra)
+    nodes["laid_off"] = [1 if i in laid_off_idx else 0 for i in range(N_EMP)]
+
+    # ----- communication generation ---------------------------------------
+    # Each employee has an "activity" level; messages flow mostly within dept,
+    # a tunable share cross-dept, plus planted bridges.
+    activity = rng.lognormal(mean=2.4, sigma=0.5, size=N_EMP)
+    # managers/directors a bit more active
+    lvl_boost = {"ic": 1.0, "manager": 1.4, "director": 1.6, "vp": 1.8}
+    activity = activity * np.array([lvl_boost[level[i]] for i in range(N_EMP)])
+
+    # --- designate cross-department bridges ------------------------------
+    # Cross-dept messages must pass THROUGH a bridge employee, so bridges sit on
+    # the only cross-dept paths -> high betweenness, and removing them fragments
+    # cross-dept communication. Each ordered department pair gets one or more
+    # assigned bridge "owners". This is what makes the planted connectors real.
+    pair_bridge = {}   # frozenset({deptA, deptB}) -> list of employee idx
+    for a in range(len(DEPTS)):
+        for b in range(a + 1, len(DEPTS)):
+            da, db = DEPTS[a], DEPTS[b]
+            key = frozenset({da, db})
+            if key == frozenset({"Engineering", "Sales"}):
+                pair_bridge[key] = [bottleneck_mgr]   # SOLE bridge -> bottleneck
+            else:
+                # one owner from each side, drawn from the bridge pool
+                opts_a = [i for i in bridge_pool if dept_of[i] == da] or \
+                         [i for i in idx_by_dept[da] if level[i] != "ic"][:1] or \
+                         [idx_by_dept[da][0]]
+                opts_b = [i for i in bridge_pool if dept_of[i] == db] or \
+                         [i for i in idx_by_dept[db] if level[i] != "ic"][:1] or \
+                         [idx_by_dept[db][0]]
+                pair_bridge[key] = [opts_a[0], opts_b[0]]
+
+    # informal broker: make it a bridge owner for MANY dept pairs (across the
+    # whole company), giving a low-level IC outsized betweenness.
+    for key in list(pair_bridge):
+        if "Engineering" in key and frozenset({"Engineering"}) != key:
+            if key != frozenset({"Engineering", "Sales"}):
+                pair_bridge[key] = list(set(pair_bridge[key]) | {informal_broker})
+
+    edge_rows = []
+
+    def add_through_bridge(pair_counts, s, r, active_set):
+        """Route a cross-dept message s->r through an assigned bridge."""
+        key = frozenset({dept_of[s], dept_of[r]})
+        owners = [b for b in pair_bridge.get(key, []) if b in active_set]
+        if not owners:
+            return  # no live bridge -> message cannot cross (fragmentation!)
+        br = int(rng.choice(owners))
+        if br == s or br == r:
+            _bump(pair_counts, s, r)
+            return
+        # model the two-hop path s -> bridge -> r as two directed edges
+        _bump(pair_counts, s, br)
+        _bump(pair_counts, br, r)
+
+    def gen_period(period):
+        if period == "before":
+            vol = 1.0; cross = CROSS_DEPT_BEFORE; active = set(range(N_EMP))
+        elif period == "during":
+            vol = VOLUME_DURING; cross = (CROSS_DEPT_BEFORE + CROSS_DEPT_AFTER) / 2
+            active = set(range(N_EMP))  # leavers still present during
+        else:  # after
+            vol = VOLUME_AFTER; cross = CROSS_DEPT_AFTER
+            active = set(i for i in range(N_EMP) if i not in laid_off_idx)
+
+        active = list(active)
+        active_set = set(active)
+        n_msgs = int(2600 * vol)
+
+        w = np.array([activity[i] for i in active])
+        w = w / w.sum()
+
+        pair_counts = {}
+        for _ in range(n_msgs):
+            s = int(rng.choice(active, p=w))
+            if rng.random() < cross:
+                # cross-department message -> must go through a bridge
+                r = _other_dept_receiver(rng, s, dept_of, active, active_set)
+                if dept_of[r] == dept_of[s]:
+                    continue
+                add_through_bridge(pair_counts, s, r, active_set)
+            else:
+                # within-department message
+                same = [i for i in idx_by_dept[dept_of[s]]
+                        if i in active_set and i != s]
+                if not same:
+                    continue
+                r = int(rng.choice(same))
+                if r != s:
+                    _bump(pair_counts, s, r)
+
+        for (s, r), c in pair_counts.items():
+            c2 = max(1, int(round(c * rng.uniform(0.85, 1.15))))
+            edge_rows.append({
+                "sender_id": emp_ids[s], "receiver_id": emp_ids[r],
+                "period": period, "message_count": c2,
+            })
+
+    for p in PERIODS:
+        gen_period(p)
+
+    edges = pd.DataFrame(edge_rows)
+    # collapse any dup (sender, receiver, period)
+    edges = (edges.groupby(["sender_id", "receiver_id", "period"], as_index=False)
+             .agg(message_count=("message_count", "sum")))
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+
+    import os
+    if os.environ.get("REORG_DEBUG"):
+        print("DEBUG informal_broker:", emp_ids[informal_broker],
+              "dept", dept_of[informal_broker], "level", level[informal_broker],
+              "tenure", tenure[informal_broker])
+        print("DEBUG bottleneck_mgr:", emp_ids[bottleneck_mgr],
+              "dept", dept_of[bottleneck_mgr], "level", level[bottleneck_mgr])
+        print("DEBUG load_bearing leavers:", [emp_ids[i] for i in load_bearing])
+        print("DEBUG n laid_off:", len(laid_off_idx))
+
+    print(f"reorg-comms: {len(nodes)} nodes (employees), {len(edges)} edges "
+          f"across {edges['period'].nunique()} periods "
+          f"(before={int((edges.period=='before').sum())}, "
+          f"during={int((edges.period=='during').sum())}, "
+          f"after={int((edges.period=='after').sum())}); "
+          f"{int(nodes.laid_off.sum())} laid off.")
+
+
+def _bump(d, s, r):
+    d[(s, r)] = d.get((s, r), 0) + 1
+
+
+def _other_dept_receiver(rng, s, dept_of, active, active_set):
+    for _ in range(8):
+        r = int(rng.choice(active))
+        if dept_of[r] != dept_of[s]:
+            return r
+    return int(rng.choice(active))
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/reorg-comms/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `reorg-comms` project network (R)
+#' @description
+#'
+#' Reads the two CSVs in this folder and builds a directed, weighted igraph
+#' object: internal message volume between employees, recorded across three
+#' periods (`before` / `during` / `after` a reorganization + layoff). Run it
+#' straight (`Rscript load.R`) for a quick summary, or `source()` it and call
+#' `load_reorg()` to get the graph in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "reorg-comms")
+
+#' Load the node table (one row per employee).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE,
+           colClasses = c(manager_id = "character"))
+}
+
+#' Load the edge table (one row per sender x receiver x period).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the directed, weighted graph.
+#'
+#' Edges are weighted by `message_count`. Because the data is temporal (a
+#' `period` column), a sender->receiver pair can appear up to three times (once
+#' per period) as parallel edges. Filter to one `period` first if you want a
+#' simple graph, e.g. `edges <- subset(load_edges(), period == "before")`.
+#'
+#' Note: `manager_id` on the node table is the FORMAL org-chart reporting line
+#' (blank for department heads), separate from who actually messages whom.
+load_reorg <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = TRUE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$message_count
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n\U0001F4AC reorg-comms (R)\n")
+  cat("   Employee-to-employee message volume; weighted by message_count,\n")
+  cat("   across before / during / after a reorganization + layoff.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_reorg(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d employees (%d laid off) and %d edges across %d periods.\n",
+              nrow(nodes), sum(nodes$laid_off == 1), nrow(edges),
+              length(unique(edges$period))))
+  cat(sprintf("\U0001F517 Directed: %s | total messages: %s\n",
+              is_directed(g), format(sum(edges$message_count), big.mark = ",")))
+  per <- tapply(edges$message_count, edges$period, sum)
+  cat("\U0001F4E8 Messages by period: ",
+      paste(sprintf("%s=%s", names(per), format(per, big.mark = ",")),
+            collapse = " | "), "\n")
+  cat("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.\n")
+}
+```
+
+---
+
+## `data/projects/reorg-comms/load.py`
+
+```python
+"""Load the `reorg-comms` project network (Python).
+
+Reads the two CSVs in this folder and builds a directed, weighted python-igraph
+object: internal message volume between employees, recorded across three periods
+(``before`` / ``during`` / ``after`` a reorganization + layoff). Run it straight
+(``python load.py``) for a quick summary, or import ``load_reorg()`` into your own
+script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per employee.
+
+    ``manager_id`` is read as a string (it is a node id, blank for department
+    heads).
+    """
+    return pd.read_csv(HERE / "nodes.csv", dtype={"manager_id": "string"})
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per sender x receiver x period."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_reorg(nodes: pd.DataFrame | None = None,
+               edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the directed, weighted graph (edge weight = ``message_count``).
+
+    The data is temporal (a ``period`` column), so a sender->receiver pair can
+    appear up to three times (once per period) as parallel edges. Filter to one
+    ``period`` first if you want a simple graph, e.g.
+    ``edges[edges.period == "before"]``.
+
+    Note: ``manager_id`` on the node table is the FORMAL org-chart reporting line
+    (blank for department heads), separate from who actually messages whom.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    # igraph dislikes pandas <NA> in vertex attributes; blank out missing managers.
+    nodes = nodes.copy()
+    nodes["manager_id"] = nodes["manager_id"].fillna("").astype(str)
+    g = ig.Graph.DataFrame(edges, directed=True, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["message_count"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n\U0001F4AC reorg-comms (Python)")
+    print("   Employee-to-employee message volume; weighted by message_count,")
+    print("   across before / during / after a reorganization + layoff.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_reorg(nodes, edges)
+
+    print(f"✅ Loaded {len(nodes)} employees ({int((nodes.laid_off==1).sum())} laid off) "
+          f"and {len(edges)} edges across {edges['period'].nunique()} periods.")
+    print(f"\U0001F517 Directed: {g.is_directed()} | total messages: "
+          f"{edges['message_count'].sum():,}")
+    per = edges.groupby('period')['message_count'].sum()
+    print("\U0001F4E8 Messages by period: " +
+          " | ".join(f"{k}={v:,}" for k, v in per.items()))
+    print("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.")
+```
+
+---
+
+## `data/projects/semiconductor-supply/README.md`
+
+# semiconductor-supply
+
+*A multi-tier global semiconductor supply chain — raw materials and gases flow up
+through fabs, packaging houses, and chip designers into finished electronic
+products.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Directed (supply flow: upstream tier → downstream tier) |
+| **Weights** | Weighted (`annual_volume`; paired `value_musd` and `lead_time_days`) |
+| **Modality** | Multimodal — 5 node kinds across 5 tiers (`material`, `foundry`, `packaging`, `designer`, `product`) |
+| **Temporal** | No — a single annual snapshot |
+| **Nodes** | 368 (70 material + 46 foundry + 60 packaging + 96 designer + 96 product) |
+| **Edges** | 739 supply relationships |
+| **Files** | `nodes.csv`, `edges.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+"GlobalFab" is a stylized model of the world semiconductor supply chain. Supply
+flows from the most upstream tier to the most downstream:
+
+- **tier 4 `material`** — raw materials, specialty gases, silicon wafers,
+  photoresist, sputter targets, bonding wire;
+- **tier 3 `foundry`** — wafer fabrication plants ("fabs"), at process nodes from
+  mature (28 nm) to leading-edge (3 nm);
+- **tier 2 `packaging`** — assembly / test houses (OSATs), standard or advanced
+  (2.5D/3D) packaging;
+- **tier 1 `designer`** — chip designers and IDMs that place silicon orders;
+- **tier 0 `product`** — end OEM products (phones, GPUs, servers, vehicles).
+
+Each directed edge is a supply relationship weighted by `annual_volume` (units or
+wafer-starts), with a dollar `value_musd` and a `lead_time_days`. Nodes carry a
+`region`, a `tier`, a `capacity`, a nominal `lead_time_days`, and a `subtype`.
+
+This is a flow-and-criticality network. It rewards students who look past which
+nodes have the most connections. Some questions to chew on:
+
+- If you could harden one node against disruption, which would it be — and would
+  degree, betweenness, or a knockout/criticality analysis give you the same
+  answer? Are the busiest suppliers the most important ones?
+- Is the chain's resilience the same everywhere, or are some end products one bad
+  day away from having no viable supply path at all?
+- Does geography matter? If a region were embargoed or hit by a quake, how much
+  downstream output would be cut, and through which tier?
+- Recovery is not free: when the system is shocked, which nodes are also the
+  slowest to come back?
+
+> **Note.** The interesting findings here are deliberately *not* documented. "Big
+> suppliers ship more volume" is the starting point, not a finding. Push past it —
+> raw degree will mislead you.
+
+## `nodes.csv`
+
+One row per node (supplier or product). Every node has every column populated.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique key. `M###` material, `F###` foundry, `P###` packaging, `D###` designer, `E###` product. Referenced by edges. | character | `M001`, `F016`, `P007`, `D053`, `E030` |
+| `kind` | Node kind | Tier role of the node. | character | `material`, `foundry`, `packaging`, `designer`, `product` |
+| `tier` | Supply tier | Depth in the chain: 4 = most upstream (material) … 0 = end product. | integer | `4`, `3`, `0` |
+| `region` | Region | Where the node operates. | character | `Taiwan`, `South Korea`, `USA`, `Japan`, `China`, `Europe` |
+| `subtype` | Subtype | Kind-specific detail: material class, fab process node, packaging grade, designer/product segment. | character | `specialty_gas`, `5nm`, `advanced`, `gpu`, `router` |
+| `capacity` | Capacity | Nominal annual throughput capacity (relative units). | integer | `3967`, `310`, `196` |
+| `lead_time_days` | Lead time | Nominal replenishment / production lead time in days. | integer | `126`, `35`, `18` |
+| `label` | Display name | Human-readable label. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Specialty Gas Co 001`, `OSAT 007 (standard)` |
+
+## `edges.csv`
+
+One row per supply relationship. Directed from the upstream node (`from_id`) to
+the downstream node (`to_id`).
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | Upstream node ID | Supplying node (higher tier). | character | `M001`, `D038`, `P039` |
+| `to_id` | Downstream node ID | Receiving node (lower tier). | character | `F016`, `E049`, `D053` |
+| `annual_volume` | Annual volume | Units / wafer-starts shipped on this relationship per year (the edge weight). | integer | `153`, `227`, `30` |
+| `value_musd` | Annual value | Dollar value of the flow, millions USD. | double | `5.504`, `16.824` |
+| `lead_time_days` | Edge lead time | Lead time for deliveries on this relationship, days. | integer | `126`, `49`, `29` |
+
+## Load it
+
+```bash
+Rscript data/projects/semiconductor-supply/load.R     # R    (igraph)
+python  data/projects/semiconductor-supply/load.py     # Python (python-igraph)
+```
+
+Both build a directed, weighted `igraph` graph and print a one-screen summary. In
+the [R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**semiconductor-supply** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/semiconductor-supply>
+
+---
+
+## `data/projects/semiconductor-supply/_generate.py`
+
+```python
+"""Generate the `semiconductor-supply` project network (deterministic).
+
+A multi-tier global semiconductor supply chain spanning five tiers of nodes:
+  - tier 4  material   raw materials, specialty gases, wafers, photoresist
+  - tier 3  foundry    wafer fabrication plants ("fabs")
+  - tier 2  packaging  assembly / test / advanced packaging houses (OSATs)
+  - tier 1  designer   chip designers and IDMs (place orders for silicon)
+  - tier 0  product    end OEM products (phones, GPUs, cars, servers)
+
+Edges are directed supply flows from upstream (higher tier number) to
+downstream (lower tier number). One row per supply relationship. The edge
+weight is `annual_volume` (millions of units / wafer-starts) with a paired
+`value_musd` ($ value) and `lead_time_days`.
+
+Node attributes: kind, tier, region, capacity, lead_time_days, label.
+Regions: Taiwan, South Korea, USA, Japan, China, Europe.
+
+Design parameters (the only record of the planted structure):
+  - HUB_FOUNDRY: one advanced Taiwan foundry takes a dominant share of all
+    *advanced-node* demand. Many tier-1 designers route advanced parts through
+    it, so it has high BETWEENNESS but only modest in-degree (a few fat edges,
+    not many edges). Removing it severs most advanced product output.
+  - ADV_PACK_REGION: advanced `packaging` is concentrated in ONE region
+    (Taiwan); a regional shock severs many advanced downstream paths.
+  - CHOKE_MATERIAL: one tier-4 specialty-gas supplier feeds nearly every
+    foundry (a second hidden critical node, again betweenness >> degree-rank).
+  - LEADTIME_ON_PATH: the longest lead times cluster ON the critical path
+    (hub foundry, choke material, advanced packaging) so the bottleneck is
+    also the slowest to recover.
+
+Run:
+    python data/projects/semiconductor-supply/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+REGIONS = ["Taiwan", "South Korea", "USA", "Japan", "China", "Europe"]
+
+# tier population sizes (total ~ 360 nodes)
+N_MATERIAL = 70     # tier 4
+N_FOUNDRY = 46      # tier 3
+N_PACKAGING = 60    # tier 2
+N_DESIGNER = 96     # tier 1
+N_PRODUCT = 96      # tier 0
+
+# --- planted parameters -----------------------------------------------------
+HUB_SHARE = 0.78          # share of advanced-node demand the hub foundry takes
+CHOKE_SHARE = 0.88        # share of foundries the choke material feeds
+ADV_PACK_REGION = "Taiwan"
+ADV_PACK_CONC = 0.80      # share of advanced packaging routed to that region
+LEADTIME_PATH_BONUS = 70  # extra lead-time days loaded onto the critical path
+NOISE_REGION_FLIP = 0.10  # fraction of nodes whose region is "wrong" (noise)
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # region sampling weights: chip world is Asia-heavy
+    rweights = np.array([0.26, 0.16, 0.18, 0.14, 0.16, 0.10])
+    rweights = rweights / rweights.sum()
+
+    def pick_regions(n):
+        return rng.choice(REGIONS, size=n, p=rweights)
+
+    rows = []  # node rows
+
+    # ----- tier 4: materials ----------------------------------------------
+    mat_kinds = ["specialty_gas", "silicon_wafer", "photoresist", "rare_earth",
+                 "sputter_target", "cmp_slurry", "lead_frame", "bonding_wire"]
+    mat_region = pick_regions(N_MATERIAL)
+    for i in range(N_MATERIAL):
+        sub = mat_kinds[i % len(mat_kinds)]
+        rows.append({
+            "node_id": f"M{i+1:03d}", "kind": "material", "tier": 4,
+            "region": mat_region[i], "subtype": sub,
+            "capacity": int(rng.integers(200, 4000)),
+            "lead_time_days": int(np.clip(rng.normal(60, 18), 14, 140)),
+            "label": f"{sub.replace('_',' ').title()} Co {i+1:03d}",
+        })
+
+    # ----- tier 3: foundries ----------------------------------------------
+    f_region = pick_regions(N_FOUNDRY)
+    # node tier (process node, nm); a minority are "advanced" (<= 7nm)
+    f_node_nm = rng.choice([28, 14, 10, 7, 5, 3], size=N_FOUNDRY,
+                           p=[0.30, 0.18, 0.14, 0.16, 0.14, 0.08])
+    for i in range(N_FOUNDRY):
+        adv = f_node_nm[i] <= 7
+        rows.append({
+            "node_id": f"F{i+1:03d}", "kind": "foundry", "tier": 3,
+            "region": f_region[i], "subtype": f"{int(f_node_nm[i])}nm",
+            "capacity": int(rng.integers(20, 220) * (3 if adv else 1)),
+            "lead_time_days": int(np.clip(rng.normal(95, 22), 40, 200)),
+            "label": f"Fab {i+1:03d} ({int(f_node_nm[i])}nm)",
+        })
+
+    # ----- tier 2: packaging ----------------------------------------------
+    p_region = pick_regions(N_PACKAGING)
+    p_adv = rng.random(N_PACKAGING) < 0.40  # advanced packaging (2.5D/3D/CoWoS)
+    # advanced packaging is geographically concentrated: ~70% of the advanced
+    # houses sit in ADV_PACK_REGION (a planted single-region dependence).
+    for i in range(N_PACKAGING):
+        if p_adv[i] and rng.random() < 0.70:
+            p_region[i] = ADV_PACK_REGION
+    for i in range(N_PACKAGING):
+        sub = "advanced" if p_adv[i] else "standard"
+        rows.append({
+            "node_id": f"P{i+1:03d}", "kind": "packaging", "tier": 2,
+            "region": p_region[i], "subtype": sub,
+            "capacity": int(rng.integers(30, 300)),
+            "lead_time_days": int(np.clip(rng.normal(40, 12), 12, 90)),
+            "label": f"OSAT {i+1:03d} ({sub})",
+        })
+
+    # ----- tier 1: designers ----------------------------------------------
+    d_region = pick_regions(N_DESIGNER)
+    d_segment = rng.choice(["mobile", "gpu", "cpu", "auto", "iot", "network"],
+                           size=N_DESIGNER)
+    # designers that need advanced nodes (high-performance silicon)
+    d_advanced = np.isin(d_segment, ["gpu", "cpu", "mobile"]) & (rng.random(N_DESIGNER) < 0.85)
+    for i in range(N_DESIGNER):
+        rows.append({
+            "node_id": f"D{i+1:03d}", "kind": "designer", "tier": 1,
+            "region": d_region[i], "subtype": d_segment[i],
+            "capacity": int(rng.integers(50, 600)),
+            "lead_time_days": int(np.clip(rng.normal(30, 10), 7, 70)),
+            "label": f"Designer {i+1:03d} ({d_segment[i]})",
+        })
+
+    # ----- tier 0: products -----------------------------------------------
+    pr_region = pick_regions(N_PRODUCT)
+    pr_segment = rng.choice(["phone", "gpu_card", "server", "vehicle", "iot_device",
+                             "router"], size=N_PRODUCT)
+    for i in range(N_PRODUCT):
+        rows.append({
+            "node_id": f"E{i+1:03d}", "kind": "product", "tier": 0,
+            "region": pr_region[i], "subtype": pr_segment[i],
+            "capacity": int(rng.integers(100, 2000)),
+            "lead_time_days": int(np.clip(rng.normal(20, 8), 5, 50)),
+            "label": f"Product {i+1:03d} ({pr_segment[i]})",
+        })
+
+    nodes = pd.DataFrame(rows)
+
+    # convenient id pools / lookups
+    def ids(kind):
+        return nodes.loc[nodes.kind == kind, "node_id"].tolist()
+    mat_ids = ids("material")
+    fou_ids = ids("foundry")
+    pack_ids = ids("packaging")
+    des_ids = ids("designer")
+    prod_ids = ids("product")
+    region_of = dict(zip(nodes.node_id, nodes.region))
+    sub_of = dict(zip(nodes.node_id, nodes.subtype))
+
+    adv_fou = [f for f in fou_ids if int(sub_of[f].replace("nm", "")) <= 7]
+    std_fou = [f for f in fou_ids if f not in adv_fou]
+    adv_pack = [p for p in pack_ids if sub_of[p] == "advanced"]
+    std_pack = [p for p in pack_ids if p not in adv_pack]
+    adv_pack_region = [p for p in adv_pack if region_of[p] == ADV_PACK_REGION]
+    if not adv_pack_region:  # safety
+        adv_pack_region = adv_pack[:1]
+
+    # ---- pick the planted critical nodes ---------------------------------
+    # HUB_FOUNDRY: a Taiwan advanced foundry
+    tw_adv = [f for f in adv_fou if region_of[f] == "Taiwan"]
+    HUB_FOUNDRY = tw_adv[0] if tw_adv else adv_fou[0]
+    # CHOKE_MATERIAL: a specialty-gas material supplier (feeds foundries)
+    gas_ids = nodes.loc[(nodes.kind == "material") &
+                        (nodes.subtype == "specialty_gas"), "node_id"].tolist()
+    CHOKE_MATERIAL = gas_ids[0]
+
+    advanced_designers = [d for d, a in zip(des_ids, d_advanced) if a]
+    adv_designers_set = set(advanced_designers)
+    std_designers = [d for d in des_ids if d not in adv_designers_set]
+
+    # advanced products (high-performance) vs mature products
+    prod_seg = dict(zip(prod_ids, pr_segment))
+    adv_prod = [e for e in prod_ids if prod_seg[e] in ("gpu_card", "server", "phone")]
+    std_prod = [e for e in prod_ids if e not in set(adv_prod)]
+
+    eds = []  # edge rows
+
+    def add_edge(frm, to, vol, ltd):
+        eds.append({
+            "from_id": frm, "to_id": to,
+            "annual_volume": int(max(vol, 1)),
+            "value_musd": round(float(max(vol, 1)) * rng.uniform(0.02, 0.18), 3),
+            "lead_time_days": int(ltd),
+        })
+
+    def lt_of(n):
+        return int(nodes.loc[nodes.node_id == n, "lead_time_days"].iloc[0])
+
+    choke_lt = lt_of(CHOKE_MATERIAL)
+    hub_lt = lt_of(HUB_FOUNDRY)
+
+    # DECOY commodity materials that feed almost every mature foundry. They are
+    # the highest-DEGREE upstream nodes, but fully substitutable (mature
+    # foundries have many suppliers), so removing one cuts almost nothing.
+    # Their job is to out-rank the real choke on degree, hiding the choke.
+    commodity_pool = [m for m in mat_ids
+                      if sub_of[m] == "silicon_wafer" and m != CHOKE_MATERIAL]
+    COMMODITY = commodity_pool[0]
+    COMMODITY2 = commodity_pool[1]
+
+    # Strict tier order: material(4) -> foundry(3) -> packaging(2)
+    #                    -> designer(1) -> product(0).
+    #
+    # Two weakly separable corridors:
+    #   * a MATURE corridor that is richly multi-sourced (resilient), and
+    #   * an ADVANCED corridor that funnels through the choke material, the hub
+    #     foundry, and Taiwan advanced packaging (fragile single points).
+    # The advanced corridor never borrows resilience from the mature side, so
+    # the hub & choke are genuine cut vertices for advanced product output --
+    # findable by criticality/betweenness but NOT by raw degree.
+
+    # ===== ADVANCED CORRIDOR (the fragile spine) ==========================
+    # choke material -> the advanced foundries (its ONLY upstream input).
+    add_edge(CHOKE_MATERIAL, HUB_FOUNDRY, int(rng.integers(150, 260)), choke_lt)
+    for f in adv_fou:
+        if f != HUB_FOUNDRY:
+            add_edge(CHOKE_MATERIAL, f, int(rng.integers(60, 160)), choke_lt)
+
+    # hub foundry -> advanced packaging corridor (the Taiwan-led set).
+    # The hub is the SOLE upstream feeder of every advanced packaging house,
+    # so it lies on every path to the advanced products beyond them -- a genuine
+    # cut vertex -- while touching only a handful of nodes (modest degree).
+    corridor_pack = list(adv_pack)              # ALL advanced packaging
+    # bias volume toward the Taiwan houses so the geographic concentration is
+    # real but not a giveaway (noise on the non-Taiwan houses).
+    for p in corridor_pack:
+        vol = int(rng.integers(180, 360)) if region_of.get(p) == ADV_PACK_REGION \
+            else int(rng.integers(40, 110))
+        add_edge(HUB_FOUNDRY, p, vol, hub_lt)
+
+    # the other advanced fabs exist but sell into the MATURE designer market
+    # (a secondary outlet) -- they do NOT feed advanced packaging, so they give
+    # the advanced corridor no alternative path.
+    for f in adv_fou:
+        if f != HUB_FOUNDRY:
+            for d in rng.choice(std_designers, size=int(rng.integers(1, 3)), replace=False):
+                add_edge(f, d, int(rng.integers(20, 90)), lt_of(f))
+
+    # advanced packaging -> advanced designers. Each designer draws mostly from
+    # the Taiwan corridor houses (concentration) plus occasionally another.
+    tw_pack = [p for p in corridor_pack if region_of.get(p) == ADV_PACK_REGION] or corridor_pack
+    for d in advanced_designers:
+        if rng.random() < ADV_PACK_CONC:
+            add_edge(rng.choice(tw_pack), d, int(rng.integers(80, 300)), lt_of(tw_pack[0]))
+        else:
+            p = rng.choice(corridor_pack)
+            add_edge(p, d, int(rng.integers(80, 300)), lt_of(p))
+    # advanced designers -> advanced products
+    for e in adv_prod:
+        for d in rng.choice(advanced_designers, size=int(rng.integers(1, 3)), replace=False):
+            add_edge(d, e, int(rng.integers(60, 400)), lt_of(d))
+
+    # ===== MATURE CORRIDOR (resilient, multi-sourced) =====================
+    # materials -> mature foundries. The COMMODITY feeds nearly all of them
+    # (highest degree, but substitutable); a moderate share also draw the
+    # choke gas; everyone has 2-4 ordinary suppliers.
+    for f in std_fou:
+        add_edge(COMMODITY, f, int(rng.integers(40, 160)), lt_of(COMMODITY))
+        # a SECOND commodity wafer line feeds most mature foundries too, so the
+        # commodity suppliers (not the choke gas) dominate raw degree.
+        if rng.random() < 0.85:
+            add_edge(COMMODITY2, f, int(rng.integers(30, 120)), lt_of(COMMODITY2))
+        if rng.random() < 0.25:
+            add_edge(CHOKE_MATERIAL, f, int(rng.integers(30, 120)), choke_lt)
+        excl = (COMMODITY, COMMODITY2, CHOKE_MATERIAL)
+        for m in rng.choice([x for x in mat_ids if x not in excl],
+                            size=int(rng.integers(2, 5)), replace=False):
+            add_edge(m, f, int(rng.integers(5, 80)), lt_of(m))
+    # some materials also feed standard packaging directly
+    for p in std_pack:
+        for m in rng.choice([x for x in mat_ids if x != CHOKE_MATERIAL],
+                            size=int(rng.integers(1, 3)), replace=False):
+            add_edge(m, p, int(rng.integers(5, 60)), lt_of(m))
+    # mature foundries -> standard packaging (multi-sourced)
+    for p in std_pack:
+        for f in rng.choice(std_fou, size=int(rng.integers(2, 4)), replace=False):
+            add_edge(f, p, int(rng.integers(20, 120)), lt_of(f))
+    # standard packaging -> mature designers
+    for d in std_designers:
+        for p in rng.choice(std_pack, size=int(rng.integers(2, 4)), replace=False):
+            add_edge(p, d, int(rng.integers(30, 120)), lt_of(p))
+    # mature designers -> mature products
+    for e in std_prod:
+        for d in rng.choice(std_designers, size=int(rng.integers(2, 4)), replace=False):
+            add_edge(d, e, int(rng.integers(50, 300)), lt_of(d))
+
+    corridor_pack = list(dict.fromkeys(corridor_pack))
+    edges = pd.DataFrame(eds)
+
+    # ---- LEADTIME_ON_PATH: load extra lead time onto the critical path ----
+    crit = {HUB_FOUNDRY, CHOKE_MATERIAL}
+    crit |= set(corridor_pack)
+    nodes.loc[nodes.node_id.isin(crit), "lead_time_days"] = (
+        nodes.loc[nodes.node_id.isin(crit), "lead_time_days"] + LEADTIME_PATH_BONUS
+    ).clip(upper=300)
+    # reflect onto edges that originate from those critical nodes
+    edges.loc[edges.from_id.isin(crit), "lead_time_days"] = (
+        edges.loc[edges.from_id.isin(crit), "lead_time_days"] + LEADTIME_PATH_BONUS
+    ).clip(upper=320)
+
+    # ---- region noise: flip a few regions so region != destiny ------------
+    flip = rng.random(len(nodes)) < NOISE_REGION_FLIP
+    nodes.loc[flip, "region"] = rng.choice(REGIONS, size=int(flip.sum()))
+
+    nodes = nodes[["node_id", "kind", "tier", "region", "subtype",
+                   "capacity", "lead_time_days", "label"]]
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+
+    kc = nodes.kind.value_counts()
+    print(f"semiconductor-supply: {len(nodes)} nodes "
+          f"({kc.get('material',0)} material + {kc.get('foundry',0)} foundry + "
+          f"{kc.get('packaging',0)} packaging + {kc.get('designer',0)} designer + "
+          f"{kc.get('product',0)} product), {len(edges)} edges.")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/semiconductor-supply/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `semiconductor-supply` project network (R)
+#' @description
+#'
+#' Reads the two CSVs in this folder and builds a directed, weighted igraph
+#' object: a multi-tier semiconductor supply chain (materials -> foundries ->
+#' packaging -> designers -> products). Run it straight (`Rscript load.R`) for a
+#' quick summary, or `source()` it and call `load_semi()` in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "semiconductor-supply")
+
+#' Load the node table (one row per supplier / product).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per supply relationship).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the directed, weighted graph.
+#'
+#' Edges are weighted by `annual_volume` and flow from the upstream node to the
+#' downstream node. Use `subcomponent(g, v, mode = "out")` to trace everything
+#' downstream of a node, or knock a node out (`delete_vertices`) to test how
+#' much end-product output it carries.
+load_semi <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = TRUE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$annual_volume
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n🔌 semiconductor-supply (R)\n")
+  cat("   Materials -> foundries -> packaging -> designers -> products;",
+      "weighted by annual volume.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_semi(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d nodes (%d material, %d foundry, %d packaging, %d designer, %d product) and %d edges.\n",
+              nrow(nodes), sum(nodes$kind == "material"),
+              sum(nodes$kind == "foundry"), sum(nodes$kind == "packaging"),
+              sum(nodes$kind == "designer"), sum(nodes$kind == "product"),
+              nrow(edges)))
+  cat(sprintf("🔗 Directed: %s | total annual volume: %s | total value: $%s M\n",
+              is_directed(g),
+              format(sum(edges$annual_volume), big.mark = ","),
+              format(round(sum(edges$value_musd)), big.mark = ",")))
+  cat("🎉 Graph ready. `g` is a directed, weighted igraph (weight = annual_volume).\n")
+}
+```
+
+---
+
+## `data/projects/semiconductor-supply/load.py`
+
+```python
+"""Load the `semiconductor-supply` project network (Python).
+
+Reads the two CSVs in this folder and builds a directed, weighted python-igraph
+object: a multi-tier semiconductor supply chain (materials -> foundries ->
+packaging -> designers -> products). Run it straight (``python load.py``) for a
+quick summary, or import ``load_semi()`` into your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per supplier / product."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per supply relationship."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_semi(nodes: pd.DataFrame | None = None,
+              edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the directed, weighted graph (edge weight = ``annual_volume``).
+
+    Edges flow from the upstream node to the downstream node. Use
+    ``g.subcomponent(v, mode="out")`` to trace everything downstream of a node,
+    or delete a vertex to test how much end-product output it carries.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=True, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["annual_volume"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n🔌 semiconductor-supply (Python)")
+    print("   Materials -> foundries -> packaging -> designers -> products; "
+          "weighted by annual volume.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_semi(nodes, edges)
+
+    kinds = nodes["kind"].value_counts()
+    print(f"✅ Loaded {len(nodes)} nodes "
+          f"({kinds.get('material',0)} material, {kinds.get('foundry',0)} foundry, "
+          f"{kinds.get('packaging',0)} packaging, {kinds.get('designer',0)} designer, "
+          f"{kinds.get('product',0)} product) and {len(edges)} edges.")
+    print(f"🔗 Directed: {g.is_directed()} | total annual volume: "
+          f"{edges['annual_volume'].sum():,} | total value: "
+          f"${round(edges['value_musd'].sum()):,} M")
+    print("🎉 Graph ready. Object `g` is a directed, weighted igraph "
+          "(weight = annual_volume).")
+```
+
+---
+
+## `data/projects/trade-commodity/README.md`
+
+# trade-commodity
+
+*World trade in a single strategic commodity ("refined metal", in tonnes) among
+~140 countries, observed before, during, and after a major supply disruption.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Directed (export flow: exporter → importer) |
+| **Weights** | Weighted (`tonnes` per edge; `price_usd_per_t` companion field) |
+| **Modality** | Unimodal — one node kind (`country`) |
+| **Temporal** | Yes — one row per (exporter, importer, **period**): `before` / `during` / `after` |
+| **Nodes** | 140 (countries across 6 regional blocs) |
+| **Edges** | 1,210 (≈422 before + ≈378 during + ≈410 after) |
+| **Files** | `nodes.csv`, `edges.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+A directed, weighted trade network for one strategic commodity. Each **country**
+both produces and consumes the commodity; a directed **export flow** carries
+`tonnes` from an exporting country to an importing country, with a per-tonne
+trade price attached. The world is observed across three **periods** — a normal
+market (`before`), a market disrupted by a supply shock (`during`), and a
+partially recovered market (`after`). Countries carry attributes for region/bloc,
+GDP per capita, and domestic production and consumption capacity.
+
+This is a flow, criticality, and community network with a built-in shock you can
+study as a natural experiment. Some questions to chew on:
+
+- Which importers are most exposed if a single supplier disappears? Is exposure
+  about *how much* a country trades, or *how concentrated* its sources are?
+- Does the trade map break into regional communities, and who are the few
+  countries that bridge between blocs?
+- If you ranked countries by how much trade *passes through* them, would that
+  match a ranking by raw trade volume — or would different countries top each?
+- The three periods are not the same world. What changed between them, who was
+  hurt, and did anyone fail to recover?
+- Whose removal would cut some group of countries off from supply entirely?
+
+> **Note.** The interesting findings here are deliberately *not* documented.
+> "Bigger economies trade more" is the starting point, not a finding. Push past it.
+
+## `nodes.csv`
+
+One row per country.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique country key (`C###`). Referenced by edges. | character | `C001`, `C047`, `C140` |
+| `kind` | Node kind | Node type (all countries in this network). | character | `country` |
+| `label` | Display name | Human-readable label (region prefix + index). (`name` is avoided — python-igraph reserves it for the ID.) | character | `NOR-001`, `SOU-031`, `EUR-061` |
+| `region` | Region / bloc | Continental trade bloc the country belongs to. | character | `North America`, `Africa`, `Asia-Pacific` |
+| `gdp_per_capita` | GDP per capita | National income per person, USD. | integer | `54442`, `43966`, `14354` |
+| `production` | Production | Domestic output capacity of the commodity, tonnes. | double | `7016`, `33045`, `15239` |
+| `consumption` | Consumption | Domestic demand for the commodity, tonnes. | double | `52860`, `11350`, `31147` |
+
+## `edges.csv`
+
+One row per (exporter, importer, period). Directed; a pair can appear up to three
+times (once per period).
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `exporter_id` | Exporter node ID | Country sending the commodity. | character | `C004`, `C047` |
+| `importer_id` | Importer node ID | Country receiving the commodity. | character | `C001`, `C007` |
+| `period` | Period | Market era: `before`, `during`, or `after` the supply disruption. | character | `before`, `during`, `after` |
+| `tonnes` | Tonnes traded | Quantity moved on that edge in that period (the edge weight). | integer | `78`, `1340`, `40285` |
+| `price_usd_per_t` | Price per tonne | Trade price for that flow, USD per tonne. | integer | `889`, `974`, `1183` |
+
+## Load it
+
+```bash
+Rscript data/projects/trade-commodity/load.R     # R    (igraph)
+python  data/projects/trade-commodity/load.py     # Python (python-igraph)
+```
+
+Both build a directed, weighted `igraph` graph and print a one-screen summary. In
+the [R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**trade-commodity** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/trade-commodity>
+
+---
+
+## `data/projects/trade-commodity/_generate.py`
+
+```python
+"""Generate the `trade-commodity` project network (deterministic).
+
+International trade in a single strategic commodity ("refined metal", measured in
+tonnes) among ~140 countries, observed across three periods around a supply
+shock:
+  - period = "before"  : normal market
+  - period = "during"  : a dominant exporter goes offline
+  - period = "after"   : partial, costlier rewiring
+
+Nodes are countries (kind = "country"); edges are directed export flows
+exporter -> importer for a given period, weighted by tonnes traded.
+
+Design parameters (the only record of the planted structure):
+  - DOMINANT_EXPORTERS: a few large exporters supply most of the world. One of
+    them (the SHOCKED exporter) collapses to ~0 out-strength DURING and recovers
+    only partially AFTER.
+  - DEPENDENT_IMPORTERS: a handful of importers draw the large majority of their
+    supply from ONE or TWO dominant exporters (very high top-2 supply share).
+    When their dominant source goes offline they scramble: in-strength collapses
+    DURING and partially rewires to costlier sources AFTER (some never recover).
+  - REEXPORTER: one mid-size country imports heavily and re-exports most of it
+    (import ~= export, high throughput, high betweenness) — a transshipment hub
+    that brokers flow and masks origin.
+  - BLOCS: trade clusters strongly within region/bloc (high modularity) with a
+    few inter-bloc broker countries.
+  - BROKERS: a few structurally critical countries sit on the only supply path
+    into otherwise peripheral importer groups (high betweenness vs degree).
+
+Run:
+    python data/projects/trade-commodity/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+PERIODS = ["before", "during", "after"]
+
+# blocs (region label, count, base gdp-per-capita tier 0..1)
+BLOCS = [
+    ("North America", 18, 0.82),
+    ("South America", 20, 0.45),
+    ("Europe", 30, 0.78),
+    ("Africa", 28, 0.30),
+    ("Middle East", 16, 0.55),
+    ("Asia-Pacific", 28, 0.50),
+]
+
+# --- planted parameters -----------------------------------------------------
+N_DOMINANT = 6          # big exporters that supply most of the market
+SHOCK_OFFSET = 0        # index (within dominant list) of the exporter that fails
+SHOCK_RECOVERY = 0.35   # AFTER out-strength as fraction of BEFORE for shocked exporter
+N_DEPENDENT = 9         # importers concentrated on one/two dominant sources
+DEP_SHARE = 0.86        # share of a dependent importer's supply from its top source(s)
+DEP_RECOVERY = 0.55     # AFTER in-strength as fraction of BEFORE for dependents
+N_PERIPHERAL_GROUPS = 4 # importer groups reachable only via a broker
+COST_PREMIUM = 1.0      # AFTER price premium added when rewiring to new sources
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # ----- countries -------------------------------------------------------
+    rows = []
+    cid = 1
+    bloc_of = {}
+    for region, n, tier in BLOCS:
+        for _ in range(n):
+            gdp = int(np.clip(2500 + tier * 60000 + rng.normal(0, 9000), 800, 110000))
+            # latent production / consumption capacity (tonnes), noisy
+            prod = float(np.clip(rng.lognormal(mean=10.0, sigma=1.1), 2e3, 5e6))
+            cons = float(np.clip(rng.lognormal(mean=10.2, sigma=0.9), 5e3, 4e6))
+            node_id = f"C{cid:03d}"
+            bloc_of[node_id] = region
+            rows.append({
+                "node_id": node_id,
+                "kind": "country",
+                "label": f"{region[:3].upper()}-{cid:03d}",
+                "region": region,
+                "gdp_per_capita": gdp,
+                "production": round(prod, 0),
+                "consumption": round(cons, 0),
+            })
+            cid += 1
+    nodes = pd.DataFrame(rows)
+    ids = list(nodes.node_id)
+    n_countries = len(ids)
+    region_arr = nodes["region"].to_numpy()
+    prod_arr = nodes["production"].to_numpy().astype(float).copy()
+    cons_arr = nodes["consumption"].to_numpy().astype(float).copy()
+
+    idx_of = {nid: i for i, nid in enumerate(ids)}
+
+    # ----- choose dominant exporters --------------------------------------
+    # the highest-production countries become dominant exporters; give them a
+    # large production bump so the market really concentrates on them.
+    dominant = list(np.argsort(-prod_arr)[:N_DOMINANT])
+    for d in dominant:
+        prod_arr[d] *= 4.0
+    nodes.loc[:, "production"] = prod_arr.round(0)
+    shocked = dominant[SHOCK_OFFSET]
+
+    # ----- choose dependent importers -------------------------------------
+    # high-consumption, low-production countries that lean on dominant sources.
+    deficit = cons_arr - prod_arr
+    cand = [i for i in np.argsort(-deficit) if i not in dominant]
+    dependent = cand[:N_DEPENDENT]
+    # each dependent importer is pinned to 1-2 dominant sources, and the SHOCKED
+    # exporter is the primary source for several of them.
+    dep_sources = {}
+    for k, di in enumerate(dependent):
+        if k < 5:
+            primary = shocked
+        else:
+            primary = dominant[(k % (N_DOMINANT - 1)) + 1]
+        secondary = dominant[(dominant.index(primary) + 2) % N_DOMINANT]
+        dep_sources[di] = (primary, secondary)
+
+    # ----- re-exporter (transshipment hub) --------------------------------
+    # a mid-size country (mid production, mid consumption) that brokers flow.
+    mid = [i for i in range(n_countries)
+           if i not in dominant and i not in dependent]
+    # pick a mid-size country with genuine demand capacity so it can sustain a
+    # high import + re-export throughput.
+    mid_sorted = sorted(mid, key=lambda i: -(prod_arr[i] + cons_arr[i]))
+    reexporter = mid_sorted[8]   # not a top producer, but well-connected & sizeable
+
+    # ----- peripheral importer groups reachable only via a broker ---------
+    # pick a few brokers; behind each, a cluster of small importers that buy ONLY
+    # from the broker (so the broker sits on their only supply path).
+    broker_pool = [i for i in mid if i != reexporter]
+    rng.shuffle(broker_pool)
+    brokers = broker_pool[:N_PERIPHERAL_GROUPS]
+    periph = {}
+    used = set(brokers) | {reexporter} | set(dominant) | set(dependent)
+    remaining = [i for i in range(n_countries) if i not in used]
+    rng.shuffle(remaining)
+    cur = 0
+    for b in brokers:
+        grp = remaining[cur:cur + 4]
+        cur += 4
+        periph[b] = grp
+        used.update(grp)
+
+    # supplier of each broker = a NON-shocked dominant exporter (so the broker's
+    # downstream group keeps a stable single supply path: dom -> broker -> periph)
+    nonshock_dom = [d for d in dominant if d != shocked]
+    broker_src = {b: nonshock_dom[j % len(nonshock_dom)]
+                  for j, b in enumerate(brokers)}
+    periph_members = {g for grp in periph.values() for g in grp}
+
+    # ----- helper: base trade volume for a pair ---------------------------
+    def base_volume(src, dst):
+        # gravity-ish: bigger exporter * bigger importer, same-bloc bonus
+        s = prod_arr[src] ** 0.5
+        d = cons_arr[dst] ** 0.5
+        bloc_bonus = 1.6 if region_arr[src] == region_arr[dst] else 1.0
+        return s * d * 1e-3 * bloc_bonus
+
+    edge_rows = []
+
+    by_region = {}
+    for r in {region_arr[i] for i in range(n_countries)}:
+        by_region[r] = [i for i in range(n_countries) if region_arr[i] == r]
+
+    # producers within each bloc, ranked by production (bloc background trade
+    # routes mostly through these regional suppliers -> tight communities).
+    # Exclude brokers and the re-exporter so their degree stays low and their
+    # betweenness (structural role) stands out against degree.
+    _excl = set(brokers) | {reexporter}
+    bloc_suppliers = {r: [i for i in sorted(members, key=lambda i: -prod_arr[i])
+                          if i not in _excl][:8]
+                      for r, members in by_region.items()}
+
+    # ----- build BEFORE flows ---------------------------------------------
+    # 1) within-bloc background trade: every country buys from several same-bloc
+    #    suppliers (dense, high-volume -> creates modular community structure).
+    def background_flows(period, scale=1.0):
+        out = []
+        for dst in range(n_countries):
+            if dst in periph_members:
+                continue  # peripheral importers buy ONLY via their broker
+            r = region_arr[dst]
+            same = [i for i in bloc_suppliers[r] if i != dst]
+            if not same:
+                continue
+            k = rng.integers(3, min(7, len(same) + 1))
+            picks = rng.choice(same, size=min(k, len(same)), replace=False)
+            for s in picks:
+                vol = base_volume(s, dst) * rng.uniform(0.45, 1.1) * scale
+                out.append((s, dst, vol))
+        return out
+
+    # 2) dominant exporters sell broadly across blocs (big inter-bloc ties)
+    def dominant_flows(period, shocked_factor):
+        out = []
+        for d in dominant:
+            factor = shocked_factor if d == shocked else 1.0
+            buyers = rng.choice(n_countries, size=20, replace=False)
+            for b in buyers:
+                if b == d or b in periph_members:
+                    continue
+                vol = base_volume(d, b) * rng.uniform(0.20, 0.45) * factor
+                out.append((d, b, vol))
+        return out
+
+    # 3) dependent importers: concentrate supply on 1-2 dominant sources, but
+    #    keep a small surviving non-dominant tail that persists through the shock
+    #    (so in-strength collapses DURING then partially recovers AFTER).
+    def dependent_flows(period, shocked_factor):
+        out = []
+        for di in dependent:
+            primary, secondary = dep_sources[di]
+            need = cons_arr[di] * 0.9
+            p_factor = shocked_factor if primary == shocked else 1.0
+            s_factor = shocked_factor if secondary == shocked else 1.0
+            out.append((primary, di, need * DEP_SHARE * 0.78 * p_factor))
+            out.append((secondary, di, need * DEP_SHARE * 0.22 * s_factor))
+            # surviving tail of non-dominant suppliers (unaffected by the shock);
+            # AFTER, this tail grows as the importer rewires to costlier sources.
+            r = region_arr[di]
+            tail = [i for i in bloc_suppliers[r]
+                    if i not in (primary, secondary, di)][:3]
+            rewire = 1.0 + (2.2 if period == "after" else 0.0)
+            for o in tail:
+                out.append((o, di, need * (1 - DEP_SHARE) * 0.5 * rewire))
+        return out
+
+    # 4) re-exporter: imports a lot from dominants, re-exports most to many
+    #    (import ~= export, very high throughput & betweenness).
+    def reexport_flows(period, shocked_factor):
+        out = []
+        re = reexporter
+        srcs = dominant[1:4]   # avoid the shocked one as sole source
+        total_in = 0.0
+        # large absolute imports so the hub has real throughput regardless of its
+        # own small domestic consumption.
+        per_src = 40000
+        for s in srcs:
+            f = shocked_factor if s == shocked else 1.0
+            vol = per_src * rng.uniform(0.85, 1.15) * f
+            out.append((s, re, vol))
+            total_in += vol
+        # re-export ~90% of imports to many buyers across blocs (import ~= export)
+        buyers = rng.choice(n_countries, size=22, replace=False)
+        buyers = [b for b in buyers if b != re and b not in periph_members]
+        per = (total_in * 0.9) / max(len(buyers), 1)
+        for b in buyers:
+            out.append((re, b, per * rng.uniform(0.7, 1.3)))
+        return out
+
+    # 5) broker -> peripheral groups (broker is the SOLE supplier of its group,
+    #    so it sits on the only supply path -> high betweenness vs degree).
+    def broker_flows(period, shocked_factor):
+        out = []
+        for b in brokers:
+            src = broker_src[b]
+            f = shocked_factor if src == shocked else 1.0
+            vol_in = base_volume(src, b) * 1.8 * f + 4000 * f
+            out.append((src, b, vol_in))
+            grp = periph[b]
+            per = (vol_in * 0.85) / max(len(grp), 1)
+            for g in grp:
+                out.append((b, g, per * rng.uniform(0.8, 1.2)))
+        return out
+
+    def assemble(period, shocked_factor, premium):
+        flows = []
+        flows += [(s, d, v, "bloc") for (s, d, v) in background_flows(period)]
+        flows += [(s, d, v, "major") for (s, d, v) in dominant_flows(period, shocked_factor)]
+        flows += [(s, d, v, "dependency") for (s, d, v) in dependent_flows(period, shocked_factor)]
+        flows += [(s, d, v, "reexport") for (s, d, v) in reexport_flows(period, shocked_factor)]
+        flows += [(s, d, v, "broker") for (s, d, v) in broker_flows(period, shocked_factor)]
+        for (s, d, v, kind) in flows:
+            if s == d:
+                continue
+            noise = rng.lognormal(mean=0.0, sigma=0.25)
+            tonnes = max(v * noise, 0.0)
+            row = {
+                "exporter_id": ids[s], "importer_id": ids[d], "period": period,
+                "tonnes": int(round(tonnes)), "flow_type": kind,
+            }
+            # price: base + distance/scarcity; AFTER rewired flows cost more
+            base_price = 900 + (0 if region_arr[s] == region_arr[d] else 220)
+            base_price += premium * 180 if kind in ("dependency", "broker") else 0
+            base_price *= rng.uniform(0.92, 1.10)
+            row["price_usd_per_t"] = int(round(base_price))
+            if row["tonnes"] >= 50:
+                edge_rows.append(row)
+
+    # BEFORE: normal
+    assemble("before", shocked_factor=1.0, premium=0.0)
+    # DURING: shocked exporter collapses to ~0; dependents scramble; brokers/reexport
+    # drained; market does NOT fully replace the lost supply.
+    assemble("during", shocked_factor=0.04, premium=0.4)
+    # AFTER: shocked exporter partially recovers; dependents partially rewire to
+    # costlier sources (premium up); some never recover (handled by recovery<1).
+    assemble("after", shocked_factor=SHOCK_RECOVERY, premium=COST_PREMIUM)
+
+    edges = pd.DataFrame(edge_rows)
+    # collapse duplicate (exporter, importer, period) rows by summing tonnes and
+    # taking a tonnes-weighted mean price. `flow_type` is an INTERNAL design tag
+    # only — it is deliberately NOT written out (it would reveal the planted
+    # structure). Different flow mechanisms between the same pair merge here.
+    edges["_pt"] = edges["price_usd_per_t"] * edges["tonnes"]
+    edges = (edges.groupby(["exporter_id", "importer_id", "period"],
+                           as_index=False)
+             .agg(tonnes=("tonnes", "sum"), _pt=("_pt", "sum")))
+    edges["price_usd_per_t"] = (edges["_pt"] / edges["tonnes"]).round(0).astype(int)
+    edges = edges[["exporter_id", "importer_id", "period", "tonnes",
+                   "price_usd_per_t"]]
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+
+    # Optional debug dump of planted identities (only when explicitly requested,
+    # so the normal run prints just the one-line summary and never leaks the
+    # story into stdout that students would see).
+    import os
+    if os.environ.get("TRADE_DEBUG"):
+        print("DEBUG shocked_exporter:", ids[shocked])
+        print("DEBUG dominant:", [ids[d] for d in dominant])
+        print("DEBUG dependents:", [ids[d] for d in dependent])
+        print("DEBUG reexporter:", ids[reexporter])
+        print("DEBUG brokers:", [ids[b] for b in brokers])
+        print("DEBUG periph:", {ids[b]: [ids[g] for g in grp]
+                                 for b, grp in periph.items()})
+
+    print(f"trade-commodity: {len(nodes)} nodes (countries), {len(edges)} edges "
+          f"across {edges['period'].nunique()} periods "
+          f"(before={int((edges.period=='before').sum())}, "
+          f"during={int((edges.period=='during').sum())}, "
+          f"after={int((edges.period=='after').sum())}).")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/trade-commodity/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `trade-commodity` project network (R)
+#' @description
+#'
+#' Reads the two CSVs in this folder and builds a directed, weighted igraph
+#' object: export flows of a single strategic commodity between countries,
+#' recorded across three periods (`before` / `during` / `after` a supply shock).
+#' Run it straight (`Rscript load.R`) for a quick summary, or `source()` it and
+#' call `load_trade()` to get the graph in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "trade-commodity")
+
+#' Load the node table (one row per country).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per exporter x importer x period).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the directed, weighted graph.
+#'
+#' Edges are weighted by `tonnes`. Because the data is temporal (a `period`
+#' column), an exporter->importer pair can appear up to three times (once per
+#' period) as parallel edges. Filter to one `period` first if you want a simple
+#' graph, e.g. `edges <- subset(load_edges(), period == "before")`.
+load_trade <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = TRUE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$tonnes
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n\U0001F310 trade-commodity (R)\n")
+  cat("   Country-to-country commodity export flows; weighted by tonnes,\n")
+  cat("   across before / during / after a supply shock.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_trade(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d countries and %d edges across %d periods.\n",
+              nrow(nodes), nrow(edges), length(unique(edges$period))))
+  cat(sprintf("\U0001F517 Directed: %s | total tonnes traded: %s\n",
+              is_directed(g), format(sum(edges$tonnes), big.mark = ",")))
+  per <- tapply(edges$tonnes, edges$period, sum)
+  cat("\U0001F4E6 Tonnes by period: ",
+      paste(sprintf("%s=%s", names(per), format(per, big.mark = ",")),
+            collapse = " | "), "\n")
+  cat("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.\n")
+}
+```
+
+---
+
+## `data/projects/trade-commodity/load.py`
+
+```python
+"""Load the `trade-commodity` project network (Python).
+
+Reads the two CSVs in this folder and builds a directed, weighted python-igraph
+object: export flows of a single strategic commodity between countries, recorded
+across three periods (``before`` / ``during`` / ``after`` a supply shock). Run it
+straight (``python load.py``) for a quick summary, or import ``load_trade()``
+into your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per country."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per exporter x importer x period."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_trade(nodes: pd.DataFrame | None = None,
+               edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the directed, weighted graph (edge weight = ``tonnes``).
+
+    The data is temporal (a ``period`` column), so an exporter->importer pair can
+    appear up to three times (once per period) as parallel edges. Filter to one
+    ``period`` first if you want a simple graph, e.g.
+    ``edges[edges.period == "before"]``.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=True, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["tonnes"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n\U0001F310 trade-commodity (Python)")
+    print("   Country-to-country commodity export flows; weighted by tonnes,")
+    print("   across before / during / after a supply shock.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_trade(nodes, edges)
+
+    print(f"✅ Loaded {len(nodes)} countries and {len(edges)} edges across "
+          f"{edges['period'].nunique()} periods.")
+    print(f"\U0001F517 Directed: {g.is_directed()} | total tonnes traded: "
+          f"{edges['tonnes'].sum():,}")
+    per = edges.groupby('period')['tonnes'].sum()
+    print("\U0001F4E6 Tonnes by period: " +
+          " | ".join(f"{k}={v:,}" for k, v in per.items()))
+    print("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.")
+```
+
+---
+
 ## `data/projects/uber-manhattan/README.md`
 
 # uber-manhattan
@@ -9605,10 +14939,10 @@ def main() -> None:
         if roll < 0.08:                        # airport run
             pu = rng.choice(z_ids); do = "ZJFK"
             hour = int(rng.choice([5, 6, 7, 15, 16, 17]))
-            did = rng.choice(list(pro_ids)) if rng.random() < 0.8 else rng.choice(list(drivers.node_id))
+            did = rng.choice(sorted(pro_ids)) if rng.random() < 0.8 else rng.choice(list(drivers.node_id))
         elif roll < 0.34:                      # nightlife
             pu = rng.choice(z_ids)
-            do = rng.choice(list(nightlife_z))
+            do = rng.choice(sorted(nightlife_z))
             hour = int(rng.choice([19, 20, 21, 22, 23, 0, 1, 2]))
             did = rng.choice(list(drivers.node_id))
         else:                                  # ordinary daytime

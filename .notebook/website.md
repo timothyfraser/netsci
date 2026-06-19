@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-19 02:55 UTC_
+_Auto-generated NotebookLM source · 2026-06-19 10:41 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -3491,6 +3491,16 @@ Supply Chain (16 factories)
 
 Amazon Last\-Mile (313 nodes)
 Uber Manhattan (370 nodes)
+Semiconductor Supply (368 nodes)
+Aerospace Components (300 nodes)
+Mutual Aid · Quake (250 nodes)
+Financial Contagion (220 nodes)
+Airline Delays (200 nodes)
+Power Grid (300 nodes)
+Campus Contact (300 nodes)
+Open\-Source Deps (400 nodes)
+Trade · Commodity (140 nodes)
+Reorg Comms (250 nodes)
 
 
 ⬆ Upload CSV
@@ -3583,6 +3593,16 @@ Supply Chain (16 factories)
 
 Amazon Last\-Mile (313 nodes)
 Uber Manhattan (370 nodes)
+Semiconductor Supply (368 nodes)
+Aerospace Components (300 nodes)
+Mutual Aid · Quake (250 nodes)
+Financial Contagion (220 nodes)
+Airline Delays (200 nodes)
+Power Grid (300 nodes)
+Campus Contact (300 nodes)
+Open\-Source Deps (400 nodes)
+Trade · Commodity (140 nodes)
+Reorg Comms (250 nodes)
 
 
 ⬆ Upload CSV
@@ -4940,6 +4960,19 @@ WASM virtual filesystem when you pick a sample from the loader dropdown.
 | `supply-chain` | 16 | 30 | The 16-factory supply chain from the **Network Joins** lab. Three tiers (Tier 1 final assembly, Tier 2 subassembly, Tier 3 raw). Volume-weighted shipment lanes. |
 | `amazon-last-mile` | 313 | 2,142 | **Project dataset.** One week of package flow, hubs → stations → zones. Directed, weighted (`packages`), temporal (`day`). Mirrored from `data/projects/amazon-last-mile/`. |
 | `uber-manhattan` | 370 | 3,000 | **Project dataset.** Bipartite drivers ↔ riders for one day downtown. Weighted by `fare`; ships a `zones.csv` lookup. Mirrored from `data/projects/uber-manhattan/`. |
+| `semiconductor-supply` | 368 | 739 | **Project dataset.** Multi-tier chip supply chain (material→foundry→packaging→designer→product), weighted by `annual_volume`. |
+| `aerospace-components` | 300 | 777 | **Project dataset.** Aircraft BOM + suppliers, weighted by `qty_per_aircraft`. |
+| `mutualaid-quake` | 250 | 2,935 | **Project dataset.** Neighborhood mutual aid across `before`/`during`/`after` a quake, weighted by `amount`. |
+| `financial-contagion` | 220 | 1,701 | **Project dataset.** Interbank exposures across a crisis (`period`), weighted by `exposure`. |
+| `airline-delays` | 200 | 2,244 | **Project dataset.** Route network with delay propagation across time `block`s, weighted by `number_of_flights`. |
+| `power-grid` | 300 | 422 | **Project dataset.** Undirected transmission grid, weighted by `capacity_mw`; ships a `regions.csv` lookup. |
+| `campus-contact` | 300 | 3,699 | **Project dataset.** Undirected weekly contact network during an outbreak, weighted by `contact_minutes`; ships a `status.csv` lookup. |
+| `opensource-deps` | 400 | 2,251 | **Project dataset.** Package dependency graph, weighted by `import_count`. |
+| `trade-commodity` | 140 | 1,210 | **Project dataset.** Country-to-country commodity trade across a shock (`period`), weighted by `tonnes`. |
+| `reorg-comms` | 250 | 7,926 | **Project dataset.** Corporate messaging across `before`/`during`/`after` a reorg, weighted by `message_count`. |
+
+All `*-project` datasets above are mirrored from `data/projects/<name>/` by
+`data/projects/_sync_to_playground.py`.
 
 ## Columns
 
