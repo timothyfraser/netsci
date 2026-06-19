@@ -407,6 +407,16 @@
           <optgroup label="Project datasets (larger)">
             <option value="amazon-last-mile">Amazon Last-Mile (313 nodes)</option>
             <option value="uber-manhattan">Uber Manhattan (370 nodes)</option>
+            <option value="semiconductor-supply">Semiconductor Supply (368 nodes)</option>
+            <option value="aerospace-components">Aerospace Components (300 nodes)</option>
+            <option value="mutualaid-quake">Mutual Aid · Quake (250 nodes)</option>
+            <option value="financial-contagion">Financial Contagion (220 nodes)</option>
+            <option value="airline-delays">Airline Delays (200 nodes)</option>
+            <option value="power-grid">Power Grid (300 nodes)</option>
+            <option value="campus-contact">Campus Contact (300 nodes)</option>
+            <option value="opensource-deps">Open-Source Deps (400 nodes)</option>
+            <option value="trade-commodity">Trade · Commodity (140 nodes)</option>
+            <option value="reorg-comms">Reorg Comms (250 nodes)</option>
           </optgroup>
         </select>
         <input type="file" id="file-upload" multiple accept=".csv,.tsv,.txt,.json" style="display: none;">
@@ -502,9 +512,34 @@ const SAMPLE_CONFIGS = {
   'supply-chain':{ files: ['supply-chain-nodes.csv',  'supply-chain-edges.csv'],  title: 'Supply Chain'               , directed: 'True'  },
   'amazon-last-mile': { files: ['amazon-last-mile-nodes.csv', 'amazon-last-mile-edges.csv'], title: 'Amazon Last-Mile', directed: 'True' },
   'uber-manhattan':   { files: ['uber-manhattan-nodes.csv', 'uber-manhattan-edges.csv', 'uber-manhattan-zones.csv'], title: 'Uber Manhattan', directed: 'False' },
+  'semiconductor-supply': { proj: true, files: ['semiconductor-supply-nodes.csv', 'semiconductor-supply-edges.csv'], title: 'Semiconductor Supply', directed: 'True',  weight: 'annual_volume' },
+  'aerospace-components': { proj: true, files: ['aerospace-components-nodes.csv', 'aerospace-components-edges.csv'], title: 'Aerospace Components', directed: 'True',  weight: 'qty_per_aircraft' },
+  'mutualaid-quake':      { proj: true, files: ['mutualaid-quake-nodes.csv', 'mutualaid-quake-edges.csv'], title: 'Mutual Aid (Quake)', directed: 'True',  weight: 'amount' },
+  'financial-contagion':  { proj: true, files: ['financial-contagion-nodes.csv', 'financial-contagion-edges.csv'], title: 'Financial Contagion', directed: 'True',  weight: 'exposure' },
+  'airline-delays':       { proj: true, files: ['airline-delays-nodes.csv', 'airline-delays-edges.csv'], title: 'Airline Delays', directed: 'True',  weight: 'number_of_flights' },
+  'power-grid':           { proj: true, files: ['power-grid-nodes.csv', 'power-grid-edges.csv', 'power-grid-regions.csv'], title: 'Power Grid', directed: 'False', weight: 'capacity_mw' },
+  'campus-contact':       { proj: true, files: ['campus-contact-nodes.csv', 'campus-contact-edges.csv', 'campus-contact-status.csv'], title: 'Campus Contact', directed: 'False', weight: 'contact_minutes' },
+  'opensource-deps':      { proj: true, files: ['opensource-deps-nodes.csv', 'opensource-deps-edges.csv'], title: 'Open-Source Deps', directed: 'True',  weight: 'import_count' },
+  'trade-commodity':      { proj: true, files: ['trade-commodity-nodes.csv', 'trade-commodity-edges.csv'], title: 'Trade Commodity', directed: 'True',  weight: 'tonnes' },
+  'reorg-comms':          { proj: true, files: ['reorg-comms-nodes.csv', 'reorg-comms-edges.csv'], title: 'Reorg Comms', directed: 'True',  weight: 'message_count' },
 };
 function sampleSnippet(key) {
   const cfg = SAMPLE_CONFIGS[key];
+  if (cfg && cfg.proj) {
+    const extra = cfg.files[2] ? `lookup = pd.read_csv("${cfg.files[2]}")  # extra lookup table to join on\n` : '';
+    const cu = cfg.directed === 'True' ? 'nx.MultiDiGraph' : 'nx.MultiGraph';
+    return `# ${cfg.title} loaded (project dataset).
+import pandas as pd, networkx as nx
+nodes = pd.read_csv("${cfg.files[0]}")
+edges = pd.read_csv("${cfg.files[1]}")
+${extra}# endpoint ids are the first two edge columns; weight = ${cfg.weight}
+G = nx.from_pandas_edgelist(edges, source=edges.columns[0], target=edges.columns[1],
+                            edge_attr=True, create_using=${cu})
+for _, r in nodes.iterrows():
+    G.nodes[r.node_id].update(r.to_dict())
+print("Nodes:", G.number_of_nodes(), "Edges:", G.number_of_edges())
+`;
+  }
   if (key === 'amazon-last-mile') {
     return `# ${cfg.title} loaded (directed, weighted, temporal).
 import pandas as pd, networkx as nx

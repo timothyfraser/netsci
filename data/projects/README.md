@@ -21,9 +21,19 @@ Each dataset folder contains:
 |---|---:|---:|:--:|:--:|:--:|:--:|---|
 | [`amazon-last-mile`](amazon-last-mile/) | 313 | 2,142 | ✓ | ✓ | — | ✓ | A week of package flow: hubs → stations → delivery zones. |
 | [`uber-manhattan`](uber-manhattan/) | 370 | 3,000 | — | ✓ | ✓ | ✓ | A day of driver↔rider ride-matching across downtown Manhattan. |
+| [`semiconductor-supply`](semiconductor-supply/) | 368 | 739 | ✓ | ✓ | — | — | Multi-tier global chip supply chain, raw materials → products. |
+| [`aerospace-components`](aerospace-components/) | 300 | 777 | ✓ | ✓ | — | — | An aircraft's bill-of-materials + supplier network. |
+| [`mutualaid-quake`](mutualaid-quake/) | 250 | 2,935 | ✓ | ✓ | — | ✓ | Neighborhood mutual aid before / during / after an earthquake. |
+| [`financial-contagion`](financial-contagion/) | 220 | 1,701 | ✓ | ✓ | — | ✓ | Interbank exposure network across a financial crisis. |
+| [`airline-delays`](airline-delays/) | 200 | 2,244 | ✓ | ✓ | — | ✓ | Domestic route network with delay propagation over a day. |
+| [`power-grid`](power-grid/) | 300 | 422 | — | ✓ | — | — | A regional electrical transmission grid. |
+| [`campus-contact`](campus-contact/) | 300 | 3,699 | — | ✓ | — | ✓ | Campus face-to-face contact network during an outbreak. |
+| [`opensource-deps`](opensource-deps/) | 400 | 2,251 | ✓ | ✓ | — | — | An open-source package dependency graph. |
+| [`trade-commodity`](trade-commodity/) | 140 | 1,210 | ✓ | ✓ | — | ✓ | International commodity trade across a supply shock. |
+| [`reorg-comms`](reorg-comms/) | 250 | 7,926 | ✓ | ✓ | — | ✓ | Corporate communication before / during / after a reorg + layoff. |
 
-*More datasets are on the way (semiconductor & aerospace supply chains, mutual-aid
-during a disaster, financial contagion, airline delays, power grid, and more).*
+All 12 are larger than the lab datasets, mostly weighted, and several are temporal
+(`period`/`day`/`hour`/`week` columns), bipartite, or multimodal (`kind` column).
 
 ## How to use them
 
