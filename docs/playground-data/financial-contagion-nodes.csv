@@ -1,0 +1,221 @@
+node_id,type,assets,leverage,region,label
+F001,hedge_fund,6.71,10.07,LatAm,Hedge Fund 001
+F002,bank,10.61,10.28,LatAm,Bank 002
+F003,insurer,9.01,5.62,Europe,Insurer 003
+F004,hedge_fund,9.6,15.97,Europe,Hedge Fund 004
+F005,bank,23.26,10.09,Europe,Bank 005
+F006,insurer,4.15,8.64,LatAm,Insurer 006
+F007,hedge_fund,8.37,11.94,LatAm,Hedge Fund 007
+F008,hedge_fund,9.48,5.14,LatAm,Hedge Fund 008
+F009,bank,191.24,12.2,LatAm,Bank 009
+F010,bank,107.44,8.01,Asia,Bank 010
+F011,bank,9.21,12.34,Asia,Bank 011
+F012,insurer,8.51,6.77,LatAm,Insurer 012
+F013,hedge_fund,2.07,13.21,Europe,Hedge Fund 013
+F014,insurer,6.48,6.7,Europe,Insurer 014
+F015,bank,26.36,14.85,LatAm,Bank 015
+F016,bank,58.74,15.23,Europe,Bank 016
+F017,hedge_fund,4.0,14.42,NorthAm,Hedge Fund 017
+F018,bank,11.01,9.48,Asia,Bank 018
+F019,insurer,1.6,8.15,Europe,Insurer 019
+F020,hedge_fund,6.67,8.93,LatAm,Hedge Fund 020
+F021,hedge_fund,2.97,16.0,LatAm,Hedge Fund 021
+F022,bank,12.32,8.92,Europe,Bank 022
+F023,insurer,5.01,6.63,Asia,Insurer 023
+F024,insurer,10.13,4.33,LatAm,Insurer 024
+F025,hedge_fund,1.59,4.46,Asia,Hedge Fund 025
+F026,bank,5.3,2.78,NorthAm,Bank 026
+F027,bank,134.84,5.65,Asia,Bank 027
+F028,bank,6.23,7.62,Asia,Bank 028
+F029,ccp,9.86,2.71,Asia,CCP 029
+F030,hedge_fund,40.31,25.62,NorthAm,Hedge Fund 030
+F031,hedge_fund,105.41,20.64,Europe,Hedge Fund 031
+F032,insurer,3.84,4.08,LatAm,Insurer 032
+F033,bank,14.24,10.04,NorthAm,Bank 033
+F034,bank,26.98,7.78,Europe,Bank 034
+F035,bank,94.03,8.15,Europe,Bank 035
+F036,bank,8.16,9.56,NorthAm,Bank 036
+F037,bank,15.91,10.86,NorthAm,Bank 037
+F038,bank,39.94,7.98,Europe,Bank 038
+F039,bank,29.34,12.19,LatAm,Bank 039
+F040,hedge_fund,5.5,7.15,NorthAm,Hedge Fund 040
+F041,bank,17.59,9.02,Europe,Bank 041
+F042,insurer,3.2,11.2,NorthAm,Insurer 042
+F043,hedge_fund,6.23,15.34,Asia,Hedge Fund 043
+F044,bank,15.61,13.3,Europe,Bank 044
+F045,insurer,13.58,6.18,LatAm,Insurer 045
+F046,hedge_fund,4.68,17.48,Asia,Hedge Fund 046
+F047,bank,30.33,8.83,LatAm,Bank 047
+F048,bank,49.36,8.49,Asia,Bank 048
+F049,hedge_fund,8.87,9.32,Europe,Hedge Fund 049
+F050,bank,27.23,10.29,LatAm,Bank 050
+F051,bank,20.81,6.45,Europe,Bank 051
+F052,bank,19.84,11.0,LatAm,Bank 052
+F053,hedge_fund,4.03,20.51,LatAm,Hedge Fund 053
+F054,hedge_fund,10.26,16.2,Asia,Hedge Fund 054
+F055,hedge_fund,7.07,12.28,Asia,Hedge Fund 055
+F056,hedge_fund,50.76,16.72,Europe,Hedge Fund 056
+F057,bank,81.76,8.07,LatAm,Bank 057
+F058,hedge_fund,10.92,19.61,Asia,Hedge Fund 058
+F059,bank,9.98,3.51,LatAm,Bank 059
+F060,bank,7.29,7.99,Europe,Bank 060
+F061,hedge_fund,22.54,3.0,LatAm,Hedge Fund 061
+F062,bank,25.13,4.51,Europe,Bank 062
+F063,hedge_fund,11.89,38.0,NorthAm,Hedge Fund 063
+F064,hedge_fund,1.61,19.37,NorthAm,Hedge Fund 064
+F065,hedge_fund,17.78,9.68,Asia,Hedge Fund 065
+F066,ccp,39.82,1.5,Europe,CCP 066
+F067,hedge_fund,2.84,3.0,NorthAm,Hedge Fund 067
+F068,bank,12.98,7.37,Europe,Bank 068
+F069,bank,25.16,16.26,Asia,Bank 069
+F070,bank,20.8,10.3,Europe,Bank 070
+F071,bank,15.25,7.32,LatAm,Bank 071
+F072,bank,18.08,10.4,LatAm,Bank 072
+F073,insurer,8.79,2.88,Asia,Insurer 073
+F074,bank,22.76,8.11,LatAm,Bank 074
+F075,bank,74.6,9.3,Europe,Bank 075
+F076,bank,1.97,8.74,NorthAm,Bank 076
+F077,bank,16.03,11.37,NorthAm,Bank 077
+F078,hedge_fund,9.04,16.07,LatAm,Hedge Fund 078
+F079,hedge_fund,10.07,18.01,LatAm,Hedge Fund 079
+F080,hedge_fund,5.52,9.87,Asia,Hedge Fund 080
+F081,hedge_fund,1.59,19.39,NorthAm,Hedge Fund 081
+F082,bank,26.66,13.89,Europe,Bank 082
+F083,hedge_fund,36.52,8.18,NorthAm,Hedge Fund 083
+F084,bank,4.99,6.34,NorthAm,Bank 084
+F085,bank,43.17,13.01,NorthAm,Bank 085
+F086,bank,14.76,8.43,Asia,Bank 086
+F087,hedge_fund,7.3,22.42,NorthAm,Hedge Fund 087
+F088,bank,7.69,7.67,LatAm,Bank 088
+F089,bank,14.68,13.37,Europe,Bank 089
+F090,hedge_fund,24.86,14.79,Europe,Hedge Fund 090
+F091,bank,33.52,9.77,Asia,Bank 091
+F092,hedge_fund,36.69,23.39,LatAm,Hedge Fund 092
+F093,bank,57.25,7.91,Europe,Bank 093
+F094,bank,29.46,6.18,NorthAm,Bank 094
+F095,bank,95.33,7.65,NorthAm,Bank 095
+F096,hedge_fund,11.45,16.71,LatAm,Hedge Fund 096
+F097,bank,41.8,4.3,NorthAm,Bank 097
+F098,bank,15.19,10.91,Asia,Bank 098
+F099,bank,21.07,7.38,Europe,Bank 099
+F100,insurer,5.88,8.3,LatAm,Insurer 100
+F101,insurer,26.86,1.5,NorthAm,Insurer 101
+F102,hedge_fund,2.67,9.28,LatAm,Hedge Fund 102
+F103,bank,40.12,3.94,Asia,Bank 103
+F104,insurer,9.29,4.35,Europe,Insurer 104
+F105,hedge_fund,22.14,15.49,NorthAm,Hedge Fund 105
+F106,hedge_fund,15.17,12.92,LatAm,Hedge Fund 106
+F107,bank,102.14,8.24,Europe,Bank 107
+F108,ccp,51.07,2.84,Europe,CCP 108
+F109,bank,4.82,9.61,Europe,Bank 109
+F110,insurer,10.38,3.98,NorthAm,Insurer 110
+F111,bank,6.91,11.12,Europe,Bank 111
+F112,bank,12.45,10.99,NorthAm,Bank 112
+F113,bank,77.32,10.16,NorthAm,Bank 113
+F114,hedge_fund,13.7,17.34,Europe,Hedge Fund 114
+F115,bank,10.58,9.89,NorthAm,Bank 115
+F116,insurer,4.43,10.07,Europe,Insurer 116
+F117,hedge_fund,7.95,13.48,LatAm,Hedge Fund 117
+F118,hedge_fund,2.58,12.16,NorthAm,Hedge Fund 118
+F119,bank,10.85,6.74,NorthAm,Bank 119
+F120,hedge_fund,10.22,7.81,NorthAm,Hedge Fund 120
+F121,hedge_fund,21.83,6.53,Asia,Hedge Fund 121
+F122,hedge_fund,13.35,8.67,Europe,Hedge Fund 122
+F123,bank,2.52,8.79,Europe,Bank 123
+F124,bank,26.09,10.0,NorthAm,Bank 124
+F125,bank,21.17,9.15,Europe,Bank 125
+F126,bank,28.8,6.7,Europe,Bank 126
+F127,bank,84.98,11.7,Europe,Bank 127
+F128,bank,3.1,11.22,Asia,Bank 128
+F129,bank,11.66,8.52,LatAm,Bank 129
+F130,hedge_fund,13.13,10.08,Europe,Hedge Fund 130
+F131,bank,4.78,10.65,LatAm,Bank 131
+F132,insurer,41.61,6.38,Asia,Insurer 132
+F133,hedge_fund,10.75,5.31,Europe,Hedge Fund 133
+F134,bank,42.51,8.8,NorthAm,Bank 134
+F135,hedge_fund,4.62,15.57,Europe,Hedge Fund 135
+F136,bank,41.27,6.3,Asia,Bank 136
+F137,insurer,28.84,6.38,NorthAm,Insurer 137
+F138,bank,24.47,4.64,LatAm,Bank 138
+F139,hedge_fund,9.53,22.02,Europe,Hedge Fund 139
+F140,bank,25.31,12.74,LatAm,Bank 140
+F141,bank,9.12,8.24,Asia,Bank 141
+F142,bank,17.37,10.09,Europe,Bank 142
+F143,insurer,9.61,1.5,NorthAm,Insurer 143
+F144,hedge_fund,10.9,7.06,Asia,Hedge Fund 144
+F145,bank,48.8,8.12,Europe,Bank 145
+F146,bank,7.65,5.78,NorthAm,Bank 146
+F147,bank,17.73,11.14,LatAm,Bank 147
+F148,hedge_fund,29.27,25.98,Europe,Hedge Fund 148
+F149,bank,10.16,5.47,NorthAm,Bank 149
+F150,bank,9.47,6.49,Europe,Bank 150
+F151,insurer,13.22,6.47,Europe,Insurer 151
+F152,insurer,23.57,9.22,LatAm,Insurer 152
+F153,bank,20.05,5.33,Asia,Bank 153
+F154,hedge_fund,25.52,15.49,NorthAm,Hedge Fund 154
+F155,bank,42.9,14.46,NorthAm,Bank 155
+F156,hedge_fund,16.46,4.09,Asia,Hedge Fund 156
+F157,bank,32.67,5.16,NorthAm,Bank 157
+F158,hedge_fund,62.69,11.46,Europe,Hedge Fund 158
+F159,hedge_fund,6.42,10.88,NorthAm,Hedge Fund 159
+F160,hedge_fund,1.27,18.88,NorthAm,Hedge Fund 160
+F161,bank,84.07,9.72,LatAm,Bank 161
+F162,insurer,7.3,2.45,NorthAm,Insurer 162
+F163,bank,21.86,10.55,NorthAm,Bank 163
+F164,bank,64.48,7.27,LatAm,Bank 164
+F165,hedge_fund,1.82,21.65,NorthAm,Hedge Fund 165
+F166,bank,6.43,7.12,LatAm,Bank 166
+F167,insurer,2.61,4.73,NorthAm,Insurer 167
+F168,hedge_fund,3.78,17.25,NorthAm,Hedge Fund 168
+F169,bank,29.47,11.29,NorthAm,Bank 169
+F170,insurer,17.67,6.9,Asia,Insurer 170
+F171,bank,25.44,3.94,Asia,Bank 171
+F172,hedge_fund,2.16,17.23,Europe,Hedge Fund 172
+F173,bank,2.48,5.9,NorthAm,Bank 173
+F174,insurer,11.58,6.47,NorthAm,Insurer 174
+F175,bank,12.98,4.73,Asia,Bank 175
+F176,bank,30.0,10.34,NorthAm,Bank 176
+F177,bank,37.32,6.58,Asia,Bank 177
+F178,insurer,12.48,3.43,Asia,Insurer 178
+F179,insurer,21.85,7.43,LatAm,Insurer 179
+F180,hedge_fund,9.48,15.45,Europe,Hedge Fund 180
+F181,insurer,17.76,4.77,NorthAm,Insurer 181
+F182,insurer,5.85,8.9,Europe,Insurer 182
+F183,hedge_fund,6.56,11.36,LatAm,Hedge Fund 183
+F184,bank,23.69,9.1,Asia,Bank 184
+F185,hedge_fund,16.15,15.61,Asia,Hedge Fund 185
+F186,hedge_fund,5.41,10.28,Europe,Hedge Fund 186
+F187,bank,31.72,10.41,NorthAm,Bank 187
+F188,bank,15.62,7.4,LatAm,Bank 188
+F189,hedge_fund,6.94,11.53,LatAm,Hedge Fund 189
+F190,bank,41.86,13.09,LatAm,Bank 190
+F191,insurer,1.83,3.92,LatAm,Insurer 191
+F192,bank,6.18,2.0,Europe,Bank 192
+F193,bank,5.23,13.83,Europe,Bank 193
+F194,insurer,1.35,11.1,NorthAm,Insurer 194
+F195,bank,10.78,7.78,LatAm,Bank 195
+F196,bank,38.95,3.19,Asia,Bank 196
+F197,hedge_fund,5.97,12.14,Europe,Hedge Fund 197
+F198,insurer,13.17,5.43,LatAm,Insurer 198
+F199,bank,52.88,8.43,Asia,Bank 199
+F200,bank,65.54,5.66,LatAm,Bank 200
+F201,hedge_fund,7.25,17.48,LatAm,Hedge Fund 201
+F202,insurer,37.27,7.05,NorthAm,Insurer 202
+F203,hedge_fund,8.38,5.03,Europe,Hedge Fund 203
+F204,bank,9.34,11.1,Asia,Bank 204
+F205,bank,11.62,15.16,LatAm,Bank 205
+F206,bank,5.23,9.52,NorthAm,Bank 206
+F207,bank,8.92,7.99,Europe,Bank 207
+F208,hedge_fund,5.59,13.15,Asia,Hedge Fund 208
+F209,bank,40.9,10.85,LatAm,Bank 209
+F210,hedge_fund,36.31,3.62,NorthAm,Hedge Fund 210
+F211,hedge_fund,2.22,14.99,Asia,Hedge Fund 211
+F212,ccp,37.68,2.61,Europe,CCP 212
+F213,bank,7.78,14.54,NorthAm,Bank 213
+F214,hedge_fund,11.83,12.95,Asia,Hedge Fund 214
+F215,hedge_fund,6.86,24.01,Europe,Hedge Fund 215
+F216,hedge_fund,1.49,7.38,Asia,Hedge Fund 216
+F217,bank,45.75,10.76,Europe,Bank 217
+F218,bank,11.51,9.96,LatAm,Bank 218
+F219,insurer,6.82,4.26,NorthAm,Insurer 219
+F220,bank,7.58,9.53,LatAm,Bank 220

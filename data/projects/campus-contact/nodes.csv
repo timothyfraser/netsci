@@ -1,0 +1,301 @@
+node_id,kind,unit,year,label
+P001,faculty,Engineering,,Faculty 01
+P002,faculty,Sciences,,Faculty 02
+P003,faculty,Sciences,,Faculty 03
+P004,faculty,Engineering,,Faculty 04
+P005,faculty,Engineering,,Faculty 05
+P006,faculty,Sciences,,Faculty 06
+P007,faculty,Engineering,,Faculty 07
+P008,faculty,Sciences,,Faculty 08
+P009,faculty,Engineering,,Faculty 09
+P010,faculty,Engineering,,Faculty 10
+P011,faculty,Sciences,,Faculty 11
+P012,faculty,Sciences,,Faculty 12
+P013,faculty,Sciences,,Faculty 13
+P014,faculty,Sciences,,Faculty 14
+P015,faculty,Sciences,,Faculty 15
+P016,faculty,Sciences,,Faculty 16
+P017,faculty,Sciences,,Faculty 17
+P018,faculty,Engineering,,Faculty 18
+P019,faculty,Sciences,,Faculty 19
+P020,faculty,Engineering,,Faculty 20
+P021,faculty,Sciences,,Faculty 21
+P022,faculty,Engineering,,Faculty 22
+P023,faculty,Engineering,,Faculty 23
+P024,faculty,Sciences,,Faculty 24
+P025,faculty,Sciences,,Faculty 25
+P026,faculty,Sciences,,Faculty 26
+P027,staff,Engineering,,Staff 01
+P028,staff,Sciences,,Staff 02
+P029,staff,Sciences,,Staff 03
+P030,staff,Engineering,,Staff 04
+P031,staff,Engineering,,Staff 05
+P032,staff,Engineering,,Staff 06
+P033,staff,Engineering,,Staff 07
+P034,staff,Sciences,,Staff 08
+P035,staff,Sciences,,Staff 09
+P036,staff,Engineering,,Staff 10
+P037,staff,Sciences,,Staff 11
+P038,staff,Sciences,,Staff 12
+P039,staff,Engineering,,Staff 13
+P040,staff,Sciences,,Staff 14
+P041,staff,Engineering,,Staff 15
+P042,staff,Sciences,,Staff 16
+P043,staff,Sciences,,Staff 17
+P044,staff,Engineering,,Staff 18
+P045,staff,Engineering,,Staff 19
+P046,staff,Sciences,,Staff 20
+P047,staff,Engineering,,Staff 21
+P048,staff,Sciences,,Staff 22
+P049,student,Gradflat,4,Student 001
+P050,student,Gradflat,1,Student 002
+P051,student,North Hall,2,Student 003
+P052,student,North Hall,1,Student 004
+P053,student,South Hall,1,Student 005
+P054,student,Gradflat,3,Student 006
+P055,student,Annex,3,Student 007
+P056,student,North Hall,4,Student 008
+P057,student,North Hall,2,Student 009
+P058,student,Annex,2,Student 010
+P059,student,West Hall,2,Student 011
+P060,student,Gradflat,1,Student 012
+P061,student,North Hall,1,Student 013
+P062,student,Gradflat,2,Student 014
+P063,student,East Hall,1,Student 015
+P064,student,South Hall,3,Student 016
+P065,student,Annex,2,Student 017
+P066,student,West Hall,4,Student 018
+P067,student,South Hall,3,Student 019
+P068,student,West Hall,2,Student 020
+P069,student,Gradflat,4,Student 021
+P070,student,North Hall,4,Student 022
+P071,student,Annex,2,Student 023
+P072,student,Annex,2,Student 024
+P073,student,East Hall,3,Student 025
+P074,student,South Hall,1,Student 026
+P075,student,Gradflat,1,Student 027
+P076,student,Gradflat,1,Student 028
+P077,student,Gradflat,4,Student 029
+P078,student,Gradflat,3,Student 030
+P079,student,North Hall,3,Student 031
+P080,student,East Hall,4,Student 032
+P081,student,South Hall,2,Student 033
+P082,student,South Hall,3,Student 034
+P083,student,West Hall,1,Student 035
+P084,student,East Hall,1,Student 036
+P085,student,North Hall,3,Student 037
+P086,student,South Hall,2,Student 038
+P087,student,Annex,3,Student 039
+P088,student,West Hall,4,Student 040
+P089,student,South Hall,3,Student 041
+P090,student,South Hall,3,Student 042
+P091,student,West Hall,3,Student 043
+P092,student,Gradflat,2,Student 044
+P093,student,South Hall,1,Student 045
+P094,student,North Hall,2,Student 046
+P095,student,Annex,1,Student 047
+P096,student,East Hall,2,Student 048
+P097,student,Annex,4,Student 049
+P098,student,West Hall,1,Student 050
+P099,student,Gradflat,1,Student 051
+P100,student,Annex,2,Student 052
+P101,student,Annex,2,Student 053
+P102,student,North Hall,3,Student 054
+P103,student,West Hall,3,Student 055
+P104,student,South Hall,4,Student 056
+P105,student,Annex,3,Student 057
+P106,student,North Hall,2,Student 058
+P107,student,North Hall,4,Student 059
+P108,student,East Hall,1,Student 060
+P109,student,North Hall,1,Student 061
+P110,student,West Hall,1,Student 062
+P111,student,Gradflat,3,Student 063
+P112,student,Gradflat,2,Student 064
+P113,student,Gradflat,1,Student 065
+P114,student,Annex,3,Student 066
+P115,student,Annex,1,Student 067
+P116,student,North Hall,3,Student 068
+P117,student,North Hall,2,Student 069
+P118,student,West Hall,2,Student 070
+P119,student,East Hall,2,Student 071
+P120,student,Gradflat,3,Student 072
+P121,student,South Hall,2,Student 073
+P122,student,Annex,1,Student 074
+P123,student,North Hall,1,Student 075
+P124,student,North Hall,4,Student 076
+P125,student,North Hall,4,Student 077
+P126,student,North Hall,3,Student 078
+P127,student,North Hall,2,Student 079
+P128,student,Gradflat,4,Student 080
+P129,student,East Hall,4,Student 081
+P130,student,East Hall,3,Student 082
+P131,student,Gradflat,2,Student 083
+P132,student,Gradflat,2,Student 084
+P133,student,West Hall,1,Student 085
+P134,student,North Hall,4,Student 086
+P135,student,West Hall,2,Student 087
+P136,student,Gradflat,1,Student 088
+P137,student,Gradflat,2,Student 089
+P138,student,Gradflat,3,Student 090
+P139,student,South Hall,1,Student 091
+P140,student,North Hall,4,Student 092
+P141,student,West Hall,4,Student 093
+P142,student,North Hall,3,Student 094
+P143,student,South Hall,2,Student 095
+P144,student,East Hall,3,Student 096
+P145,student,West Hall,3,Student 097
+P146,student,West Hall,3,Student 098
+P147,student,South Hall,1,Student 099
+P148,student,Gradflat,2,Student 100
+P149,student,Gradflat,1,Student 101
+P150,student,East Hall,2,Student 102
+P151,student,East Hall,2,Student 103
+P152,student,South Hall,1,Student 104
+P153,student,Gradflat,1,Student 105
+P154,student,East Hall,3,Student 106
+P155,student,Gradflat,1,Student 107
+P156,student,East Hall,4,Student 108
+P157,student,Annex,3,Student 109
+P158,student,North Hall,2,Student 110
+P159,student,South Hall,3,Student 111
+P160,student,East Hall,1,Student 112
+P161,student,West Hall,4,Student 113
+P162,student,North Hall,2,Student 114
+P163,student,North Hall,4,Student 115
+P164,student,West Hall,1,Student 116
+P165,student,East Hall,2,Student 117
+P166,student,Gradflat,2,Student 118
+P167,student,North Hall,4,Student 119
+P168,student,West Hall,3,Student 120
+P169,student,South Hall,2,Student 121
+P170,student,Gradflat,2,Student 122
+P171,student,Annex,2,Student 123
+P172,student,South Hall,3,Student 124
+P173,student,Annex,2,Student 125
+P174,student,East Hall,1,Student 126
+P175,student,North Hall,4,Student 127
+P176,student,West Hall,4,Student 128
+P177,student,South Hall,1,Student 129
+P178,student,East Hall,3,Student 130
+P179,student,East Hall,1,Student 131
+P180,student,South Hall,3,Student 132
+P181,student,West Hall,2,Student 133
+P182,student,East Hall,3,Student 134
+P183,student,Gradflat,3,Student 135
+P184,student,Annex,4,Student 136
+P185,student,East Hall,1,Student 137
+P186,student,South Hall,4,Student 138
+P187,student,Annex,1,Student 139
+P188,student,East Hall,1,Student 140
+P189,student,West Hall,3,Student 141
+P190,student,South Hall,2,Student 142
+P191,student,East Hall,4,Student 143
+P192,student,North Hall,4,Student 144
+P193,student,Annex,2,Student 145
+P194,student,East Hall,4,Student 146
+P195,student,South Hall,2,Student 147
+P196,student,South Hall,3,Student 148
+P197,student,Annex,2,Student 149
+P198,student,Annex,4,Student 150
+P199,student,East Hall,1,Student 151
+P200,student,South Hall,1,Student 152
+P201,student,East Hall,2,Student 153
+P202,student,Annex,4,Student 154
+P203,student,West Hall,4,Student 155
+P204,student,West Hall,3,Student 156
+P205,student,Annex,4,Student 157
+P206,student,East Hall,4,Student 158
+P207,student,West Hall,3,Student 159
+P208,student,North Hall,2,Student 160
+P209,student,West Hall,4,Student 161
+P210,student,North Hall,3,Student 162
+P211,student,North Hall,2,Student 163
+P212,student,Annex,1,Student 164
+P213,student,Gradflat,3,Student 165
+P214,student,North Hall,2,Student 166
+P215,student,West Hall,4,Student 167
+P216,student,Annex,1,Student 168
+P217,student,West Hall,1,Student 169
+P218,student,West Hall,4,Student 170
+P219,student,Annex,1,Student 171
+P220,student,Gradflat,1,Student 172
+P221,student,North Hall,3,Student 173
+P222,student,Gradflat,4,Student 174
+P223,student,West Hall,1,Student 175
+P224,student,East Hall,2,Student 176
+P225,student,Annex,4,Student 177
+P226,student,East Hall,4,Student 178
+P227,student,North Hall,3,Student 179
+P228,student,North Hall,1,Student 180
+P229,student,Annex,1,Student 181
+P230,student,East Hall,1,Student 182
+P231,student,East Hall,1,Student 183
+P232,student,West Hall,3,Student 184
+P233,student,Annex,1,Student 185
+P234,student,East Hall,3,Student 186
+P235,student,Annex,3,Student 187
+P236,student,Gradflat,3,Student 188
+P237,student,North Hall,1,Student 189
+P238,student,Annex,4,Student 190
+P239,student,West Hall,3,Student 191
+P240,student,West Hall,3,Student 192
+P241,student,Gradflat,1,Student 193
+P242,student,North Hall,1,Student 194
+P243,student,South Hall,4,Student 195
+P244,student,West Hall,2,Student 196
+P245,student,Annex,2,Student 197
+P246,student,West Hall,2,Student 198
+P247,student,South Hall,3,Student 199
+P248,student,East Hall,4,Student 200
+P249,student,South Hall,2,Student 201
+P250,student,Annex,4,Student 202
+P251,student,North Hall,1,Student 203
+P252,student,South Hall,3,Student 204
+P253,student,West Hall,3,Student 205
+P254,student,Annex,1,Student 206
+P255,student,Gradflat,1,Student 207
+P256,student,Gradflat,2,Student 208
+P257,student,West Hall,4,Student 209
+P258,student,West Hall,3,Student 210
+P259,student,East Hall,4,Student 211
+P260,student,Gradflat,4,Student 212
+P261,student,North Hall,2,Student 213
+P262,student,South Hall,4,Student 214
+P263,student,Annex,1,Student 215
+P264,student,South Hall,1,Student 216
+P265,student,East Hall,4,Student 217
+P266,student,East Hall,4,Student 218
+P267,student,North Hall,1,Student 219
+P268,student,North Hall,3,Student 220
+P269,student,Gradflat,3,Student 221
+P270,student,Annex,4,Student 222
+P271,student,Gradflat,3,Student 223
+P272,student,East Hall,2,Student 224
+P273,student,West Hall,2,Student 225
+P274,student,Annex,2,Student 226
+P275,student,West Hall,3,Student 227
+P276,student,Annex,4,Student 228
+P277,student,East Hall,2,Student 229
+P278,student,South Hall,1,Student 230
+P279,student,East Hall,1,Student 231
+P280,student,Annex,3,Student 232
+P281,student,Annex,4,Student 233
+P282,student,Annex,1,Student 234
+P283,student,Annex,1,Student 235
+P284,student,North Hall,3,Student 236
+P285,student,North Hall,1,Student 237
+P286,student,East Hall,4,Student 238
+P287,student,East Hall,2,Student 239
+P288,student,Annex,1,Student 240
+P289,student,Annex,4,Student 241
+P290,student,South Hall,1,Student 242
+P291,student,West Hall,2,Student 243
+P292,student,South Hall,1,Student 244
+P293,student,North Hall,1,Student 245
+P294,student,South Hall,1,Student 246
+P295,student,Gradflat,1,Student 247
+P296,student,East Hall,1,Student 248
+P297,student,Gradflat,1,Student 249
+P298,student,North Hall,3,Student 250
+P299,student,South Hall,3,Student 251
+P300,student,Gradflat,2,Student 252

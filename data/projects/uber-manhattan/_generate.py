@@ -170,10 +170,10 @@ def main() -> None:
         if roll < 0.08:                        # airport run
             pu = rng.choice(z_ids); do = "ZJFK"
             hour = int(rng.choice([5, 6, 7, 15, 16, 17]))
-            did = rng.choice(list(pro_ids)) if rng.random() < 0.8 else rng.choice(list(drivers.node_id))
+            did = rng.choice(sorted(pro_ids)) if rng.random() < 0.8 else rng.choice(list(drivers.node_id))
         elif roll < 0.34:                      # nightlife
             pu = rng.choice(z_ids)
-            do = rng.choice(list(nightlife_z))
+            do = rng.choice(sorted(nightlife_z))
             hour = int(rng.choice([19, 20, 21, 22, 23, 0, 1, 2]))
             did = rng.choice(list(drivers.node_id))
         else:                                  # ordinary daytime
