@@ -1,10 +1,10 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-19 10:41 UTC_
+_Auto-generated NotebookLM source · 2026-06-19 23:19 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
-**121 files included.**
+**133 files included.**
 
 ---
 
@@ -8786,9 +8786,15 @@ Each dataset folder contains:
 | [`opensource-deps`](opensource-deps/) | 400 | 2,251 | ✓ | ✓ | — | — | An open-source package dependency graph. |
 | [`trade-commodity`](trade-commodity/) | 140 | 1,210 | ✓ | ✓ | — | ✓ | International commodity trade across a supply shock. |
 | [`reorg-comms`](reorg-comms/) | 250 | 7,926 | ✓ | ✓ | — | ✓ | Corporate communication before / during / after a reorg + layoff. |
+| [`satellite-constellation`](satellite-constellation/) | 298 | 733 | — | ✓ | — | — | Multi-operator LEO satellite comms: orbits, inter-satellite links, ground stations. |
+| [`drone-components`](drone-components/) | 183 | 617 | ✓ | ✓ | — | — | A drone's functional component + software dependency graph (what needs what to fly). |
+| [`transit-multimodal`](transit-multimodal/) | 152 | 384 | — | ✓ | — | — | A city's bus + metro network with neighborhood nodes (hub-spoke + ring). |
 
-All 12 are larger than the lab datasets, mostly weighted, and several are temporal
-(`period`/`day`/`hour`/`week` columns), bipartite, or multimodal (`kind` column).
+All 15 are larger than the lab datasets, mostly weighted, and several are temporal
+(`period`/`day`/`hour`/`week` columns), bipartite, or multimodal (`kind`/`mode`
+columns). `satellite-constellation` and `transit-multimodal` are multi-layer (link
+type / transit mode); `transit-multimodal` is purpose-built for counterfactual
+"add-one-edge" connectivity analysis.
 
 ## How to use them
 
@@ -10950,6 +10956,701 @@ if __name__ == "__main__":
     print("\U0001F4C8 Cumulative infected by week: "
           + "  ".join(f"wk{w}={c}" for w, c in inf.items()))
     print("\U0001F389 Graph ready. Object `g` is an undirected, weighted igraph.")
+```
+
+---
+
+## `data/projects/drone-components/README.md`
+
+# drone-components
+
+*A functional dependency map of a small UAV (drone): which hardware components and
+software modules require which others to work.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Directed (`from` requires → `to`) |
+| **Weights** | Weighted (`coupling_strength` 1–5 = how tightly `from` is coupled to `to`) |
+| **Modality** | Two node kinds (`hardware`, `software`), grouped into `subsystem` |
+| **Temporal** | No — a single design snapshot |
+| **Nodes** | 183 components (131 hardware, 52 software) |
+| **Edges** | 617 "requires to function" relationships |
+| **Files** | `nodes.csv`, `edges.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+Every node is a **component** of a drone — either a physical part (`hardware`:
+motors, ESCs, battery, autopilot, IMUs, GPS, radios, camera, frame …) or a
+`software` module (firmware, flight stack, sensor drivers, the EKF estimator, the
+attitude controller, failsafe, telemetry stack …). A directed edge `A → B` means
+*A depends on / requires B to function*: if B fails or is removed, A is impaired.
+This is a **functional dependency graph** — a Design Structure Matrix view of
+"what needs what" — not a supply chain. The edge weight, `coupling_strength`
+(1–5), is how tightly A is bound to B. Each component carries its `kind`,
+`subsystem`, `component_type`, `vendor`, a 1–5 `criticality` rating, a `redundant`
+flag, and (for hardware) `mass_g` and `power_draw_w`.
+
+This is a directed-graph **criticality, reachability, modularity, and
+failure-propagation** playground. Some things worth investigating:
+
+- The autopilot is the obvious hub by raw degree. But is the *most* critical node
+  the one with the highest degree? Try ranking nodes by how many others can reach
+  them *transitively*, or by betweenness, and see whether a different, quieter
+  component rises to the top.
+- Counterfactual disruption: remove one node and ask how much of the system gets
+  stranded (can no longer reach what it needs). Does the biggest blast radius come
+  from a high-degree node, or from one that degree analysis underrates?
+- Is this graph acyclic? Look for strongly-connected components — feedback loops
+  where two modules each depend on the other.
+- Some components are flagged `redundant`. Check whether a redundant pair truly
+  buys you independence, or whether both ultimately funnel into the same single
+  downstream consumer.
+- Does the system partition cleanly into `subsystem` modules (high modularity)?
+  Which few cross-subsystem edges are the integration seams?
+- Combine reach with `vendor` and `criticality`: is there a module the whole stack
+  leans on that comes from a single vendor? What happens to a subsystem if you
+  remove one vendor's parts entirely?
+
+> **Note.** The interesting findings here are deliberately *not* documented.
+> "The autopilot connects to everything" is the starting point, not a finding.
+> Look at what raw degree alone hides.
+
+## `nodes.csv`
+
+One row per component.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique key referenced by edges. Spine parts get mnemonic ids; generic parts are `hw###` / `sw###`. | character | `mot1`, `fc`, `ekf`, `hw042`, `sw017` |
+| `kind` | Component kind | Whether the node is a physical part or a software module. | character | `hardware`, `software` |
+| `subsystem` | Subsystem | Functional group the component belongs to. | character | `propulsion`, `power`, `flight_control`, `navigation`, `software` |
+| `component_type` | Component type | Finer-grained type within the subsystem. | character | `motor`, `esc`, `autopilot`, `estimator`, `sensor_driver` |
+| `vendor` | Vendor | Supplier of the part / author of the module (~6 vendors). | character | `Aerex`, `Voltspan`, `NaviCore`, `PixHawk` |
+| `criticality` | Criticality rating | Designer-assigned importance, 1 (minor) to 5 (flight-critical). | integer | `1`, `3`, `5` |
+| `redundant` | Redundant flag | 1 if the part is nominally backed up by a sibling, else 0. | integer | `0`, `1` |
+| `mass_g` | Mass (grams) | Component mass; blank for software. | double | `14.3`, `42.0`, `320.0` |
+| `power_draw_w` | Power draw (watts) | Typical electrical draw; blank for software. | double | `0.3`, `1.82`, `4.46` |
+| `label` | Display name | Human-readable label. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Motor FL`, `Autopilot FC`, `EKF Estimator` |
+
+## `edges.csv`
+
+One row per dependency. Directed: `from_id` requires `to_id` to function.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | Dependent component ID | The component that has the dependency (joins to `nodes.csv`). | character | `esc1`, `ekf`, `mot2` |
+| `to_id` | Required component ID | The component being depended on (joins to `nodes.csv`). | character | `pdb`, `imu_a`, `bec5v` |
+| `dep_type` | Dependency type | Nature of the coupling. | character | `power`, `data`, `control`, `mechanical`, `software` |
+| `coupling_strength` | Coupling strength | How tightly `from_id` is bound to `to_id`, 1 (loose) to 5 (tight). The edge weight. | integer | `1`, `3`, `5` |
+
+## Load it
+
+```bash
+Rscript data/projects/drone-components/load.R     # R    (igraph)
+python  data/projects/drone-components/load.py     # Python (python-igraph)
+```
+
+Both build a directed, weighted `igraph` graph (edge weight =
+`coupling_strength`) and print a one-screen summary. In the
+[R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**drone-components** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/drone-components>
+
+---
+
+## `data/projects/drone-components/_generate.py`
+
+```python
+"""Generate the `drone-components` project network (deterministic).
+
+A FUNCTIONAL dependency graph for a small UAV (drone): hardware components and
+software modules, and which one *requires* which to function. This is a
+dependency-type graph (a Design Structure Matrix / "what needs what to work"),
+NOT a supply chain. A directed edge ``A -> B`` means *A depends on / requires B
+to function* (if B fails, A is impaired). Edges are weighted by
+``coupling_strength`` (1-5). Nodes are multimodal: ``kind`` in {hardware,
+software}, grouped into a ``subsystem``.
+
+Design parameters (the ONLY record of the planted structure; parameter-level):
+  - HIDDEN_SPOF = the power-distribution board ("pdb"). It has only MODERATE
+    direct degree, but an outsized share of nodes transitively depend on it
+    (high transitive in-reach + betweenness), so degree alone misses it.
+    Knocking it out strands a large fraction of the system.
+  - FUSION_NODE = the single sensor-fusion / EKF estimator. Two "redundant"
+    sensor pairs (dual IMUs, and GPS+RTK) BOTH feed this one node -> the
+    redundancy is fake (common single downstream dependent).
+  - CYCLE: the flight controller <-> ESC telemetry and estimator <-> controller
+    form real cyclic dependencies, so the graph is NOT a clean DAG (SCC size>1).
+  - MODULARITY: components cluster by subsystem (dense within, sparse across),
+    with a few cross-subsystem couplings = integration risk seams.
+  - LEGACY_MODULE = a critical legacy software module ("sensor driver core")
+    with high downstream reach and a single vendor = bus-factor risk.
+  - VENDOR_LOCKIN: one vendor's parts depend tightly on each other through a
+    proprietary protocol; removing that vendor fragments its subsystem.
+
+Run:
+    python data/projects/drone-components/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+VENDORS = ["Aerex", "Voltspan", "NaviCore", "PixHawk", "SkyLink", "GimbalWorks"]
+
+# --- planted parameters -----------------------------------------------------
+N_FILLER_HW = 90        # extra generic hardware components (noise)
+N_FILLER_SW = 40        # extra generic software modules (noise)
+CROSS_LINK_P = 0.06     # base prob of a cross-subsystem coupling (integration seam)
+WITHIN_LINK_P = 0.34    # prob of a within-subsystem coupling (modularity)
+SPOF_FANIN = 34         # how many nodes the power board ultimately feeds (reach)
+LEGACY_REACH = 30       # downstream consumers of the legacy driver core
+VENDOR_LOCK_VENDOR = "NaviCore"   # the lock-in vendor (navigation/comms parts)
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # ----- the named "spine" components (the realistic UAV skeleton) --------
+    # Each tuple: (node_id, kind, subsystem, component_type, label)
+    spine = [
+        # propulsion (4 motors + 4 ESCs + 4 props + mounts)
+        ("mot1", "hardware", "propulsion", "motor", "Motor FL"),
+        ("mot2", "hardware", "propulsion", "motor", "Motor FR"),
+        ("mot3", "hardware", "propulsion", "motor", "Motor RL"),
+        ("mot4", "hardware", "propulsion", "motor", "Motor RR"),
+        ("esc1", "hardware", "propulsion", "esc", "ESC FL"),
+        ("esc2", "hardware", "propulsion", "esc", "ESC FR"),
+        ("esc3", "hardware", "propulsion", "esc", "ESC RL"),
+        ("esc4", "hardware", "propulsion", "esc", "ESC RR"),
+        ("prop1", "hardware", "propulsion", "propeller", "Prop FL"),
+        ("prop2", "hardware", "propulsion", "propeller", "Prop FR"),
+        ("prop3", "hardware", "propulsion", "propeller", "Prop RL"),
+        ("prop4", "hardware", "propulsion", "propeller", "Prop RR"),
+        ("mount1", "hardware", "propulsion", "motor_mount", "Mount FL"),
+        ("mount2", "hardware", "propulsion", "motor_mount", "Mount FR"),
+        ("mount3", "hardware", "propulsion", "motor_mount", "Mount RL"),
+        ("mount4", "hardware", "propulsion", "motor_mount", "Mount RR"),
+        # power
+        ("battery", "hardware", "power", "battery", "LiPo Battery"),
+        ("pdb", "hardware", "power", "power_distribution", "Power Dist Board"),
+        ("bec5v", "hardware", "power", "regulator", "BEC 5V Rail"),
+        ("bec12v", "hardware", "power", "regulator", "BEC 12V Rail"),
+        ("harness", "hardware", "power", "wiring_harness", "Wiring Harness"),
+        # flight_control
+        ("fc", "hardware", "flight_control", "autopilot", "Autopilot FC"),
+        ("imu_a", "hardware", "flight_control", "imu", "IMU A"),
+        ("imu_b", "hardware", "flight_control", "imu", "IMU B"),
+        ("accel", "hardware", "flight_control", "accelerometer", "Accelerometer"),
+        ("gyro", "hardware", "flight_control", "gyroscope", "Gyroscope"),
+        ("baro", "hardware", "flight_control", "barometer", "Barometer"),
+        ("mag", "hardware", "flight_control", "magnetometer", "Compass"),
+        # navigation
+        ("gps", "hardware", "navigation", "gps", "GPS Receiver"),
+        ("rtk", "hardware", "navigation", "rtk", "RTK Module"),
+        ("optflow", "hardware", "navigation", "optical_flow", "Optical Flow"),
+        # comms
+        ("rx", "hardware", "comms", "rc_receiver", "RC Receiver"),
+        ("telem", "hardware", "comms", "telemetry_radio", "Telemetry Radio"),
+        ("ant_rc", "hardware", "comms", "antenna", "RC Antenna"),
+        ("ant_telem", "hardware", "comms", "antenna", "Telem Antenna"),
+        ("datalink", "hardware", "comms", "datalink", "Datalink Unit"),
+        # payload
+        ("camera", "hardware", "payload", "camera", "Camera"),
+        ("gimbal", "hardware", "payload", "gimbal", "Gimbal"),
+        ("lidar", "hardware", "payload", "lidar", "Lidar"),
+        # airframe
+        ("frame", "hardware", "airframe", "frame", "Airframe"),
+        ("gear", "hardware", "airframe", "landing_gear", "Landing Gear"),
+        # software
+        ("firmware", "software", "software", "firmware", "Bootloader/Firmware"),
+        ("flightstack", "software", "software", "flight_stack", "Flight Stack Scheduler"),
+        ("drv_core", "software", "software", "sensor_driver", "Sensor Driver Core"),
+        ("drv_imu", "software", "software", "sensor_driver", "IMU Driver"),
+        ("drv_gps", "software", "software", "sensor_driver", "GPS Driver"),
+        ("drv_baro", "software", "software", "sensor_driver", "Baro Driver"),
+        ("ekf", "software", "software", "estimator", "EKF Estimator"),
+        ("controller", "software", "software", "controller", "Attitude Controller"),
+        ("mixer", "software", "software", "motor_mixer", "Motor Mixer"),
+        ("failsafe", "software", "software", "failsafe", "Failsafe/Geofence"),
+        ("telemstack", "software", "software", "telemetry_stack", "Telemetry Stack"),
+        ("paramstore", "software", "software", "parameter_store", "Parameter Store"),
+    ]
+
+    spine_ids = [s[0] for s in spine]
+    spine_set = set(spine_ids)
+
+    # ----- generic filler nodes (noise) ------------------------------------
+    hw_subsystems = ["propulsion", "power", "flight_control", "navigation",
+                     "comms", "payload", "airframe"]
+    hw_types = {
+        "propulsion": ["motor", "esc", "propeller", "motor_mount", "fastener"],
+        "power": ["regulator", "wiring_harness", "connector", "fuse", "capacitor"],
+        "flight_control": ["sensor", "io_expander", "buzzer", "led", "switch"],
+        "navigation": ["gps", "antenna", "ground_marker", "beacon"],
+        "comms": ["antenna", "filter", "amplifier", "connector"],
+        "payload": ["camera", "mount", "cable", "lens"],
+        "airframe": ["arm", "standoff", "cover", "damper", "bracket"],
+    }
+
+    filler = []
+    # sort the subsystem pool first so rng.choice ordering is deterministic
+    for i in range(1, N_FILLER_HW + 1):
+        sub = str(rng.choice(sorted(hw_subsystems)))
+        ctype = str(rng.choice(sorted(hw_types[sub])))
+        nid = f"hw{i:03d}"
+        filler.append((nid, "hardware", sub, ctype, f"{ctype.title()} {i:03d}"))
+
+    sw_types = ["sensor_driver", "service", "library", "logger", "watchdog",
+                "calibration", "interface"]
+    for i in range(1, N_FILLER_SW + 1):
+        ctype = str(rng.choice(sorted(sw_types)))
+        nid = f"sw{i:03d}"
+        filler.append((nid, "software", "software", ctype, f"{ctype.title()} {i:03d}"))
+
+    all_nodes = spine + filler
+    node_id = np.array([n[0] for n in all_nodes])
+    kind = np.array([n[1] for n in all_nodes])
+    subsystem = np.array([n[2] for n in all_nodes])
+    component_type = np.array([n[3] for n in all_nodes])
+    label = np.array([n[4] for n in all_nodes])
+    n = len(node_id)
+    idx = {nid: i for i, nid in enumerate(node_id)}
+
+    # ----- node attributes -------------------------------------------------
+    vendor = rng.choice(VENDORS, size=n)
+    criticality = rng.integers(1, 6, size=n)
+    redundant = (rng.random(n) < 0.12).astype(int)
+
+    mass_g = np.where(kind == "hardware",
+                      np.clip(rng.gamma(2.0, 18.0, size=n), 1, 600).round(1),
+                      np.nan)
+    power_draw_w = np.where(kind == "hardware",
+                            np.clip(rng.gamma(1.6, 1.4, size=n), 0.0, 60.0).round(2),
+                            np.nan)
+
+    # force realistic attributes for the named spine + planted nodes
+    def setattrs(nid, **kw):
+        i = idx[nid]
+        for k, v in kw.items():
+            if k == "vendor":
+                vendor[i] = v
+            elif k == "criticality":
+                criticality[i] = v
+            elif k == "redundant":
+                redundant[i] = v
+            elif k == "mass_g":
+                mass_g[i] = v
+            elif k == "power_draw_w":
+                power_draw_w[i] = v
+
+    # power board: moderate criticality LABEL on attributes (don't reveal SPOF)
+    setattrs("pdb", vendor="Voltspan", criticality=3, redundant=0,
+             mass_g=42.0, power_draw_w=1.2)
+    setattrs("battery", vendor="Voltspan", criticality=5, redundant=0,
+             mass_g=320.0, power_draw_w=0.0)
+    setattrs("fc", vendor="PixHawk", criticality=5, redundant=0,
+             mass_g=38.0, power_draw_w=2.5)
+    setattrs("ekf", vendor="PixHawk", criticality=4, redundant=0)
+    setattrs("controller", vendor="PixHawk", criticality=5, redundant=0)
+    # dual IMUs marked redundant (the redundancy illusion)
+    setattrs("imu_a", vendor="PixHawk", criticality=4, redundant=1,
+             mass_g=4.0, power_draw_w=0.3)
+    setattrs("imu_b", vendor="Aerex", criticality=4, redundant=1,
+             mass_g=4.0, power_draw_w=0.3)
+    # GPS + RTK also "redundant" position sources
+    setattrs("gps", vendor="NaviCore", criticality=3, redundant=1)
+    setattrs("rtk", vendor="NaviCore", criticality=3, redundant=1)
+    # legacy driver core: single vendor, moderate criticality flag
+    setattrs("drv_core", vendor="Aerex", criticality=3, redundant=0)
+    # vendor lock-in cluster
+    setattrs("datalink", vendor=VENDOR_LOCK_VENDOR)
+    setattrs("telem", vendor=VENDOR_LOCK_VENDOR)
+    setattrs("ant_telem", vendor=VENDOR_LOCK_VENDOR)
+    setattrs("optflow", vendor=VENDOR_LOCK_VENDOR)
+
+    # ----- build dependency edges ------------------------------------------
+    edges = {}   # (src, dst) -> coupling_strength
+
+    def add_edge(src, dst, w=None):
+        if src == dst:
+            return
+        key = (src, dst)
+        if w is None:
+            w = int(np.clip(rng.integers(1, 6), 1, 5))
+        # keep the strongest coupling if duplicated
+        edges[key] = max(edges.get(key, 0), w)
+
+    # ---- (1) realistic spine dependencies (domain-true) -------------------
+    spine_edges = [
+        # propulsion: motor needs ESC + mount + prop; ESC needs power + mixer
+        ("mot1", "esc1", 5), ("mot2", "esc2", 5), ("mot3", "esc3", 5), ("mot4", "esc4", 5),
+        ("mot1", "mount1", 4), ("mot2", "mount2", 4), ("mot3", "mount3", 4), ("mot4", "mount4", 4),
+        ("mot1", "prop1", 3), ("mot2", "prop2", 3), ("mot3", "prop3", 3), ("mot4", "prop4", 3),
+        ("esc1", "pdb", 5), ("esc2", "pdb", 5), ("esc3", "pdb", 5), ("esc4", "pdb", 5),
+        ("esc1", "mixer", 4), ("esc2", "mixer", 4), ("esc3", "mixer", 4), ("esc4", "mixer", 4),
+        # power chain
+        ("pdb", "battery", 5),
+        ("bec5v", "pdb", 5), ("bec12v", "pdb", 5),
+        ("harness", "pdb", 3),
+        ("pdb", "harness", 4),
+        # flight control hardware powered via the 5V rail (-> pdb transitively)
+        ("fc", "bec5v", 5),
+        ("imu_a", "bec5v", 4), ("imu_b", "bec5v", 4),
+        ("accel", "bec5v", 3), ("gyro", "bec5v", 3),
+        ("baro", "bec5v", 3), ("mag", "bec5v", 3),
+        ("fc", "firmware", 5),
+        ("fc", "flightstack", 5),
+        # sensors feed the FC / drivers
+        ("imu_a", "drv_imu", 3), ("imu_b", "drv_imu", 3),
+        ("accel", "imu_a", 2), ("gyro", "imu_a", 2),
+        ("baro", "drv_baro", 3),
+        ("mag", "drv_core", 2),
+        # navigation hardware
+        ("gps", "bec5v", 3), ("rtk", "bec5v", 3), ("optflow", "bec5v", 3),
+        ("rtk", "gps", 4),
+        ("gps", "drv_gps", 3), ("rtk", "drv_gps", 3),
+        # comms
+        ("rx", "bec5v", 3), ("telem", "bec5v", 3),
+        ("rx", "ant_rc", 4), ("telem", "ant_telem", 4),
+        ("datalink", "telem", 4),
+        ("fc", "rx", 4),
+        # payload
+        ("camera", "bec12v", 4), ("gimbal", "bec12v", 4), ("lidar", "bec12v", 4),
+        ("gimbal", "camera", 3),
+        ("camera", "frame", 2), ("gimbal", "frame", 2),
+        # airframe
+        ("frame", "gear", 1),
+        ("mount1", "frame", 3), ("mount2", "frame", 3),
+        ("mount3", "frame", 3), ("mount4", "frame", 3),
+        # ---- software stack ----
+        ("flightstack", "firmware", 5),
+        ("drv_imu", "drv_core", 5),
+        ("drv_gps", "drv_core", 5),
+        ("drv_baro", "drv_core", 5),
+        ("drv_core", "firmware", 4),
+        ("ekf", "drv_imu", 5),
+        ("ekf", "drv_gps", 4),
+        ("ekf", "drv_baro", 3),
+        ("controller", "ekf", 5),
+        ("mixer", "controller", 5),
+        ("failsafe", "ekf", 4),
+        ("failsafe", "rx", 3),
+        ("failsafe", "controller", 3),
+        ("telemstack", "telem", 4),
+        ("telemstack", "ekf", 3),
+        ("flightstack", "paramstore", 3),
+        ("controller", "paramstore", 2),
+        ("ekf", "paramstore", 2),
+        ("mixer", "paramstore", 2),
+        # FC software depends on FC hardware abstraction
+        ("flightstack", "drv_core", 3),
+    ]
+    for s, d, w in spine_edges:
+        add_edge(s, d, w)
+
+    # ---- (2) REDUNDANCY ILLUSION: dual IMUs + GPS/RTK both feed single EKF -
+    add_edge("ekf", "imu_a", 5)
+    add_edge("ekf", "imu_b", 5)       # both IMUs -> same single EKF
+    add_edge("ekf", "gps", 4)
+    add_edge("ekf", "rtk", 4)         # both position sources -> same single EKF
+    add_edge("ekf", "optflow", 3)
+
+    # ---- (3) FEEDBACK LOOPS / CYCLES (graph is not a DAG) -----------------
+    # controller <-> ekf (estimator uses control input feedforward)
+    add_edge("ekf", "controller", 3)         # closes controller<->ekf loop
+    # fc <-> esc telemetry: ESCs report back rpm/temp to the FC
+    add_edge("fc", "esc1", 2)
+    add_edge("esc1", "fc", 2)                 # closes fc<->esc1 loop
+    # mixer -> esc -> ... and fc consumes mixer output via flightstack
+    add_edge("flightstack", "mixer", 3)
+    add_edge("mixer", "flightstack", 2)       # small scheduler<->mixer loop
+
+    # ---- (4) HIDDEN SPOF: route a large share of nodes to power via pdb ----
+    # Many hardware components draw power; we wire them to a rail (bec5v/bec12v/
+    # harness) -> all rails depend on pdb -> pdb gets huge TRANSITIVE in-reach
+    # while its DIRECT in-degree stays moderate (only the rails + escs touch it).
+    rails = ["bec5v", "bec12v", "harness"]
+    hw_idx = [i for i in range(n) if kind[i] == "hardware"
+              and node_id[i] not in {"pdb", "battery"}]
+    # choose ~SPOF_FANIN hardware nodes to draw from a rail (sorted for determinism)
+    hw_pool = sorted(node_id[i] for i in hw_idx)
+    chosen = rng.choice(hw_pool, size=min(SPOF_FANIN, len(hw_pool)), replace=False)
+    for nid in chosen:
+        rail = str(rng.choice(rails))
+        add_edge(str(nid), rail, w=int(rng.integers(2, 5)))
+
+    # ---- (5) LEGACY MODULE: drv_core gets high downstream reach -----------
+    sw_pool = sorted(node_id[i] for i in range(n)
+                     if kind[i] == "software" and node_id[i] != "drv_core")
+    legacy_consumers = rng.choice(sw_pool, size=min(LEGACY_REACH, len(sw_pool)),
+                                  replace=False)
+    for nid in legacy_consumers:
+        add_edge(str(nid), "drv_core", w=int(rng.integers(2, 6)))
+
+    # ---- (6) VENDOR LOCK-IN: NaviCore parts depend on each other tightly --
+    lock_nodes = [node_id[i] for i in range(n) if vendor[i] == VENDOR_LOCK_VENDOR
+                  and subsystem[i] in {"navigation", "comms"}]
+    lock_nodes = sorted(lock_nodes)
+    # a proprietary datalink protocol: chain + mutual coupling within the vendor
+    for a in range(len(lock_nodes)):
+        for b in range(len(lock_nodes)):
+            if a == b:
+                continue
+            if rng.random() < 0.45:
+                add_edge(lock_nodes[a], lock_nodes[b], w=int(rng.integers(3, 6)))
+
+    # Power-sink nodes: power flows strictly DOWN into them, so they must never
+    # be the SOURCE of a noise edge (this keeps pdb the sole gateway to battery
+    # = a genuine articulation point for power).
+    POWER_SINKS = {"battery", "pdb", "bec5v", "bec12v", "harness"}
+
+    # ---- (7) MODULARITY: dense within-subsystem, sparse cross-subsystem ----
+    by_sub = {}
+    for i in range(n):
+        by_sub.setdefault(subsystem[i], []).append(node_id[i])
+    for sub, members in by_sub.items():
+        members = sorted(members)
+        for a in members:
+            for b in members:
+                if a == b:
+                    continue
+                if rng.random() < WITHIN_LINK_P * 0.18:
+                    if a in POWER_SINKS:
+                        continue
+                    add_edge(a, b, w=int(rng.integers(1, 4)))
+    # sparse cross-subsystem integration seams
+    all_sorted = sorted(node_id.tolist())
+    for a in all_sorted:
+        if rng.random() < CROSS_LINK_P:
+            if a in POWER_SINKS:
+                continue
+            # pick a target in a DIFFERENT subsystem
+            sa = subsystem[idx[a]]
+            others = [x for x in all_sorted
+                      if subsystem[idx[x]] != sa and x != a]
+            if others:
+                b = str(rng.choice(others))
+                add_edge(a, b, w=int(rng.integers(1, 4)))
+
+    # ---- (8) connect filler software to spine so they aren't isolated ------
+    spine_sw = ["firmware", "flightstack", "drv_core", "ekf", "controller",
+                "paramstore"]
+    for i in range(n):
+        if kind[i] == "software" and node_id[i].startswith("sw"):
+            if rng.random() < 0.85:
+                add_edge(node_id[i], str(rng.choice(sorted(spine_sw))),
+                         w=int(rng.integers(1, 4)))
+    # connect filler hardware to its subsystem spine anchor or a rail
+    anchors = {"propulsion": "frame", "power": "bec5v", "flight_control": "fc",
+               "navigation": "gps", "comms": "telem", "payload": "frame",
+               "airframe": "frame"}
+    for i in range(n):
+        if kind[i] == "hardware" and node_id[i].startswith("hw"):
+            if rng.random() < 0.80:
+                anchor = anchors.get(subsystem[i], "frame")
+                add_edge(node_id[i], anchor, w=int(rng.integers(1, 4)))
+
+    # ----- emit ------------------------------------------------------------
+    edge_rows = [{"from_id": s, "to_id": d, "dep_type": _dep_type(s, d, kind, idx,
+                                                                  subsystem),
+                  "coupling_strength": w}
+                 for (s, d), w in edges.items()]
+    edges_df = pd.DataFrame(edge_rows)
+    # stable ordering
+    edges_df = edges_df.sort_values(["from_id", "to_id"]).reset_index(drop=True)
+
+    nodes = pd.DataFrame({
+        "node_id": node_id,
+        "kind": kind,
+        "subsystem": subsystem,
+        "component_type": component_type,
+        "vendor": vendor,
+        "criticality": criticality,
+        "redundant": redundant,
+        "mass_g": mass_g,
+        "power_draw_w": power_draw_w,
+        "label": label,
+    })
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges_df.to_csv(HERE / "edges.csv", index=False)
+
+    kinds = dict(pd.Series(kind).value_counts())
+    print(f"drone-components: {len(nodes)} nodes "
+          f"({kinds.get('hardware', 0)} hardware, {kinds.get('software', 0)} software), "
+          f"{len(edges_df)} dependency edges.")
+
+
+def _dep_type(src, dst, kind, idx, subsystem):
+    """Infer a plausible dependency type for an edge (power/data/control/
+    mechanical/software). Deterministic from the endpoints' kind/subsystem."""
+    ks, kd = kind[idx[src]], kind[idx[dst]]
+    ss, sd = subsystem[idx[src]], subsystem[idx[dst]]
+    if dst in {"pdb", "battery", "bec5v", "bec12v", "harness"}:
+        return "power"
+    if ks == "software" and kd == "software":
+        return "software"
+    if kd == "software" or ks == "software":
+        return "data"
+    if sd == "propulsion" and dst.startswith(("esc", "mixer", "mot")):
+        return "control"
+    if dst in {"frame", "gear"} or dst.startswith("mount"):
+        return "mechanical"
+    if ss == "propulsion" or sd == "propulsion":
+        return "control"
+    return "data"
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/drone-components/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `drone-components` project network (R)
+#' @description
+#'
+#' Reads the two CSVs in this folder and builds a directed, weighted igraph
+#' object: a UAV functional dependency graph (`A -> B` means *A depends on /
+#' requires B to function*). Run it straight (`Rscript load.R`) for a quick
+#' summary, or `source()` it and call `load_drone()` in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "drone-components")
+
+#' Load the node table (one row per component).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per dependency).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the directed, weighted dependency graph.
+#'
+#' Edges are weighted by `coupling_strength`. Direction is `from_id -> to_id`,
+#' i.e. `from_id` depends on / requires `to_id` to function. The graph is
+#' intentionally NOT a clean DAG.
+load_drone <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = TRUE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$coupling_strength
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n\U0001F681 drone-components (R)\n")
+  cat("   UAV functional dependency graph; A -> B means A requires B to function.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_drone(nodes, edges)
+
+  nh <- sum(nodes$kind == "hardware")
+  ns <- sum(nodes$kind == "software")
+  cat(sprintf("✅ Loaded %d components (%d hardware, %d software) and %d dependency edges.\n",
+              nrow(nodes), nh, ns, nrow(edges)))
+  cat(sprintf("\U0001F517 Directed: %s | is DAG: %s | total coupling: %s\n",
+              is_directed(g), is_dag(g),
+              format(sum(edges$coupling_strength), big.mark = ",")))
+  ind <- igraph::degree(g, mode = "in")
+  outd <- igraph::degree(g, mode = "out")
+  cat(sprintf("\U0001F4CA Max in-degree: %d (%s) | max out-degree: %d (%s)\n",
+              max(ind), names(which.max(ind)), max(outd), names(which.max(outd))))
+  cat("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.\n")
+}
+```
+
+---
+
+## `data/projects/drone-components/load.py`
+
+```python
+"""Load the `drone-components` project network (Python).
+
+Reads the two CSVs in this folder and builds a directed, weighted python-igraph
+object: a UAV functional dependency graph (``A -> B`` means *A depends on / requires
+B to function*). Run it straight (``python load.py``) for a quick summary, or
+import ``load_drone()`` into your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per component (hardware or software module)."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per dependency (from_id requires to_id)."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_drone(nodes: pd.DataFrame | None = None,
+               edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the directed, weighted dependency graph (weight = ``coupling_strength``).
+
+    Direction is ``from_id -> to_id``: ``from_id`` depends on / requires
+    ``to_id`` to function. The graph is intentionally NOT a clean DAG.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=True, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["coupling_strength"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n\U0001F681 drone-components (Python)")
+    print("   UAV functional dependency graph; A -> B means A requires B to function.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_drone(nodes, edges)
+
+    kinds = nodes["kind"].value_counts()
+    print(f"✅ Loaded {len(nodes)} components "
+          f"({kinds.get('hardware', 0)} hardware, {kinds.get('software', 0)} software) "
+          f"and {len(edges)} dependency edges.")
+    print(f"\U0001F517 Directed: {g.is_directed()} | is DAG: {g.is_dag()} | "
+          f"total coupling: {edges['coupling_strength'].sum():,}")
+    indeg = g.indegree()
+    outdeg = g.outdegree()
+    names = g.vs["name"]
+    i_max = max(range(len(indeg)), key=lambda i: indeg[i])
+    o_max = max(range(len(outdeg)), key=lambda i: outdeg[i])
+    print(f"\U0001F4CA Max in-degree: {indeg[i_max]} ({names[i_max]}) | "
+          f"max out-degree: {outdeg[o_max]} ({names[o_max]})")
+    print("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.")
 ```
 
 ---
@@ -13502,6 +14203,644 @@ if __name__ == "__main__":
 
 ---
 
+## `data/projects/satellite-constellation/README.md`
+
+# satellite-constellation
+
+*A single-instant snapshot of three operators' low-Earth-orbit (LEO) satellite
+broadband networks: satellites linked to each other and down to ground gateways,
+each link rated by capacity and latency.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Undirected (a radio/laser link carries traffic either way) |
+| **Weights** | Weighted (`capacity_gbps` per link; `latency_ms` attribute) |
+| **Modality** | Multimodal — 2 node kinds (`satellite`, `ground_station`) across 3 operators |
+| **Temporal** | No — one frozen snapshot of all orbits at instant *t0* |
+| **Nodes** | 298 (274 satellites + 24 ground stations) |
+| **Edges** | 733 (210 intra-plane ISL + 199 inter-plane ISL + 2 cross-seam + 322 feeder) |
+| **Files** | `nodes.csv`, `edges.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+Three fictional broadband operators — **Helios**, **Polaris**, and **Nimbus** —
+each fly their own constellation of LEO **satellites**, arranged in orbital
+*planes* with several satellites (*slots*) per plane. Some satellites talk
+directly to their neighbors in space over **inter-satellite links** (ISLs);
+traffic ultimately reaches the internet through **ground stations** (gateways) on
+the surface via **feeder** links. A handful of gateways are neutral and shared by
+all three operators; the rest belong to one operator. Each link carries a
+throughput `capacity_gbps` (the edge weight) and a one-way `latency_ms`.
+Satellites carry their orbital geometry (plane, slot, altitude, inclination,
+RAAN, sub-satellite lat/lon), radio band, ISL capability, launch year, and
+operational status; ground stations carry their region and capacity. This is a
+frozen snapshot — every satellite is "parked" at the position its orbit puts it
+in at instant *t0*.
+
+This is a criticality, resilience, and equity network. It rewards students who
+ask how the *architecture* of each operator changes what happens under stress.
+Some questions to chew on:
+
+- The three operators are built differently. If every ground station went dark at
+  once, which operators keep talking to themselves in orbit, and which simply fall
+  apart — and *why* does the answer differ by operator?
+- A few links sit on a structural fault line in the orbital mesh. Can you find the
+  links that carry far more routed traffic than their capacity or count suggests?
+- Latency to a gateway is not the same everywhere. Is it explained by *where* a
+  satellite is, even after you account for how many satellites are around?
+- Which ground stations are single points of failure for their operator, and would
+  degree, strength, and betweenness point you at the same ones?
+- Run community detection. What do the communities correspond to, and which nodes
+  end up acting as the bridges between them?
+- Not every satellite is in the same shape. Is there a pattern to which ones are
+  degraded, and does it line up with anything about the fleet's history?
+
+> **Note.** The interesting findings here are deliberately *not* documented.
+> "Bigger constellations have more links" is the starting point, not a finding.
+> Push past it.
+
+## `nodes.csv`
+
+One row per node. Satellite rows leave `region` blank; ground-station rows leave
+the orbital columns (`plane`, `slot`, `altitude_km`, `inclination_deg`,
+`raan_deg`, `band`, `isl_capable`, `launch_year`, `status`) blank.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique key. `SAT####` satellite, `GS###` ground station. Referenced by edges. | character | `SAT0001`, `GS004` |
+| `kind` | Node kind | Whether the node is in orbit or on the ground. | character | `satellite`, `ground_station` |
+| `operator` | Operator | Owning operator; `neutral` for shared gateways. | character | `Helios`, `Polaris`, `Nimbus`, `neutral` |
+| `plane` | Orbital plane | Index of the orbital plane the satellite is in (blank for ground stations). | integer | `0`, `5`, `11` |
+| `slot` | Slot in plane | Position of the satellite within its plane (blank for ground stations). | integer | `0`, `6`, `10` |
+| `altitude_km` | Altitude | Orbital altitude above the surface, kilometers (blank for ground stations). | double | `546.9`, `780.2`, `1200.4` |
+| `inclination_deg` | Inclination | Orbital-plane inclination to the equator, degrees (blank for ground stations). | double | `53.02`, `86.41`, `88.0` |
+| `raan_deg` | RAAN | Right ascension of the ascending node — the plane's orientation, degrees (blank for ground stations). | double | `0.0`, `90.0`, `157.5` |
+| `region` | Region | Surface region of a ground station (blank for satellites). | character | `North America`, `Europe`, `East Asia` |
+| `lat` | Latitude | Sub-satellite latitude (satellite) or site latitude (ground station), degrees. | double | `43.79`, `-29.97`, `50.12` |
+| `lon` | Longitude | Sub-satellite longitude (satellite) or site longitude (ground station), degrees. | double | `19.19`, `-94.3`, `125.6` |
+| `x` | X coordinate | Map X (= longitude), for plotting. | double | `19.19`, `-94.3` |
+| `y` | Y coordinate | Map Y (= latitude), for plotting. | double | `43.79`, `50.12` |
+| `band` | Radio/optical band | Primary link band of the satellite (blank for ground stations). | character | `optical`, `Ka`, `Ku` |
+| `isl_capable` | ISL capable | 1 if the satellite has inter-satellite links, else 0 (blank for ground stations). | integer | `0`, `1` |
+| `launch_year` | Launch year | Year the satellite was launched (blank for ground stations). | integer | `2019`, `2022`, `2025` |
+| `status` | Status | Operational state of the satellite (blank for ground stations). | character | `active`, `degraded`, `spare` |
+| `capacity_gbps` | Capacity (Gbps) | Per-node throughput capacity (satellite payload, or gateway backhaul). | double | `5.74`, `14.89`, `42.10` |
+| `label` | Display name | Human-readable label. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Helios 00-00`, `Europe GW 08` |
+
+## `edges.csv`
+
+One row per link. Undirected (`from_id`/`to_id` ordering is arbitrary).
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | Endpoint node ID | One end of the link. | character | `SAT0001`, `SAT0150` |
+| `to_id` | Endpoint node ID | Other end of the link. | character | `SAT0002`, `GS004` |
+| `link_type` | Link type | Kind of link: `intra_isl` (fore/aft neighbor in the same plane), `inter_isl` (to an adjacent plane), `crossseam` (spanning the orbital seam), `feeder` (satellite ↔ ground station). | character | `intra_isl`, `inter_isl`, `crossseam`, `feeder` |
+| `capacity_gbps` | Link capacity (Gbps) | Throughput capacity of the link (the edge weight). | double | `8.04`, `15.36`, `28.10` |
+| `latency_ms` | Latency | One-way link latency, milliseconds. | double | `17.0`, `33.7`, `41.2` |
+| `band` | Band | Radio/optical band the link uses. | character | `optical`, `Ka`, `Ku` |
+
+## Load it
+
+```bash
+Rscript data/projects/satellite-constellation/load.R     # R    (igraph)
+python  data/projects/satellite-constellation/load.py     # Python (python-igraph)
+```
+
+Both build an undirected, weighted `igraph` graph and print a one-screen summary.
+In the [R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**satellite-constellation** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/satellite-constellation>
+
+---
+
+## `data/projects/satellite-constellation/_generate.py`
+
+```python
+"""Generate the `satellite-constellation` project network (deterministic).
+
+A single-instant snapshot of a multi-operator low-Earth-orbit (LEO) satellite
+communications network. Three fictional operators fly distinct constellation
+architectures, plus a set of ground stations (gateways) on the surface:
+
+  - satellites    (kind = "satellite")  ~274 across three operators
+  - ground_station(kind = "ground_station")  ~24 gateways
+
+Operators (each a real-world architecture in disguise):
+  - "Helios"  : Walker-Delta, i~53 deg, ~550 km, dense LASER inter-satellite
+                links (a connected mesh); needs few gateways.   12 x 12 = 144
+  - "Polaris" : Walker-Star near-polar i~88 deg, ~1200 km, BENT-PIPE: NO
+                inter-satellite links at all -- every satellite depends on
+                reaching a ground gateway.                       8 x  8 =  64
+  - "Nimbus"  : Walker-Star polar i~86.4 deg, ~780 km, Ka-band crosslinks
+                including a few cross-seam links.                 6 x 11 =  66
+
+Edges (undirected), `link_type`:
+  - intra_isl  : sat <-> fore/aft neighbor in the SAME plane (a ring)
+  - inter_isl  : sat <-> nearest sat in an adjacent plane
+  - crossseam  : the rare ISL spanning the Walker-Star ascending/descending seam
+  - feeder     : sat <-> ground_station (the only way bent-pipe sats reach the net)
+weighted by `capacity_gbps`, with `latency_ms` and `band`.
+
+Design parameters (the only record of the planted structure):
+  - BENTPIPE_OPERATOR = "Polaris": has zero ISLs, so removing all ground
+    stations shatters it into isolated satellites while Helios's ISL mesh
+    barely changes its largest component (architecture-divide resilience).
+  - SEAM_LINK_FRACTION: in Walker-Star operators only a few planes bridge the
+    ascending/descending seam; those crossseam links carry outsized betweenness.
+  - GATEWAY_REGIONS: gateways cluster in NA/EU/E-Asia; sats over oceans / the
+    global south / poles must hop far to a gateway -> FEEDER_LAT_PENALTY raises
+    feeder latency with |lat| and ocean-ness, independent of satellite count.
+  - GATEWAY_HUB_FRACTION: a few gateways absorb most feeders -> high strength /
+    betweenness, single points of failure.
+  - Operator + plane structure is recoverable by community detection; the few
+    NEUTRAL shared gateways are the bridges between operator clusters.
+  - AGING: early launch_year -> higher P(degraded) and lower capacity, and the
+    earliest-launched satellites sit in the lowest-numbered planes.
+
+Run:
+    python data/projects/satellite-constellation/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+EARTH_R_KM = 6371.0
+
+# --- constellation geometry -------------------------------------------------
+# operator -> (n_planes, sats_per_plane, inclination_deg, altitude_km, has_isl)
+OPERATORS = {
+    "Helios":  dict(planes=12, per_plane=12, inc=53.0,  alt=550.0,  isl=True,
+                    walker="delta", band="optical"),
+    "Polaris": dict(planes=8,  per_plane=8,  inc=88.0,  alt=1200.0, isl=False,
+                    walker="star",  band="Ku"),
+    "Nimbus":  dict(planes=6,  per_plane=11, inc=86.4,  alt=780.0,  isl=True,
+                    walker="star",  band="Ka"),
+}
+
+# --- planted parameters -----------------------------------------------------
+BENTPIPE_OPERATOR = "Polaris"   # the operator with NO inter-satellite links
+SEAM_LINK_FRACTION = 0.18       # frac of seam-adjacent planes that bridge seam
+GATEWAY_HUB_FRACTION = 0.25     # frac of gateways that soak up most feeders
+FEEDER_LAT_PENALTY = 26.0       # extra feeder latency (ms) at the poles/oceans
+AGING_DEGRADE = 0.55            # max P(degraded) for the oldest satellites
+N_NEUTRAL_GATEWAYS = 4          # shared gateways that bridge operator clusters
+
+# gateway clusters: (name, lat, lon, n, radius_deg). Dense in NA/EU/E-Asia.
+GATEWAY_REGIONS = [
+    ("North America", 40.0,  -95.0, 6, 9.0),
+    ("Europe",        50.0,   10.0, 6, 7.0),
+    ("East Asia",     35.0,  125.0, 5, 8.0),
+    ("South America", -20.0, -55.0, 2, 9.0),
+    ("Oceania",       -30.0, 145.0, 2, 8.0),
+    ("Africa",         5.0,   25.0, 1, 9.0),
+    ("Mid-Ocean",     10.0,  -40.0, 2, 6.0),   # sparse, near nothing
+]
+
+# launch-year window
+YEAR_MIN, YEAR_MAX = 2019, 2025
+
+
+def subsatellite_latlon(inc_deg, raan_deg, anomaly_deg):
+    """Sub-satellite latitude/longitude for a circular orbit at one instant.
+
+    Standard spherical relations: given inclination i, RAAN, and argument of
+    latitude u (here the true anomaly from the ascending node), the geocentric
+    latitude and longitude of the sub-satellite point are
+        lat = asin(sin i * sin u)
+        lon = raan + atan2(cos i * sin u, cos u)
+    (Earth rotation / GMST is folded into RAAN for this snapshot.)
+    """
+    i = np.radians(inc_deg)
+    u = np.radians(anomaly_deg)
+    raan = np.radians(raan_deg)
+    lat = np.arcsin(np.sin(i) * np.sin(u))
+    lon = raan + np.arctan2(np.cos(i) * np.sin(u), np.cos(u))
+    lat_d = np.degrees(lat)
+    lon_d = (np.degrees(lon) + 180.0) % 360.0 - 180.0
+    return lat_d, lon_d
+
+
+def haversine_km(lat1, lon1, lat2, lon2):
+    p1, p2 = np.radians(lat1), np.radians(lat2)
+    dphi = np.radians(lat2 - lat1)
+    dl = np.radians(lon2 - lon1)
+    a = np.sin(dphi / 2) ** 2 + np.cos(p1) * np.cos(p2) * np.sin(dl / 2) ** 2
+    return 2 * EARTH_R_KM * np.arcsin(np.sqrt(np.clip(a, 0, 1)))
+
+
+def ocean_ness(lat, lon):
+    """Crude 0..1 'how oceanic / underserved' score for a sub-satellite point.
+
+    High over open ocean and the polar/southern reaches, low over the
+    well-served NA/EU/E-Asia land masses. Not physical -- just a coverage proxy.
+    """
+    land_centers = [(40, -95), (50, 10), (35, 125), (-10, -55), (0, 20)]
+    best = min(haversine_km(lat, lon, la, lo) for la, lo in land_centers)
+    land_score = np.clip(best / 5000.0, 0, 1)         # far from land -> oceanic
+    polar = np.clip((abs(lat) - 35) / 55.0, 0, 1)     # high |lat| underserved
+    return float(np.clip(0.55 * land_score + 0.45 * polar, 0, 1))
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # ===== 1. satellites ===================================================
+    sat_rows = []
+    # per-operator record of (node_id, plane, slot, lat, lon) for edge building
+    sat_index: dict[str, list[dict]] = {op: [] for op in OPERATORS}
+
+    sid = 1
+    for op in sorted(OPERATORS):                      # deterministic op order
+        cfg = OPERATORS[op]
+        nP, nS = cfg["planes"], cfg["per_plane"]
+        # Walker-Star spreads RAAN over 180 deg; Walker-Delta over 360 deg.
+        raan_span = 180.0 if cfg["walker"] == "star" else 360.0
+        for p in range(nP):
+            raan = (raan_span * p / nP) % 360.0
+            # phasing offset between planes (Walker phase factor), small jitter
+            phase = (360.0 / (nP * nS)) * p
+            for s in range(nS):
+                anomaly = (360.0 * s / nS + phase) % 360.0
+                inc = cfg["inc"] + float(rng.normal(0, 0.05))
+                alt = cfg["alt"] + float(rng.normal(0, 3.0))
+                lat, lon = subsatellite_latlon(inc, raan, anomaly)
+
+                # AGING: earliest planes launched first; year rises with plane.
+                yr_frac = p / max(nP - 1, 1)
+                launch_year = int(round(YEAR_MIN + yr_frac * (YEAR_MAX - YEAR_MIN)
+                                        + rng.normal(0, 0.4)))
+                launch_year = int(np.clip(launch_year, YEAR_MIN, YEAR_MAX))
+                age_frac = (YEAR_MAX - launch_year) / (YEAR_MAX - YEAR_MIN)
+                p_deg = AGING_DEGRADE * age_frac
+                roll = rng.random()
+                if roll < 0.04:
+                    status = "spare"
+                elif roll < 0.04 + p_deg:
+                    status = "degraded"
+                else:
+                    status = "active"
+
+                # capacity: optical/Ka fast; bent-pipe Ku slower; degraded lower
+                base_cap = {"optical": 20.0, "Ka": 12.0, "Ku": 8.0}[cfg["band"]]
+                cap = base_cap * (1.0 - 0.45 * age_frac) * (1 + rng.normal(0, 0.06))
+                if status == "degraded":
+                    cap *= 0.55
+                cap = float(np.clip(cap, 1.0, 30.0))
+
+                node_id = f"SAT{sid:04d}"
+                rec = dict(
+                    node_id=node_id, kind="satellite", operator=op,
+                    plane=p, slot=s,
+                    altitude_km=round(alt, 1), inclination_deg=round(inc, 2),
+                    raan_deg=round(raan, 2),
+                    lat=round(lat, 4), lon=round(lon, 4),
+                    x=round(lon, 4), y=round(lat, 4),
+                    band=cfg["band"], isl_capable=int(cfg["isl"]),
+                    launch_year=launch_year, status=status,
+                    capacity_gbps=round(cap, 2),
+                    label=f"{op} {p:02d}-{s:02d}",
+                )
+                sat_rows.append(rec)
+                sat_index[op].append(rec)
+                sid += 1
+
+    # ===== 2. ground stations =============================================
+    gs_rows = []
+    gs_all = []
+    gid = 1
+    # build a flat, ordered list of gateway positions first
+    gw_positions = []
+    for region, clat, clon, n, radius in GATEWAY_REGIONS:
+        for _ in range(n):
+            la = float(np.clip(clat + rng.normal(0, radius), -85, 85))
+            lo = (clon + rng.normal(0, radius) + 180) % 360 - 180
+            gw_positions.append((region, la, lo))
+
+    n_gw = len(gw_positions)
+    # decide which gateways are NEUTRAL (shared) vs operator-specific.
+    # neutral ones are chosen by index (sorted) for determinism.
+    neutral_idx = set(sorted(range(n_gw))[:N_NEUTRAL_GATEWAYS])
+    ops_cycle = sorted(OPERATORS)
+    for k, (region, la, lo) in enumerate(gw_positions):
+        if k in neutral_idx:
+            operator = "neutral"
+        else:
+            operator = ops_cycle[k % len(ops_cycle)]
+        capacity = float(np.clip(40 + rng.normal(0, 12), 8, 90))
+        rec = dict(
+            node_id=f"GS{gid:03d}", kind="ground_station", operator=operator,
+            region=region, lat=round(la, 4), lon=round(lo, 4),
+            x=round(lo, 4), y=round(la, 4),
+            capacity_gbps=round(capacity, 2),
+            label=f"{region} GW {gid:02d}",
+        )
+        gs_rows.append(rec)
+        gs_all.append(rec)
+        gid += 1
+
+    # ===== 3. edges ========================================================
+    edges = []
+    seen = set()
+
+    def add_edge(a, b, link_type, cap, lat_ms, band):
+        if a == b:
+            return
+        key = (a, b) if a < b else (b, a)
+        if key in seen:
+            return
+        seen.add(key)
+        edges.append(dict(
+            from_id=key[0], to_id=key[1], link_type=link_type,
+            capacity_gbps=round(float(cap), 2), latency_ms=round(float(lat_ms), 2),
+            band=band,
+        ))
+
+    # ---- inter/intra ISL for operators that have ISL ----------------------
+    for op in sorted(OPERATORS):
+        cfg = OPERATORS[op]
+        if not cfg["isl"]:
+            continue
+        nP, nS = cfg["planes"], cfg["per_plane"]
+        recs = sat_index[op]
+        # index by (plane, slot)
+        by_ps = {(r["plane"], r["slot"]): r for r in recs}
+
+        # intra-plane ring: fore/aft neighbors in the same plane
+        for p in range(nP):
+            for s in range(nS):
+                a = by_ps[(p, s)]
+                b = by_ps[(p, (s + 1) % nS)]
+                d = haversine_km(a["lat"], a["lon"], b["lat"], b["lon"])
+                lat_ms = d / 200.0 + rng.uniform(0.1, 0.6)   # light-speed-ish
+                cap = min(a["capacity_gbps"], b["capacity_gbps"]) * 1.4
+                add_edge(a["node_id"], b["node_id"], "intra_isl",
+                         cap, lat_ms, cfg["band"])
+
+        # inter-plane: each sat links to nearest sat in the next plane.
+        # Walker-Star has a SEAM between plane (nP-1) and plane 0 (ascending vs
+        # descending side); only a few planes bridge it (crossseam links).
+        seam_pairs = {(nP - 1, 0)}
+        for p in range(nP):
+            q = (p + 1) % nP
+            is_seam = (p, q) in seam_pairs or (q, p) in seam_pairs
+            if cfg["walker"] == "star" and is_seam:
+                # only a small fraction of slots bridge the seam
+                n_bridge = max(1, int(round(nS * SEAM_LINK_FRACTION)))
+                bridge_slots = sorted(range(nS))[:n_bridge]
+            else:
+                bridge_slots = list(range(nS))
+            for s in bridge_slots:
+                a = by_ps[(p, s)]
+                # nearest slot in plane q
+                cands = [by_ps[(q, s2)] for s2 in range(nS)]
+                dists = [haversine_km(a["lat"], a["lon"], c["lat"], c["lon"])
+                         for c in cands]
+                b = cands[int(np.argmin(dists))]
+                d = min(dists)
+                if d > 4000:           # too far to close a link
+                    continue
+                lat_ms = d / 200.0 + rng.uniform(0.2, 0.8)
+                if cfg["walker"] == "star" and is_seam:
+                    lt = "crossseam"
+                    # seam crossings are bandwidth-starved (sats cross at high
+                    # relative velocity): low capacity -> a weighted bottleneck.
+                    cap = min(a["capacity_gbps"], b["capacity_gbps"]) * 0.35
+                else:
+                    lt = "inter_isl"
+                    cap = min(a["capacity_gbps"], b["capacity_gbps"]) * 1.1
+                add_edge(a["node_id"], b["node_id"], lt, cap, lat_ms, cfg["band"])
+
+    # ---- feeder links: satellites <-> ground stations ---------------------
+    # A satellite can reach a gateway it is "over" (within an elevation mask).
+    # Hub gateways soak up most feeders. Bent-pipe sats depend ENTIRELY on these.
+    # Visibility footprint half-angle grows with altitude (rough proxy).
+    gw_by_op: dict[str, list[dict]] = {op: [] for op in OPERATORS}
+    neutral_gws = [g for g in gs_all if g["operator"] == "neutral"]
+    for g in gs_all:
+        if g["operator"] in gw_by_op:
+            gw_by_op[g["operator"]].append(g)
+
+    # choose hub gateways (deterministic: first fraction by node_id order)
+    sorted_gw_ids = sorted(g["node_id"] for g in gs_all)
+    n_hub = max(1, int(round(len(sorted_gw_ids) * GATEWAY_HUB_FRACTION)))
+    hub_ids = set(sorted_gw_ids[:n_hub])
+
+    for op in sorted(OPERATORS):
+        cfg = OPERATORS[op]
+        # gateways this operator can use: its own + neutral
+        usable = sorted(gw_by_op[op] + neutral_gws, key=lambda g: g["node_id"])
+        # footprint radius (km) on the ground; higher altitude sees farther
+        footprint = 2500.0 + cfg["alt"] * 1.4
+        for sat in sat_index[op]:
+            # distances to all usable gateways
+            ds = [(haversine_km(sat["lat"], sat["lon"], g["lat"], g["lon"]), g)
+                  for g in usable]
+            ds.sort(key=lambda t: (t[0], t[1]["node_id"]))
+            # link to gateways within footprint; bias toward hub gateways
+            linked = 0
+            target = 2 if cfg["isl"] else 3   # bent-pipe craves more feeders
+            for d, g in ds:
+                if d > footprint and linked >= 1:
+                    break
+                if d > footprint * 1.6:
+                    break
+                # hubs win: non-hub gateways links are probabilistically dropped
+                if g["node_id"] not in hub_ids and rng.random() < 0.5 and linked >= 1:
+                    continue
+                # feeder latency: distance + penalty for oceanic/polar coverage
+                oc = ocean_ness(sat["lat"], sat["lon"])
+                lat_ms = (d / 200.0) + FEEDER_LAT_PENALTY * oc + rng.uniform(0.2, 1.0)
+                cap = min(sat["capacity_gbps"], g["capacity_gbps"]) * 0.8
+                add_edge(sat["node_id"], g["node_id"], "feeder",
+                         cap, lat_ms, sat["band"])
+                linked += 1
+                if linked >= target:
+                    break
+            # guarantee bent-pipe sats are not totally isolated: if none in
+            # range, attach to the single nearest usable gateway (long hop).
+            if linked == 0 and ds:
+                d, g = ds[0]
+                oc = ocean_ness(sat["lat"], sat["lon"])
+                lat_ms = (d / 200.0) + FEEDER_LAT_PENALTY * oc + rng.uniform(0.2, 1.0)
+                cap = min(sat["capacity_gbps"], g["capacity_gbps"]) * 0.8
+                add_edge(sat["node_id"], g["node_id"], "feeder",
+                         cap, lat_ms, sat["band"])
+
+    # ===== 4. assemble & write ============================================
+    sat_df = pd.DataFrame(sat_rows)
+    gs_df = pd.DataFrame(gs_rows)
+
+    # unified column order; satellite-only cols blank for ground stations
+    cols = ["node_id", "kind", "operator", "plane", "slot", "altitude_km",
+            "inclination_deg", "raan_deg", "region", "lat", "lon", "x", "y",
+            "band", "isl_capable", "launch_year", "status", "capacity_gbps",
+            "label"]
+    for c in cols:
+        if c not in sat_df.columns:
+            sat_df[c] = pd.NA
+        if c not in gs_df.columns:
+            gs_df[c] = pd.NA
+    nodes = pd.concat([sat_df[cols], gs_df[cols]], ignore_index=True)
+
+    edges_df = pd.DataFrame(edges, columns=[
+        "from_id", "to_id", "link_type", "capacity_gbps", "latency_ms", "band"])
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges_df.to_csv(HERE / "edges.csv", index=False)
+
+    nsat = (nodes.kind == "satellite").sum()
+    ngs = (nodes.kind == "ground_station").sum()
+    lc = edges_df.link_type.value_counts()
+    print(f"satellite-constellation: {len(nodes)} nodes "
+          f"({nsat} satellites + {ngs} ground_stations), {len(edges_df)} edges "
+          f"(intra_isl={lc.get('intra_isl',0)}, inter_isl={lc.get('inter_isl',0)}, "
+          f"crossseam={lc.get('crossseam',0)}, feeder={lc.get('feeder',0)}).")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/satellite-constellation/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `satellite-constellation` project network (R)
+#' @description
+#'
+#' Reads the two CSVs in this folder and builds an undirected, weighted igraph
+#' object: a one-instant snapshot of three operators' LEO satellite broadband
+#' networks (satellites + ground stations, joined by ISL and feeder links). Run
+#' it straight (`Rscript load.R`) for a quick summary, or `source()` it and call
+#' `load_constellation()` to get the graph in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "satellite-constellation")
+
+#' Load the node table (one row per satellite / ground station).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per link).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the undirected, weighted constellation graph.
+#'
+#' Edges are weighted by link `capacity_gbps`. The graph is a single frozen
+#' snapshot of all orbits at one instant (no time dimension).
+load_constellation <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = FALSE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$capacity_gbps
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n\U0001F6F0\UFE0F  satellite-constellation (R)\n")
+  cat("   Undirected LEO network; links weighted by capacity (Gbps).\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_constellation(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d nodes (%d satellites, %d ground stations) and %d links.\n",
+              nrow(nodes), sum(nodes$kind == "satellite"),
+              sum(nodes$kind == "ground_station"), nrow(edges)))
+  cat(sprintf("\U0001F517 Directed: %s | total link capacity: %s Gbps\n",
+              is_directed(g),
+              format(round(sum(edges$capacity_gbps)), big.mark = ",")))
+  cat("\U0001F389 Graph ready. Object `g` is an undirected, weighted igraph.\n")
+}
+```
+
+---
+
+## `data/projects/satellite-constellation/load.py`
+
+```python
+"""Load the `satellite-constellation` project network (Python).
+
+Reads the two CSVs in this folder and builds an undirected, weighted
+python-igraph object: a one-instant snapshot of three operators' LEO satellite
+broadband networks (satellites + ground stations, joined by ISL and feeder
+links). Run it straight (``python load.py``) for a quick summary, or import
+``load_constellation()`` into your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per satellite / ground station."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per link."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_constellation(nodes: pd.DataFrame | None = None,
+                       edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the undirected, weighted constellation graph.
+
+    Edges are weighted by link ``capacity_gbps``. The graph is a single frozen
+    snapshot of all orbits at one instant (no time dimension).
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=False, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["capacity_gbps"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n🛰️  satellite-constellation (Python)")
+    print("   Undirected LEO network; links weighted by capacity (Gbps).\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_constellation(nodes, edges)
+
+    kinds = nodes["kind"].value_counts()
+    print(f"✅ Loaded {len(nodes)} nodes "
+          f"({kinds.get('satellite',0)} satellites, "
+          f"{kinds.get('ground_station',0)} ground stations) and {len(edges)} links.")
+    print(f"🔗 Directed: {g.is_directed()} | total link capacity: "
+          f"{round(edges['capacity_gbps'].sum()):,} Gbps")
+    print("🎉 Graph ready. Object `g` is an undirected, weighted igraph.")
+```
+
+---
+
 ## `data/projects/semiconductor-supply/README.md`
 
 # semiconductor-supply
@@ -14644,6 +15983,746 @@ if __name__ == "__main__":
     print("\U0001F4E6 Tonnes by period: " +
           " | ".join(f"{k}={v:,}" for k, v in per.items()))
     print("\U0001F389 Graph ready. Object `g` is a directed, weighted igraph.")
+```
+
+---
+
+## `data/projects/transit-multimodal/README.md`
+
+# transit-multimodal
+
+*A hypothetical city's public-transit network: neighborhoods linked by metro and
+bus, with travel times, service frequency, and capacity on every link.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Undirected (a transit link runs both ways) |
+| **Weights** | Weighted (`capacity` riders/hr; also `travel_time_min`, `frequency_per_hr`) |
+| **Modality** | Multimodal / multiplex — two edge `mode`s (`metro`, `bus`); a pair may carry BOTH (parallel edges). `lines.csv` is a route lookup |
+| **Temporal** | No — a single service snapshot (typical weekday) |
+| **Nodes** | 152 neighborhoods |
+| **Edges** | 384 links (81 metro + 303 bus) |
+| **Files** | `nodes.csv`, `edges.csv`, `lines.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+Nodes are **neighborhoods** laid out on a 2D city map with a central business
+district (CBD) at the middle and concentric rings of neighborhoods outward.
+Edges are **transit links** between neighborhoods in two modes: a fast,
+high-frequency, high-capacity **metro** that runs on a set of radial lines plus
+ring lines, and a slower, lower-capacity **bus** mesh that covers many more
+neighborhoods and feeds outer areas to the rail. Because the same pair of
+neighborhoods can be connected by both a metro and a bus link, the graph is a
+**multiplex** with parallel edges (use the `mode` attribute to tell them apart).
+Each link records its travel time, how many vehicles run per hour, and its
+hourly seat capacity (the primary edge weight). Each neighborhood records its
+district, map position, population, median income, jobs, and whether it has a
+metro station.
+
+This is a natural home for **criticality**, **accessibility/equity**, and
+**counterfactual ("what if we add a link?")** questions. Some things worth
+investigating:
+
+- Which neighborhoods are interchange **hubs**, and how fragile is the network if
+  one of them goes down? Do the ring lines change the answer?
+- Is access to jobs evenly distributed? Compute a job-access travel time or a
+  gravity-accessibility score per neighborhood. Is what you see explained by
+  population and distance from the center — or by *something about the
+  neighborhoods*?
+- Some neighborhoods are far better served than others at the same distance from
+  downtown. What separates them?
+- **Counterfactual:** if you could add a single new transit link anywhere, which
+  one would most improve travel times for an underserved part of the city — and
+  how does that compare to adding a random link?
+- Project or partition the network: do districts behave as communities? Where are
+  the structural gaps between them?
+
+> **Note.** The interesting findings are deliberately undocumented. "Busy central
+> neighborhoods have more service" is the starting point, not an answer. Look for
+> the structure — and the gaps — underneath.
+
+## `nodes.csv`
+
+One row per neighborhood.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique key (`N###`). Referenced by edges. | character | `N003`, `N025`, `N127` |
+| `label` | Label | Human-readable display name (district + number). | character | `CBD 003`, `East 025` |
+| `district` | District | Which wedge of the city the neighborhood sits in. | character | `CBD`, `East`, `NorthWest` |
+| `x` | X coordinate | Map x position (CBD is near the origin). | double | `0.051`, `-0.395` |
+| `y` | Y coordinate | Map y position. | double | `-0.008`, `0.159` |
+| `population` | Population | Residents in the neighborhood. | integer | `4539`, `22073` |
+| `median_income` | Median household income | Neighborhood median income, USD. | integer | `129919`, `24000` |
+| `jobs` | Jobs | Number of jobs located in the neighborhood. | integer | `66400`, `80` |
+| `has_metro` | Has metro station | 1 if a metro line stops here, else 0. | integer | `1`, `0` |
+
+## `edges.csv`
+
+One row per transit link. Undirected link between `from_id` and `to_id`. The same
+pair may appear twice with different `mode` (parallel edges = the multiplex).
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | From node ID | One endpoint neighborhood (joins to `nodes.csv`). | character | `N003`, `N025` |
+| `to_id` | To node ID | Other endpoint neighborhood (joins to `nodes.csv`). | character | `N007`, `N047` |
+| `mode` | Mode | Transit mode of the link. | character | `metro`, `bus` |
+| `line` | Line / route | Line or route id this link belongs to (joins to `lines.csv`). | character | `M1`, `Ring`, `B045`, `F570` |
+| `travel_time_min` | In-vehicle travel time | Minutes to ride this link (metro is faster than bus). | double | `2.0`, `3.5`, `17.8` |
+| `frequency_per_hr` | Service frequency | Vehicles per hour on this link (higher = shorter wait). | double | `12.0`, `1.5`, `23.0` |
+| `capacity` | Capacity | Seats offered per hour — the primary edge weight. | integer | `2544`, `120` |
+
+## `lines.csv`
+
+Lookup table for transit lines and bus routes (one row per line). Not a node
+list — join it onto the `line` column in `edges.csv`.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `line_id` | Line ID | Unique line/route key. | character | `M1`, `Ring`, `OuterArc`, `B045` |
+| `mode` | Mode | Mode the line operates. | character | `metro`, `bus` |
+| `kind` | Line kind | Structural role of the line. | character | `radial`, `inner_ring`, `outer_ring_partial`, `local`, `feeder` |
+| `label` | Label | Human-readable line name. | character | `Metro Line M1`, `Bus Route F570` |
+| `n_stations` | Station count | Number of stops/stations on the line. | integer | `7`, `2` |
+
+## Load it
+
+```bash
+Rscript data/projects/transit-multimodal/load.R     # R    (igraph, multimodal)
+python  data/projects/transit-multimodal/load.py     # Python (python-igraph, multimodal)
+```
+
+Both build an undirected, weighted, multimodal `igraph` graph (edge weight =
+`capacity`; `mode` distinguishes metro vs bus parallel edges) and print a
+one-screen summary. In the
+[R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**transit-multimodal** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/transit-multimodal>
+
+---
+
+## `data/projects/transit-multimodal/_generate.py`
+
+```python
+"""Generate the `transit-multimodal` project network (deterministic).
+
+A multimodal urban public-transit network for one hypothetical city.
+  - ~160 NEIGHBORHOODS (nodes), placed on a 2D city layout with a CBD center
+    and concentric outer rings.
+Edges are transit links between neighborhoods, in TWO modes (a multiplex):
+  - metro: fast, high-frequency, high-capacity, but only serves neighborhoods
+    on the rail lines (radial spokes + an inner ring + a partial outer ring).
+  - bus: a denser, slower, lower-capacity mesh that covers many more
+    neighborhoods, plus feeder routes that bring outer areas to the nearest
+    metro station.
+The same neighborhood pair can carry BOTH a bus and a metro edge -> parallel
+edges (the multiplex). A companion `lines.csv` lists each transit line/route.
+
+Design parameters (the only record of the planted structure):
+  - INCOME_PENALTY: job-access travel-time rises as neighborhood income FALLS,
+    holding population and distance-to-CBD fixed. We force this by giving
+    low-income peripheral areas metro=0 and only sparse, infrequent bus service,
+    while planting a few WEALTHY low-population near-metro areas that are
+    over-served. So income predicts access AFTER controlling for pop & distance.
+  - DESERT_NODES: a planted set of HIGH-population, LOW-income, peripheral
+    neighborhoods deliberately left off the metro with thin bus service ->
+    bottom-decile closeness/accessibility despite high population (transit
+    deserts that are NOT explained by demand).
+  - MISSING_LINK: two large adjacent districts (EAST and SOUTH wedges) are NOT
+    directly connected; every trip between them detours through the CBD. Adding
+    ONE crosstown edge collapses shortest paths for that whole region (the
+    counterfactual centerpiece). The single best edge to add is the EAST<->SOUTH
+    crosstown link.
+  - CBD_HUB: all radial metro lines meet at the CBD interchange -> very high
+    betweenness (#1). Removing it sharply raises mean path length, BUT the metro
+    ring lines provide partial redundancy so the network does not shatter.
+  - MODE_GAP: at matched distance-to-CBD, metro-served neighborhoods get far
+    shorter job-access times than bus-only ones.
+  - JOBS: jobs concentrate in the CBD plus ONE secondary edge-city center
+    (north-west). Peripheral bus-only areas have long job-access despite high
+    population.
+
+Run:
+    python data/projects/transit-multimodal/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+# --- planted parameters -----------------------------------------------------
+N_TARGET = 160              # target neighborhood count (final is close to this)
+N_RADIAL = 6               # number of radial metro lines (spokes)
+RING_RADIUS = 1.9          # radius of the inner metro ring line
+OUTER_RING_RADIUS = 4.2    # radius of the partial outer metro ring
+CITY_RADIUS = 6.0          # outer edge of the city
+INCOME_PENALTY = 0.85      # how strongly low income thins out transit service
+N_DESERTS = 9              # planted high-pop low-income transit deserts
+N_OVERSERVED = 7           # planted low-pop wealthy over-served near-metro areas
+
+# metro is fast & frequent; bus is slow & infrequent (per km factors)
+METRO_TIME_PER_UNIT = 2.2   # min per layout-unit on metro
+BUS_TIME_PER_UNIT = 5.6     # min per layout-unit on bus (much slower)
+METRO_FREQ = (10, 24)       # trains/hr range
+BUS_FREQ = (1.5, 12)        # buses/hr range (wide: low-income areas near 1.5)
+METRO_CAP = (1200, 3000)    # riders/hr
+BUS_CAP = (180, 700)        # riders/hr
+
+# the two big districts that are NOT directly connected (the missing link)
+WEDGE_EAST = "East"
+WEDGE_SOUTH = "South"
+
+DISTRICTS = ["CBD", "North", "NorthEast", "East", "SouthEast",
+             "South", "SouthWest", "West", "NorthWest"]
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # ------------------------------------------------------------------ NODES
+    # Place neighborhoods in concentric rings around a CBD at (0,0).
+    # Ring 0 = CBD core; rings grow outward. Angle determines the district wedge.
+    nodes_rows = []
+    nid = 1
+
+    def wedge_of(angle_deg: float) -> str:
+        # 0 deg = East, increasing counter-clockwise.
+        a = angle_deg % 360
+        # 8 wedges of 45 deg, centered so "East"=0
+        sectors = {
+            0: "East", 45: "NorthEast", 90: "North", 135: "NorthWest",
+            180: "West", 225: "SouthWest", 270: "South", 315: "SouthEast",
+        }
+        nearest = min(sectors, key=lambda s: min(abs(a - s), 360 - abs(a - s)))
+        return sectors[nearest]
+
+    # CBD core: a handful of central neighborhoods (the interchange district)
+    n_cbd = 6
+    for _ in range(n_cbd):
+        r = rng.uniform(0.0, 0.55)
+        th = rng.uniform(0, 2 * np.pi)
+        x = r * np.cos(th)
+        y = r * np.sin(th)
+        nodes_rows.append({"px": x, "py": y, "district": "CBD"})
+
+    # rings of neighborhoods outward
+    ring_specs = [
+        (1.0, 18),   # inner residential
+        (1.9, 22),   # at inner ring radius
+        (2.8, 26),
+        (3.6, 28),
+        (4.4, 28),
+        (5.2, 24),
+    ]
+    for radius, count in ring_specs:
+        for k in range(count):
+            base_ang = (360.0 / count) * k
+            ang = base_ang + rng.uniform(-8, 8)
+            rr = radius + rng.uniform(-0.28, 0.28)
+            th = np.deg2rad(ang)
+            x = rr * np.cos(th)
+            y = rr * np.sin(th)
+            district = wedge_of(ang) if rr > 0.8 else "CBD"
+            nodes_rows.append({"px": x, "py": y, "district": district})
+
+    nodes = pd.DataFrame(nodes_rows)
+    nodes = nodes.iloc[:N_TARGET].reset_index(drop=True)
+    n = len(nodes)
+    nodes["node_id"] = [f"N{i:03d}" for i in range(1, n + 1)]
+
+    nodes["x"] = nodes["px"].round(3)
+    nodes["y"] = nodes["py"].round(3)
+    nodes["dist_cbd"] = np.hypot(nodes["px"], nodes["py"])
+
+    # --- income: spatial gradient (rich near center & in the NW) + noise -----
+    # wealth decreases outward overall, but NW wedge is affluent and parts of
+    # the periphery vary; add noise so location does not perfectly reveal income.
+    ang = np.rad2deg(np.arctan2(nodes["py"], nodes["px"])) % 360
+    nw_bonus = np.exp(-((((ang - 135) + 180) % 360 - 180) ** 2) / (2 * 35 ** 2))
+    base_income = (
+        95000
+        - 9000 * nodes["dist_cbd"]
+        + 28000 * nw_bonus
+        + rng.normal(0, 11000, n)
+    )
+    nodes["median_income"] = np.clip(base_income, 24000, 210000).round().astype(int)
+
+    # --- population: outer rings hold more people; noise -------------------
+    base_pop = (
+        4500
+        + 1300 * nodes["dist_cbd"]
+        + rng.normal(0, 1500, n)
+    )
+    nodes["population"] = np.clip(base_pop, 800, 30000).round().astype(int)
+
+    # --- jobs: concentrate in CBD + one secondary edge-city center (NW) -----
+    # secondary center location
+    sec_ang = np.deg2rad(135)
+    sec_r = 3.4
+    sec_x, sec_y = sec_r * np.cos(sec_ang), sec_r * np.sin(sec_ang)
+    d_sec = np.hypot(nodes["px"] - sec_x, nodes["py"] - sec_y)
+    jobs = (
+        2200 * np.exp(-(nodes["dist_cbd"] ** 2) / (2 * 1.1 ** 2)) * 30   # CBD peak
+        + 1400 * np.exp(-(d_sec ** 2) / (2 * 0.9 ** 2)) * 30            # edge city
+        + 300
+        + rng.normal(0, 600, n)
+    )
+    nodes["jobs"] = np.clip(jobs, 80, None).round().astype(int)
+
+    pos = {r.node_id: (r.px, r.py) for r in nodes.itertuples()}
+    ids = list(nodes.node_id)
+
+    def dist(a: str, b: str) -> float:
+        (ax, ay), (bx, by) = pos[a], pos[b]
+        return float(np.hypot(ax - bx, ay - by))
+
+    # ---------------------------------------------------- METRO LINE LAYOUT
+    # Radial spokes: pick, for each of N_RADIAL angles, a chain of neighborhoods
+    # marching outward (nearest to the ideal point at each radius step).
+    metro_nodes: set[str] = set()
+    metro_edges: list[dict] = []
+    lines_rows: list[dict] = []
+
+    # the CBD interchange node: the neighborhood closest to (0,0)
+    cbd_hub = min(ids, key=lambda nd: nodes.loc[nodes.node_id == nd, "dist_cbd"].iloc[0])
+
+    def nearest_free(target_xy, pool, used):
+        cand = sorted(
+            ((np.hypot(pos[p][0] - target_xy[0], pos[p][1] - target_xy[1]), p)
+             for p in pool if p not in used),
+            key=lambda t: (round(t[0], 6), t[1]),
+        )
+        return cand[0][1] if cand else None
+
+    radial_angles = [(360.0 / N_RADIAL) * k for k in range(N_RADIAL)]
+    radial_steps = [0.0, 1.0, 1.9, 2.8, 3.6, 4.4, 5.2]
+
+    line_idx = 1
+    for ang_deg in radial_angles:
+        line_id = f"M{line_idx}"
+        line_idx += 1
+        th = np.deg2rad(ang_deg)
+        chain = [cbd_hub]
+        used_for_line = {cbd_hub}
+        for step in radial_steps[1:]:
+            tx, ty = step * np.cos(th), step * np.sin(th)
+            # restrict to nodes roughly in this wedge & near this radius
+            pool = [p for p in ids
+                    if abs(nodes.loc[nodes.node_id == p, "dist_cbd"].iloc[0] - step) < 0.6]
+            nd = nearest_free((tx, ty), pool, used_for_line)
+            if nd is not None and nd != chain[-1]:
+                chain.append(nd)
+                used_for_line.add(nd)
+        # build consecutive metro edges along the chain
+        for a, b in zip(chain[:-1], chain[1:]):
+            metro_nodes.update([a, b])
+            metro_edges.append({"a": a, "b": b, "line": line_id})
+        lines_rows.append({
+            "line_id": line_id, "mode": "metro", "kind": "radial",
+            "label": f"Metro Line {line_id}", "n_stations": len(chain),
+        })
+
+    # inner ring metro line: order the neighborhoods nearest RING_RADIUS by angle
+    def ring_chain(radius: str, tol: float):
+        ring_pool = [p for p in ids
+                     if abs(nodes.loc[nodes.node_id == p, "dist_cbd"].iloc[0] - radius) < tol]
+        ring_pool = sorted(
+            ring_pool,
+            key=lambda p: np.rad2deg(np.arctan2(pos[p][1], pos[p][0])) % 360,
+        )
+        return ring_pool
+
+    inner_ring = ring_chain(RING_RADIUS, 0.5)
+    for a, b in zip(inner_ring, inner_ring[1:] + inner_ring[:1]):  # close the loop
+        metro_nodes.update([a, b])
+        metro_edges.append({"a": a, "b": b, "line": "Ring"})
+    lines_rows.append({
+        "line_id": "Ring", "mode": "metro", "kind": "inner_ring",
+        "label": "Inner Ring Line", "n_stations": len(inner_ring),
+    })
+
+    # PARTIAL outer ring metro line: an arc covering the WEST/NORTH side only,
+    # deliberately leaving a GAP on the EAST<->SOUTH side (relevant to the
+    # missing link, and giving partial-but-not-full ring redundancy).
+    outer_ring_all = ring_chain(OUTER_RING_RADIUS, 0.7)
+    # keep only nodes whose angle is in [60, 240] deg (covers N, NW, W, SW),
+    # leaving East (0/315) and South (270) unconnected by the outer ring.
+    def angle_of(p):
+        return np.rad2deg(np.arctan2(pos[p][1], pos[p][0])) % 360
+    outer_arc = [p for p in outer_ring_all if 60 <= angle_of(p) <= 240]
+    outer_arc = sorted(outer_arc, key=angle_of)
+    for a, b in zip(outer_arc[:-1], outer_arc[1:]):  # an OPEN arc (not closed)
+        metro_nodes.update([a, b])
+        metro_edges.append({"a": a, "b": b, "line": "OuterArc"})
+    lines_rows.append({
+        "line_id": "OuterArc", "mode": "metro", "kind": "outer_ring_partial",
+        "label": "Outer Ring (partial)", "n_stations": len(outer_arc),
+    })
+
+    nodes["has_metro"] = nodes["node_id"].isin(metro_nodes).astype(int)
+
+    # ----------------------------------------------- TRANSIT DESERTS / EQUITY
+    # Plant high-pop, low-income, peripheral deserts: force metro=0 and mark them
+    # for thin bus service. Choose peripheral (dist_cbd large) low-income nodes
+    # that are currently bus-territory, biasing toward high population.
+    periph = nodes[(nodes.dist_cbd > 3.0) & (nodes.has_metro == 0)].copy()
+    # score: want HIGH pop and LOW income -> rank
+    periph["desert_score"] = (
+        (periph.population - periph.population.mean()) / periph.population.std()
+        - (periph.median_income - periph.median_income.mean()) / periph.median_income.std()
+    )
+    desert_ids = list(
+        periph.sort_values(["desert_score", "node_id"], ascending=[False, True])
+        .head(N_DESERTS).node_id
+    )
+    nodes["is_desert_param"] = nodes["node_id"].isin(desert_ids).astype(int)
+    # push deserts to be genuinely high-pop & low-income (strengthen the signal)
+    for did in desert_ids:
+        i = nodes.index[nodes.node_id == did][0]
+        nodes.at[i, "population"] = int(min(30000, nodes.at[i, "population"] + 8000))
+        nodes.at[i, "median_income"] = int(max(24000, nodes.at[i, "median_income"] - 14000))
+
+    # Over-served wealthy low-pop near-metro nodes (for the equity contrast)
+    near_metro = nodes[(nodes.has_metro == 1) & (nodes.dist_cbd > 1.2)].copy()
+    near_metro["over_score"] = (
+        (near_metro.median_income - near_metro.median_income.mean()) / near_metro.median_income.std()
+        - (near_metro.population - near_metro.population.mean()) / near_metro.population.std()
+    )
+    overserved_ids = list(
+        near_metro.sort_values(["over_score", "node_id"], ascending=[False, True])
+        .head(N_OVERSERVED).node_id
+    )
+    nodes["is_overserved_param"] = nodes["node_id"].isin(overserved_ids).astype(int)
+    for oid in overserved_ids:
+        i = nodes.index[nodes.node_id == oid][0]
+        nodes.at[i, "median_income"] = int(min(210000, nodes.at[i, "median_income"] + 18000))
+        nodes.at[i, "population"] = int(max(800, nodes.at[i, "population"] - 2500))
+
+    # ------------------------------------------------------------------- BUS
+    # Dense mesh: connect spatially-adjacent neighborhoods (k nearest), with
+    # service level scaled by income (low-income -> fewer buses) and deserts thin.
+    bus_edges: list[dict] = []
+    bus_keys: set[tuple[str, str]] = set()
+    income_arr = nodes.set_index("node_id")["median_income"]
+    inc_min, inc_max = income_arr.min(), income_arr.max()
+
+    def inc_norm(p):
+        return float((income_arr[p] - inc_min) / (inc_max - inc_min))
+
+    desert_set = set(desert_ids)
+
+    def k_nearest(node, k, pool=None):
+        pool = pool or ids
+        cand = sorted(
+            ((dist(node, p), p) for p in pool if p != node),
+            key=lambda t: (round(t[0], 6), t[1]),
+        )
+        return [p for _, p in cand[:k]]
+
+    bus_route_idx = 1
+
+    def add_bus(a, b, route_id):
+        if a == b:
+            return
+        key = (a, b) if a < b else (b, a)
+        if key in bus_keys:
+            return
+        bus_keys.add(key)
+        d = dist(a, b)
+        # service level: richer endpoints get more frequent service; deserts thin
+        avg_inc = (inc_norm(a) + inc_norm(b)) / 2
+        desert_factor = 0.40 if (a in desert_set or b in desert_set) else 1.0
+        freq = BUS_FREQ[0] + (BUS_FREQ[1] - BUS_FREQ[0]) * (
+            INCOME_PENALTY * avg_inc + (1 - INCOME_PENALTY) * rng.random()
+        )
+        freq = float(np.clip(freq * desert_factor, 1.5, BUS_FREQ[1]))
+        cap = int(np.clip(
+            rng.integers(*BUS_CAP) * (0.6 + 0.8 * avg_inc) * desert_factor,
+            120, BUS_CAP[1]))
+        # low-income routes are also slightly slower (older, more circuitous)
+        slow = 1.0 + 0.30 * (1 - avg_inc) + (0.20 if desert_factor < 1 else 0.0)
+        ttime = d * BUS_TIME_PER_UNIT * slow * rng.uniform(0.95, 1.20) + 1.5
+        bus_edges.append({
+            "a": key[0], "b": key[1], "line": route_id,
+            "travel_time_min": round(ttime, 1),
+            "frequency_per_hr": round(freq, 1),
+            "capacity": cap,
+        })
+
+    # local mesh: each neighborhood to its nearest neighbors. Lower-income areas
+    # get FEWER bus links (k smaller) -> thinner coverage, independent of pop.
+    for p in ids:
+        kbase = 4
+        # income reduces connectivity: poorest get k=2, richest k=5
+        k = int(round(2 + 3 * inc_norm(p)))
+        if p in desert_set:
+            k = 2
+        k = max(2, min(5, k))
+        for q in k_nearest(p, max(kbase, k))[:k]:
+            add_bus(p, q, f"B{bus_route_idx:03d}")
+            bus_route_idx += 1
+
+    # FEEDER routes: every non-metro neighborhood gets a bus to its nearest metro
+    # station (brings outer areas to the rail) -- but deserts get a LONG feeder
+    # (their nearest metro is far) which we keep, modeling poor access.
+    metro_list = sorted(metro_nodes)
+    for p in ids:
+        if p in metro_nodes:
+            continue
+        nearest_metro = min(metro_list, key=lambda m: (round(dist(p, m), 6), m))
+        add_bus(p, nearest_metro, f"F{bus_route_idx:03d}")
+        bus_route_idx += 1
+
+    # ---- ensure the MISSING LINK: isolate the East wedge into a spoke-only ---
+    # peninsula. We cut ALL bus links from East-wedge nodes to their two
+    # neighbouring wedges (NorthEast and SouthEast), and keep the inner-ring and
+    # outer-arc gaps on the East/South side. The result: every trip from East to
+    # the South side of the city must detour inward down the East radial metro
+    # spoke, through the CBD interchange, and back out -- a long way round.
+    # Adding ONE crosstown edge (East <-> SouthEast/South) collapses that detour.
+    dist_map = nodes.set_index("node_id")["dist_cbd"]
+    district_map = nodes.set_index("node_id")["district"]
+    ISOLATE = WEDGE_EAST
+    NEIGHBORS = {"NorthEast", "SouthEast"}
+
+    def crosses_cut(p, q):
+        dp, dq = district_map[p], district_map[q]
+        return (dp == ISOLATE and dq in NEIGHBORS) or (dq == ISOLATE and dp in NEIGHBORS)
+
+    bus_edges = [e for e in bus_edges if not crosses_cut(e["a"], e["b"])]
+    bus_keys = {(e["a"], e["b"]) for e in bus_edges}
+    # the inner-ring metro must also not bridge East to its neighbours
+    metro_edges = [e for e in metro_edges if not crosses_cut(e["a"], e["b"])]
+
+    # repair: cutting cross-wedge links can orphan an East node. Reconnect any
+    # now-isolated East node to its nearest East-wedge OR CBD neighbour (never
+    # across the cut), so East stays a connected spoke-only peninsula.
+    incident = set()
+    for e in bus_edges:
+        incident.update([e["a"], e["b"]])
+    incident.update(metro_nodes)
+    east_ids = [p for p in ids if district_map[p] == ISOLATE]
+    inward_pool = [p for p in ids if district_map[p] in (ISOLATE, "CBD")]
+    for p in east_ids:
+        if p in incident:
+            continue
+        pool = [q for q in inward_pool if q != p]
+        parent = min(pool, key=lambda q: (round(dist(p, q), 6), q))
+        add_bus(p, parent, f"R{bus_route_idx:03d}")
+        bus_route_idx += 1
+        incident.add(p)
+    bus_keys = {(e["a"], e["b"]) for e in bus_edges}
+
+    # ----------------------------------------- BUILD METRO EDGE ATTRIBUTES
+    metro_rows = []
+    for e in metro_edges:
+        a, b = e["a"], e["b"]
+        d = dist(a, b)
+        freq = float(rng.integers(*METRO_FREQ))
+        cap = int(rng.integers(*METRO_CAP))
+        ttime = d * METRO_TIME_PER_UNIT * rng.uniform(0.9, 1.1) + 0.8
+        metro_rows.append({
+            "from_id": a, "to_id": b, "mode": "metro", "line": e["line"],
+            "travel_time_min": round(ttime, 1),
+            "frequency_per_hr": round(freq, 1),
+            "capacity": cap,
+        })
+
+    bus_rows = []
+    for e in bus_edges:
+        bus_rows.append({
+            "from_id": e["a"], "to_id": e["b"], "mode": "bus", "line": e["line"],
+            "travel_time_min": e["travel_time_min"],
+            "frequency_per_hr": e["frequency_per_hr"],
+            "capacity": e["capacity"],
+        })
+
+    edges = pd.DataFrame(metro_rows + bus_rows)
+
+    # bus route lines lookup (collapse the many tiny route ids into the table)
+    bus_line_ids = sorted({e["line"] for e in bus_edges})
+    for lid in bus_line_ids:
+        cnt = sum(1 for e in bus_edges if e["line"] == lid)
+        lines_rows.append({
+            "line_id": lid, "mode": "bus",
+            "kind": "feeder" if lid.startswith("F") else "local",
+            "label": f"Bus Route {lid}", "n_stations": cnt + 1,
+        })
+    lines = pd.DataFrame(lines_rows)
+
+    # ------------------------------------------------------------- FINALIZE
+    nodes["label"] = nodes["district"] + " " + nodes["node_id"].str[1:]
+    out_nodes = nodes[[
+        "node_id", "label", "district", "x", "y",
+        "population", "median_income", "jobs", "has_metro",
+    ]].copy()
+
+    out_nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+    lines.to_csv(HERE / "lines.csv", index=False)
+
+    n_metro = int((edges["mode"] == "metro").sum())
+    n_bus = int((edges["mode"] == "bus").sum())
+    print(f"transit-multimodal: {len(out_nodes)} neighborhoods, "
+          f"{len(edges)} edges ({n_metro} metro + {n_bus} bus), "
+          f"{len(lines)} lines, {out_nodes.has_metro.sum()} metro-served nodes.")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/transit-multimodal/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `transit-multimodal` project network (R)
+#' @description
+#'
+#' Reads the CSVs in this folder and builds an undirected, weighted, multimodal
+#' igraph object: neighborhoods are nodes; edges are transit links in two modes
+#' (`metro` and `bus`). The same neighborhood pair can carry both a metro and a
+#' bus link, so the graph is a multiplex with parallel edges. The edge weight is
+#' `capacity` (riders/hr). Run it straight (`Rscript load.R`) for a quick
+#' summary, or `source()` it and call `load_transit()` in your own script.
+#' `load_lines()` returns the line/route lookup table.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "transit-multimodal")
+
+#' Load the node table (one row per neighborhood).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per transit link: metro or bus).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the line/route lookup table (join onto edges by `line`).
+load_lines <- function() {
+  read.csv(file.path(.dir(), "lines.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the undirected, weighted, multimodal transit graph.
+#'
+#' Edges are weighted by `capacity` (riders/hr). The `mode` edge attribute is
+#' either `"metro"` or `"bus"`; the same neighborhood pair may appear as both
+#' (parallel edges). Filter edges to analyze a single mode, or collapse with
+#' `simplify(g, edge.attr.comb = list(weight = "sum"))`.
+load_transit <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = FALSE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$capacity
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n\U0001F687 transit-multimodal (R)\n")
+  cat("   Undirected multimodal transit; neighborhoods linked by metro & bus.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_transit(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d neighborhoods and %d edges (%d metro + %d bus).\n",
+              nrow(nodes), nrow(edges),
+              sum(edges$mode == "metro"), sum(edges$mode == "bus")))
+  cat(sprintf("\U0001F517 Directed: %s | metro-served neighborhoods: %d | total seat capacity: %s riders/hr\n",
+              is_directed(g), sum(nodes$has_metro),
+              format(sum(edges$capacity), big.mark = ",")))
+  cat("\U0001F389 Graph ready. Object `g` is an undirected, weighted, multimodal igraph.\n")
+}
+```
+
+---
+
+## `data/projects/transit-multimodal/load.py`
+
+```python
+"""Load the `transit-multimodal` project network (Python).
+
+Reads the CSVs in this folder and builds an undirected, weighted, multimodal
+python-igraph object: neighborhoods are nodes; edges are transit links in two
+modes (``metro`` and ``bus``). Because the same neighborhood pair can carry both
+a metro and a bus link, the graph is a multiplex with parallel edges. The edge
+weight is ``capacity`` (riders/hr). Run it straight (``python load.py``) for a
+quick summary, or import ``load_transit()`` / ``load_lines()`` into your script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per neighborhood."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per transit link (metro or bus)."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_lines() -> pd.DataFrame:
+    """Line/route lookup table (join onto edges by ``line``)."""
+    return pd.read_csv(HERE / "lines.csv")
+
+
+def load_transit(nodes: pd.DataFrame | None = None,
+                 edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the undirected, weighted, multimodal graph (weight = ``capacity``).
+
+    The same neighborhood pair may appear twice (a metro edge AND a bus edge) ->
+    parallel edges. The ``mode`` edge attribute distinguishes them. To analyze a
+    single mode, filter edges first; to collapse to one link per pair, use
+    ``g.simplify(combine_edges={'weight': 'sum'})``.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=False, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["capacity"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n🚇 transit-multimodal (Python)")
+    print("   Undirected multimodal transit; neighborhoods linked by metro & bus.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_transit(nodes, edges)
+
+    modes = edges["mode"].value_counts()
+    print(f"✅ Loaded {len(nodes)} neighborhoods and {len(edges)} edges "
+          f"({modes.get('metro', 0)} metro + {modes.get('bus', 0)} bus).")
+    print(f"🔗 Directed: {g.is_directed()} | metro-served neighborhoods: "
+          f"{int(nodes['has_metro'].sum())} | total seat capacity: "
+          f"{edges['capacity'].sum():,} riders/hr")
+    print("🎉 Graph ready. Object `g` is an undirected, weighted, multimodal igraph.")
 ```
 
 ---

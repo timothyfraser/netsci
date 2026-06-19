@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-19 10:41 UTC_
+_Auto-generated NotebookLM source · 2026-06-19 23:19 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -3501,6 +3501,9 @@ Campus Contact (300 nodes)
 Open\-Source Deps (400 nodes)
 Trade · Commodity (140 nodes)
 Reorg Comms (250 nodes)
+Satellite Constellation (298 nodes)
+Drone Components (183 nodes)
+Transit · Multimodal (152 nodes)
 
 
 ⬆ Upload CSV
@@ -3603,6 +3606,9 @@ Campus Contact (300 nodes)
 Open\-Source Deps (400 nodes)
 Trade · Commodity (140 nodes)
 Reorg Comms (250 nodes)
+Satellite Constellation (298 nodes)
+Drone Components (183 nodes)
+Transit · Multimodal (152 nodes)
 
 
 ⬆ Upload CSV
@@ -4970,6 +4976,9 @@ WASM virtual filesystem when you pick a sample from the loader dropdown.
 | `opensource-deps` | 400 | 2,251 | **Project dataset.** Package dependency graph, weighted by `import_count`. |
 | `trade-commodity` | 140 | 1,210 | **Project dataset.** Country-to-country commodity trade across a shock (`period`), weighted by `tonnes`. |
 | `reorg-comms` | 250 | 7,926 | **Project dataset.** Corporate messaging across `before`/`during`/`after` a reorg, weighted by `message_count`. |
+| `satellite-constellation` | 298 | 733 | **Project dataset.** Multi-operator LEO satellites + ground stations, weighted by `capacity_gbps`; `link_type` distinguishes ISL vs feeder. |
+| `drone-components` | 183 | 617 | **Project dataset.** Directed drone component/software dependency graph, weighted by `coupling_strength`. |
+| `transit-multimodal` | 152 | 384 | **Project dataset.** Undirected bus + metro multiplex (`mode`), weighted by `capacity`; ships a `lines.csv` lookup. |
 
 All `*-project` datasets above are mirrored from `data/projects/<name>/` by
 `data/projects/_sync_to_playground.py`.
