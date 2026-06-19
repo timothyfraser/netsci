@@ -1,10 +1,10 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-16 05:37 UTC_
+_Auto-generated NotebookLM source · 2026-06-19 02:55 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
-**71 files included.**
+**81 files included.**
 
 ---
 
@@ -8748,6 +8748,1050 @@ for the one Python-only capability, not a wholesale rewrite.
   value can differ from Python's in the last digits.
 
 Everything else is parallel.
+
+---
+
+## `data/projects/README.md`
+
+# Project datasets
+
+Larger, project-grade synthetic networks for SYSEN 5470 **project case studies**.
+Each is bigger and richer than the lab datasets (100–500+ nodes), uniformly
+documented, and ready to load in R, Python, or the in-browser playgrounds.
+
+Each dataset folder contains:
+
+| File | What it is |
+|---|---|
+| `nodes.csv` | The node list (one row per node; a `kind` column when the graph is bipartite/multimodal). |
+| `edges.csv` | The edge list (`from`/`to` + weight columns; a `day`/`hour`/`period` column when temporal). |
+| `*.csv` (extra) | Optional lookup tables (e.g. `zones.csv`). |
+| `README.md` | At-a-glance facts + a **codebook** table for every file. |
+| `load.R` / `load.py` | Lightweight loaders that build an `igraph` (R) / `networkx`-or-`igraph` (Python) object. |
+| `_generate.py` | The deterministic generator (run it to reproduce the CSVs). |
+
+## Available datasets
+
+| Dataset | Nodes | Edges | Directed | Weighted | Bipartite | Temporal | One-line |
+|---|---:|---:|:--:|:--:|:--:|:--:|---|
+| [`amazon-last-mile`](amazon-last-mile/) | 313 | 2,142 | ✓ | ✓ | — | ✓ | A week of package flow: hubs → stations → delivery zones. |
+| [`uber-manhattan`](uber-manhattan/) | 370 | 3,000 | — | ✓ | ✓ | ✓ | A day of driver↔rider ride-matching across downtown Manhattan. |
+
+*More datasets are on the way (semiconductor & aerospace supply chains, mutual-aid
+during a disaster, financial contagion, airline delays, power grid, and more).*
+
+## How to use them
+
+**In R**
+
+```bash
+Rscript data/projects/amazon-last-mile/load.R
+```
+
+```r
+source("data/projects/amazon-last-mile/load.R")
+g <- load_amazon()      # a directed, weighted igraph object
+```
+
+**In Python**
+
+```bash
+python data/projects/amazon-last-mile/load.py
+```
+
+```python
+import sys; sys.path.insert(0, "data/projects/amazon-last-mile")
+from load import load_amazon
+g = load_amazon()       # a directed, weighted python-igraph object
+```
+
+**In the browser playground** — open the
+[R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground and pick
+the dataset from the **▾ Load sample** menu (under *Project datasets*).
+
+## A note on the data
+
+Every dataset is **synthetic but not random**. Each has planted, realistic
+structure — usually *several* overlapping patterns — that reward genuine analysis.
+The patterns are intentionally undocumented: finding and explaining them is the
+project. "Bigger places have more activity" is where you start, not where you stop.
+
+## Reproducing / contributing
+
+Each `_generate.py` is deterministic (fixed seed). After regenerating any dataset,
+mirror the CSVs into the playground's served folder:
+
+```bash
+python data/projects/<name>/_generate.py
+python data/projects/_sync_to_playground.py
+```
+
+The authoring standard (folder layout, README + codebook format, loader
+templates, and the "planted story" design rules) lives in the
+`netsci-dataset-builder` skill under `.claude/skills/`.
+
+---
+
+## `data/projects/_sync_to_playground.py`
+
+```python
+"""Mirror project-dataset CSVs into the playground's served data folder.
+
+The canonical datasets live in `data/projects/<name>/` (browsable on GitHub).
+GitHub Pages only serves `docs/`, so the in-browser playgrounds fetch their
+samples from `docs/playground-data/`. This script copies each dataset's CSVs
+there with a flat, prefixed name (`<name>-<file>.csv`) matching the existing
+`karate-nodes.csv` convention, so `SAMPLE_CONFIGS` in playground-r.html /
+playground-py.html can fetch them.
+
+Run after (re)generating any dataset:
+    python data/projects/_sync_to_playground.py
+"""
+from __future__ import annotations
+
+import shutil
+from pathlib import Path
+
+PROJECTS = Path(__file__).resolve().parent
+DEST = PROJECTS.parent.parent / "docs" / "playground-data"
+
+
+def main() -> None:
+    DEST.mkdir(parents=True, exist_ok=True)
+    n = 0
+    for ds in sorted(p for p in PROJECTS.iterdir() if p.is_dir()):
+        for csv in sorted(ds.glob("*.csv")):
+            target = DEST / f"{ds.name}-{csv.name}"
+            shutil.copyfile(csv, target)
+            print(f"  {csv.relative_to(PROJECTS)} -> playground-data/{target.name}")
+            n += 1
+    print(f"synced {n} CSV file(s) into {DEST}")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/amazon-last-mile/README.md`
+
+# amazon-last-mile
+
+*One week of package flow through a fictional metro's last-mile delivery network:
+fulfillment hubs → delivery stations → neighborhood zones.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Directed (package flow: hub → station → zone) |
+| **Weights** | Weighted (`packages` per edge; `on_time_rate` quality field) |
+| **Modality** | Multimodal — 3 node kinds (`hub`, `station`, `zone`) |
+| **Temporal** | Yes — one row per (origin, destination, **day** 1–7) |
+| **Nodes** | 313 (4 hubs + 24 stations + 285 zones) |
+| **Edges** | 2,142 (147 line-haul + 1,995 last-mile) |
+| **Files** | `nodes.csv`, `edges.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+"Cascadia Logistics" runs a metro delivery operation. Bulk freight moves overnight
+from **fulfillment hubs** to local **delivery stations** (the *line-haul* leg), then
+vans fan out from each station to the **neighborhood zones** it serves (the
+*last-mile* leg). Every delivery edge carries a package count and an on-time
+delivery rate, recorded daily across one week. Zones carry demographic attributes
+(median income, population, Prime-membership rate); stations and hubs carry
+throughput capacity.
+
+This is a flow-and-criticality network with a temporal dimension. It rewards
+students who look past raw volume. Some questions to chew on:
+
+- Who actually bears delivery risk? Is on-time performance explained by distance,
+  or by *something about the neighborhoods themselves*?
+- Is any single station carrying more than its share of the network — and what
+  happens to it under stress?
+- The week is not uniform. Does the network behave the same on every day, or does
+  a demand surge expose a weak point?
+- Does the *structure* of who-serves-whom stay fixed across the week, or does it
+  change partway through?
+- If you had to harden this system against a one-day outage, which node would you
+  protect first — and would degree, betweenness, or load tell you the same answer?
+
+> **Note.** The interesting findings here are deliberately *not* documented. "Busier
+> zones get more packages" is the starting point, not a finding. Push past it.
+
+## `nodes.csv`
+
+One row per node. Hub/station rows leave the zone-only demographic columns blank;
+zone rows leave `capacity_pkgs` blank.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique key. `H##` hub, `S##` station, `Z###` zone. Referenced by edges. | character | `H03`, `S14`, `Z001` |
+| `kind` | Node kind | Tier of the network this node sits in. | character | `hub`, `station`, `zone` |
+| `label` | Display name | Human-readable label. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Cascadia FC C`, `DS-14`, `Zone 001` |
+| `x` | X coordinate | Horizontal position on a 0–100 metro grid. | double | `21.59`, `69.18` |
+| `y` | Y coordinate | Vertical position on a 0–100 metro grid. | double | `83.29`, `40.85` |
+| `region` | Region | Metro quadrant the node falls in. | character | `North`, `South`, `East`, `West` |
+| `median_income` | Median household income | Zone median income in USD (blank for hubs/stations). | integer | `79554`, `41220` |
+| `population` | Population | Residents served by the zone (blank for hubs/stations). | integer | `7665`, `2310` |
+| `prime_rate` | Prime membership rate | Fraction of the zone that are Prime members (blank for hubs/stations). | double | `0.39`, `0.71` |
+| `capacity_pkgs` | Daily package capacity | Nominal throughput capacity (blank for zones). | integer | `50264`, `2740` |
+
+## `edges.csv`
+
+One row per (origin, destination, day). Directed. `line_haul` rows have no
+`on_time_rate` (it is a quality measure of last-mile delivery only).
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | Origin node ID | Sending node (`H##` for line-haul, `S##` for last-mile). | character | `H03`, `S08` |
+| `to_id` | Destination node ID | Receiving node (`S##` for line-haul, `Z###` for last-mile). | character | `S01`, `Z002` |
+| `day` | Day of week | 1 = Monday … 7 = Sunday. | integer | `1`, `6` |
+| `packages` | Packages | Number of packages moved on that edge that day (the edge weight). | integer | `3827`, `131` |
+| `on_time_rate` | On-time delivery rate | Share of last-mile packages delivered on time (blank for line-haul). | double | `0.865`, `0.724` |
+| `distance_km` | Distance | Road distance between the two nodes, kilometers. | double | `15.79`, `9.29` |
+| `service` | Service type | `line_haul`, or last-mile `standard` / `same_day`. | character | `line_haul`, `standard`, `same_day` |
+
+## Load it
+
+```bash
+Rscript data/projects/amazon-last-mile/load.R     # R    (igraph)
+python  data/projects/amazon-last-mile/load.py     # Python (python-igraph)
+```
+
+Both build a directed, weighted `igraph` graph and print a one-screen summary. In
+the [R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**amazon-last-mile** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/amazon-last-mile>
+
+---
+
+## `data/projects/amazon-last-mile/_generate.py`
+
+```python
+"""Generate the `amazon-last-mile` project network (deterministic).
+
+A one-week last-mile delivery network for a fictional metro area "Cascadia":
+  - 4 fulfillment hubs        (kind = "hub")
+  - 24 delivery stations      (kind = "station")
+  - ~285 delivery zones       (kind = "zone")  -> ~313 nodes total
+
+Edges are directed package flows, one row per (origin, destination, day):
+  - line-haul   hub  -> station   (trucks moving bulk freight overnight)
+  - last-mile   station -> zone   (vans delivering to neighborhoods)
+weighted by `packages`, with a delivery-quality field `on_time_rate`.
+
+Design parameters (the only record of the planted structure):
+  - INCOME_PENALTY: on-time rate falls with zone income, *independent of
+    distance*; same-day eligibility tracks income too.
+  - OVERLOAD_STATION: one station is assigned far more zones than its
+    capacity; its on-time rate is depressed and degrades hardest on the
+    demand-spike day.
+  - SPIKE_DAY (day 6): a ~2x volume surge ("Prime Day").
+  - REASSIGN: a cluster of zones is moved from the overloaded station to a
+    neighbor starting on day 4 (a structural rewiring mid-week).
+
+Run:
+    python data/projects/amazon-last-mile/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+N_HUBS = 4
+N_STATIONS = 24
+N_ZONES = 285
+DAYS = list(range(1, 8))            # 1=Mon ... 7=Sun
+SPIKE_DAY = 6
+REGIONS = ["North", "South", "East", "West"]
+
+# --- planted parameters -----------------------------------------------------
+INCOME_PENALTY = 0.16     # max on-time reduction for the lowest-income zones
+OVERLOAD_IDX = 7          # which station (0-based) is silently over capacity
+OVERLOAD_PENALTY = 0.10   # on-time reduction at the overloaded station
+SPIKE_PENALTY = 0.07      # extra on-time reduction on the spike day
+REASSIGN_FROM = 7         # zones leave this station ...
+REASSIGN_TO = 8           # ... and join this one, starting day 4
+REASSIGN_DAY = 4
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # ----- hubs ------------------------------------------------------------
+    hub_xy = rng.uniform(15, 85, size=(N_HUBS, 2))
+    hubs = pd.DataFrame({
+        "node_id": [f"H{i:02d}" for i in range(1, N_HUBS + 1)],
+        "kind": "hub",
+        "label": [f"Cascadia FC {chr(65+i)}" for i in range(N_HUBS)],
+        "x": hub_xy[:, 0].round(2),
+        "y": hub_xy[:, 1].round(2),
+        "region": [REGIONS[i % 4] for i in range(N_HUBS)],
+        "median_income": pd.NA,
+        "population": pd.NA,
+        "prime_rate": pd.NA,
+        "capacity_pkgs": rng.integers(40000, 60000, N_HUBS),
+    })
+
+    # ----- stations --------------------------------------------------------
+    st_xy = rng.uniform(5, 95, size=(N_STATIONS, 2))
+    stations = pd.DataFrame({
+        "node_id": [f"S{i:02d}" for i in range(1, N_STATIONS + 1)],
+        "kind": "station",
+        "label": [f"DS-{i:02d}" for i in range(1, N_STATIONS + 1)],
+        "x": st_xy[:, 0].round(2),
+        "y": st_xy[:, 1].round(2),
+        "region": [REGIONS[int(y // 25.0001)] for y in st_xy[:, 1]],
+        "median_income": pd.NA,
+        "population": pd.NA,
+        "prime_rate": pd.NA,
+        # nominal daily capacity; the overloaded station gets the same cap but
+        # far more demand than the rest.
+        "capacity_pkgs": rng.integers(2200, 3200, N_STATIONS),
+    })
+
+    # ----- zones -----------------------------------------------------------
+    z_xy = rng.uniform(0, 100, size=(N_ZONES, 2))
+    # Income has a spatial gradient (richer to the west/north) PLUS noise, so
+    # income is not perfectly readable from location.
+    grad = 38000 + 520 * (100 - z_xy[:, 0]) + 300 * z_xy[:, 1]
+    income = np.clip(grad + rng.normal(0, 9000, N_ZONES), 22000, 165000)
+    income_norm = (income - income.min()) / (income.max() - income.min())
+    population = rng.integers(900, 9000, N_ZONES)
+    # Prime membership rises with income but is noisy.
+    prime_rate = np.clip(0.25 + 0.45 * income_norm + rng.normal(0, 0.07, N_ZONES), 0.05, 0.95)
+
+    zones = pd.DataFrame({
+        "node_id": [f"Z{i:03d}" for i in range(1, N_ZONES + 1)],
+        "kind": "zone",
+        "label": [f"Zone {i:03d}" for i in range(1, N_ZONES + 1)],
+        "x": z_xy[:, 0].round(2),
+        "y": z_xy[:, 1].round(2),
+        "region": [REGIONS[int(y // 25.0001)] for y in z_xy[:, 1]],
+        "median_income": income.round(0).astype(int),
+        "population": population,
+        "prime_rate": prime_rate.round(3),
+        "capacity_pkgs": pd.NA,
+    })
+
+    nodes = pd.concat([hubs, stations, zones], ignore_index=True)
+
+    # ----- assign each zone to a station -----------------------------------
+    # Nearest station, but the overloaded station "wins" any zone within a
+    # generous radius -> it ends up with far more zones than its peers.
+    st_pos = st_xy
+    assign = np.empty(N_ZONES, dtype=int)
+    for zi in range(N_ZONES):
+        d = np.hypot(st_pos[:, 0] - z_xy[zi, 0], st_pos[:, 1] - z_xy[zi, 1])
+        nearest = int(np.argmin(d))
+        if d[OVERLOAD_IDX] < d[nearest] + 22:   # greedy land-grab
+            nearest = OVERLOAD_IDX
+        assign[zi] = nearest
+
+    # zones to reassign to a neighbor partway through the week
+    overload_zones = np.where(assign == REASSIGN_FROM)[0]
+    reassigned = set(overload_zones[: max(1, len(overload_zones) // 3)].tolist())
+
+    # ----- hub feeding each station ----------------------------------------
+    hub_of_station = np.empty(N_STATIONS, dtype=int)
+    for si in range(N_STATIONS):
+        d = np.hypot(hub_xy[:, 0] - st_pos[si, 0], hub_xy[:, 1] - st_pos[si, 1])
+        hub_of_station[si] = int(np.argmin(d))
+
+    # ----- build edges -----------------------------------------------------
+    DOW_FACTOR = {1: 1.05, 2: 1.00, 3: 1.00, 4: 1.02, 5: 1.10, 6: 2.0, 7: 0.7}
+    last_mile_rows = []
+    for day in DAYS:
+        for zi in range(N_ZONES):
+            # which station serves this zone today?
+            st = assign[zi]
+            if zi in reassigned and day >= REASSIGN_DAY:
+                st = REASSIGN_TO
+
+            dist = float(np.hypot(st_pos[st, 0] - z_xy[zi, 0], st_pos[st, 1] - z_xy[zi, 1]))
+            base_demand = population[zi] * (0.012 + 0.05 * prime_rate[zi])
+            lam = base_demand * DOW_FACTOR[day]
+            pkgs = int(rng.poisson(max(lam, 1)))
+            if pkgs == 0:
+                continue
+
+            # on-time rate: distance hurts a little; LOW INCOME hurts a lot
+            # (independent of distance); overloaded station + spike day hurt.
+            ot = 0.985 - 0.0011 * dist - INCOME_PENALTY * (1 - income_norm[zi])
+            if st == OVERLOAD_IDX:
+                ot -= OVERLOAD_PENALTY
+            if day == SPIKE_DAY:
+                ot -= SPIKE_PENALTY
+                if st == OVERLOAD_IDX:
+                    ot -= 0.05      # the overloaded station buckles hardest
+            ot = float(np.clip(ot + rng.normal(0, 0.015), 0.40, 0.999))
+
+            # same-day service offered mainly where income & prime are high
+            same_day = (income_norm[zi] > 0.55 and prime_rate[zi] > 0.55)
+            service = "same_day" if same_day else "standard"
+
+            last_mile_rows.append({
+                "from_id": f"S{st+1:02d}",
+                "to_id": zones.at[zi, "node_id"],
+                "day": day,
+                "packages": pkgs,
+                "on_time_rate": round(ot, 3),
+                "distance_km": round(dist * 0.9, 2),
+                "service": service,
+            })
+
+    last_mile = pd.DataFrame(last_mile_rows)
+
+    # line-haul: hub -> station, weight = packages that station pushed that day
+    haul_rows = []
+    pushed = (last_mile.assign(st=last_mile["from_id"])
+              .groupby(["st", "day"])["packages"].sum().reset_index())
+    for _, r in pushed.iterrows():
+        si = int(r["st"][1:]) - 1
+        hub = hub_of_station[si]
+        haul_rows.append({
+            "from_id": f"H{hub+1:02d}",
+            "to_id": r["st"],
+            "day": int(r["day"]),
+            "packages": int(r["packages"]),
+            "on_time_rate": pd.NA,
+            "distance_km": round(float(np.hypot(
+                hub_xy[hub, 0] - st_pos[si, 0], hub_xy[hub, 1] - st_pos[si, 1])) * 0.9, 2),
+            "service": "line_haul",
+        })
+    haul = pd.DataFrame(haul_rows)
+
+    edges = pd.concat([haul, last_mile], ignore_index=True)
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+    print(f"amazon-last-mile: {len(nodes)} nodes "
+          f"({(nodes.kind=='hub').sum()} hubs + {(nodes.kind=='station').sum()} stations + "
+          f"{(nodes.kind=='zone').sum()} zones), {len(edges)} edges "
+          f"({len(haul)} line-haul + {len(last_mile)} last-mile).")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/amazon-last-mile/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `amazon-last-mile` project network (R)
+#' @description
+#'
+#' Reads the two CSVs in this folder and builds a directed, weighted igraph
+#' object: package flow through hubs -> stations -> zones over one week. Run it
+#' straight (`Rscript load.R`) for a quick summary, or `source()` it and call
+#' `load_amazon()` to get the graph in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "amazon-last-mile")
+
+#' Load the node table (one row per hub / station / zone).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per origin x destination x day).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the directed, weighted graph.
+#'
+#' Edges are weighted by `packages`. Because the data is temporal (a `day`
+#' column), an edge between the same pair appears up to 7 times; igraph keeps
+#' them as parallel edges, so filter to one `day` first if you want a simple
+#' graph.
+load_amazon <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = TRUE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$packages
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n📦 amazon-last-mile (R)\n")
+  cat("   Hubs -> stations -> zones; weighted by packages, daily for one week.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_amazon(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d nodes (%d hubs, %d stations, %d zones) and %d edges.\n",
+              nrow(nodes), sum(nodes$kind == "hub"),
+              sum(nodes$kind == "station"), sum(nodes$kind == "zone"), nrow(edges)))
+  cat(sprintf("🔗 Directed: %s | total packages moved: %s\n",
+              is_directed(g), format(sum(edges$packages), big.mark = ",")))
+  cat("🎉 Graph ready. Object `g` is a directed, weighted igraph.\n")
+}
+```
+
+---
+
+## `data/projects/amazon-last-mile/load.py`
+
+```python
+"""Load the `amazon-last-mile` project network (Python).
+
+Reads the two CSVs in this folder and builds a directed, weighted python-igraph
+object: package flow through hubs -> stations -> zones over one week. Run it
+straight (``python load.py``) for a quick summary, or import ``load_amazon()``
+into your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per hub / station / zone."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per origin x destination x day."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_amazon(nodes: pd.DataFrame | None = None,
+                edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the directed, weighted graph (edge weight = ``packages``).
+
+    The data is temporal (a ``day`` column), so an edge between the same pair of
+    nodes appears up to 7 times as parallel edges. Filter to one ``day`` first if
+    you want a simple graph.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=True, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["packages"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n📦 amazon-last-mile (Python)")
+    print("   Hubs -> stations -> zones; weighted by packages, daily for one week.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_amazon(nodes, edges)
+
+    kinds = nodes["kind"].value_counts()
+    print(f"✅ Loaded {len(nodes)} nodes "
+          f"({kinds.get('hub',0)} hubs, {kinds.get('station',0)} stations, "
+          f"{kinds.get('zone',0)} zones) and {len(edges)} edges.")
+    print(f"🔗 Directed: {g.is_directed()} | total packages moved: "
+          f"{edges['packages'].sum():,}")
+    print("🎉 Graph ready. Object `g` is a directed, weighted igraph.")
+```
+
+---
+
+## `data/projects/uber-manhattan/README.md`
+
+# uber-manhattan
+
+*One day of ride-matching in downtown Manhattan: which drivers got matched to
+which riders, where they were picked up and dropped off, and what each ride cost.*
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Undirected matches (a ride links a driver and a rider) |
+| **Weights** | Weighted (`fare`, `tip`, `wait_min`, `surge_mult`; also count of repeat rides) |
+| **Modality** | Bipartite — two node kinds (`driver`, `rider`); `zones.csv` is a lookup table |
+| **Temporal** | Yes — each ride has an `hour` (0–23) |
+| **Nodes** | 370 (120 drivers + 250 riders) |
+| **Edges** | 3,000 rides (driver–rider pairs may repeat → parallel edges) |
+| **Files** | `nodes.csv`, `edges.csv`, `zones.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+A bipartite **matching** network: one side is drivers, the other is riders, and an
+edge is a completed ride. Because a rider can ride with the same driver more than
+once, repeated pairs appear as parallel edges. Every ride records where it started
+and ended (zones on a downtown-Manhattan grid), the hour of day, how long the rider
+waited, the trip distance, the fare, the surge multiplier in effect, and the tip.
+The `zones.csv` lookup gives each zone a neighborhood, grid position, median income,
+and a nightlife flag.
+
+This is the natural home for **bipartite projection**, **matching/assignment**, and
+**inequality** questions. Some things worth investigating:
+
+- Project the bipartite graph onto drivers (two drivers linked if they shared a
+  rider) or onto zones. What communities fall out, and what do they mean?
+- Is service evenly distributed across the city? Look at wait times and match rates
+  by pickup zone — is what you see explained by demand, or by *something about the
+  zones*?
+- Earnings are never perfectly equal, but how unequal are they here, and is the
+  inequality random or structured? Who captures the most valuable trips?
+- Surge pricing moves in space and time. Where and when does it spike, and does it
+  change rider behavior (e.g., tipping)?
+- Are there rider–driver pairs that ride together far more than chance would
+  predict? What kind of trips are those?
+
+> **Note.** The findings are deliberately undocumented. "Busy zones have more rides"
+> is the starting point, not an answer. Look for the structure underneath.
+
+## `nodes.csv`
+
+One row per driver or rider. Driver-only columns are blank for riders and vice
+versa.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique key. `D###` driver, `R###` rider. Referenced by edges. | character | `D015`, `R012` |
+| `kind` | Node kind | Which side of the bipartite graph. | character | `driver`, `rider` |
+| `home_zone` | Home zone | Zone ID the actor is based in (joins to `zones.csv`). | character | `Z22`, `Z04` |
+| `vehicle_type` | Vehicle type | Driver's vehicle class (blank for riders). | character | `uberx`, `xl`, `black` |
+| `tenure_months` | Tenure (months) | How long the driver has been active (blank for riders). | integer | `75`, `13` |
+| `rating` | Star rating | Average rating, 1–5 (present for both sides). | double | `5.0`, `4.9` |
+| `income_bracket` | Income bracket | Rider's income band (blank for drivers). | character | `low`, `mid`, `high` |
+
+## `edges.csv`
+
+One row per ride. Undirected match between `driver_id` and `rider_id`.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `driver_id` | Driver ID | The driver on this ride (joins to `nodes.csv`). | character | `D015` |
+| `rider_id` | Rider ID | The rider on this ride (joins to `nodes.csv`). | character | `R012` |
+| `hour` | Hour of day | Local start hour, 0–23. | integer | `8`, `18`, `22` |
+| `pickup_zone` | Pickup zone | Zone the ride began in (joins to `zones.csv`; `ZJFK` = airport). | character | `Z23`, `ZJFK` |
+| `dropoff_zone` | Dropoff zone | Zone the ride ended in. | character | `Z04`, `ZJFK` |
+| `wait_min` | Wait (minutes) | Minutes the rider waited for pickup. | double | `4.7`, `8.9` |
+| `distance_km` | Distance | Trip distance, kilometers. | double | `6.92`, `21.4` |
+| `fare` | Fare | Trip fare in USD (the primary edge weight). | double | `16.03`, `48.20` |
+| `surge_mult` | Surge multiplier | Dynamic-pricing multiplier in effect (1.0 = no surge). | double | `1.0`, `1.9` |
+| `tip` | Tip | Tip in USD. | double | `4.61`, `0.0` |
+
+## `zones.csv`
+
+Lookup table for the downtown-Manhattan zone grid (one row per zone). Not a node
+list — join it onto the `home_zone` / `pickup_zone` / `dropoff_zone` fields.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `zone_id` | Zone ID | Unique zone key. `ZJFK` is the airport pseudo-zone. | character | `Z01`, `ZJFK` |
+| `name` | Zone name | Short label. | character | `FiDi`, `SoHo` |
+| `neighborhood` | Neighborhood | Full neighborhood name. | character | `Financial District`, `SoHo` |
+| `avenue` | Avenue index | West→east grid column. | integer | `3`, `1` |
+| `street` | Street index | South→north grid row. | integer | `1`, `8` |
+| `x` | X coordinate | Map x (≈ avenue, jittered). | double | `2.88`, `0.77` |
+| `y` | Y coordinate | Map y (≈ street, jittered). | double | `1.09`, `0.84` |
+| `median_income` | Median household income | Zone median income, USD (blank for the airport). | integer | `156437`, `41220` |
+| `nightlife` | Nightlife flag | 1 if a nightlife district, else 0. | integer | `0`, `1` |
+
+## Load it
+
+```bash
+Rscript data/projects/uber-manhattan/load.R     # R    (igraph, bipartite)
+python  data/projects/uber-manhattan/load.py     # Python (python-igraph, bipartite)
+```
+
+Both build a bipartite, weighted `igraph` graph (vertex `type`: rider = TRUE) and
+print a one-screen summary. In the
+[R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**uber-manhattan** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/uber-manhattan>
+
+---
+
+## `data/projects/uber-manhattan/_generate.py`
+
+```python
+"""Generate the `uber-manhattan` project network (deterministic).
+
+A bipartite ride-matching network for one day in downtown Manhattan:
+  - ~120 drivers   (kind = "driver")
+  - ~250 riders    (kind = "rider")   -> ~370 nodes total
+Edges are individual rides (driver served rider), so the same driver-rider pair
+can appear several times (parallel edges = repeat customers). Each ride carries
+pickup/dropoff zone, hour, wait time, distance, fare, surge multiplier, and tip.
+A companion `zones.csv` is the lookup table for the Manhattan zone grid.
+
+Design parameters (the only record of the planted structure):
+  - DESERT_PENALTY: pickups in low-income zones wait longer and are served less
+    (a spatial service gap that is NOT explained by demand).
+  - PRO_DRIVERS: a small clique of high-tenure drivers monopolize airport runs
+    and the high-fare long trips -> extreme earnings concentration.
+  - SURGE: evening surge concentrates in nightlife zones; tips fall as surge
+    rises (riders tip less when they feel gouged).
+  - LOYAL_PAIRS: a set of commuter rider-driver pairs ride together repeatedly
+    in the morning peak (a planted bipartite community).
+
+Run:
+    python data/projects/uber-manhattan/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+N_DRIVERS = 120
+N_RIDERS = 250
+N_RIDES = 3000
+
+# --- planted parameters -----------------------------------------------------
+N_PRO = 10            # pro drivers who corner the airport / long-haul market
+N_LOYAL_PAIRS = 28    # commuter rider-driver pairs that repeat
+DESERT_PENALTY = 6.5  # extra wait-minutes in the lowest-income pickup zones
+NIGHTLIFE = {"Lower East Side", "East Village", "West Village",
+             "Meatpacking", "Nolita"}
+
+# downtown-Manhattan zone grid: (name, neighborhood, avenue col, street row,
+# income tier 0..1). Income is a *tier*; dollars get jittered below.
+ZONE_DEFS = [
+    ("FiDi",          "Financial District", 3, 1, 0.85),
+    ("Battery Park",  "Battery Park City",  1, 1, 0.90),
+    ("Tribeca",       "Tribeca",            2, 2, 0.97),
+    ("Civic Center",  "Civic Center",       4, 2, 0.55),
+    ("Chinatown",     "Chinatown",          5, 3, 0.28),
+    ("Two Bridges",   "Two Bridges",        6, 2, 0.22),
+    ("Lower East Side", "Lower East Side",  6, 4, 0.30),
+    ("SoHo",          "SoHo",               3, 4, 0.92),
+    ("Little Italy",  "Little Italy",       4, 4, 0.60),
+    ("Nolita",        "Nolita",             5, 4, 0.78),
+    ("Hudson Square", "Hudson Square",      2, 5, 0.80),
+    ("Greenwich Vlg", "Greenwich Village",  3, 6, 0.88),
+    ("West Village",  "West Village",       2, 6, 0.95),
+    ("East Village",  "East Village",       6, 6, 0.45),
+    ("NoHo",          "NoHo",               4, 6, 0.82),
+    ("Bowery",        "Bowery",             5, 5, 0.50),
+    ("Meatpacking",   "Meatpacking",        1, 7, 0.93),
+    ("Chelsea",       "Chelsea",            2, 8, 0.84),
+    ("Flatiron",      "Flatiron",           4, 8, 0.86),
+    ("Union Square",  "Union Square",       4, 7, 0.80),
+    ("Gramercy",      "Gramercy",           5, 8, 0.83),
+    ("Kips Bay",      "Kips Bay",           6, 8, 0.62),
+    ("Murray Hill",   "Murray Hill",        6, 9, 0.74),
+    ("Stuy Town",     "Stuyvesant Town",    7, 7, 0.58),
+]
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    # ----- zones -----------------------------------------------------------
+    zrows = []
+    for i, (name, nbhd, ave, st, tier) in enumerate(ZONE_DEFS, start=1):
+        income = int(np.clip(35000 + tier * 140000 + rng.normal(0, 8000), 22000, 220000))
+        zrows.append({
+            "zone_id": f"Z{i:02d}", "name": name, "neighborhood": nbhd,
+            "avenue": ave, "street": st,
+            "x": round(ave * 1.0 + rng.normal(0, 0.12), 2),
+            "y": round(st * 1.0 + rng.normal(0, 0.12), 2),
+            "median_income": income,
+            "nightlife": int(nbhd in NIGHTLIFE),
+        })
+    # airport pseudo-zone, far to the southeast
+    zrows.append({"zone_id": "ZJFK", "name": "JFK Airport", "neighborhood": "JFK Airport",
+                  "avenue": 12, "street": -6, "x": 14.0, "y": -6.0,
+                  "median_income": pd.NA, "nightlife": 0})
+    zones = pd.DataFrame(zrows)
+    zpos = {r.zone_id: (r.x, r.y) for r in zones.itertuples()}
+    z_ids = [z for z in zones.zone_id if z != "ZJFK"]
+    z_income = {r.zone_id: r.median_income for r in zones.itertuples()}
+    inc_vals = np.array([z_income[z] for z in z_ids], dtype=float)
+    inc_norm = {z: (z_income[z] - inc_vals.min()) / (inc_vals.max() - inc_vals.min())
+                for z in z_ids}
+    nightlife_z = set(zones.loc[zones.nightlife == 1, "zone_id"])
+
+    # ----- drivers ---------------------------------------------------------
+    veh = rng.choice(["uberx", "xl", "black"], size=N_DRIVERS, p=[0.72, 0.18, 0.10])
+    tenure = rng.integers(1, 84, N_DRIVERS)
+    # pros = the 10 longest-tenured; bump them to premium vehicles.
+    pro_idx = np.argsort(-tenure)[:N_PRO]
+    for p in pro_idx:
+        veh[p] = "black" if rng.random() < 0.6 else "xl"
+    drivers = pd.DataFrame({
+        "node_id": [f"D{i:03d}" for i in range(1, N_DRIVERS + 1)],
+        "kind": "driver",
+        "home_zone": rng.choice(z_ids, N_DRIVERS),
+        "vehicle_type": veh,
+        "tenure_months": tenure,
+        "rating": np.round(np.clip(rng.normal(4.85, 0.12, N_DRIVERS), 4.2, 5.0), 2),
+        "income_bracket": pd.NA,
+    })
+    pro_ids = set(drivers.node_id.iloc[pro_idx])
+
+    # ----- riders ----------------------------------------------------------
+    # riders live disproportionately in residential (mid/low income) zones
+    res_w = np.array([1.4 - 0.5 * inc_norm[z] for z in z_ids]); res_w /= res_w.sum()
+    rider_home = rng.choice(z_ids, N_RIDERS, p=res_w)
+    rbrack = []
+    for z in rider_home:
+        pr = inc_norm[z]
+        w = np.array([max(0.05, 0.6 - 0.5 * pr), 0.4, max(0.05, 0.05 + 0.5 * pr)])
+        rbrack.append(rng.choice(["low", "mid", "high"], p=w / w.sum()))
+    riders = pd.DataFrame({
+        "node_id": [f"R{i:03d}" for i in range(1, N_RIDERS + 1)],
+        "kind": "rider",
+        "home_zone": rider_home,
+        "vehicle_type": pd.NA,
+        "tenure_months": pd.NA,
+        "rating": np.round(np.clip(rng.normal(4.9, 0.1, N_RIDERS), 4.3, 5.0), 2),
+        "income_bracket": rbrack,
+    })
+    rider_ids = list(riders.node_id)
+    rider_home_map = dict(zip(riders.node_id, riders.home_zone))
+    rider_brack_map = dict(zip(riders.node_id, riders.income_bracket))
+
+    nodes = pd.concat([drivers, riders], ignore_index=True)
+
+    # planted loyal commuter pairs
+    loyal = list(zip(rng.choice(rider_ids, N_LOYAL_PAIRS, replace=False),
+                     rng.choice(list(drivers.node_id), N_LOYAL_PAIRS, replace=False)))
+
+    def dist(a, b):
+        (ax, ay), (bx, by) = zpos[a], zpos[b]
+        return float(np.hypot(ax - bx, ay - by))
+
+    # ----- rides -----------------------------------------------------------
+    rows = []
+    # each commuter pair rides together repeatedly across the (implied) week:
+    # 3 morning commutes out + 3 evening commutes home.
+    loyal_cycles = 3
+    n_loyal_rides = N_LOYAL_PAIRS * 2 * loyal_cycles
+    for rid, did in loyal:
+        work = rng.choice(z_ids)               # the rider's steady workplace zone
+        for _ in range(loyal_cycles):
+            for hour in (8, 18):               # morning out, evening back
+                pu = rider_home_map[rid] if hour == 8 else work
+                do = work if hour == 8 else rider_home_map[rid]
+                rows.append(_ride(rng, did, rid, hour, pu, do, dist, inc_norm,
+                                  nightlife_z, pro_ids, rider_brack_map, DESERT_PENALTY))
+
+    for _ in range(N_RIDES - n_loyal_rides):
+        rid = rng.choice(rider_ids)
+        roll = rng.random()
+        if roll < 0.08:                        # airport run
+            pu = rng.choice(z_ids); do = "ZJFK"
+            hour = int(rng.choice([5, 6, 7, 15, 16, 17]))
+            did = rng.choice(list(pro_ids)) if rng.random() < 0.8 else rng.choice(list(drivers.node_id))
+        elif roll < 0.34:                      # nightlife
+            pu = rng.choice(z_ids)
+            do = rng.choice(list(nightlife_z))
+            hour = int(rng.choice([19, 20, 21, 22, 23, 0, 1, 2]))
+            did = rng.choice(list(drivers.node_id))
+        else:                                  # ordinary daytime
+            pu = rider_home_map[rid] if rng.random() < 0.5 else rng.choice(z_ids)
+            do = rng.choice(z_ids)
+            hour = int(rng.integers(7, 20))
+            # pros skip low-income pickups; regulars take them (and wait longer)
+            if inc_norm[pu] < 0.4 and rng.random() < 0.85:
+                pool = [d for d in drivers.node_id if d not in pro_ids]
+                did = rng.choice(pool)
+            else:
+                did = rng.choice(list(drivers.node_id))
+        rows.append(_ride(rng, did, rid, hour, pu, do, dist, inc_norm,
+                          nightlife_z, pro_ids, rider_brack_map, DESERT_PENALTY))
+
+    edges = pd.DataFrame(rows)
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+    zones.to_csv(HERE / "zones.csv", index=False)
+    print(f"uber-manhattan: {len(nodes)} nodes ({N_DRIVERS} drivers + {N_RIDERS} riders), "
+          f"{len(edges)} rides, {len(zones)} zones.")
+
+
+def _ride(rng, did, rid, hour, pu, do, dist, inc_norm, nightlife_z, pro_ids,
+          rider_brack_map, desert_penalty):
+    d_km = dist(pu, do) * 0.9 + 0.4
+    evening = hour >= 19 or hour <= 2
+    surge = 1.0
+    if pu in nightlife_z and evening:
+        surge = round(float(np.clip(rng.normal(1.9, 0.4), 1.1, 3.2)), 2)
+    elif evening:
+        surge = round(float(np.clip(rng.normal(1.25, 0.2), 1.0, 2.0)), 2)
+    elif do == "ZJFK":
+        surge = round(float(np.clip(rng.normal(1.15, 0.15), 1.0, 1.8)), 2)
+
+    desert = desert_penalty * (1 - inc_norm.get(pu, 0.6)) if pu != "ZJFK" else 0.0
+    wait = float(np.clip(rng.normal(3.5, 1.0) + desert + (2.0 if evening else 0), 0.5, 28))
+
+    base = 2.6 + 1.85 * d_km * surge + (9.0 if do == "ZJFK" else 0.0)
+    fare = round(float(base + rng.normal(0, 1.2)), 2)
+    rb = rider_brack_map.get(rid, "mid")
+    rb_norm = {"low": 0.0, "mid": 0.5, "high": 1.0}[rb]
+    tip = round(float(max(0.0, fare * (0.16 + 0.10 * rb_norm - 0.09 * (surge - 1))
+                          + rng.normal(0, 0.6))), 2)
+    return {
+        "driver_id": did, "rider_id": rid, "hour": hour,
+        "pickup_zone": pu, "dropoff_zone": do,
+        "wait_min": round(wait, 1), "distance_km": round(d_km, 2),
+        "fare": fare, "surge_mult": surge, "tip": tip,
+    }
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/uber-manhattan/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `uber-manhattan` project network (R)
+#' @description
+#'
+#' Reads the CSVs in this folder and builds a bipartite, weighted igraph object:
+#' drivers on one side, riders on the other, edges are rides (weighted by fare).
+#' Run it straight (`Rscript load.R`) for a quick summary, or `source()` it and
+#' call `load_uber()` in your own script. `load_zones()` returns the zone lookup.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "uber-manhattan")
+
+#' Load the node table (drivers + riders).
+load_nodes <- function() read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+
+#' Load the edge table (one row per ride).
+load_edges <- function() read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+
+#' Load the zone lookup table (join onto pickup/dropoff/home zones).
+load_zones <- function() read.csv(file.path(.dir(), "zones.csv"), stringsAsFactors = FALSE)
+
+#' Build the bipartite, weighted graph.
+#'
+#' Edges are weighted by `fare`. The vertex attribute `type` is the igraph
+#' bipartite flag: TRUE for riders, FALSE for drivers. Repeat rider-driver pairs
+#' stay as parallel edges; collapse with `simplify(g, edge.attr.comb = "sum")`
+#' if you want a single weighted edge per pair.
+load_uber <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = FALSE, vertices = nodes)
+  igraph::V(g)$type <- igraph::V(g)$kind == "rider"
+  igraph::E(g)$weight <- igraph::E(g)$fare
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n🚕 uber-manhattan (R)\n")
+  cat("   Bipartite drivers <-> riders; edges are rides weighted by fare.\n\n")
+
+  nodes <- load_nodes(); edges <- load_edges(); g <- load_uber(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d nodes (%d drivers + %d riders) and %d rides.\n",
+              nrow(nodes), sum(nodes$kind == "driver"),
+              sum(nodes$kind == "rider"), nrow(edges)))
+  cat(sprintf("🔗 Bipartite: %s | total fares: $%s | total tips: $%s\n",
+              igraph::is_bipartite(g),
+              format(round(sum(edges$fare)), big.mark = ","),
+              format(round(sum(edges$tip)), big.mark = ",")))
+  cat("🎉 Graph ready. `g` is bipartite (V(g)$type: rider = TRUE), weighted by fare.\n")
+}
+```
+
+---
+
+## `data/projects/uber-manhattan/load.py`
+
+```python
+"""Load the `uber-manhattan` project network (Python).
+
+Reads the CSVs in this folder and builds a bipartite, weighted python-igraph
+object: drivers on one side, riders on the other, edges are rides (weighted by
+fare). Run it straight (``python load.py``) for a quick summary, or import
+``load_uber()`` / ``load_zones()`` into your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: drivers + riders."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per ride."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_zones() -> pd.DataFrame:
+    """Zone lookup table (join onto pickup/dropoff/home zones)."""
+    return pd.read_csv(HERE / "zones.csv")
+
+
+def load_uber(nodes: pd.DataFrame | None = None,
+              edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the bipartite, weighted graph (edge weight = ``fare``).
+
+    The vertex attribute ``type`` is the bipartite flag: True for riders, False
+    for drivers. Repeat rider-driver pairs stay as parallel edges; collapse with
+    ``g.simplify(combine_edges={'weight': 'sum'})`` for one edge per pair.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=False, vertices=nodes, use_vids=False)
+    g.vs["type"] = [k == "rider" for k in g.vs["kind"]]
+    g.es["weight"] = g.es["fare"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n🚕 uber-manhattan (Python)")
+    print("   Bipartite drivers <-> riders; edges are rides weighted by fare.\n")
+
+    nodes = load_nodes(); edges = load_edges(); g = load_uber(nodes, edges)
+    kinds = nodes["kind"].value_counts()
+    print(f"✅ Loaded {len(nodes)} nodes ({kinds.get('driver',0)} drivers + "
+          f"{kinds.get('rider',0)} riders) and {len(edges)} rides.")
+    print(f"🔗 Bipartite: {g.is_bipartite()} | total fares: "
+          f"${edges['fare'].sum():,.0f} | total tips: ${edges['tip'].sum():,.0f}")
+    print("🎉 Graph ready. `g` is bipartite (vs['type']: rider = True), weighted by fare.")
+```
 
 ---
 

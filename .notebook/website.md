@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-16 05:37 UTC_
+_Auto-generated NotebookLM source · 2026-06-19 02:55 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -878,6 +878,10 @@ A raw bike\-share network with 40 stations and hundreds of edges hides more than
 ⚠ Synthetic data — Boston\-flavored but not real Bluebikes records
 
 
+📦 Need a network for your project case study?
+Browse the project datasets on GitHub →
+
+
 📚 Readings for this case study →
 
 
@@ -1028,6 +1032,10 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify
 
 
 A network is not a picture of stuff connected to stuff — it's a deliberate choice about what counts as a node, what counts as a tie, and what direction information flows. This playground lets you construct networks from prose, see them as node\-link diagrams, adjacency matrices, and edge tables simultaneously, and compute structural properties as you build. The tool is for verification and computation. The thinking happens on your sketchpad.
+
+
+📦 Need a network for your project case study?
+Browse the project datasets on GitHub →
 
 
 📚 Readings for this case study →
@@ -1267,6 +1275,10 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure
 Explore how removing a single transit station reshapes the entire network — and why the most dangerous node isn't always the biggest one. Click any station to inspect; remove it and watch the metrics shift.
 
 
+📦 Need a network for your project case study?
+Browse the project datasets on GitHub →
+
+
 📚 Readings for this case study →
 
 
@@ -1437,6 +1449,10 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Predict
 
 
 Lakeside is a fictional city of 15 bikeshare stations. Planners are debating a network change. Use Monte Carlo simulation to test whether one proposed intervention *significantly* improves the network — or just happens to look good on one noisy dataset.
+
+
+📦 Need a network for your project case study?
+Browse the project datasets on GitHub →
 
 
 📚 Readings for this case study →
@@ -1682,6 +1698,10 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure
 A DSM is the adjacency matrix of a directed dependency graph. Trace cascading failures, then try to reorder the matrix into modular blocks by hand — and discover why clustering algorithms exist.
 
 
+📦 Need a network for your project case study?
+Browse the project datasets on GitHub →
+
+
 📚 Readings for this case study →
 
 
@@ -1865,6 +1885,10 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Predict
 
 
 Walk through every arithmetic step of a forward pass — first as a plain neural network, then as a graph neural network — on a four\-node supply chain so tiny you can check everything with a calculator.
+
+
+📦 Need a network for your project case study?
+Browse the project datasets on GitHub →
 
 
 📚 Readings for this case study →
@@ -2264,6 +2288,10 @@ SYSEN 5470 · Network Science · Case Study · Skill: Predict
 Explore how graph neural networks encode network structure as node embeddings, and how those embeddings help XGBoost predict which suppliers will experience disruptions — controlling for position in the supply network.
 
 
+📦 Need a network for your project case study?
+Browse the project datasets on GitHub →
+
+
 📚 Readings for this case study →
 
 
@@ -2463,6 +2491,10 @@ You have factory metadata in one table and shipments in another — but to answe
 ⚠ Synthetic supply\-chain data — illustrative, not from any real company
 
 
+📦 Need a network for your project case study?
+Browse the project datasets on GitHub →
+
+
 📚 Readings for this case study →
 
 
@@ -2623,6 +2655,10 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Infer
 
 
 Boston's Bluebikes program connects neighborhoods — but does ridership flow freely across income lines, or do high\-income neighborhoods mostly exchange riders with each other? Use permutation testing to find out whether the observed income pattern could arise by chance.
+
+
+📦 Need a network for your project case study?
+Browse the project datasets on GitHub →
 
 
 📚 Readings for this case study →
@@ -2828,6 +2864,10 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify
 You are an analyst studying evacuation flows during a Gulf hurricane. The full network has 40 parishes and hundreds of weighted flow edges — too big to wrangle on your laptop. Pick a sampling strategy, choose a sample size, and watch which features of the network survive. Some strategies preserve geographic coverage. Some preserve triangles. None preserve everything.
 
 
+📦 Need a network for your project case study?
+Browse the project datasets on GitHub →
+
+
 📚 Readings for this case study →
 
 
@@ -3013,6 +3053,10 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure
 
 
 Explore how goods flow from raw\-material suppliers to end customers — and discover why the busiest node in a supply chain is rarely the most critical one to protect.
+
+
+📦 Need a network for your project case study?
+Browse the project datasets on GitHub →
 
 
 📚 Readings for this case study →
@@ -3445,6 +3489,9 @@ Lakeside Bikeshare (15 nodes)
 Riverdale Metro (18 nodes)
 Supply Chain (16 factories)
 
+Amazon Last\-Mile (313 nodes)
+Uber Manhattan (370 nodes)
+
 
 ⬆ Upload CSV
 
@@ -3533,6 +3580,9 @@ Karate club (34 nodes)
 Lakeside Bikeshare (15 nodes)
 Riverdale Metro (18 nodes)
 Supply Chain (16 factories)
+
+Amazon Last\-Mile (313 nodes)
+Uber Manhattan (370 nodes)
 
 
 ⬆ Upload CSV
@@ -4419,6 +4469,10 @@ SYSEN 5470 · Assignments
 Every Monday at 9 a.m., you submit the same four things from the previous week — a sketch, a case\-study check, a code check, and your project case study. Rinse, repeat, three times. By the end, you'll have shipped three short reports applying network science to a problem you chose.
 
 
+📦 Need a network for your project case study?
+Browse the project datasets on GitHub →
+
+
 **Submission deadline**
 Every Monday at 9:00 a.m.
 
@@ -4884,6 +4938,8 @@ WASM virtual filesystem when you pick a sample from the loader dropdown.
 | `lakeside` | 15 | 19 | The 15-station Lakeside Bikeshare network from the **Counterfactual Monte Carlo** lab. Edges weighted by Q1 ridership. |
 | `riverdale` | 18 | 21 | The 18-station Riverdale Metro & Bus network from the **Centrality & Criticality** lab. Edges weighted by typical riders/day. |
 | `supply-chain` | 16 | 30 | The 16-factory supply chain from the **Network Joins** lab. Three tiers (Tier 1 final assembly, Tier 2 subassembly, Tier 3 raw). Volume-weighted shipment lanes. |
+| `amazon-last-mile` | 313 | 2,142 | **Project dataset.** One week of package flow, hubs → stations → zones. Directed, weighted (`packages`), temporal (`day`). Mirrored from `data/projects/amazon-last-mile/`. |
+| `uber-manhattan` | 370 | 3,000 | **Project dataset.** Bipartite drivers ↔ riders for one day downtown. Weighted by `fare`; ships a `zones.csv` lookup. Mirrored from `data/projects/uber-manhattan/`. |
 
 ## Columns
 
