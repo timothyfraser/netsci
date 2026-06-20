@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-20 01:23 UTC_
+_Auto-generated NotebookLM source · 2026-06-20 03:06 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -4158,13 +4158,17 @@ Item 4 · Project Case Study
 
 ### Your project code & report for this week's case study
 
-You pick **3 out of 11** case studies to do as project case studies (one per week). For each one you submit (a) a `project.R` or `project.py` that runs your full analysis on a network *you* chose, and (b) a 5-page-minimum report in your own words — that's five pages of *text*; figures and tables are encouraged but don't count toward the five. See the Project section below for the full spec.
+Each week you pick **one** of the 11 case studies and apply *its* technique to your project network — the network *you* chose. Over the three weeks that's **three case studies total, one per week**. You're strongly encouraged to keep the **same network all three weeks** (you'll come to know it inside-out); switch only if you really need to. For the week you submit (a) a `project.R` or `project.py` that runs your full analysis on that network, and (b) a 5-page-minimum report in your own words — that's five pages of *text*; figures and tables are encouraged but don't count toward the five. See the Project section below for the full spec.
 
 Project case studies
 
 The project is a big chunk of your grade. Over three weeks you'll
-pick **3 of the 11** case study methods, apply each
-one to a network you chose, and write a short report. The point
+pick **one network** you care about and stick with it: each
+week you apply a **different case-study technique** (one of the
+11) to that **same network** and write a short report — three
+techniques, three reports, one network you'll know inside-out. (You may
+switch networks between weeks if you really must, but staying with one is
+the point.) The point
 isn't to redo the example script with different data — it's to
 pose a meaningful question, justify your operationalization, run
 a defensible analysis, and report your results as quantitative

@@ -324,7 +324,9 @@ def build_assignments():
     for p in M["extras"]["projects"]:
         body = (
             f'Your weekly homework <em>is</em> the project — the analysis code plus your '
-            f'written report, on a network you chose. The full spec, the four-skill '
+            f'written report. Each week you apply <strong>one</strong> case-study technique '
+            f'to <strong>your one chosen network</strong> (ideally the same network all three '
+            f'weeks — switch only if you must). The full spec, the four-skill '
             f'rubric, the hard requirements, and a sample report all live on the '
             f'Assignments page of the course website.'
         )
