@@ -344,14 +344,14 @@
   .toast.show { opacity: 1; transform: translateY(0); }
   .toast.err { border-color: var(--node-7); color: var(--node-7); }
 
-  /* ===== Experimental block keyboard ===== */
+  /* ===== Experimental block keyboard (lean) ===== */
   .kbd {
     margin-top: 10px; border: 1px solid var(--border);
     border-radius: var(--radius-md); background: rgba(5,46,22,0.55);
     backdrop-filter: blur(8px); overflow: hidden;
   }
   .kbd-bar {
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    display: flex; align-items: center; gap: 8px;
     padding: 8px 10px; border-bottom: 1px solid var(--border-soft);
   }
   .kbd-bar .kbd-title {
@@ -363,32 +363,32 @@
     text-transform: uppercase; color: var(--black); background: var(--node-4);
     padding: 1px 7px; border-radius: 999px;
   }
-  .kbd-filter {
-    flex: 1; min-width: 110px; background: rgba(5,10,5,0.7); color: var(--white);
-    border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
-    padding: 6px 9px; font-family: var(--font-mono); font-size: 12px;
+  .kbd-toggle {
+    margin-left: auto; background: transparent; color: var(--green-bright);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 4px 11px; cursor: pointer; font-size: 13px;
   }
-  .kbd-filter:focus { outline: none; border-color: var(--green-bright); }
-  .kbd-step {
-    background: var(--green-bright); color: var(--black); border: none;
-    border-radius: var(--radius-sm); padding: 6px 11px; cursor: pointer;
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 0.06em;
+  /* controls: a cursor dpad + an edit cluster */
+  .kbd-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding: 10px 12px; }
+  .kbd-dpad { display: grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 36px); gap: 5px; }
+  .kbd-dpad .up { grid-area: 1 / 2; }
+  .kbd-dpad .left { grid-area: 2 / 1; }
+  .kbd-dpad .right { grid-area: 2 / 3; }
+  .kbd-dpad .down { grid-area: 3 / 2; }
+  .kbd-edit { display: flex; flex-wrap: wrap; gap: 6px; }
+  .kbd-controls button {
+    min-width: 40px; min-height: 36px;
+    background: rgba(5,46,22,0.7); color: var(--green-mint);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: var(--font-mono); font-size: 15px; cursor: pointer;
+    touch-action: manipulation;
   }
-  .kbd-cats { display: flex; gap: 6px; overflow-x: auto; padding: 8px 10px 2px;
-    -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
-  .kbd-cat {
-    flex: none; background: transparent; color: var(--grey);
-    border: 1px solid var(--border-soft); border-radius: 999px;
-    padding: 6px 12px; cursor: pointer; white-space: nowrap;
-    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em;
-  }
-  .kbd-cat.active { color: var(--black); background: var(--green-bright); border-color: var(--green-bright); }
+  .kbd-controls button:hover, .kbd-controls button:active { background: rgba(57,255,20,0.14); color: var(--white); border-color: var(--green-bright); }
   .kbd-hint {
-    padding: 6px 12px 0; font-family: var(--font-mono); font-size: 10px;
+    padding: 2px 12px 0; font-family: var(--font-mono); font-size: 10px;
     color: var(--node-4); letter-spacing: 0.04em;
   }
-  .kbd-chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 12px 14px; }
+  .kbd-chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 8px 12px 14px; }
   .kbd-chip {
     background: rgba(5,46,22,0.7); color: var(--green-mint);
     border: 1px solid var(--border); border-radius: 8px;
@@ -397,17 +397,6 @@
     transition: all 0.12s; touch-action: manipulation;
   }
   .kbd-chip:hover, .kbd-chip:active { background: rgba(57,255,20,0.14); color: var(--white); border-color: var(--green-bright); }
-  .kbd-chip.sug { border-color: var(--node-4); }
-  .kbd-chip .k-sub { display:block; font-size: 9.5px; color: var(--grey); margin-top: 3px; letter-spacing: 0.02em; }
-  .kbd-nav { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px 0; }
-  .kbd-nav button {
-    flex: none; min-width: 42px; min-height: 38px;
-    background: rgba(5,46,22,0.7); color: var(--green-mint);
-    border: 1px solid var(--border); border-radius: 8px;
-    font-family: var(--font-mono); font-size: 15px; cursor: pointer;
-    touch-action: manipulation;
-  }
-  .kbd-nav button:hover, .kbd-nav button:active { background: rgba(57,255,20,0.14); color: var(--white); border-color: var(--green-bright); }
 
   @media (max-width: 1100px) {
     /* On phones: pin the keyboard as a fixed, collapsible bottom sheet so it's
@@ -425,6 +414,7 @@
     #kbd.kbd-collapsed { max-height: 46px; overflow: hidden; }
     .kbd-bar { position: sticky; top: 0; background: rgba(8,22,12,0.97); z-index: 1; }
     .kbd-chip { font-size: 14px; min-height: 44px; }
+    .kbd-controls button { min-height: 42px; min-width: 42px; }
     /* leave room so page content can scroll clear of the fixed keyboard */
     body.has-fixed-kbd { padding-bottom: 46vh; }
     body.has-fixed-kbd.kbd-is-collapsed { padding-bottom: 64px; }
@@ -593,29 +583,28 @@
       </div>
       <textarea id="editor"></textarea>
 
-      <!-- ===== Experimental tap-to-code block keyboard ===== -->
+      <!-- ===== Experimental tap-to-code block keyboard (lean) ===== -->
       <div class="kbd" id="kbd">
         <div class="kbd-bar">
           <span class="kbd-title">⌨ Block keyboard</span>
           <span class="kbd-badge">experiment</span>
-          <input class="kbd-filter" id="kbd-filter" placeholder="type 1–3 letters to filter…" autocomplete="off" autocapitalize="off" spellcheck="false">
-          <button class="kbd-step" id="kbd-step" title="Jump to the next ⟨blank⟩">⇥ blank</button>
-          <button class="kbd-step" id="kbd-toggle" title="Hide / show the keyboard" aria-label="Hide or show the keyboard">▾</button>
+          <button class="kbd-toggle" id="kbd-toggle" title="Hide / show the keyboard" aria-label="Hide or show the keyboard">▾</button>
         </div>
-        <div class="kbd-nav" id="kbd-nav">
-          <button data-cmd="undo" title="Undo" aria-label="Undo">↶</button>
-          <button data-cmd="redo" title="Redo" aria-label="Redo">↷</button>
-          <button data-cmd="goCharLeft" title="Cursor left" aria-label="Cursor left">◀</button>
-          <button data-cmd="goCharRight" title="Cursor right" aria-label="Cursor right">▶</button>
-          <button data-cmd="goLineUp" title="Cursor up" aria-label="Cursor up">▲</button>
-          <button data-cmd="goLineDown" title="Cursor down" aria-label="Cursor down">▼</button>
-          <button data-cmd="goLineStart" title="Start of line" aria-label="Start of line">↤</button>
-          <button data-cmd="goLineEnd" title="End of line" aria-label="End of line">↦</button>
-          <button data-cmd="newline" title="New line" aria-label="New line">⏎</button>
-          <button data-cmd="del" title="Backspace" aria-label="Backspace">⌫</button>
+        <div class="kbd-controls">
+          <div class="kbd-dpad">
+            <button class="up"    data-cmd="goLineUp"    aria-label="Cursor up">▲</button>
+            <button class="left"  data-cmd="goCharLeft"  aria-label="Cursor left">◀</button>
+            <button class="right" data-cmd="goCharRight" aria-label="Cursor right">▶</button>
+            <button class="down"  data-cmd="goLineDown"  aria-label="Cursor down">▼</button>
+          </div>
+          <div class="kbd-edit">
+            <button data-cmd="undo"    title="Undo"      aria-label="Undo">↶</button>
+            <button data-cmd="redo"    title="Redo"      aria-label="Redo">↷</button>
+            <button data-cmd="newline" title="New line"  aria-label="New line">⏎</button>
+            <button data-cmd="del"     title="Backspace" aria-label="Backspace">⌫</button>
+          </div>
         </div>
-        <div class="kbd-cats" id="kbd-cats"></div>
-        <div class="kbd-hint" id="kbd-hint">Suggestions update as you build. Tap a block to drop it at the cursor; fill the ⟨blanks⟩.</div>
+        <div class="kbd-hint">Recommendations — tap to drop code at the cursor.</div>
         <div class="kbd-chips" id="kbd-chips"></div>
       </div>
     </div>
@@ -1223,108 +1212,45 @@ bootstrap();
   // over our block keyboard. Inserts/cursor moves work on the doc without focus.
   const onPhone = () => window.matchMedia('(max-width: 1100px)').matches;
 
-  const CAT_ORDER = ['Suggested','Yours','Load','Wrangle','Build','Measure','Community','Plot','Logic','Syms'];
+  // snippet vocabulary the recommendations draw from (not browsed directly)
   const CHIPS = {
-    Load: [
-      {l:'library()', s:'library(⟨pkg⟩)'},
-      {l:'read nodes', s:'nodes <- read.csv("⟨nodes.csv⟩")'},
-      {l:'read edges', s:'edges <- read.csv("⟨edges.csv⟩")'},
-      {l:'build graph', s:'g <- graph_from_data_frame(edges, vertices = nodes, directed = ⟨FALSE⟩)'},
-      {l:'head()', s:'head(⟨df⟩)'},
-      {l:'summary(g)', s:'summary(g)'},
-      {l:'str()', s:'str(⟨x⟩)'},
-    ],
     Wrangle: [
-      {l:'|>', s:' |>\n  '},
       {l:'filter', s:'filter(⟨condition⟩)'},
       {l:'mutate', s:'mutate(⟨new⟩ = ⟨expr⟩)'},
       {l:'group_by', s:'group_by(⟨col⟩)'},
       {l:'summarise', s:'summarise(⟨stat⟩ = ⟨fn⟩(⟨col⟩))'},
       {l:'arrange ↓', s:'arrange(desc(⟨col⟩))'},
-      {l:'select', s:'select(⟨cols⟩)'},
       {l:'count', s:'count(⟨col⟩)'},
       {l:'slice_max', s:'slice_max(⟨col⟩, n = ⟨10⟩)'},
-      {l:'left_join', s:'left_join(⟨other⟩, by = "⟨key⟩")'},
-      {l:'map_dbl', s:'map_dbl(⟨x⟩, ⟨f⟩)'},
-    ],
-    Build: [
-      {l:'graph_from_data_frame', s:'graph_from_data_frame(edges, vertices = nodes, directed = ⟨FALSE⟩)'},
-      {l:'as_tbl_graph', s:'as_tbl_graph(⟨g⟩)'},
-      {l:'V(g)', s:'V(g)'},
-      {l:'E(g)', s:'E(g)'},
-      {l:'vcount', s:'vcount(g)'},
-      {l:'ecount', s:'ecount(g)'},
-      {l:'V(g)$attr', s:'V(g)$⟨attr⟩'},
-      {l:'E(g)$weight', s:'E(g)$weight'},
-      {l:'is_directed', s:'is_directed(g)'},
-      {l:'simplify', s:'simplify(g)'},
+      {l:'select', s:'select(⟨cols⟩)'},
     ],
     Measure: [
       {l:'degree', s:'degree(g, mode = "all")'},
-      {l:'strength', s:'strength(g, weights = E(g)$weight)'},
       {l:'betweenness', s:'betweenness(g, weights = E(g)$weight)'},
-      {l:'closeness', s:'closeness(g)'},
-      {l:'eigen_centrality', s:'eigen_centrality(g)$vector'},
-      {l:'page_rank', s:'page_rank(g)$vector'},
-      {l:'distances', s:'distances(g)'},
-      {l:'mean_distance', s:'mean_distance(g)'},
-      {l:'components', s:'components(g)$csize'},
-      {l:'delete_vertices', s:'delete_vertices(g, ⟨"node"⟩)'},
     ],
     Community: [
       {l:'cluster_louvain', s:'cluster_louvain(g)'},
-      {l:'cluster_fast_greedy', s:'cluster_fast_greedy(g)'},
-      {l:'membership', s:'membership(⟨comm⟩)'},
-      {l:'modularity', s:'modularity(⟨comm⟩)'},
-      {l:'bipartite_projection', s:'bipartite_projection(g)'},
-      {l:'assortativity', s:'assortativity_nominal(g, types = ⟨factor⟩)'},
     ],
     Plot: [
       {l:'ggraph()', s:'ggraph(g, layout = "⟨fr⟩") +\n  '},
       {l:'+ edges', s:'geom_edge_link(alpha = 0.3) +\n  '},
       {l:'+ nodes', s:'geom_node_point(aes(color = ⟨attr⟩), size = 3) +\n  '},
       {l:'+ theme_graph', s:'theme_graph()'},
-      {l:'plot(g)', s:'plot(g, vertex.size = 8, edge.arrow.size = 0.3)'},
-      {l:'ggplot()', s:'ggplot(⟨df⟩, aes(⟨x⟩, ⟨y⟩)) +\n  geom_point()'},
     ],
-    Logic: [
-      {l:'assign <-', s:'⟨name⟩ <- ⟨value⟩'},
-      {l:'for', s:'for (⟨i⟩ in ⟨xs⟩) {\n  ⟨body⟩\n}'},
-      {l:'if', s:'if (⟨cond⟩) {\n  ⟨body⟩\n}'},
-      {l:'function', s:'⟨fname⟩ <- function(⟨args⟩) {\n  ⟨body⟩\n}'},
-      {l:'c()', s:'c(⟨...⟩)'},
-      {l:'print', s:'print(⟨x⟩)'},
-      {l:'cat', s:'cat(⟨msg⟩, "\\n")'},
-    ],
-    Syms: ['|>','<-','$','%>%','(',')','[',']','{','}','c()','==','!=','<=','>=','&','|','~','"','#','%in%','->','::'].map(s => ({l:s, s:s})),
   };
 
-  const state = { cat:'Suggested', filter:'', objs:[], cols:{}, gattr:{} };
-  const chip = (l, s, sug) => ({l, s, sug:!!sug});
+  const state = { objs: [], cols: {}, gattr: {} };
+  const chip = (l, s) => ({ l, s });
   const PH = /⟨[^⟩]*⟩/;
 
   function insert(snippet) {
     if (!snippet) return;
     const startIdx = editor.indexFromPos(editor.getCursor());
     editor.replaceSelection(snippet, 'end');
-    const val = editor.getValue();
-    const m = val.slice(startIdx).match(PH);   // select first ⟨blank⟩
-    if (m) {
-      const open = startIdx + m.index;
-      editor.setSelection(editor.posFromIndex(open), editor.posFromIndex(open + m[0].length));
-    }
+    const m = editor.getValue().slice(startIdx).match(PH);   // select first ⟨blank⟩ to type over
+    if (m) { const o = startIdx + m.index; editor.setSelection(editor.posFromIndex(o), editor.posFromIndex(o + m[0].length)); }
     if (!onPhone()) editor.focus();
-    if (state.cat === 'Suggested') renderChips();
-  }
-  function stepBlank() {
-    const val = editor.getValue();
-    const from = editor.indexFromPos(editor.getCursor('to'));
-    let idx = val.slice(from).search(PH), base = from;
-    if (idx === -1) { idx = val.search(PH); base = 0; }       // wrap to top
-    if (idx === -1) return;
-    const open = base + idx, len = val.slice(open).match(PH)[0].length;
-    editor.setSelection(editor.posFromIndex(open), editor.posFromIndex(open + len));
-    if (!onPhone()) editor.focus();
+    renderChips();
   }
 
   function ctx() {
@@ -1375,42 +1301,15 @@ bootstrap();
     }
     return out;
   }
-  function yoursChips() {
-    const out = [];
-    state.objs.forEach(o => out.push(chip(o, o)));
-    Object.keys(state.cols).forEach(df => state.cols[df].forEach(c => out.push(chip(df + '$' + c, df + '$' + c))));
-    Object.keys(state.gattr).forEach(g => {
-      (state.gattr[g].V || []).forEach(a => out.push(chip('V(' + g + ')$' + a, 'V(' + g + ')$' + a)));
-      (state.gattr[g].E || []).forEach(a => out.push(chip('E(' + g + ')$' + a, 'E(' + g + ')$' + a)));
-    });
-    if (!out.length) out.push(chip('▶ run code to populate this', '', 0));
-    return out;
-  }
-  function activeChips() {
-    let list = state.cat === 'Suggested' ? suggest() : state.cat === 'Yours' ? yoursChips() : (CHIPS[state.cat] || []);
-    const f = state.filter.trim().toLowerCase();
-    if (f) list = list.filter(c => c.l.toLowerCase().includes(f) || (c.s && c.s.toLowerCase().includes(f)));
-    return list;
-  }
   function renderChips() {
     const box = q('kbd-chips'); box.innerHTML = '';
-    const list = activeChips();
-    if (!list.length) { box.innerHTML = '<span style="color:var(--grey);font-family:var(--font-mono);font-size:12px;">no matches</span>'; return; }
+    const list = suggest();
+    if (!list.length) { box.innerHTML = '<span style="color:var(--grey);font-family:var(--font-mono);font-size:12px;">keep typing…</span>'; return; }
     list.forEach(c => {
       const b = document.createElement('button');
-      b.className = 'kbd-chip' + (c.sug ? ' sug' : '');
+      b.className = 'kbd-chip';
       b.textContent = c.l;
       b.addEventListener('click', () => insert(c.s));
-      box.appendChild(b);
-    });
-  }
-  function renderCats() {
-    const box = q('kbd-cats'); box.innerHTML = '';
-    CAT_ORDER.forEach(cat => {
-      const b = document.createElement('button');
-      b.className = 'kbd-cat' + (cat === state.cat ? ' active' : '');
-      b.textContent = cat;
-      b.addEventListener('click', () => { state.cat = cat; renderCats(); renderChips(); });
       box.appendChild(b);
     });
   }
@@ -1445,22 +1344,20 @@ bootstrap();
     finally { busy = false; }
   }
 
-  q('kbd-filter').addEventListener('input', e => { state.filter = e.target.value; renderChips(); });
-  q('kbd-step').addEventListener('click', stepBlank);
-  editor.on('cursorActivity', () => { if (state.cat === 'Suggested') renderChips(); });
+  editor.on('cursorActivity', renderChips);
 
   // wrap long lines so code never scrolls off the right edge on a phone
   editor.setOption('lineWrapping', true);
 
-  // ---- cursor / edit controls (no fiddly tap-to-place on mobile) ----
-  document.querySelectorAll('#kbd-nav button[data-cmd]').forEach(btn => {
+  // ---- cursor / edit controls (dpad + undo/redo/newline/backspace) ----
+  document.querySelectorAll('.kbd-controls button[data-cmd]').forEach(btn => {
     btn.addEventListener('click', () => {
       const cmd = btn.getAttribute('data-cmd');
       if (cmd === 'newline') editor.replaceSelection('\n');
       else if (cmd === 'del') editor.execCommand('delCharBefore');
-      else editor.execCommand(cmd);                 // goCharLeft/Right, goLineUp/Down, goLineStart/End, undo, redo
+      else editor.execCommand(cmd);                 // goCharLeft/Right, goLineUp/Down, undo, redo
       if (!onPhone()) editor.focus();
-      if (state.cat === 'Suggested') renderChips();
+      renderChips();
     });
   });
 
@@ -1489,7 +1386,7 @@ bootstrap();
   // give the small screen as much room as possible on first load
   if (isMobile()) document.querySelectorAll('details[open]').forEach(d => { d.open = false; });
 
-  renderCats(); renderChips();
+  renderChips();
   setInterval(introspect, 2000);
 })();
 </script>
