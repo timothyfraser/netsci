@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="R playground for SYSEN 5470 — tidygraph + igraph in your browser via WebR.">
-<title>R Playground · SYSEN 5470</title>
+<meta name="description" content="EXPERIMENT: R playground with a tap-to-code mobile keyboard (SYSEN 5470).">
+<meta name="robots" content="noindex, nofollow">
+<title>R Playground · Block Keyboard (experimental) · SYSEN 5470</title>
 <link rel="stylesheet" href="assets/design.css">
 <link rel="stylesheet" href="assets/site.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
@@ -342,6 +343,67 @@
   }
   .toast.show { opacity: 1; transform: translateY(0); }
   .toast.err { border-color: var(--node-7); color: var(--node-7); }
+
+  /* ===== Experimental block keyboard ===== */
+  .kbd {
+    margin-top: 10px; border: 1px solid var(--border);
+    border-radius: var(--radius-md); background: rgba(5,46,22,0.55);
+    backdrop-filter: blur(8px); overflow: hidden;
+  }
+  .kbd-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 8px 10px; border-bottom: 1px solid var(--border-soft);
+  }
+  .kbd-bar .kbd-title {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--green-bright);
+  }
+  .kbd-bar .kbd-badge {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--black); background: var(--node-4);
+    padding: 1px 7px; border-radius: 999px;
+  }
+  .kbd-filter {
+    flex: 1; min-width: 110px; background: rgba(5,10,5,0.7); color: var(--white);
+    border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+    padding: 6px 9px; font-family: var(--font-mono); font-size: 12px;
+  }
+  .kbd-filter:focus { outline: none; border-color: var(--green-bright); }
+  .kbd-step {
+    background: var(--green-bright); color: var(--black); border: none;
+    border-radius: var(--radius-sm); padding: 6px 11px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .kbd-cats { display: flex; gap: 6px; overflow-x: auto; padding: 8px 10px 2px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+  .kbd-cat {
+    flex: none; background: transparent; color: var(--grey);
+    border: 1px solid var(--border-soft); border-radius: 999px;
+    padding: 6px 12px; cursor: pointer; white-space: nowrap;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em;
+  }
+  .kbd-cat.active { color: var(--black); background: var(--green-bright); border-color: var(--green-bright); }
+  .kbd-hint {
+    padding: 6px 12px 0; font-family: var(--font-mono); font-size: 10px;
+    color: var(--node-4); letter-spacing: 0.04em;
+  }
+  .kbd-chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 12px 14px; }
+  .kbd-chip {
+    background: rgba(5,46,22,0.7); color: var(--green-mint);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; min-height: 38px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 13px; line-height: 1.1;
+    transition: all 0.12s; touch-action: manipulation;
+  }
+  .kbd-chip:hover, .kbd-chip:active { background: rgba(57,255,20,0.14); color: var(--white); border-color: var(--green-bright); }
+  .kbd-chip.sug { border-color: var(--node-4); }
+  .kbd-chip .k-sub { display:block; font-size: 9.5px; color: var(--grey); margin-top: 3px; letter-spacing: 0.02em; }
+  @media (max-width: 1100px) {
+    /* on phones, keep the keyboard reachable while the editor scrolls */
+    .kbd { position: sticky; bottom: 6px; z-index: 6; box-shadow: 0 -6px 18px rgba(0,0,0,0.5); }
+    .kbd-chip { font-size: 14px; min-height: 42px; }
+  }
 </style>
 <meta property="og:title" content="R Playground · SYSEN 5470">
 <meta property="og:description" content="R playground for SYSEN 5470 — tidygraph + igraph in your browser via WebR.">
@@ -503,6 +565,19 @@
         <button class="pg-btn" id="btn-upload">⬆ Upload CSV</button>
       </div>
       <textarea id="editor"></textarea>
+
+      <!-- ===== Experimental tap-to-code block keyboard ===== -->
+      <div class="kbd" id="kbd">
+        <div class="kbd-bar">
+          <span class="kbd-title">⌨ Block keyboard</span>
+          <span class="kbd-badge">experiment</span>
+          <input class="kbd-filter" id="kbd-filter" placeholder="type 1–3 letters to filter…" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <button class="kbd-step" id="kbd-step" title="Jump to the next ⟨blank⟩">⇥ blank</button>
+        </div>
+        <div class="kbd-cats" id="kbd-cats"></div>
+        <div class="kbd-hint" id="kbd-hint">Suggestions update as you build. Tap a block to drop it at the cursor; fill the ⟨blanks⟩.</div>
+        <div class="kbd-chips" id="kbd-chips"></div>
+      </div>
     </div>
 
     <!-- OUTPUT -->
@@ -1092,6 +1167,236 @@ $('btn-clear-files').addEventListener('click', async (e) => {
 
 // Kick off
 bootstrap();
+</script>
+<script>
+/* ===== Experimental DATA-AWARE block keyboard (R) =====
+   Inserts real code into the editor; suggestions adapt to the token before the
+   cursor AND to what's actually in your R session (objects, data-frame columns,
+   graph vertex/edge attributes), polled live from WebR. Coexists with the OS
+   keyboard — chips handle symbols & functions; type free text normally. */
+(function () {
+  const q = (id) => document.getElementById(id);
+  if (!q('kbd') || typeof editor === 'undefined') return;
+
+  const CAT_ORDER = ['Suggested','Yours','Load','Wrangle','Build','Measure','Community','Plot','Logic','Syms'];
+  const CHIPS = {
+    Load: [
+      {l:'library()', s:'library(⟨pkg⟩)'},
+      {l:'read nodes', s:'nodes <- read.csv("⟨nodes.csv⟩")'},
+      {l:'read edges', s:'edges <- read.csv("⟨edges.csv⟩")'},
+      {l:'build graph', s:'g <- graph_from_data_frame(edges, vertices = nodes, directed = ⟨FALSE⟩)'},
+      {l:'head()', s:'head(⟨df⟩)'},
+      {l:'summary(g)', s:'summary(g)'},
+      {l:'str()', s:'str(⟨x⟩)'},
+    ],
+    Wrangle: [
+      {l:'|>', s:' |>\n  '},
+      {l:'filter', s:'filter(⟨condition⟩)'},
+      {l:'mutate', s:'mutate(⟨new⟩ = ⟨expr⟩)'},
+      {l:'group_by', s:'group_by(⟨col⟩)'},
+      {l:'summarise', s:'summarise(⟨stat⟩ = ⟨fn⟩(⟨col⟩))'},
+      {l:'arrange ↓', s:'arrange(desc(⟨col⟩))'},
+      {l:'select', s:'select(⟨cols⟩)'},
+      {l:'count', s:'count(⟨col⟩)'},
+      {l:'slice_max', s:'slice_max(⟨col⟩, n = ⟨10⟩)'},
+      {l:'left_join', s:'left_join(⟨other⟩, by = "⟨key⟩")'},
+      {l:'map_dbl', s:'map_dbl(⟨x⟩, ⟨f⟩)'},
+    ],
+    Build: [
+      {l:'graph_from_data_frame', s:'graph_from_data_frame(edges, vertices = nodes, directed = ⟨FALSE⟩)'},
+      {l:'as_tbl_graph', s:'as_tbl_graph(⟨g⟩)'},
+      {l:'V(g)', s:'V(g)'},
+      {l:'E(g)', s:'E(g)'},
+      {l:'vcount', s:'vcount(g)'},
+      {l:'ecount', s:'ecount(g)'},
+      {l:'V(g)$attr', s:'V(g)$⟨attr⟩'},
+      {l:'E(g)$weight', s:'E(g)$weight'},
+      {l:'is_directed', s:'is_directed(g)'},
+      {l:'simplify', s:'simplify(g)'},
+    ],
+    Measure: [
+      {l:'degree', s:'degree(g, mode = "all")'},
+      {l:'strength', s:'strength(g, weights = E(g)$weight)'},
+      {l:'betweenness', s:'betweenness(g, weights = E(g)$weight)'},
+      {l:'closeness', s:'closeness(g)'},
+      {l:'eigen_centrality', s:'eigen_centrality(g)$vector'},
+      {l:'page_rank', s:'page_rank(g)$vector'},
+      {l:'distances', s:'distances(g)'},
+      {l:'mean_distance', s:'mean_distance(g)'},
+      {l:'components', s:'components(g)$csize'},
+      {l:'delete_vertices', s:'delete_vertices(g, ⟨"node"⟩)'},
+    ],
+    Community: [
+      {l:'cluster_louvain', s:'cluster_louvain(g)'},
+      {l:'cluster_fast_greedy', s:'cluster_fast_greedy(g)'},
+      {l:'membership', s:'membership(⟨comm⟩)'},
+      {l:'modularity', s:'modularity(⟨comm⟩)'},
+      {l:'bipartite_projection', s:'bipartite_projection(g)'},
+      {l:'assortativity', s:'assortativity_nominal(g, types = ⟨factor⟩)'},
+    ],
+    Plot: [
+      {l:'ggraph()', s:'ggraph(g, layout = "⟨fr⟩") +\n  '},
+      {l:'+ edges', s:'geom_edge_link(alpha = 0.3) +\n  '},
+      {l:'+ nodes', s:'geom_node_point(aes(color = ⟨attr⟩), size = 3) +\n  '},
+      {l:'+ theme_graph', s:'theme_graph()'},
+      {l:'plot(g)', s:'plot(g, vertex.size = 8, edge.arrow.size = 0.3)'},
+      {l:'ggplot()', s:'ggplot(⟨df⟩, aes(⟨x⟩, ⟨y⟩)) +\n  geom_point()'},
+    ],
+    Logic: [
+      {l:'assign <-', s:'⟨name⟩ <- ⟨value⟩'},
+      {l:'for', s:'for (⟨i⟩ in ⟨xs⟩) {\n  ⟨body⟩\n}'},
+      {l:'if', s:'if (⟨cond⟩) {\n  ⟨body⟩\n}'},
+      {l:'function', s:'⟨fname⟩ <- function(⟨args⟩) {\n  ⟨body⟩\n}'},
+      {l:'c()', s:'c(⟨...⟩)'},
+      {l:'print', s:'print(⟨x⟩)'},
+      {l:'cat', s:'cat(⟨msg⟩, "\\n")'},
+    ],
+    Syms: ['|>','<-','$','%>%','(',')','[',']','{','}','c()','==','!=','<=','>=','&','|','~','"','#','%in%','->','::'].map(s => ({l:s, s:s})),
+  };
+
+  const state = { cat:'Suggested', filter:'', objs:[], cols:{}, gattr:{} };
+  const chip = (l, s, sug) => ({l, s, sug:!!sug});
+  const PH = /⟨[^⟩]*⟩/;
+
+  function insert(snippet) {
+    if (!snippet) return;
+    const startIdx = editor.indexFromPos(editor.getCursor());
+    editor.replaceSelection(snippet, 'end');
+    const val = editor.getValue();
+    const m = val.slice(startIdx).match(PH);   // select first ⟨blank⟩
+    if (m) {
+      const open = startIdx + m.index;
+      editor.setSelection(editor.posFromIndex(open), editor.posFromIndex(open + m[0].length));
+    }
+    editor.focus();
+    if (state.cat === 'Suggested') renderChips();
+  }
+  function stepBlank() {
+    const val = editor.getValue();
+    const from = editor.indexFromPos(editor.getCursor('to'));
+    let idx = val.slice(from).search(PH), base = from;
+    if (idx === -1) { idx = val.search(PH); base = 0; }       // wrap to top
+    if (idx === -1) return;
+    const open = base + idx, len = val.slice(open).match(PH)[0].length;
+    editor.setSelection(editor.posFromIndex(open), editor.posFromIndex(open + len));
+    editor.focus();
+  }
+
+  function ctx() {
+    const cur = editor.getCursor();
+    const t = editor.getLine(cur.line).slice(0, cur.ch).replace(/\s+$/, '');
+    return { t, last: t.slice(-1) };
+  }
+  function suggest() {
+    const { t, last } = ctx();
+    const has = (n) => state.objs.includes(n);
+    const out = [];
+    if (t === '') {
+      out.push(chip('build graph','g <- graph_from_data_frame(edges, vertices = nodes, directed = ⟨FALSE⟩)',1));
+      out.push(chip('read nodes','nodes <- read.csv("⟨nodes.csv⟩")',1));
+      out.push(chip('read edges','edges <- read.csv("⟨edges.csv⟩")',1));
+      if (has('g')) { out.push(chip('g |>','g |>\n  ',1)); out.push(chip('degree(g)','deg <- degree(g, mode = "all")',1)); out.push(chip('summary(g)','summary(g)',1)); }
+      out.push(chip('library()','library(⟨pkg⟩)',1));
+      state.objs.forEach(o => out.push(chip(o, o)));
+    } else if (/(\|>|%>%)$/.test(t)) {
+      ['filter','mutate','group_by','summarise','arrange ↓','count','slice_max','select'].forEach(l => {
+        const c = CHIPS.Wrangle.find(x => x.l === l); if (c) out.push(chip(c.l, c.s, 1));
+      });
+    } else if (last === '+') {
+      CHIPS.Plot.filter(c => c.l.startsWith('+')).forEach(c => out.push(chip(c.l, c.s, 1)));
+    } else if (last === '(') {
+      ['weights = E(g)$weight','mode = "all"','directed = FALSE','n = ⟨10⟩','na.rm = TRUE'].forEach(s => out.push(chip(s, s, 1)));
+    } else if (last === '$') {
+      const mg = t.match(/([VE])\((\w+)\)\$$/);
+      const mv = t.match(/([A-Za-z0-9_.]+)\$$/);
+      if (mg && state.gattr[mg[2]]) (state.gattr[mg[2]][mg[1]] || ['weight','name','kind']).forEach(a => out.push(chip(a, a, 1)));
+      else if (mv && state.cols[mv[1]]) state.cols[mv[1]].forEach(c => out.push(chip(c, c, 1)));
+      else ['weight','name','kind'].forEach(c => out.push(chip(c, c, 1)));
+    } else if (/[A-Za-z0-9_.\)\]"]$/.test(t)) {
+      [[' |> ','|>'],[' <- ','<-'],['$','$'],[' + ','+'],[' == ','==']].forEach(p => out.push(chip(p[1], p[0], 1)));
+    } else {
+      ['degree','betweenness','cluster_louvain','ggraph()'].forEach(l => {
+        for (const cat of ['Measure','Community','Plot']) { const c = CHIPS[cat].find(x => x.l === l); if (c) { out.push(chip(c.l, c.s, 1)); break; } }
+      });
+    }
+    return out;
+  }
+  function yoursChips() {
+    const out = [];
+    state.objs.forEach(o => out.push(chip(o, o)));
+    Object.keys(state.cols).forEach(df => state.cols[df].forEach(c => out.push(chip(df + '$' + c, df + '$' + c))));
+    Object.keys(state.gattr).forEach(g => {
+      (state.gattr[g].V || []).forEach(a => out.push(chip('V(' + g + ')$' + a, 'V(' + g + ')$' + a)));
+      (state.gattr[g].E || []).forEach(a => out.push(chip('E(' + g + ')$' + a, 'E(' + g + ')$' + a)));
+    });
+    if (!out.length) out.push(chip('▶ run code to populate this', '', 0));
+    return out;
+  }
+  function activeChips() {
+    let list = state.cat === 'Suggested' ? suggest() : state.cat === 'Yours' ? yoursChips() : (CHIPS[state.cat] || []);
+    const f = state.filter.trim().toLowerCase();
+    if (f) list = list.filter(c => c.l.toLowerCase().includes(f) || (c.s && c.s.toLowerCase().includes(f)));
+    return list;
+  }
+  function renderChips() {
+    const box = q('kbd-chips'); box.innerHTML = '';
+    const list = activeChips();
+    if (!list.length) { box.innerHTML = '<span style="color:var(--grey);font-family:var(--font-mono);font-size:12px;">no matches</span>'; return; }
+    list.forEach(c => {
+      const b = document.createElement('button');
+      b.className = 'kbd-chip' + (c.sug ? ' sug' : '');
+      b.textContent = c.l;
+      b.addEventListener('click', () => insert(c.s));
+      box.appendChild(b);
+    });
+  }
+  function renderCats() {
+    const box = q('kbd-cats'); box.innerHTML = '';
+    CAT_ORDER.forEach(cat => {
+      const b = document.createElement('button');
+      b.className = 'kbd-cat' + (cat === state.cat ? ' active' : '');
+      b.textContent = cat;
+      b.addEventListener('click', () => { state.cat = cat; renderCats(); renderChips(); });
+      box.appendChild(b);
+    });
+  }
+
+  // ---- live introspection of the R session ----
+  let busy = false, sig = '';
+  async function introspect() {
+    if (busy || typeof webR === 'undefined' || typeof isReady === 'undefined' || !isReady) return;
+    busy = true;
+    try {
+      const out = await webR.evalRString(`
+        .kbd_o <- ls(envir = .GlobalEnv)
+        if (length(.kbd_o) == 0) "" else paste(sapply(.kbd_o, function(x){
+          v <- get(x, envir = .GlobalEnv)
+          if (is.data.frame(v)) paste("df", x, paste(names(v), collapse=","), sep=" :: ")
+          else if (inherits(v, "igraph")) paste("graph", x, paste(igraph::vertex_attr_names(v), collapse=","), paste(igraph::edge_attr_names(v), collapse=","), sep=" :: ")
+          else paste("var", x, sep=" :: ")
+        }), collapse=" ||| ")
+      `);
+      const objs = [], cols = {}, gattr = {};
+      if (out) out.split(' ||| ').forEach(row => {
+        const p = row.split(' :: '), type = p[0], name = p[1];
+        if (!name) return;
+        objs.push(name);
+        if (type === 'df' && p[2]) cols[name] = p[2].split(',').filter(Boolean);
+        if (type === 'graph') gattr[name] = { V:(p[2]||'').split(',').filter(Boolean), E:(p[3]||'').split(',').filter(Boolean) };
+      });
+      const newSig = objs.join('|') + JSON.stringify(cols) + JSON.stringify(gattr);
+      state.objs = objs; state.cols = cols; state.gattr = gattr;
+      if (newSig !== sig) { sig = newSig; renderChips(); }
+    } catch (e) { /* keyboard still works without introspection */ }
+    finally { busy = false; }
+  }
+
+  q('kbd-filter').addEventListener('input', e => { state.filter = e.target.value; renderChips(); });
+  q('kbd-step').addEventListener('click', stepBlank);
+  editor.on('cursorActivity', () => { if (state.cat === 'Suggested') renderChips(); });
+  renderCats(); renderChips();
+  setInterval(introspect, 2000);
+})();
 </script>
 </body>
 </html>
