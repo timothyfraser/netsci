@@ -3,6 +3,8 @@
 *A hypothetical city's public-transit network: neighborhoods linked by metro and
 bus, with travel times, service frequency, and capacity on every link.*
 
+![Preview of the transit-multimodal network](thumb.png)
+
 ## At a glance
 
 | | |

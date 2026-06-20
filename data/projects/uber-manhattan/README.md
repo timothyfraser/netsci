@@ -3,6 +3,8 @@
 *One day of ride-matching in downtown Manhattan: which drivers got matched to
 which riders, where they were picked up and dropped off, and what each ride cost.*
 
+![Preview of the uber-manhattan network](thumb.png)
+
 ## At a glance
 
 | | |

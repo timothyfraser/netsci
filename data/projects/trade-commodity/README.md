@@ -3,6 +3,8 @@
 *World trade in a single strategic commodity ("refined metal", in tonnes) among
 ~140 countries, observed before, during, and after a major supply disruption.*
 
+![Preview of the trade-commodity network](thumb.png)
+
 ## At a glance
 
 | | |

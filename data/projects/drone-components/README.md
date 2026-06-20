@@ -3,6 +3,8 @@
 *A functional dependency map of a small UAV (drone): which hardware components and
 software modules require which others to work.*
 
+![Preview of the drone-components network](thumb.png)
+
 ## At a glance
 
 | | |

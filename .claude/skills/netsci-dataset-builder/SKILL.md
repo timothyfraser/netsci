@@ -112,6 +112,13 @@ Always verify BOTH languages actually run: `Rscript load.R` and `python load.py`
      `directed` flag, weight, and (if bipartite) `type`.
 3. Document the sample in `docs/playground-data/README.md`.
 4. Update the catalog table in `data/projects/README.md`.
+5. `python data/projects/_make_thumbnails.py` to render each dataset's
+   `thumb.png` preview; it is auto-embedded near the top of the README and shown
+   in the catalog's Previews gallery.
+6. Refresh the NotebookLM/site bundles so the dataset is discoverable:
+   `python scripts/build_coding_bundle.py` (picks up the READMEs/loaders) and
+   `python scripts/build_notebooklm_source.py` + `python scripts/build_index.py`
+   (the playground pages). These need `beautifulsoup4` + `markdownify`.
 
 ## 7. The planted story (the part that matters)
 

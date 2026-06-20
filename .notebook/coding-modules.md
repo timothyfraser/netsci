@@ -1,10 +1,10 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-19 23:19 UTC_
+_Auto-generated NotebookLM source · 2026-06-20 00:58 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
-**133 files included.**
+**134 files included.**
 
 ---
 
@@ -8796,6 +8796,20 @@ columns). `satellite-constellation` and `transit-multimodal` are multi-layer (li
 type / transit mode); `transit-multimodal` is purpose-built for counterfactual
 "add-one-edge" connectivity analysis.
 
+## Previews
+
+Node colors encode a categorical attribute (kind / operator / subsystem /
+district / region); layouts use real coordinates where the data has them,
+otherwise a force-directed layout. Click a thumbnail for its dataset.
+
+|   |   |   |
+|---|---|---|
+| <a href="amazon-last-mile/"><img src="amazon-last-mile/thumb.png" width="260" alt="amazon-last-mile"><br>amazon-last-mile</a> | <a href="uber-manhattan/"><img src="uber-manhattan/thumb.png" width="260" alt="uber-manhattan"><br>uber-manhattan</a> | <a href="semiconductor-supply/"><img src="semiconductor-supply/thumb.png" width="260" alt="semiconductor-supply"><br>semiconductor-supply</a> |
+| <a href="aerospace-components/"><img src="aerospace-components/thumb.png" width="260" alt="aerospace-components"><br>aerospace-components</a> | <a href="mutualaid-quake/"><img src="mutualaid-quake/thumb.png" width="260" alt="mutualaid-quake"><br>mutualaid-quake</a> | <a href="financial-contagion/"><img src="financial-contagion/thumb.png" width="260" alt="financial-contagion"><br>financial-contagion</a> |
+| <a href="airline-delays/"><img src="airline-delays/thumb.png" width="260" alt="airline-delays"><br>airline-delays</a> | <a href="power-grid/"><img src="power-grid/thumb.png" width="260" alt="power-grid"><br>power-grid</a> | <a href="campus-contact/"><img src="campus-contact/thumb.png" width="260" alt="campus-contact"><br>campus-contact</a> |
+| <a href="opensource-deps/"><img src="opensource-deps/thumb.png" width="260" alt="opensource-deps"><br>opensource-deps</a> | <a href="trade-commodity/"><img src="trade-commodity/thumb.png" width="260" alt="trade-commodity"><br>trade-commodity</a> | <a href="reorg-comms/"><img src="reorg-comms/thumb.png" width="260" alt="reorg-comms"><br>reorg-comms</a> |
+| <a href="satellite-constellation/"><img src="satellite-constellation/thumb.png" width="260" alt="satellite-constellation"><br>satellite-constellation</a> | <a href="drone-components/"><img src="drone-components/thumb.png" width="260" alt="drone-components"><br>drone-components</a> | <a href="transit-multimodal/"><img src="transit-multimodal/thumb.png" width="260" alt="transit-multimodal"><br>transit-multimodal</a> |
+
 ## How to use them
 
 **In R**
@@ -8849,6 +8863,113 @@ templates, and the "planted story" design rules) lives in the
 
 ---
 
+## `data/projects/_make_thumbnails.py`
+
+```python
+"""Render a small preview thumbnail (thumb.png) for each project dataset.
+
+Deterministic and self-contained. For each data/projects/<name>/ folder it loads
+nodes.csv + edges.csv, lays the graph out (real x/y when present, else a
+seeded spring layout), colors nodes by the first categorical attribute it finds
+(kind / operator / subsystem / district / type), and writes a compact PNG that
+matches the course's dark-green aesthetic. Parallel edges (temporal/multiplex)
+are collapsed for the drawing only.
+
+Run after (re)generating datasets:
+    python data/projects/_make_thumbnails.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib.collections import LineCollection
+import networkx as nx
+
+PROJECTS = Path(__file__).resolve().parent
+SEED = 42
+BG = "#08160c"
+EDGE = "#39FF14"
+PALETTE = ["#39FF14", "#38bdf8", "#fbbf24", "#f472b6", "#a78bfa",
+           "#fb923c", "#86efac", "#e879f9", "#facc15", "#2dd4bf"]
+CAT_COLS = ["operator", "subsystem", "type", "district", "ecosystem_area",
+            "dept", "kind", "region", "neighborhood", "system"]
+
+
+def _positions(nodes: pd.DataFrame, edges: pd.DataFrame, ids: list) -> dict:
+    """Real coordinates if the node table has usable x/y, else seeded spring."""
+    if {"x", "y"}.issubset(nodes.columns) and nodes[["x", "y"]].notna().all(axis=1).mean() > 0.9:
+        return {r.node_id: (float(r.x), float(r.y)) for r in nodes.itertuples()}
+    g = nx.Graph()
+    g.add_nodes_from(ids)
+    g.add_edges_from(edges.iloc[:, :2].itertuples(index=False, name=None))
+    return nx.spring_layout(g, seed=SEED, k=1.0 / np.sqrt(max(len(ids), 1)))
+
+
+def _make(ds: Path) -> None:
+    nodes = pd.read_csv(ds / "nodes.csv")
+    edges = pd.read_csv(ds / "edges.csv")
+    ids = nodes["node_id"].tolist()
+    pos = _positions(nodes, edges, ids)
+
+    # color by the first categorical attribute available
+    cat = next((c for c in CAT_COLS if c in nodes.columns and nodes[c].nunique() > 1), None)
+    if cat:
+        cats = sorted(map(str, nodes[cat].fillna("·").unique()))
+        cmap = {c: PALETTE[i % len(PALETTE)] for i, c in enumerate(cats)}
+        ncolors = [cmap[str(v) if pd.notna(v) else "·"] for v in nodes[cat]]
+    else:
+        ncolors = [EDGE] * len(nodes)
+
+    # node size scales gently with degree
+    deg = pd.Series(0, index=ids)
+    vc = pd.concat([edges.iloc[:, 0], edges.iloc[:, 1]]).value_counts()
+    deg = deg.add(vc, fill_value=0).reindex(ids).fillna(0)
+    dmax = max(deg.max(), 1)
+    sizes = 4 + 26 * (deg.values / dmax)
+
+    # collapse parallel edges for drawing
+    segs = []
+    seen = set()
+    for u, v in edges.iloc[:, :2].itertuples(index=False, name=None):
+        key = (u, v) if str(u) <= str(v) else (v, u)
+        if key in seen or u not in pos or v not in pos:
+            continue
+        seen.add(key)
+        segs.append([pos[u], pos[v]])
+
+    fig, ax = plt.subplots(figsize=(6.4, 4.2), dpi=100)
+    fig.patch.set_facecolor(BG)
+    ax.set_facecolor(BG)
+    ax.add_collection(LineCollection(segs, colors=EDGE, linewidths=0.35, alpha=0.16, zorder=1))
+    xs = [pos[i][0] for i in ids if i in pos]
+    ys = [pos[i][1] for i in ids if i in pos]
+    ax.scatter(xs, ys, s=sizes, c=ncolors, edgecolors="none", alpha=0.95, zorder=2)
+    ax.set_title(f"{ds.name}  ·  {len(nodes)} nodes / {len(edges)} edges",
+                 color="#d1fae5", fontsize=10, fontfamily="monospace", pad=8)
+    ax.axis("off")
+    ax.margins(0.04)
+    fig.tight_layout()
+    fig.savefig(ds / "thumb.png", facecolor=BG, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  {ds.name}/thumb.png  ({len(nodes)} nodes, {len(edges)} edges, color={cat or 'none'})")
+
+
+def main() -> None:
+    for ds in sorted(p for p in PROJECTS.iterdir() if p.is_dir()):
+        if (ds / "nodes.csv").exists() and (ds / "edges.csv").exists():
+            _make(ds)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
 ## `data/projects/_sync_to_playground.py`
 
 ```python
@@ -8898,6 +9019,8 @@ if __name__ == "__main__":
 *The bill-of-materials and supplier network behind one commercial aircraft
 program — detail parts and firms roll up through sub-assemblies into major
 systems.*
+
+![Preview of the aerospace-components network](thumb.png)
 
 ## At a glance
 
@@ -9461,6 +9584,8 @@ if __name__ == "__main__":
 blocks: directed flights between airports, each carrying a flight count and an
 average departure delay.*
 
+![Preview of the airline-delays network](thumb.png)
+
 ## At a glance
 
 | | |
@@ -9990,6 +10115,8 @@ if __name__ == "__main__":
 *One week of package flow through a fictional metro's last-mile delivery network:
 fulfillment hubs → delivery stations → neighborhood zones.*
 
+![Preview of the amazon-last-mile network](thumb.png)
+
 ## At a glance
 
 | | |
@@ -10428,6 +10555,8 @@ if __name__ == "__main__":
 
 *Four weeks of face-to-face proximity on a university campus, recorded as a
 respiratory illness moves through the population.*
+
+![Preview of the campus-contact network](thumb.png)
 
 ## At a glance
 
@@ -10966,6 +11095,8 @@ if __name__ == "__main__":
 
 *A functional dependency map of a small UAV (drone): which hardware components and
 software modules require which others to work.*
+
+![Preview of the drone-components network](thumb.png)
 
 ## At a glance
 
@@ -11663,6 +11794,8 @@ if __name__ == "__main__":
 crisis: who lent to whom, before the storm, during the crash, and in the calmer
 aftermath.*
 
+![Preview of the financial-contagion network](thumb.png)
+
 ## At a glance
 
 | | |
@@ -12184,6 +12317,8 @@ if __name__ == "__main__":
 earthquake: a directed neighborhood mutual-aid network of residents and local
 organizations.*
 
+![Preview of the mutualaid-quake network](thumb.png)
+
 ## At a glance
 
 | | |
@@ -12681,6 +12816,8 @@ if __name__ == "__main__":
 *A snapshot of an open-source software ecosystem's dependency graph: which
 packages depend on which, and how heavily.*
 
+![Preview of the opensource-deps network](thumb.png)
+
 ## At a glance
 
 | | |
@@ -13146,6 +13283,8 @@ if __name__ == "__main__":
 
 *A regional electrical transmission grid: buses (generators, substations, loads)
 wired together by undirected transmission lines, each rated by capacity.*
+
+![Preview of the power-grid network](thumb.png)
 
 ## At a glance
 
@@ -13670,6 +13809,8 @@ if __name__ == "__main__":
 
 *Internal employee communication (email + chat volume) at a ~250-person company,
 observed before, during, and after a reorganization and layoff.*
+
+![Preview of the reorg-comms network](thumb.png)
 
 ## At a glance
 
@@ -14210,6 +14351,8 @@ if __name__ == "__main__":
 *A single-instant snapshot of three operators' low-Earth-orbit (LEO) satellite
 broadband networks: satellites linked to each other and down to ground gateways,
 each link rated by capacity and latency.*
+
+![Preview of the satellite-constellation network](thumb.png)
 
 ## At a glance
 
@@ -14849,6 +14992,8 @@ if __name__ == "__main__":
 through fabs, packaging houses, and chip designers into finished electronic
 products.*
 
+![Preview of the semiconductor-supply network](thumb.png)
+
 ## At a glance
 
 | | |
@@ -15420,6 +15565,8 @@ if __name__ == "__main__":
 
 *World trade in a single strategic commodity ("refined metal", in tonnes) among
 ~140 countries, observed before, during, and after a major supply disruption.*
+
+![Preview of the trade-commodity network](thumb.png)
 
 ## At a glance
 
@@ -15993,6 +16140,8 @@ if __name__ == "__main__":
 
 *A hypothetical city's public-transit network: neighborhoods linked by metro and
 bus, with travel times, service frequency, and capacity on every link.*
+
+![Preview of the transit-multimodal network](thumb.png)
 
 ## At a glance
 
@@ -16733,6 +16882,8 @@ if __name__ == "__main__":
 
 *One day of ride-matching in downtown Manhattan: which drivers got matched to
 which riders, where they were picked up and dropped off, and what each ride cost.*
+
+![Preview of the uber-manhattan network](thumb.png)
 
 ## At a glance
 

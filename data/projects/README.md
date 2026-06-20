@@ -41,6 +41,20 @@ columns). `satellite-constellation` and `transit-multimodal` are multi-layer (li
 type / transit mode); `transit-multimodal` is purpose-built for counterfactual
 "add-one-edge" connectivity analysis.
 
+## Previews
+
+Node colors encode a categorical attribute (kind / operator / subsystem /
+district / region); layouts use real coordinates where the data has them,
+otherwise a force-directed layout. Click a thumbnail for its dataset.
+
+|   |   |   |
+|---|---|---|
+| <a href="amazon-last-mile/"><img src="amazon-last-mile/thumb.png" width="260" alt="amazon-last-mile"><br>amazon-last-mile</a> | <a href="uber-manhattan/"><img src="uber-manhattan/thumb.png" width="260" alt="uber-manhattan"><br>uber-manhattan</a> | <a href="semiconductor-supply/"><img src="semiconductor-supply/thumb.png" width="260" alt="semiconductor-supply"><br>semiconductor-supply</a> |
+| <a href="aerospace-components/"><img src="aerospace-components/thumb.png" width="260" alt="aerospace-components"><br>aerospace-components</a> | <a href="mutualaid-quake/"><img src="mutualaid-quake/thumb.png" width="260" alt="mutualaid-quake"><br>mutualaid-quake</a> | <a href="financial-contagion/"><img src="financial-contagion/thumb.png" width="260" alt="financial-contagion"><br>financial-contagion</a> |
+| <a href="airline-delays/"><img src="airline-delays/thumb.png" width="260" alt="airline-delays"><br>airline-delays</a> | <a href="power-grid/"><img src="power-grid/thumb.png" width="260" alt="power-grid"><br>power-grid</a> | <a href="campus-contact/"><img src="campus-contact/thumb.png" width="260" alt="campus-contact"><br>campus-contact</a> |
+| <a href="opensource-deps/"><img src="opensource-deps/thumb.png" width="260" alt="opensource-deps"><br>opensource-deps</a> | <a href="trade-commodity/"><img src="trade-commodity/thumb.png" width="260" alt="trade-commodity"><br>trade-commodity</a> | <a href="reorg-comms/"><img src="reorg-comms/thumb.png" width="260" alt="reorg-comms"><br>reorg-comms</a> |
+| <a href="satellite-constellation/"><img src="satellite-constellation/thumb.png" width="260" alt="satellite-constellation"><br>satellite-constellation</a> | <a href="drone-components/"><img src="drone-components/thumb.png" width="260" alt="drone-components"><br>drone-components</a> | <a href="transit-multimodal/"><img src="transit-multimodal/thumb.png" width="260" alt="transit-multimodal"><br>transit-multimodal</a> |
+
 ## How to use them
 
 **In R**

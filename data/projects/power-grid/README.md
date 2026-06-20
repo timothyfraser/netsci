@@ -3,6 +3,8 @@
 *A regional electrical transmission grid: buses (generators, substations, loads)
 wired together by undirected transmission lines, each rated by capacity.*
 
+![Preview of the power-grid network](thumb.png)
+
 ## At a glance
 
 | | |

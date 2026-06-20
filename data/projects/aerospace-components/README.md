@@ -4,6 +4,8 @@
 program — detail parts and firms roll up through sub-assemblies into major
 systems.*
 
+![Preview of the aerospace-components network](thumb.png)
+
 ## At a glance
 
 | | |

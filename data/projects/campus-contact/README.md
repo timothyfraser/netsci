@@ -3,6 +3,8 @@
 *Four weeks of face-to-face proximity on a university campus, recorded as a
 respiratory illness moves through the population.*
 
+![Preview of the campus-contact network](thumb.png)
+
 ## At a glance
 
 | | |

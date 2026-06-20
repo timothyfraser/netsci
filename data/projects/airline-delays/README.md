@@ -4,6 +4,8 @@
 blocks: directed flights between airports, each carrying a flight count and an
 average departure delay.*
 
+![Preview of the airline-delays network](thumb.png)
+
 ## At a glance
 
 | | |

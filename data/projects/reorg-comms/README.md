@@ -3,6 +3,8 @@
 *Internal employee communication (email + chat volume) at a ~250-person company,
 observed before, during, and after a reorganization and layoff.*
 
+![Preview of the reorg-comms network](thumb.png)
+
 ## At a glance
 
 | | |

@@ -3,6 +3,8 @@
 *A snapshot of an open-source software ecosystem's dependency graph: which
 packages depend on which, and how heavily.*
 
+![Preview of the opensource-deps network](thumb.png)
+
 ## At a glance
 
 | | |
