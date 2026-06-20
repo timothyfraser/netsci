@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-20 04:03 UTC_
+_Auto-generated NotebookLM source · 2026-06-20 05:04 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -3358,7 +3358,7 @@ Pick a Language
 A full R interpreter, compiled to WebAssembly. Tidyverse\-flavored, network\-science\-ready.
 
 
-**Pre\-installed:** dplyr · tidyr · ggplot2 · readr · igraph · tidygraph · DBI · RSQLite
+**Pre\-installed:** dplyr · tidyr · ggplot2 · readr · purrr · igraph · tidygraph · ggraph · DBI · RSQLite
 
 
 Open R Playground →
@@ -3502,7 +3502,7 @@ SYSEN 5470 · Coding Playground
 # *R* Playground
 
 
-A full R interpreter, compiled to WebAssembly, running in your browser tab. No install. Tidyverse \+ igraph \+ tidygraph \+ DBI/RSQLite are pre\-installed. Your code and uploaded CSVs are saved to your own browser — they survive a refresh but never leave your device.
+A full R interpreter, compiled to WebAssembly, running in your browser tab. No install. Tidyverse (incl. purrr) \+ igraph \+ tidygraph \+ ggraph \+ DBI/RSQLite are pre\-installed. Your code and uploaded CSVs are saved to your own browser — they survive a refresh but never leave your device.
 
 
 Loading WebR runtime…
@@ -3526,8 +3526,10 @@ dplyr
 tidyr
 ggplot2
 readr
+purrr
 igraph
 tidygraph
+ggraph
 DBI
 RSQLite
 
@@ -5079,6 +5081,181 @@ Final due 9 AM**Week 3 \+ final project submission.** Remaining sketches and LCs
 **SYSEN 5470 · Calendar**
 
  Cornell Engineering · Summer 2026 · tmf77@cornell.edu
+
+---
+
+# R Playground · Block Keyboard (experimental) · SYSEN 5470
+
+_Source: docs/playground-r-blocks.html_
+
+Skip to content
+
+
+SYSEN 5470 · Coding Playground
+
+
+# *R* Playground
+
+
+A full R interpreter, compiled to WebAssembly, running in your browser tab. No install. Tidyverse (incl. purrr) \+ igraph \+ tidygraph \+ ggraph \+ DBI/RSQLite are pre\-installed. Your code and uploaded CSVs are saved to your own browser — they survive a refresh but never leave your device.
+
+
+Loading WebR runtime…
+
+
+How this works
+
+* The R interpreter runs **entirely in this browser tab** via WebAssembly. Nothing is sent to a server.
+* First load downloads \~30MB of R \+ WASM. Your browser caches it, so subsequent visits start in a second or two.
+* A browser tab has a **\~2–4 GB memory ceiling**. Fine for any course dataset; not enough for million\-row CSVs at full resolution.
+* Your code is auto\-saved to your browser's `localStorage`. Uploaded files are saved to your browser's `IndexedDB`. Both stay on your device.
+* Click **Run** (or press `Ctrl/Cmd + Enter`) to execute the editor's contents. Stdout, plots, and the current workspace populate on the right.
+
+
+Pre\-installed packages
+
+The packages below are loaded into your session once WebR is ready. To install additional ones, run `webr::install("<pkg>")` if it's available in the WebR CRAN repo.
+
+
+dplyr
+tidyr
+ggplot2
+readr
+purrr
+igraph
+tidygraph
+ggraph
+DBI
+RSQLite
+
+
+Project datasets — what's available \& how to load them
+
+These larger networks **ship with the playground — you don't upload anything.**
+ Pick one from the **▾ Load sample** menu in the toolbar, or click a card below.
+ That fetches the dataset's CSV files into your in\-browser working directory and drops a
+ starter snippet into the editor. From there they're ordinary files: read them with
+ `read.csv("…-nodes.csv")` and build the graph with igraph (`graph_from_data_frame()`). Each dataset has a full codebook
+ on GitHub.
+
+
+![](playground-data/amazon-last-mile-thumb.png)amazon\-last\-mile
+313 nodes · 2,142 edges
+A week of package flow: hubs → stations → delivery zones.
+![](playground-data/uber-manhattan-thumb.png)uber\-manhattan
+370 nodes · 3,000 edges
+Bipartite driver↔rider ride\-matching across downtown Manhattan.
+![](playground-data/semiconductor-supply-thumb.png)semiconductor\-supply
+368 nodes · 739 edges
+Multi\-tier global chip supply chain, raw materials → products.
+![](playground-data/aerospace-components-thumb.png)aerospace\-components
+300 nodes · 777 edges
+An aircraft's bill\-of\-materials \+ supplier network.
+![](playground-data/mutualaid-quake-thumb.png)mutualaid\-quake
+250 nodes · 2,935 edges
+Neighborhood mutual aid before / during / after an earthquake.
+![](playground-data/financial-contagion-thumb.png)financial\-contagion
+220 nodes · 1,701 edges
+Interbank exposure network across a financial crisis.
+![](playground-data/airline-delays-thumb.png)airline\-delays
+200 nodes · 2,244 edges
+Route network with delay propagation over a day.
+![](playground-data/power-grid-thumb.png)power\-grid
+300 nodes · 422 edges
+A regional electrical transmission grid.
+![](playground-data/campus-contact-thumb.png)campus\-contact
+300 nodes · 3,699 edges
+Campus face\-to\-face contact network during an outbreak.
+![](playground-data/opensource-deps-thumb.png)opensource\-deps
+400 nodes · 2,251 edges
+An open\-source package dependency graph.
+![](playground-data/trade-commodity-thumb.png)trade\-commodity
+140 nodes · 1,210 edges
+International commodity trade across a supply shock.
+![](playground-data/reorg-comms-thumb.png)reorg\-comms
+250 nodes · 7,926 edges
+Corporate comms before / during / after a reorg \+ layoff.
+![](playground-data/satellite-constellation-thumb.png)satellite\-constellation
+298 nodes · 733 edges
+Multi\-operator LEO satellites, links \& ground stations.
+![](playground-data/drone-components-thumb.png)drone\-components
+183 nodes · 617 edges
+A drone's component \+ software dependency graph.
+![](playground-data/transit-multimodal-thumb.png)transit\-multimodal
+152 nodes · 384 edges
+A city's bus \+ metro network with neighborhood nodes.
+
+
+### 📝 Code Editor
+
+
+▶ Run
+↻ Reset
+
+
+▾ Load sample…
+Karate club (34 nodes)
+Lakeside Bikeshare (15 nodes)
+Riverdale Metro (18 nodes)
+Supply Chain (16 factories)
+
+Amazon Last\-Mile (313 nodes)
+Uber Manhattan (370 nodes)
+Semiconductor Supply (368 nodes)
+Aerospace Components (300 nodes)
+Mutual Aid · Quake (250 nodes)
+Financial Contagion (220 nodes)
+Airline Delays (200 nodes)
+Power Grid (300 nodes)
+Campus Contact (300 nodes)
+Open\-Source Deps (400 nodes)
+Trade · Commodity (140 nodes)
+Reorg Comms (250 nodes)
+Satellite Constellation (298 nodes)
+Drone Components (183 nodes)
+Transit · Multimodal (152 nodes)
+
+
+⬆ Upload CSV
+
+
+⌨ Block keyboard
+experiment
+
+⇥ blank
+
+
+Suggestions update as you build. Tap a block to drop it at the cursor; fill the ⟨blanks⟩.
+
+
+### 📤 Output
+
+
+Console
+Plots 0
+Objects 0
+Data 0
+
+
+WebR is loading. The console will activate once the runtime is ready.
+
+
+No plots yet. Call `plot()`, `ggplot()`, or any graphics function in the editor.
+
+
+No objects in your workspace yet.
+
+
+No files uploaded yet. Use ⬆ Upload CSV or ▾ Load sample to bring data into your session.
+
+
+**Code** auto\-saved to localStorage
+**Uploaded files** persisted in IndexedDB (survive refresh, stay on your device)
+Clear saved code
+Clear uploaded files
+
+
+**SYSEN 5470 · R Playground** · Powered by WebR · 100% client\-side · tmf77@cornell.edu
 
 ---
 
