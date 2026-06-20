@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-20 05:20 UTC_
+_Auto-generated NotebookLM source · 2026-06-20 05:43 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -5223,6 +5223,19 @@ Transit · Multimodal (152 nodes)
 experiment
 
 ⇥ blank
+▾
+
+
+↶
+↷
+◀
+▶
+▲
+▼
+↤
+↦
+⏎
+⌫
 
 
 Suggestions update as you build. Tap a block to drop it at the cursor; fill the ⟨blanks⟩.
