@@ -4,6 +4,8 @@
 through fabs, packaging houses, and chip designers into finished electronic
 products.*
 
+![Preview of the semiconductor-supply network](thumb.png)
+
 ## At a glance
 
 | | |

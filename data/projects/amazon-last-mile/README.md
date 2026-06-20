@@ -3,6 +3,8 @@
 *One week of package flow through a fictional metro's last-mile delivery network:
 fulfillment hubs → delivery stations → neighborhood zones.*
 
+![Preview of the amazon-last-mile network](thumb.png)
+
 ## At a glance
 
 | | |

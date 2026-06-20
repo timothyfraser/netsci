@@ -4,6 +4,8 @@
 crisis: who lent to whom, before the storm, during the crash, and in the calmer
 aftermath.*
 
+![Preview of the financial-contagion network](thumb.png)
+
 ## At a glance
 
 | | |

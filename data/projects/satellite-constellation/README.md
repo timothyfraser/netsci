@@ -4,6 +4,8 @@
 broadband networks: satellites linked to each other and down to ground gateways,
 each link rated by capacity and latency.*
 
+![Preview of the satellite-constellation network](thumb.png)
+
 ## At a glance
 
 | | |

@@ -4,6 +4,8 @@
 earthquake: a directed neighborhood mutual-aid network of residents and local
 organizations.*
 
+![Preview of the mutualaid-quake network](thumb.png)
+
 ## At a glance
 
 | | |
