@@ -399,10 +399,37 @@
   .kbd-chip:hover, .kbd-chip:active { background: rgba(57,255,20,0.14); color: var(--white); border-color: var(--green-bright); }
   .kbd-chip.sug { border-color: var(--node-4); }
   .kbd-chip .k-sub { display:block; font-size: 9.5px; color: var(--grey); margin-top: 3px; letter-spacing: 0.02em; }
+  .kbd-nav { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px 0; }
+  .kbd-nav button {
+    flex: none; min-width: 42px; min-height: 38px;
+    background: rgba(5,46,22,0.7); color: var(--green-mint);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: var(--font-mono); font-size: 15px; cursor: pointer;
+    touch-action: manipulation;
+  }
+  .kbd-nav button:hover, .kbd-nav button:active { background: rgba(57,255,20,0.14); color: var(--white); border-color: var(--green-bright); }
+
   @media (max-width: 1100px) {
-    /* on phones, keep the keyboard reachable while the editor scrolls */
-    .kbd { position: sticky; bottom: 6px; z-index: 6; box-shadow: 0 -6px 18px rgba(0,0,0,0.5); }
-    .kbd-chip { font-size: 14px; min-height: 42px; }
+    /* On phones: pin the keyboard as a fixed, collapsible bottom sheet so it's
+       always reachable, and shrink the editor so it isn't a mile of scroll. */
+    .pg-card { min-height: auto; }
+    .CodeMirror { min-height: 200px !important; }
+    .pg-toolbar-spacer { display: none; }       /* let toolbar buttons wrap into view */
+    .pg-card, .CodeMirror, .CodeMirror-scroll, .pg-grid { max-width: 100%; }
+    #kbd {
+      position: fixed; left: 0; right: 0; bottom: 0; margin: 0; z-index: 60;
+      border-radius: 14px 14px 0 0; border-bottom: 0;
+      max-height: 44vh; overflow-y: auto;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.6);
+    }
+    #kbd.kbd-collapsed { max-height: 46px; overflow: hidden; }
+    .kbd-bar { position: sticky; top: 0; background: rgba(8,22,12,0.97); z-index: 1; }
+    .kbd-chip { font-size: 14px; min-height: 44px; }
+    /* leave room so page content can scroll clear of the fixed keyboard */
+    body.has-fixed-kbd { padding-bottom: 46vh; }
+    body.has-fixed-kbd.kbd-is-collapsed { padding-bottom: 64px; }
+    /* keep the Course Companion available, just move it up out of the keyboard's way */
+    #notebooklm-fab { top: 84px !important; bottom: auto !important; right: 12px !important; z-index: 40 !important; }
   }
 </style>
 <meta property="og:title" content="R Playground · SYSEN 5470">
@@ -573,6 +600,19 @@
           <span class="kbd-badge">experiment</span>
           <input class="kbd-filter" id="kbd-filter" placeholder="type 1–3 letters to filter…" autocomplete="off" autocapitalize="off" spellcheck="false">
           <button class="kbd-step" id="kbd-step" title="Jump to the next ⟨blank⟩">⇥ blank</button>
+          <button class="kbd-step" id="kbd-toggle" title="Hide / show the keyboard" aria-label="Hide or show the keyboard">▾</button>
+        </div>
+        <div class="kbd-nav" id="kbd-nav">
+          <button data-cmd="undo" title="Undo" aria-label="Undo">↶</button>
+          <button data-cmd="redo" title="Redo" aria-label="Redo">↷</button>
+          <button data-cmd="goCharLeft" title="Cursor left" aria-label="Cursor left">◀</button>
+          <button data-cmd="goCharRight" title="Cursor right" aria-label="Cursor right">▶</button>
+          <button data-cmd="goLineUp" title="Cursor up" aria-label="Cursor up">▲</button>
+          <button data-cmd="goLineDown" title="Cursor down" aria-label="Cursor down">▼</button>
+          <button data-cmd="goLineStart" title="Start of line" aria-label="Start of line">↤</button>
+          <button data-cmd="goLineEnd" title="End of line" aria-label="End of line">↦</button>
+          <button data-cmd="newline" title="New line" aria-label="New line">⏎</button>
+          <button data-cmd="del" title="Backspace" aria-label="Backspace">⌫</button>
         </div>
         <div class="kbd-cats" id="kbd-cats"></div>
         <div class="kbd-hint" id="kbd-hint">Suggestions update as you build. Tap a block to drop it at the cursor; fill the ⟨blanks⟩.</div>
@@ -1179,6 +1219,9 @@ bootstrap();
   // (e.g. offline), a <textarea id="editor"> would shadow it as window.editor —
   // so check for the CodeMirror API, not just existence.
   if (!q('kbd') || typeof editor === 'undefined' || !editor || typeof editor.on !== 'function') return;
+  // On phones, do NOT steal focus to the editor — that would pop the OS keyboard
+  // over our block keyboard. Inserts/cursor moves work on the doc without focus.
+  const onPhone = () => window.matchMedia('(max-width: 1100px)').matches;
 
   const CAT_ORDER = ['Suggested','Yours','Load','Wrangle','Build','Measure','Community','Plot','Logic','Syms'];
   const CHIPS = {
@@ -1270,7 +1313,7 @@ bootstrap();
       const open = startIdx + m.index;
       editor.setSelection(editor.posFromIndex(open), editor.posFromIndex(open + m[0].length));
     }
-    editor.focus();
+    if (!onPhone()) editor.focus();
     if (state.cat === 'Suggested') renderChips();
   }
   function stepBlank() {
@@ -1281,7 +1324,7 @@ bootstrap();
     if (idx === -1) return;
     const open = base + idx, len = val.slice(open).match(PH)[0].length;
     editor.setSelection(editor.posFromIndex(open), editor.posFromIndex(open + len));
-    editor.focus();
+    if (!onPhone()) editor.focus();
   }
 
   function ctx() {
@@ -1405,6 +1448,47 @@ bootstrap();
   q('kbd-filter').addEventListener('input', e => { state.filter = e.target.value; renderChips(); });
   q('kbd-step').addEventListener('click', stepBlank);
   editor.on('cursorActivity', () => { if (state.cat === 'Suggested') renderChips(); });
+
+  // wrap long lines so code never scrolls off the right edge on a phone
+  editor.setOption('lineWrapping', true);
+
+  // ---- cursor / edit controls (no fiddly tap-to-place on mobile) ----
+  document.querySelectorAll('#kbd-nav button[data-cmd]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cmd = btn.getAttribute('data-cmd');
+      if (cmd === 'newline') editor.replaceSelection('\n');
+      else if (cmd === 'del') editor.execCommand('delCharBefore');
+      else editor.execCommand(cmd);                 // goCharLeft/Right, goLineUp/Down, goLineStart/End, undo, redo
+      if (!onPhone()) editor.focus();
+      if (state.cat === 'Suggested') renderChips();
+    });
+  });
+
+  // ---- mobile: fixed collapsible bottom sheet ----
+  // The editor card uses backdrop-filter, which would make position:fixed resolve
+  // relative to the card (not the viewport). So on phones we relocate the keyboard
+  // to <body> so it truly pins to the bottom of the screen; restore it on desktop.
+  const toggle = q('kbd-toggle');
+  const kbdEl = q('kbd');
+  const kbdMark = document.createComment('kbd-home');
+  kbdEl.parentNode.insertBefore(kbdMark, kbdEl);
+  const isMobile = onPhone;
+  function applyMobile() {
+    const m = isMobile();
+    document.body.classList.toggle('has-fixed-kbd', m);
+    if (m && kbdEl.parentNode !== document.body) document.body.appendChild(kbdEl);
+    else if (!m && kbdEl.parentNode === document.body) kbdMark.parentNode.insertBefore(kbdEl, kbdMark);
+  }
+  if (toggle) toggle.addEventListener('click', () => {
+    const collapsed = kbdEl.classList.toggle('kbd-collapsed');
+    document.body.classList.toggle('kbd-is-collapsed', collapsed);
+    toggle.textContent = collapsed ? '▲' : '▾';
+  });
+  applyMobile();
+  window.addEventListener('resize', applyMobile);
+  // give the small screen as much room as possible on first load
+  if (isMobile()) document.querySelectorAll('details[open]').forEach(d => { d.open = false; });
+
   renderCats(); renderChips();
   setInterval(introspect, 2000);
 })();
