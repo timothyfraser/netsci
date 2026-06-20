@@ -112,9 +112,15 @@ Always verify BOTH languages actually run: `Rscript load.R` and `python load.py`
      `directed` flag, weight, and (if bipartite) `type`.
 3. Document the sample in `docs/playground-data/README.md`.
 4. Update the catalog table in `data/projects/README.md`.
-5. `python data/projects/_make_thumbnails.py` to render each dataset's
-   `thumb.png` preview; it is auto-embedded near the top of the README and shown
-   in the catalog's Previews gallery.
+5. `python data/projects/_make_thumbnails.py` to render each dataset's icon
+   `thumb.png` (add the dataset's emoji to the `ICONS` map first); it is embedded
+   near the top of the README and in the catalog's Previews gallery. The sync
+   step also mirrors thumbnails to `docs/playground-data/<name>-thumb.png`.
+   Then `python scripts/build_dataset_menus.py` regenerates the collapsible
+   "Project datasets" panel in both playgrounds (with click-to-load cards + a
+   how-to-load explainer) and the gallery on the playground hub page
+   (`docs/playground.html`) — add the dataset's key + one-liner to its `DATA`
+   list. Whitelist new thumbnails in `.gitignore` (the repo ignores `*.png`).
 6. Refresh the NotebookLM/site bundles so the dataset is discoverable:
    `python scripts/build_coding_bundle.py` (picks up the READMEs/loaders) and
    `python scripts/build_notebooklm_source.py` + `python scripts/build_index.py`

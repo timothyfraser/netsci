@@ -28,7 +28,11 @@ def main() -> None:
             shutil.copyfile(csv, target)
             print(f"  {csv.relative_to(PROJECTS)} -> playground-data/{target.name}")
             n += 1
-    print(f"synced {n} CSV file(s) into {DEST}")
+        thumb = ds / "thumb.png"
+        if thumb.exists():
+            shutil.copyfile(thumb, DEST / f"{ds.name}-thumb.png")
+            n += 1
+    print(f"synced {n} file(s) into {DEST}")
 
 
 if __name__ == "__main__":
