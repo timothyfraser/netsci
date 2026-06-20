@@ -39,6 +39,9 @@ jobs:
       - name: Build resource index (.notebook/index.md)
         run: python scripts/build_index.py
 
+      - name: Build combined single-file bundle (.notebook/netsci-notebooklm.md)
+        run: python scripts/build_combined_bundle.py
+
       - name: Commit refreshed bundles
         uses: stefanzweifel/git-auto-commit-action@v5
         with:

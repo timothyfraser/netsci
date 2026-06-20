@@ -122,9 +122,11 @@ Always verify BOTH languages actually run: `Rscript load.R` and `python load.py`
    (`docs/playground.html`) — add the dataset's key + one-liner to its `DATA`
    list. Whitelist new thumbnails in `.gitignore` (the repo ignores `*.png`).
 6. Refresh the NotebookLM/site bundles so the dataset is discoverable:
-   `python scripts/build_coding_bundle.py` (picks up the READMEs/loaders) and
+   `python scripts/build_coding_bundle.py` (picks up the READMEs/loaders),
    `python scripts/build_notebooklm_source.py` + `python scripts/build_index.py`
-   (the playground pages). These need `beautifulsoup4` + `markdownify`.
+   (the playground pages), then `python scripts/build_combined_bundle.py` (the
+   single-file `.notebook/netsci-notebooklm.md` blob). These need
+   `beautifulsoup4` + `markdownify`. (CI does all of this on push to `main`.)
 
 ## 7. The planted story (the part that matters)
 

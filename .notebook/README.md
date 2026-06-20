@@ -40,14 +40,20 @@ The Study Companion is a [NotebookLM](https://notebooklm.google.com) notebook co
 
 1. **Create a new notebook** at [notebooklm.google.com](https://notebooklm.google.com). Name it `SYSEN 5470 Study Companion`.
 
-2. **Upload course sources.** Recommended starter set:
-   - Syllabus (PDF)
-   - All rendered lab HTMLs as they're created
+2. **Upload course sources.** The easiest path is the **single combined bundle**:
+   - **`.notebook/netsci-notebooklm.md`** — one file containing the resource index,
+     the full course website text, and every code/dataset/skill module
+     (~128k words; well under NotebookLM's 500k-words-per-source limit). Upload
+     just this one and you're done.
+
+   It is built and kept current automatically by the *Build NotebookLM bundles*
+   GitHub Action (which also still emits the three section files —
+   `index.md`, `website.md`, `coding-modules.md` — if you'd rather upload them
+   separately). Add as you like:
    - Any required readings (PDF or EPUB)
    - Lecture slide decks (PDF) and/or lecture transcripts
-   - Module overviews or reading guides
 
-   *Free tier limit: 50 sources per notebook. Plenty for a 3-week course.*
+   *Free tier limit: 50 sources per notebook; the single-file bundle keeps you to one.*
 
 3. **Set the persona.** Click the gear icon in the chat panel → **Configure Chat** → **Custom** mode. Paste the entire contents of `study_companion_persona.md`. Save.
 
