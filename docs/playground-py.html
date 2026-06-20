@@ -300,6 +300,83 @@
   }
   .toast.show { opacity: 1; transform: translateY(0); }
   .toast.err { border-color: var(--node-7); color: var(--node-7); }
+/* ===== Experimental block keyboard (lean) ===== */
+  .kbd {
+    margin-top: 10px; border: 1px solid var(--border);
+    border-radius: var(--radius-md); background: rgba(5,46,22,0.55);
+    backdrop-filter: blur(8px); overflow: hidden;
+  }
+  .kbd-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-bottom: 1px solid var(--border-soft);
+  }
+  .kbd-bar .kbd-title {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--green-bright);
+  }
+  .kbd-bar .kbd-badge {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--black); background: var(--node-4);
+    padding: 1px 7px; border-radius: 999px;
+  }
+  .kbd-toggle {
+    margin-left: auto; background: transparent; color: var(--green-bright);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 4px 11px; cursor: pointer; font-size: 13px;
+  }
+  /* controls: a cursor dpad + an edit cluster */
+  .kbd-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding: 10px 12px; }
+  .kbd-dpad { display: grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 36px); gap: 5px; }
+  .kbd-dpad .up { grid-area: 1 / 2; }
+  .kbd-dpad .left { grid-area: 2 / 1; }
+  .kbd-dpad .right { grid-area: 2 / 3; }
+  .kbd-dpad .down { grid-area: 3 / 2; }
+  .kbd-edit { display: flex; flex-wrap: wrap; gap: 6px; }
+  .kbd-controls button {
+    min-width: 40px; min-height: 36px;
+    background: rgba(5,46,22,0.7); color: var(--green-mint);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: var(--font-mono); font-size: 15px; cursor: pointer;
+    touch-action: manipulation;
+  }
+  .kbd-controls button:hover, .kbd-controls button:active { background: rgba(57,255,20,0.14); color: var(--white); border-color: var(--green-bright); }
+  .kbd-hint {
+    padding: 2px 12px 0; font-family: var(--font-mono); font-size: 10px;
+    color: var(--node-4); letter-spacing: 0.04em;
+  }
+  .kbd-chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 8px 12px 14px; }
+  .kbd-chip {
+    background: rgba(5,46,22,0.7); color: var(--green-mint);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; min-height: 38px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 13px; line-height: 1.1;
+    transition: all 0.12s; touch-action: manipulation;
+  }
+  .kbd-chip:hover, .kbd-chip:active { background: rgba(57,255,20,0.14); color: var(--white); border-color: var(--green-bright); }
+
+  @media (max-width: 1100px) {
+    /* On phones: pin the keyboard as a fixed, collapsible bottom sheet so it's
+       always reachable, and shrink the editor so it isn't a mile of scroll. */
+    .pg-card { min-height: auto; }
+    .CodeMirror { min-height: 200px !important; }
+    .pg-toolbar-spacer { display: none; }       /* let toolbar buttons wrap into view */
+    .pg-card, .CodeMirror, .CodeMirror-scroll, .pg-grid { max-width: 100%; }
+    #kbd {
+      position: fixed; left: 0; right: 0; bottom: 0; margin: 0; z-index: 60;
+      border-radius: 14px 14px 0 0; border-bottom: 0;
+      max-height: 44vh; overflow-y: auto;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.6);
+    }
+    #kbd.kbd-collapsed { max-height: 46px; overflow: hidden; }
+    .kbd-bar { position: sticky; top: 0; background: rgba(8,22,12,0.97); z-index: 1; }
+    .kbd-chip { font-size: 14px; min-height: 44px; }
+    .kbd-controls button { min-height: 42px; min-width: 42px; }
+    /* leave room so page content can scroll clear of the fixed keyboard */
+    body.has-fixed-kbd { padding-bottom: 46vh; }
+    body.has-fixed-kbd.kbd-is-collapsed { padding-bottom: 64px; }
+    /* keep the Course Companion available, just move it up out of the keyboard's way */
+    #notebooklm-fab { top: 84px !important; bottom: auto !important; right: 12px !important; z-index: 40 !important; }
+  }
 </style>
 <meta property="og:title" content="Python Playground · SYSEN 5470">
 <meta property="og:description" content="Python playground for SYSEN 5470 — networkx + pandas in your browser via Pyodide.">
@@ -456,6 +533,31 @@
         <button class="pg-btn" id="btn-upload">⬆ Upload CSV</button>
       </div>
       <textarea id="editor"></textarea>
+
+<!-- ===== Experimental tap-to-code block keyboard (lean) ===== -->
+      <div class="kbd" id="kbd">
+        <div class="kbd-bar">
+          <span class="kbd-title">⌨ Block keyboard</span>
+          <span class="kbd-badge">experiment</span>
+          <button class="kbd-toggle" id="kbd-toggle" title="Hide / show the keyboard" aria-label="Hide or show the keyboard">▾</button>
+        </div>
+        <div class="kbd-controls">
+          <div class="kbd-dpad">
+            <button class="up"    data-cmd="goLineUp"    aria-label="Cursor up">▲</button>
+            <button class="left"  data-cmd="goCharLeft"  aria-label="Cursor left">◀</button>
+            <button class="right" data-cmd="goCharRight" aria-label="Cursor right">▶</button>
+            <button class="down"  data-cmd="goLineDown"  aria-label="Cursor down">▼</button>
+          </div>
+          <div class="kbd-edit">
+            <button data-cmd="undo"    title="Undo"      aria-label="Undo">↶</button>
+            <button data-cmd="redo"    title="Redo"      aria-label="Redo">↷</button>
+            <button data-cmd="newline" title="New line"  aria-label="New line">⏎</button>
+            <button data-cmd="del"     title="Backspace" aria-label="Backspace">⌫</button>
+          </div>
+        </div>
+        <div class="kbd-hint">Recommendations — tap to drop code at the cursor.</div>
+        <div class="kbd-chips" id="kbd-chips"></div>
+      </div>
     </div>
 
     <div class="pg-card">
@@ -1026,6 +1128,154 @@ $('btn-clear-files').addEventListener('click', async (e) => {
 });
 
 bootstrap();
+
+/* ===== Block keyboard (Python) =====
+   Cursor dpad + undo/redo/newline/backspace, plus context- and data-aware code
+   recommendations (token before the cursor + DataFrame columns live in the
+   Pyodide session). Inserts real code; you still type freely. */
+(function () {
+  const q = (id) => document.getElementById(id);
+  if (!q('kbd') || typeof editor === 'undefined' || !editor || typeof editor.on !== 'function') return;
+  const onPhone = () => window.matchMedia('(max-width: 1100px)').matches;
+
+  const state = { objs: [], cols: {} };
+  const chip = (l, s) => ({ l, s });
+  const PH = /⟨[^⟩]*⟩/;
+  const PD = ['head()', 'describe()', 'query("⟨cond⟩")', 'groupby("⟨col⟩")', 'sort_values("⟨col⟩", ascending=False)', 'value_counts()', 'columns', 'shape'];
+  const NX = ['betweenness_centrality(G, weight="weight")', 'degree_centrality(G)', 'connected_components(G)', 'shortest_path(G, ⟨s⟩, ⟨t⟩)', 'draw(G)'];
+  const PLT = ['show()', 'title("⟨t⟩")', 'figure(figsize=(6, 4))'];
+
+  function insert(snippet) {
+    if (!snippet) return;
+    const startIdx = editor.indexFromPos(editor.getCursor());
+    editor.replaceSelection(snippet, 'end');
+    const m = editor.getValue().slice(startIdx).match(PH);
+    if (m) { const o = startIdx + m.index; editor.setSelection(editor.posFromIndex(o), editor.posFromIndex(o + m[0].length)); }
+    if (!onPhone()) editor.focus();
+    renderChips();
+  }
+  function ctx() {
+    const cur = editor.getCursor();
+    const curTrim = editor.getLine(cur.line).slice(0, cur.ch).replace(/\s+$/, '');
+    if (curTrim === '') {
+      let p = cur.line - 1, prev = '';
+      while (p >= 0) { const L = editor.getLine(p).replace(/\s+$/, ''); if (L) { prev = L; break; } p--; }
+      if (/[\(,\[+\\]$/.test(prev)) return { t: prev, last: prev.slice(-1) };
+      return { t: '', last: '' };
+    }
+    return { t: curTrim, last: curTrim.slice(-1) };
+  }
+  function suggest() {
+    const { t, last } = ctx();
+    const has = (n) => state.objs.includes(n);
+    const out = [];
+    if (t === '') {
+      out.push(chip('import pandas', 'import pandas as pd'));
+      out.push(chip('import networkx', 'import networkx as nx'));
+      out.push(chip('read nodes', 'nodes = pd.read_csv("⟨nodes.csv⟩")'));
+      out.push(chip('read edges', 'edges = pd.read_csv("⟨edges.csv⟩")'));
+      out.push(chip('build graph', 'G = nx.from_pandas_edgelist(edges, "⟨source⟩", "⟨target⟩", edge_attr=True)'));
+      if (has('G')) { out.push(chip('degree', 'deg = dict(G.degree())')); out.push(chip('betweenness', 'bc = nx.betweenness_centrality(G, weight="weight")')); }
+      state.objs.forEach(o => out.push(chip(o, o)));
+    } else if (last === '[') {
+      const m = t.match(/([A-Za-z_][A-Za-z0-9_]*)\[$/);
+      if (m && state.cols[m[1]]) state.cols[m[1]].forEach(c => out.push(chip('"' + c + '"', '"' + c + '"]')));
+      else out.push(chip('"col"', '"⟨col⟩"]'));
+    } else if (last === '.') {
+      const m = t.match(/([A-Za-z_][A-Za-z0-9_]*)\.$/);
+      if (m && m[1] === 'nx') NX.forEach(s => out.push(chip(s.split('(')[0], s)));
+      else if (m && m[1] === 'plt') PLT.forEach(s => out.push(chip(s.replace(/\(.*/, '()'), s)));
+      else { PD.forEach(s => out.push(chip(s.includes('(') ? s.replace(/\(.*/, '()') : s, s))); if (m && state.cols[m[1]]) state.cols[m[1]].slice(0, 8).forEach(c => out.push(chip(c, c))); }
+    } else if (last === '(') {
+      ['weight="weight"', 'seed=42', 'data=True'].forEach(s => out.push(chip(s, s)));
+    } else if (/[A-Za-z0-9_\)\]"']$/.test(t)) {
+      [' = ', '.', '[', '('].forEach(s => out.push(chip(s.trim() || s, s)));
+    } else {
+      out.push(chip('betweenness', 'nx.betweenness_centrality(G, weight="weight")'));
+      out.push(chip('degree', 'dict(G.degree())'));
+      out.push(chip('draw', 'nx.draw(G, nx.spring_layout(G, seed=42), node_size=20)'));
+    }
+    return out;
+  }
+  function renderChips() {
+    const box = q('kbd-chips'); box.innerHTML = '';
+    const list = suggest();
+    if (!list.length) { box.innerHTML = '<span style="color:var(--grey);font-family:var(--font-mono);font-size:12px;">keep typing…</span>'; return; }
+    list.forEach(c => { const b = document.createElement('button'); b.className = 'kbd-chip'; b.textContent = c.l; b.addEventListener('click', () => insert(c.s)); box.appendChild(b); });
+  }
+
+  let busy = false, sig = '';
+  async function introspect() {
+    if (busy || typeof pyodide === 'undefined' || !pyodide || typeof isReady === 'undefined' || !isReady) return;
+    busy = true;
+    try {
+      const out = pyodide.runPython(`
+import pandas as _pd
+def _kbd():
+    try:
+        import networkx as _nx
+    except Exception:
+        _nx = None
+    rows = []
+    for _k, _v in list(globals().items()):
+        if _k.startswith('_'): continue
+        if isinstance(_v, _pd.DataFrame):
+            rows.append("df :: %s :: %s" % (_k, ",".join([str(c) for c in _v.columns])))
+        elif _nx is not None and isinstance(_v, _nx.Graph):
+            rows.append("graph :: %s" % _k)
+    return " ||| ".join(rows)
+_kbd()
+`);
+      const objs = [], cols = {};
+      if (out) String(out).split(' ||| ').forEach(row => {
+        const pcs = row.split(' :: '), type = pcs[0], name = pcs[1];
+        if (!name) return;
+        objs.push(name);
+        if (type === 'df' && pcs[2]) cols[name] = pcs[2].split(',').filter(Boolean);
+      });
+      const newSig = objs.join('|') + JSON.stringify(cols);
+      state.objs = objs; state.cols = cols;
+      if (newSig !== sig) { sig = newSig; renderChips(); }
+    } catch (e) { /* keyboard still works without introspection */ }
+    finally { busy = false; }
+  }
+
+  editor.on('cursorActivity', renderChips);
+  editor.setOption('lineWrapping', true);
+  document.querySelectorAll('.kbd-controls button[data-cmd]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cmd = btn.getAttribute('data-cmd');
+      if (cmd === 'newline') editor.replaceSelection('\n');
+      else if (cmd === 'del') editor.execCommand('delCharBefore');
+      else editor.execCommand(cmd);
+      if (!onPhone()) editor.focus();
+      renderChips();
+    });
+  });
+
+  // ---- mobile: fixed collapsible bottom sheet ----
+  const toggle = q('kbd-toggle');
+  const kbdEl = q('kbd');
+  const kbdMark = document.createComment('kbd-home');
+  kbdEl.parentNode.insertBefore(kbdMark, kbdEl);
+  function applyMobile() {
+    const m = onPhone();
+    document.body.classList.toggle('has-fixed-kbd', m);
+    if (m && kbdEl.parentNode !== document.body) document.body.appendChild(kbdEl);
+    else if (!m && kbdEl.parentNode === document.body) kbdMark.parentNode.insertBefore(kbdEl, kbdMark);
+  }
+  if (toggle) toggle.addEventListener('click', () => {
+    const c = kbdEl.classList.toggle('kbd-collapsed');
+    document.body.classList.toggle('kbd-is-collapsed', c);
+    toggle.textContent = c ? '▲' : '▾';
+  });
+  applyMobile();
+  window.addEventListener('resize', applyMobile);
+  if (onPhone()) document.querySelectorAll('details[open]').forEach(d => { d.open = false; });
+
+  renderChips();
+  setInterval(introspect, 2000);
+})();
 </script>
 </body>
 </html>
