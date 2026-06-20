@@ -1167,8 +1167,7 @@ $('btn-clear-files').addEventListener('click', async (e) => {
 
 // Kick off
 bootstrap();
-</script>
-<script>
+
 /* ===== Experimental DATA-AWARE block keyboard (R) =====
    Inserts real code into the editor; suggestions adapt to the token before the
    cursor AND to what's actually in your R session (objects, data-frame columns,
@@ -1176,7 +1175,10 @@ bootstrap();
    keyboard — chips handle symbols & functions; type free text normally. */
 (function () {
   const q = (id) => document.getElementById(id);
-  if (!q('kbd') || typeof editor === 'undefined') return;
+  // `editor` must be the live CodeMirror instance. If CodeMirror failed to load
+  // (e.g. offline), a <textarea id="editor"> would shadow it as window.editor —
+  // so check for the CodeMirror API, not just existence.
+  if (!q('kbd') || typeof editor === 'undefined' || !editor || typeof editor.on !== 'function') return;
 
   const CAT_ORDER = ['Suggested','Yours','Load','Wrangle','Build','Measure','Community','Plot','Logic','Syms'];
   const CHIPS = {
@@ -1284,8 +1286,17 @@ bootstrap();
 
   function ctx() {
     const cur = editor.getCursor();
-    const t = editor.getLine(cur.line).slice(0, cur.ch).replace(/\s+$/, '');
-    return { t, last: t.slice(-1) };
+    const curTrim = editor.getLine(cur.line).slice(0, cur.ch).replace(/\s+$/, '');
+    // At the start of a fresh line, look back: if the previous non-empty line
+    // ends with a continuation token (|>  %>%  +  ,  (), continue that thought;
+    // otherwise treat it as the start of a new statement (offer starters).
+    if (curTrim === '') {
+      let p = cur.line - 1, prev = '';
+      while (p >= 0) { const L = editor.getLine(p).replace(/\s+$/, ''); if (L) { prev = L; break; } p--; }
+      if (/(\|>|%>%|\+|,|\()$/.test(prev)) return { t: prev, last: prev.slice(-1) };
+      return { t: '', last: '' };
+    }
+    return { t: curTrim, last: curTrim.slice(-1) };
   }
   function suggest() {
     const { t, last } = ctx();
