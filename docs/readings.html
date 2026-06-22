@@ -172,7 +172,7 @@
   <section class="hero">
     <p class="course-number">SYSEN 5470 · Readings</p>
     <h1 class="hero-title"><span>Readings</span></h1>
-    <p class="hook">Every case study pairs a textbook chapter with one engineering application paper — the textbook keeps it rigorous, the paper keeps it real. Most links are free or open-access; excerpts from non-open texts are distributed as PDFs in the course.</p>
+    <p class="hook">Every case study has at most <strong>two required readings</strong> — typically a textbook chapter and one engineering application paper: the textbook keeps it rigorous, the paper keeps it real. Everything else is <strong>optional further reading</strong>. Most links are free or open-access; excerpts from non-open texts are distributed as PDFs in the course.</p>
   </section>
 
   <section class="section">
@@ -215,22 +215,22 @@
     <p class="case-goal">Classify nodes, edges, direction, weighting, and small-world phenomena. Recognize when your problem is a graph problem.</p>
     <div class="reading-list">
       <div class="reading-item t-primary">
-        <span class="tag-col">Primary</span>
-        <span class="body">Barabási, Ch. 1: <em>Introduction</em>. Why network thinking matters.</span>
-        <a href="https://networksciencebook.com/chapter/1" target="_blank" rel="noopener">Read →</a>
-      </div>
-      <div class="reading-item t-primary">
-        <span class="tag-col">Primary</span>
+        <span class="tag-col">Required</span>
         <span class="body">Barabási, Ch. 2: <em>Graph Theory</em>. Nodes, edges, direction, weighting, paths.</span>
         <a href="https://networksciencebook.com/chapter/2" target="_blank" rel="noopener">Read →</a>
       </div>
       <div class="reading-item t-applied">
-        <span class="tag-col">Applied</span>
+        <span class="tag-col">Required</span>
         <span class="body">Gladwell, M. (1999). <em>Six Degrees of Lois Weinberg.</em> The New Yorker.</span>
         <a href="https://www.newyorker.com/magazine/1999/01/11/six-degrees-of-lois-weinberg" target="_blank" rel="noopener">Open →</a>
       </div>
-      <div class="reading-item t-primary">
-        <span class="tag-col">Primary</span>
+      <div class="reading-item t-optional">
+        <span class="tag-col">Optional</span>
+        <span class="body">Barabási, Ch. 1: <em>Introduction</em>. Why network thinking matters.</span>
+        <a href="https://networksciencebook.com/chapter/1" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-optional">
+        <span class="tag-col">Optional</span>
         <span class="body">Easley &amp; Kleinberg, Ch. 3: <em>Strong and Weak Ties.</em></span>
         <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch03.pdf" target="_blank" rel="noopener">Read →</a>
       </div>
@@ -252,27 +252,27 @@
     <p class="case-goal">Identify bottlenecks, hubs, and vulnerabilities in any system. Calculate centrality with tidygraph; bipartite networks; cascading failure.</p>
     <div class="reading-list">
       <div class="reading-item t-primary">
-        <span class="tag-col">Primary</span>
-        <span class="body">Barabási, Ch. 3: <em>Random Networks.</em></span>
-        <a href="https://networksciencebook.com/chapter/3" target="_blank" rel="noopener">Read →</a>
-      </div>
-      <div class="reading-item t-primary">
-        <span class="tag-col">Primary</span>
+        <span class="tag-col">Required</span>
         <span class="body">Barabási, Ch. 8: <em>Network Robustness.</em></span>
         <a href="https://networksciencebook.com/chapter/8" target="_blank" rel="noopener">Read →</a>
       </div>
-      <div class="reading-item t-primary">
-        <span class="tag-col">Primary</span>
-        <span class="body">Barabási, Ch. 10: <em>Spreading Phenomena.</em></span>
-        <a href="https://networksciencebook.com/chapter/10" target="_blank" rel="noopener">Read →</a>
-      </div>
       <div class="reading-item t-applied">
-        <span class="tag-col">Applied</span>
+        <span class="tag-col">Required</span>
         <span class="body">Easley &amp; Kleinberg, §3.6: <em>Betweenness Measures and Graph Partitioning.</em></span>
         <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch03.pdf" target="_blank" rel="noopener">Read →</a>
       </div>
-      <div class="reading-item t-applied">
-        <span class="tag-col">Applied</span>
+      <div class="reading-item t-optional">
+        <span class="tag-col">Optional</span>
+        <span class="body">Barabási, Ch. 3: <em>Random Networks.</em></span>
+        <a href="https://networksciencebook.com/chapter/3" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-optional">
+        <span class="tag-col">Optional</span>
+        <span class="body">Barabási, Ch. 10: <em>Spreading Phenomena.</em></span>
+        <a href="https://networksciencebook.com/chapter/10" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-optional">
+        <span class="tag-col">Optional</span>
         <span class="body">Easley &amp; Kleinberg, Ch. 19: <em>Cascading Behavior in Networks.</em></span>
         <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch19.pdf" target="_blank" rel="noopener">Read →</a>
       </div>
@@ -294,7 +294,7 @@
     <p class="case-goal">Permutation tests, jackknife, bootstrap on networks. Does income shape who rides with whom?</p>
     <div class="reading-list">
       <div class="reading-item t-applied">
-        <span class="tag-col">Applied</span>
+        <span class="tag-col">Required</span>
         <span class="body">Farine, D. R. (2017). <em>A guide to null models for animal social network analysis.</em> Methods Ecol. Evol. 8: 1309–1320.</span>
         <a href="https://doi.org/10.1111/2041-210X.12772" target="_blank" rel="noopener">DOI →</a>
       </div>
@@ -311,12 +311,12 @@
     <p class="case-goal">Solve real flow and routing problems in logistics and transit. Counterfactual graph mutation — add a node, measure metric M, resample.</p>
     <div class="reading-list">
       <div class="reading-item t-primary">
-        <span class="tag-col">Primary</span>
+        <span class="tag-col">Required</span>
         <span class="body">Bertsekas. <em>Network Optimization.</em> MIT.</span>
         <a href="https://web.mit.edu/dimitrib/www/netbook_Full_Book_NEW.pdf" target="_blank" rel="noopener">PDF →</a>
       </div>
       <div class="reading-item t-applied">
-        <span class="tag-col">Applied</span>
+        <span class="tag-col">Required</span>
         <span class="body"><em>Supply Chain Network Design.</em> Resource on production-distribution graph design.</span>
         <a href="https://share.google/Aj1SlRHiOSlH2ih1x" target="_blank" rel="noopener">Open →</a>
       </div>
@@ -333,22 +333,22 @@
     <p class="case-goal">Detect structure in large-scale networks automatically. Bipartite graphs, affiliation, matching markets.</p>
     <div class="reading-list">
       <div class="reading-item t-primary">
-        <span class="tag-col">Primary</span>
+        <span class="tag-col">Required</span>
         <span class="body">Barabási, Ch. 9: <em>Communities.</em></span>
         <a href="https://networksciencebook.com/chapter/9" target="_blank" rel="noopener">Read →</a>
       </div>
       <div class="reading-item t-applied">
-        <span class="tag-col">Applied</span>
-        <span class="body">Barabási, Ch. 2: §<em>Bipartite Graphs.</em></span>
-        <a href="https://networksciencebook.com/chapter/2" target="_blank" rel="noopener">Read →</a>
-      </div>
-      <div class="reading-item t-applied">
-        <span class="tag-col">Applied</span>
+        <span class="tag-col">Required</span>
         <span class="body">Easley &amp; Kleinberg, Ch. 10: <em>Matching Markets</em> (bipartite focus).</span>
         <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch10.pdf" target="_blank" rel="noopener">Read →</a>
       </div>
-      <div class="reading-item t-applied">
-        <span class="tag-col">Applied</span>
+      <div class="reading-item t-optional">
+        <span class="tag-col">Optional</span>
+        <span class="body">Barabási, Ch. 2: §<em>Bipartite Graphs.</em></span>
+        <a href="https://networksciencebook.com/chapter/2" target="_blank" rel="noopener">Read →</a>
+      </div>
+      <div class="reading-item t-optional">
+        <span class="tag-col">Optional</span>
         <span class="body">Easley &amp; Kleinberg, §4.3: <em>Affiliation.</em></span>
         <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch04.pdf" target="_blank" rel="noopener">Read →</a>
       </div>
@@ -365,12 +365,12 @@
     <p class="case-goal">Neural networks, graph neural nets, and ML for network inference. Static and temporal GNNs.</p>
     <div class="reading-list">
       <div class="reading-item t-applied">
-        <span class="tag-col">Applied</span>
+        <span class="tag-col">Required</span>
         <span class="body">Khan et al. (2025). <em>Optimizing machine learning for network inference.</em> Sci Rep 15, 24472.</span>
         <a href="https://doi.org/10.1038/s41598-025-02982-0" target="_blank" rel="noopener">DOI →</a>
       </div>
       <div class="reading-item t-applied">
-        <span class="tag-col">Applied</span>
+        <span class="tag-col">Required</span>
         <span class="body">Resce et al. (2022). <em>Machine learning prediction of academic collaboration networks.</em> Sci Rep 12, 21993.</span>
         <a href="https://doi.org/10.1038/s41598-022-26531-1" target="_blank" rel="noopener">DOI →</a>
       </div>
@@ -397,7 +397,7 @@
     <p class="case-goal">Communicate network insight with beautiful, interactive graphics. Bluebikes, hurricane evacuation, healthcare accessibility.</p>
     <div class="reading-list">
       <div class="reading-item t-applied">
-        <span class="tag-col">Applied</span>
+        <span class="tag-col">Required</span>
         <span class="body">Bellantuono et al. (2025). <em>Analyzing the accessibility of Rome's healthcare services via public transportation.</em> Sci Rep 15, 22880.</span>
         <a href="https://doi.org/10.1038/s41598-025-05060-7" target="_blank" rel="noopener">DOI →</a>
       </div>
@@ -414,7 +414,7 @@
     <p class="case-goal">Wrangling edgelists and nodelists at scale. Grouping, joins, network joins, aggregation, intro to SQLite.</p>
     <div class="reading-list">
       <div class="reading-item t-primary">
-        <span class="tag-col">Primary</span>
+        <span class="tag-col">Required</span>
         <span class="body">Easley &amp; Kleinberg, §2.4: <em>Network Datasets — An Overview.</em></span>
         <a href="https://www.cs.cornell.edu/home/kleinber/networks-book/networks-book-ch02.pdf" target="_blank" rel="noopener">Read →</a>
       </div>
