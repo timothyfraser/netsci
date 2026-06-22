@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science and Applications for Systems Engineering
 
-Course repository for **SYSEN 5470** at Cornell, taught by [Tim Fraser](https://timothyfraser.com).
+Course repository for **SYSEN 5470** at Cornell, taught by [Tim Fraser][tf].
 A graduate course on analyzing networked engineered systems — supply chains,
 transit, power grids, disaster response — in R and Python.
 
@@ -8,47 +8,49 @@ transit, power grids, disaster response — in R and Python.
 
 | | |
 |---|---|
-| 🌐 **Course website** (start here) | <https://timothyfraser.com/netsci> |
-| 🎓 **Canvas** (assignments, grades, announcements) | <https://canvas.cornell.edu/courses/87652> |
-| 💻 **Coding playground** (run code in your browser) | <https://timothyfraser.com/netsci/playground.html> |
-| ⌨️ R playground | <https://timothyfraser.com/netsci/playground-r.html> |
-| 🐍 Python playground | <https://timothyfraser.com/netsci/playground-py.html> |
+| 🌐 **Course website** (start here) | [timothyfraser.com/netsci][site] |
+| 🎓 **Canvas** (assignments, grades, announcements) | [canvas.cornell.edu][canvas] |
+| 💻 **Coding playground** (run code in your browser) | [playground][play] · [R][play-r] · [Python][play-py] |
 
-## 📚 For students — where to find things
+## 📚 For students
 
-On the **[course website](https://timothyfraser.com/netsci)**:
-
-- [Syllabus](https://timothyfraser.com/netsci/syllabus.html) · [Calendar](https://timothyfraser.com/netsci/calendar.html) · [Assignments](https://timothyfraser.com/netsci/assignments.html)
-- [Case studies](https://timothyfraser.com/netsci/case-studies.html) — the applications we work through
-- [The four skills](https://timothyfraser.com/netsci/four-skills.html) — Identify · Measure · Infer · Predict
-- [Readings & materials](https://timothyfraser.com/netsci/materials.html) · [Sketchpad](https://timothyfraser.com/netsci/sketchpad.html)
+On the **[course website][site]**: syllabus, calendar, assignments, case studies,
+the four skills (Identify · Measure · Infer · Predict), readings, and the sketchpad.
 
 In **this repository**:
 
-- [`data/projects/`](data/projects) — the **project datasets** (100–500+ node networks)
-  for your case study, each with a README codebook and ready-to-run R + Python loaders
-- [`code/`](code) — the case-study teaching code (parallel R and Python)
-- [`quickstart/`](quickstart) — get your environment set up
+| | |
+|---|---|
+| [`data/projects/`](data/projects) | Project datasets (100–500+ node networks), each with a README codebook and ready-to-run R + Python loaders |
+| [`code/`](code) | Case-study teaching code, in parallel R and Python |
+| [`quickstart/`](quickstart) | Get your environment set up |
 
-## 💻 The coding playgrounds
+## 💻 Coding playgrounds
 
-Both playgrounds run **entirely in your browser** — no install needed — and come
+Both [playgrounds][play] run **entirely in your browser** — no install — and come
 preloaded with the project datasets:
 
-- **[R playground](https://timothyfraser.com/netsci/playground-r.html)** — igraph, tidygraph, ggraph (via WebR)
-- **[Python playground](https://timothyfraser.com/netsci/playground-py.html)** — pandas, networkx, matplotlib (via Pyodide)
+- **[R][play-r]** — igraph, tidygraph, ggraph (via WebR)
+- **[Python][play-py]** — pandas, networkx, matplotlib (via Pyodide)
 
-On a phone, a tap-to-code block keyboard helps you write code without fighting
-the on-screen keyboard.
+On a phone, a tap-to-code block keyboard lets you write code without fighting the
+on-screen keyboard.
 
 ## 🤖 Study Companion
 
-A NotebookLM-based tutor configured to **help you think, not do your work** —
-with chat commands like `/study`, `/glossary`, `/quizme`, and `/interpret`. Your
+A NotebookLM-based tutor configured to **help you think, not do your work** — with
+chat commands like `/study`, `/glossary`, `/quizme`, and `/interpret`. Your
 instructor shares the link on Canvas.
 
 ---
 
 *Instructor note: this `main` branch is the student-facing view, generated
-automatically from the `instructor` branch. See `instructor` for the full course
-source (website, build tooling, and study-companion materials).*
+automatically from the `instructor` branch, which holds the full course source
+(website, build tooling, and study-companion materials).*
+
+[tf]: https://timothyfraser.com
+[site]: https://timothyfraser.com/netsci
+[canvas]: https://canvas.cornell.edu/courses/87652
+[play]: https://timothyfraser.com/netsci/playground.html
+[play-r]: https://timothyfraser.com/netsci/playground-r.html
+[play-py]: https://timothyfraser.com/netsci/playground-py.html

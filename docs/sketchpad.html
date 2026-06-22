@@ -128,6 +128,23 @@
     .sketch-card { grid-template-columns: 1fr; }
     .sketch-card .ico { font-size: 32px; }
   }
+
+  .sketch-link {
+    font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--green-bright); text-decoration: none;
+    display: inline-block; margin-top: 4px;
+  }
+  .sketch-link:hover { text-decoration: underline; }
+
+  .optional-note {
+    background: rgba(251,191,36,0.07);
+    border: 1px solid var(--node-4);
+    border-radius: var(--radius-lg); padding: 18px 24px; margin-bottom: 24px;
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.6;
+  }
+  .optional-note strong { color: var(--white); font-weight: 500; }
 </style>
 <meta property="og:title" content="Sketchpad Prompts · SYSEN 5470">
 <meta property="og:description" content="Sketchpad prompts for SYSEN 5470 — sketch first, code second. One sketch per topic before any syntax.">
@@ -208,279 +225,294 @@
   </section>
 
   <section class="section">
-    <div class="sec-label">The Eleven Prompts — one per lab</div>
+    <div class="sec-label">The Eleven Sketches — one per case study</div>
 
-    <!-- 01: Fundamentals -->
-    <div class="sketch-card">
+    <div class="sketch-card" id="sketch-01">
       <div class="ico">🕸️</div>
       <div>
         <div class="head">
-          <h3>Sketch 01 · Map your network</h3>
+          <h3>Sketch 01 · One paragraph, two networks</h3>
           <div class="meta">
             <span class="skill-chip skill-identify">Identify</span>
-            <span class="time-chip">~20 min</span>
           </div>
         </div>
-        <div class="prompt">
-          Pick a system you know well — your team, your supply chain, your transit commute, a household. Draw <strong>five to twelve nodes</strong> with edges between them. Label each node. Label at least two edges with what flows along them (information, goods, money, trust). Use one color for directed edges, another for undirected.
-        </div>
-        <div class="purpose"><span class="label">Purpose</span>Dismantles the assumption that "real systems are too messy to model." If you can draw it, you can analyze it.</div>
+        <div class="prompt">Read this scenario carefully: <em>"The city’s emergency operations center (EOC) coordinates response with the fire department, police department, and hospital. The fire chief and police chief exchange text messages directly throughout each shift. During the last storm, the hospital emailed status reports to the EOC every two hours, and the police called the EOC whenever a road was closed. The EOC, in turn, broadcast briefings to all three agencies over a shared radio channel. The fire department posts its dispatch log to a shared portal that the police and EOC read but the hospital does not."</em> On your sketchpad, draw this network <strong>two ways</strong>: first <strong>undirected</strong> (an edge means "these two parties communicate at all"), then <strong>directed</strong>, possibly multi-edge, where each arrow is one specific channel (call, email, text, radio, portal post). Then write underneath: who would find each version more useful? Name a specific <strong>role</strong> — the actual person whose job depends on that view.</div>
+        <div class="purpose"><span class="label">Purpose</span>A network is a choice about what counts as a tie. The question you’re asking determines which version is "right" — there is no universally correct answer.</div>
         <ul class="what-you-draw">
-          <li>Five to twelve nodes, labeled</li>
-          <li>Edges with explicit direction (arrowheads)</li>
+          <li>The scenario as an undirected network</li>
+          <li>The same scenario as a directed, multi-edge network</li>
+          <li>A written note naming who needs each view, and why</li>
+        </ul>
+        <a class="sketch-link" href="case-studies/build-a-network.html">Open case study 01 →</a>
+      </div>
+    </div>
+
+    <div class="sketch-card" id="sketch-02">
+      <div class="ico">🔗</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 02 · Draw the join key</h3>
+          <div class="meta">
+            <span class="skill-chip skill-identify">Identify</span>
+          </div>
+        </div>
+        <div class="prompt">On your physical sketchpad, sketch the <strong>nodes</strong> and <strong>edges</strong> tables side by side and list their columns. Draw an arrow from <code>edges.from_id</code> to <code>nodes.node_id</code> — that arrow <em>is</em> your join key. Now sketch what the joined table looks like: which columns survive, how many rows, and what happens to <code>tier</code> if you join twice (once on <code>from_id</code>, once on <code>to_id</code>). Write down: <strong>when does the rename step become essential, and what is it renaming?</strong></div>
+        <div class="purpose"><span class="label">Purpose</span>The join key is a visual idea before it is code, and the rename step is the part everyone forgets — sketching it forces you to remember.</div>
+        <ul class="what-you-draw">
+          <li>Two table boxes with column names</li>
+          <li>The join-key arrow between them</li>
+          <li>The joined table, with the columns that collide and their new names</li>
+        </ul>
+        <a class="sketch-link" href="case-studies/joins.html">Open case study 02 →</a>
+      </div>
+    </div>
+
+    <div class="sketch-card" id="sketch-03">
+      <div class="ico">🗺️</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 03 · Predict the O–D matrix</h3>
+          <div class="meta">
+            <span class="skill-chip skill-identify">Identify</span>
+          </div>
+        </div>
+        <div class="prompt">Before you switch to the income-quintiles view, pause and sketch: what pattern do you expect in a <strong>5×5 origin–destination matrix</strong> between income quintiles during a morning commute? Where will the heaviest flows go? Draw a 5×5 grid with arrows for the dominant flows you predict — then check the matrix view against your guess.</div>
+        <div class="purpose"><span class="label">Purpose</span>Aggregation isn’t losing data — it’s choosing what to make visible. Commit to a prediction before the grid shows you the answer.</div>
+        <ul class="what-you-draw">
+          <li>A 5×5 quintile grid</li>
+          <li>Arrows for the flows you expect to dominate</li>
+          <li>A one-line note on what surprised you</li>
+        </ul>
+        <a class="sketch-link" href="case-studies/aggregation.html">Open case study 03 →</a>
+      </div>
+    </div>
+
+    <div class="sketch-card" id="sketch-04">
+      <div class="ico">📊</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 04 · Predict the bottleneck</h3>
+          <div class="meta">
+            <span class="skill-chip skill-measure">Measure</span>
+          </div>
+        </div>
+        <div class="prompt">Before you remove a single station, predict <strong>by eye</strong> which two stations would do the most damage if knocked out. Mark them on paper. Then remove them in the lab and see whether your intuition matched <strong>degree</strong>, <strong>betweenness</strong>, or neither.</div>
+        <div class="purpose"><span class="label">Purpose</span>Dismantles the "busiest = most critical" misconception before the code lab hands you the numbers.</div>
+        <ul class="what-you-draw">
+          <li>The network sketched by eye</li>
+          <li>Two circled stations you predict are most critical</li>
+          <li>A one-line guess: degree, betweenness, or neither</li>
+        </ul>
+        <a class="sketch-link" href="case-studies/centrality.html">Open case study 04 →</a>
+      </div>
+    </div>
+
+    <div class="sketch-card" id="sketch-05">
+      <div class="ico">🛡️</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 05 · Predict the damage curves</h3>
+          <div class="meta">
+            <span class="skill-chip skill-measure">Measure</span>
+          </div>
+        </div>
+        <div class="prompt">Before you run any simulation, sketch your predictions for all three disruption strategies on paper. <strong>Which one degrades the network fastest? How far behind is the slowest?</strong> Draw rough damage curves on a single axis. Then run the lab and see which prediction held — and where you were surprised.</div>
+        <div class="purpose"><span class="label">Purpose</span>Trains your eye for how a network falls apart before the simulation automates it.</div>
+        <ul class="what-you-draw">
+          <li>One axis with three rough damage curves</li>
+          <li>A ranking of which strategy is worst</li>
+          <li>A marked spot where you expect to be surprised</li>
+        </ul>
+        <a class="sketch-link" href="case-studies/supply-chain.html">Open case study 05 →</a>
+      </div>
+    </div>
+
+    <div class="sketch-card" id="sketch-06">
+      <div class="ico">🧩</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 06 · Draw the system you don’t see</h3>
+          <div class="meta">
+            <span class="skill-chip skill-measure">Measure</span>
+          </div>
+        </div>
+        <div class="prompt">Pick one of three systems (<strong>rocket, drone, software</strong>). Without looking at the matrix, sketch it as a node-link diagram — 8–15 components with arrows for what depends on what. Then draw a blank <strong>8×8 grid</strong> with your components as both row and column labels and fill in the dependencies you think exist: this is your <em>predicted DSM</em>. Load the real DSM and compare — how many dependencies did you miss, how many did you imagine? Which view would convince a program manager the system is over-coupled?</div>
+        <div class="purpose"><span class="label">Purpose</span>Node-link diagrams hide coupling; matrices expose it. The gap between your two sketches is the lesson.</div>
+        <ul class="what-you-draw">
+          <li>A node-link sketch of your chosen system</li>
+          <li>A predicted 8×8 DSM grid</li>
+          <li>A tally of missed vs. imagined dependencies</li>
+        </ul>
+        <a class="sketch-link" href="case-studies/dsm-clustering.html">Open case study 06 →</a>
+      </div>
+    </div>
+
+    <div class="sketch-card" id="sketch-07">
+      <div class="ico">📐</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 07 · Predict the null distribution</h3>
+          <div class="meta">
+            <span class="skill-chip skill-infer">Infer</span>
+          </div>
+        </div>
+        <div class="prompt">Before you click Run, predict on paper what the null distribution should look like <strong>if there were no real structure</strong>: where should the observed statistic sit relative to the bulk of the null? Draw the histogram you expect and mark the observed value. Then run the sampler and compare.</div>
+        <div class="purpose"><span class="label">Purpose</span>Forces you to commit to what "no real structure" looks like before the permutation test shows you.</div>
+        <ul class="what-you-draw">
+          <li>The null histogram you expect</li>
+          <li>A vertical line for the observed value</li>
+          <li>A note on whether it should land in the tail</li>
+        </ul>
+        <a class="sketch-link" href="case-studies/permutation.html">Open case study 07 →</a>
+      </div>
+    </div>
+
+    <div class="sketch-card" id="sketch-08">
+      <div class="ico">🎯</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 08 · Choose your five</h3>
+          <div class="meta">
+            <span class="skill-chip skill-identify">Identify</span>
+          </div>
+        </div>
+        <div class="prompt">Without running the visualization, draw a quick map: <strong>which 5 of the 40 parishes</strong> would you measure if you could only afford 5? Mark them, then write down what you expect to lose — geographic blind spots, missing triangles, biased degree estimates. Now resample with each strategy at 12.5% (5 nodes’ worth) and see whether the strategies even produce the kind of network you expected.</div>
+        <div class="purpose"><span class="label">Purpose</span>The sampling strategy determines the biases you inherit — name them before you sample.</div>
+        <ul class="what-you-draw">
+          <li>5 chosen parishes marked on a rough map</li>
+          <li>A list of what that choice loses</li>
+          <li>A comparison against the resampled networks</li>
+        </ul>
+        <a class="sketch-link" href="case-studies/sampling.html">Open case study 08 →</a>
+      </div>
+    </div>
+
+    <div class="sketch-card" id="sketch-09">
+      <div class="ico">🚦</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 09 · Pick the best treatment</h3>
+          <div class="meta">
+            <span class="skill-chip skill-predict">Predict</span>
+          </div>
+        </div>
+        <div class="prompt">Look at the Lakeside map. By eye, predict which of the <strong>three proposed treatments</strong> will produce the largest improvement in average path length. Draw the treatment on paper, mark which nodes you think will benefit, and note your prediction. We will return to it.</div>
+        <div class="purpose"><span class="label">Purpose</span>Trains the counterfactual instinct — "what if we added this edge?" — before the lab computes it for you.</div>
+        <ul class="what-you-draw">
+          <li>The chosen treatment drawn onto the map</li>
+          <li>The nodes you expect to benefit</li>
+          <li>Your predicted winner, written down</li>
+        </ul>
+        <a class="sketch-link" href="case-studies/counterfactual.html">Open case study 09 →</a>
+      </div>
+    </div>
+
+    <div class="sketch-card" id="sketch-10">
+      <div class="ico">🧠</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 10 · Trace a message-passing step</h3>
+          <div class="meta">
+            <span class="skill-chip skill-predict">Predict</span>
+          </div>
+        </div>
+        <div class="prompt">Put down the keyboard. Draw a <strong>six-node supply chain</strong> of your own design. Label each node with a feature <strong>x ∈ [0, 1]</strong>, and mark which nodes are true bottlenecks (<strong>y = 1</strong>) and which aren’t (<strong>y = 0</strong>). Now trace one message-passing step by hand: for each node write <strong>x̃ = x + mean(neighbors’ x)</strong>. Circle the node where x̃ is highest. Is it a true bottleneck? Could the GNN get it right with the right trained weights — why or why not?</div>
+        <div class="purpose"><span class="label">Purpose</span>The neighborhood-aggregation step is the only thing separating a GNN forward pass from a plain-NN one. You feel it the moment you do the arithmetic.</div>
+        <ul class="what-you-draw">
+          <li>A six-node graph with x and y on each node</li>
+          <li>x̃ computed at each node after one step</li>
+          <li>The highest-x̃ node circled, with your verdict</li>
+        </ul>
+        <a class="sketch-link" href="case-studies/gnn-by-hand.html">Open case study 10 →</a>
+      </div>
+    </div>
+
+    <div class="sketch-card" id="sketch-11">
+      <div class="ico">🤖</div>
+      <div>
+        <div class="head">
+          <h3>Sketch 11 · Predict the AUCs</h3>
+          <div class="meta">
+            <span class="skill-chip skill-predict">Predict</span>
+          </div>
+        </div>
+        <div class="prompt">Before you click Train, predict the <strong>AUC for all three model variants</strong>. Will the GNN-augmented model beat the lag-augmented one by a lot, by a little, or not at all? Write your three predictions on paper, then train and compare — the gap between your guesses and the actual AUCs is where the lab’s real lesson lives.</div>
+        <div class="purpose"><span class="label">Purpose</span>Calibrates your expectations for what graph features actually buy you — sometimes less than you would think.</div>
+        <ul class="what-you-draw">
+          <li>Three predicted AUC values</li>
+          <li>Your ranking of the three variants</li>
+          <li>The actual gap, noted after training</li>
+        </ul>
+        <a class="sketch-link" href="case-studies/gnn-xgboost.html">Open case study 11 →</a>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="section">
+    <div class="sec-label">Optional Sketches — for planning your project</div>
+    <div class="optional-note">
+      <strong>These are optional and ungraded — not extra credit.</strong> They aren’t tied to a
+      specific case study. They’re here because students have found them useful when scoping their
+      own project network: modeling a system from scratch, choosing a grouping and null for your own
+      data, and communicating a result to different audiences.
+    </div>
+
+    <div class="sketch-card">
+      <div class="ico">🗺️</div>
+      <div>
+        <div class="head">
+          <h3>Map your own network</h3>
+          <div class="meta">
+            <span class="skill-chip skill-identify">Identify</span>
+            <span class="skill-chip">Optional</span>
+          </div>
+        </div>
+        <div class="prompt">Pick a system you know well — your team, your supply chain, your transit commute, a household. Draw <strong>five to twelve nodes</strong> with edges between them. Label each node. Label at least two edges with what flows along them (information, goods, money, trust). Use one color for directed edges, another for undirected.</div>
+        <div class="purpose"><span class="label">Purpose</span>A blank-page warm-up for modeling your own project system: if you can draw it, you can analyze it.</div>
+        <ul class="what-you-draw">
+          <li>Five to twelve labeled nodes</li>
+          <li>Edges with explicit direction</li>
           <li>Two edge labels naming what flows</li>
         </ul>
       </div>
     </div>
 
-    <!-- 02: Centrality -->
     <div class="sketch-card">
-      <div class="ico">📊</div>
-      <div>
-        <div class="head">
-          <h3>Sketch 02 · Predict the bottleneck</h3>
-          <div class="meta">
-            <span class="skill-chip skill-measure">Measure</span>
-            <span class="time-chip">~25 min</span>
-          </div>
-        </div>
-        <div class="prompt">
-          Look at your Sketch 01. Circle the node you think has the <strong>highest degree</strong> (most edges). Now circle the node you think has the <strong>highest betweenness</strong> (sits on the most shortest paths). If they're the same node, your network is too simple — add edges until they diverge.
-        </div>
-        <div class="purpose"><span class="label">Purpose</span>Dismantles the "busiest = most critical" misconception before the code lab gives you the data.</div>
-        <ul class="what-you-draw">
-          <li>Two circled nodes (degree, betweenness) on Sketch 01</li>
-          <li>A one-sentence prediction: which node, if removed, breaks the most paths</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- 03a: Network Statistics / permutation — Bluebikes case -->
-    <div class="sketch-card" id="sketch-03a">
       <div class="ico">📐</div>
       <div>
         <div class="head">
-          <h3>Sketch 03a · Two null distributions — Bluebikes case</h3>
+          <h3>Two null distributions — your network</h3>
           <div class="meta">
             <span class="skill-chip skill-infer">Infer</span>
-            <span class="time-chip">~20 min</span>
+            <span class="skill-chip">Optional</span>
           </div>
         </div>
-        <div class="prompt">
-          Sketch the five Bluebikes neighborhoods as labeled circles. Mark each as high-income (one color) or low-income (other color). Draw the arrows you'd <em>expect</em> to be heaviest. Now sketch two histograms side by side: an "unblocked permutation" null and a "block permutation" null. Mark the observed value with a vertical line. Which test would call the observed pattern significant, and which wouldn't?
-        </div>
-        <div class="purpose"><span class="label">Purpose</span>Surfaces the gap between "random shuffle" and "structurally plausible shuffle" — the heart of network-aware inference. Lab-specific version.</div>
+        <div class="prompt">Take <strong>your own project network and grouping variable</strong> (gender, region, tier, faction, role — whatever fits). Sketch the nodes as labeled circles colored by your grouping, and draw the arrows you’d expect to be heaviest. Then sketch two histograms: an <em>unblocked</em> permutation that ignores groups, and a <em>block</em> permutation that preserves within-group structure. Mark the observed value. <strong>Which null is the right one for your question?</strong></div>
+        <div class="purpose"><span class="label">Purpose</span>Helps you define the grouping that matters for your project and commit to a null hypothesis before you run it.</div>
         <ul class="what-you-draw">
-          <li>Five labeled nodes, color-coded by group</li>
-          <li>Expected heavy edges (arrows)</li>
-          <li>Two histograms with the observed value drawn in</li>
+          <li>Your network’s nodes, colored by your grouping</li>
+          <li>Expected heavy edges, with a margin "why"</li>
+          <li>Two histograms with the observed value marked</li>
         </ul>
       </div>
     </div>
 
-    <!-- 03b: Network Statistics — your network -->
-    <div class="sketch-card" id="sketch-03b">
-      <div class="ico">📐</div>
-      <div>
-        <div class="head">
-          <h3>Sketch 03b · Two null distributions — your network</h3>
-          <div class="meta">
-            <span class="skill-chip skill-infer">Infer</span>
-            <span class="time-chip">~25 min</span>
-          </div>
-        </div>
-        <div class="prompt">
-          Now substitute <strong>your own network and your own grouping variable</strong>. Sketch the nodes as labeled circles, colored by your grouping (gender, region, tier, faction, role — whatever makes sense for your project). Draw the arrows you'd expect to be heaviest based on your domain knowledge. Then sketch the same two histograms: an unblocked permutation that ignores groups, and a block permutation that preserves within-group structure. Mark the observed value. Which null is the right one for <em>your</em> question?
-        </div>
-        <div class="purpose"><span class="label">Purpose</span>Forces you to define the grouping that matters for your project, and to commit to a null hypothesis before running it. Project-track students do this version in their project week.</div>
-        <ul class="what-you-draw">
-          <li>5–15 labeled nodes from your network, colored by your grouping</li>
-          <li>Expected heavy edges, with a one-sentence "why" in the margin</li>
-          <li>Two histograms with the observed value, plus a one-line interpretation</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- 04: Routing & optimization -->
     <div class="sketch-card">
-      <div class="ico">🚦</div>
+      <div class="ico">🎤</div>
       <div>
         <div class="head">
-          <h3>Sketch 04 · Pick where to add a road</h3>
-          <div class="meta">
-            <span class="skill-chip skill-predict">Predict</span>
-            <span class="time-chip">~25 min</span>
-          </div>
-        </div>
-        <div class="prompt">
-          Draw a transit or supply network with at least <strong>three components</strong> that are not yet connected. Pick <em>one</em> edge you could add. Predict which metric — average path length, diameter, number of components, total flow — will change most, and by roughly how much. Now pick the <em>wrong</em> edge: one that <em>looks</em> like a good addition but isn't.
-        </div>
-        <div class="purpose"><span class="label">Purpose</span>Trains your eye for counterfactual graph mutation before the code lab automates it.</div>
-        <ul class="what-you-draw">
-          <li>3+ disconnected components</li>
-          <li>Two candidate edges, with a written prediction for each</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- 05: Clustering / communities -->
-    <div class="sketch-card">
-      <div class="ico">🧩</div>
-      <div>
-        <div class="head">
-          <h3>Sketch 05 · Draw the seams</h3>
-          <div class="meta">
-            <span class="skill-chip skill-measure">Measure</span>
-            <span class="time-chip">~20 min</span>
-          </div>
-        </div>
-        <div class="prompt">
-          Take a 15-to-25 node graph (your own data, or a sketched one). Draw the <strong>boundaries</strong> you'd cut the graph along to separate it into 2–4 communities. Now find one node that sits <em>on</em> a boundary — a bridge between communities. What would happen to your cluster assignments if that node disappeared?
-        </div>
-        <div class="purpose"><span class="label">Purpose</span>Internalizes the difference between modular structure and structural holes before the algorithm finds them for you.</div>
-        <ul class="what-you-draw">
-          <li>15+ nodes</li>
-          <li>2–4 cluster boundaries (drawn as loops or dashed lines)</li>
-          <li>One identified bridge node</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- 06: AI/ML -->
-    <div class="sketch-card">
-      <div class="ico">🤖</div>
-      <div>
-        <div class="head">
-          <h3>Sketch 06 · Two-hop neighborhood</h3>
-          <div class="meta">
-            <span class="skill-chip skill-predict">Predict</span>
-            <span class="time-chip">~20 min</span>
-          </div>
-        </div>
-        <div class="prompt">
-          Pick a node in your sketched supply network. Highlight its <strong>two-hop neighborhood</strong> — every node reachable within two edges. List the features of those neighbors (size, country, delay rate, sole-source status). Now write a one-sentence prediction: based <em>only</em> on its neighborhood (not its own attributes), is this node at higher or lower risk of disruption?
-        </div>
-        <div class="purpose"><span class="label">Purpose</span>Makes the message-passing intuition visible. The GNN does the same thing, just numerically.</div>
-        <ul class="what-you-draw">
-          <li>One highlighted center node</li>
-          <li>Its two-hop neighborhood shaded</li>
-          <li>A list of 4–6 neighbor features and a one-line risk prediction</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- 07: Visualization -->
-    <div class="sketch-card">
-      <div class="ico">🗺️</div>
-      <div>
-        <div class="head">
-          <h3>Sketch 07 · One chart, three audiences</h3>
+          <h3>One chart, three audiences</h3>
           <div class="meta">
             <span class="skill-chip skill-identify">Identify</span>
-            <span class="time-chip">~30 min</span>
+            <span class="skill-chip">Optional</span>
           </div>
         </div>
-        <div class="prompt">
-          Pick one network insight from a previous lab (a bottleneck, a community, a risk score). Sketch the <strong>same insight three times</strong> — once for a technical peer, once for a non-technical executive, once for a public-facing dashboard. What changes? What stays? Mark in red anything you'd remove for the public version.
-        </div>
-        <div class="purpose"><span class="label">Purpose</span>Forces the recognition that "good visualization" isn't a property of a chart — it's a property of a chart-audience pair.</div>
+        <div class="prompt">Pick one network insight from a lab or your project (a bottleneck, a community, a risk score). Sketch the <strong>same insight three times</strong> — once for a technical peer, once for a non-technical executive, once for a public-facing dashboard. What changes? What stays? Mark in a second color anything you’d remove for the public version.</div>
+        <div class="purpose"><span class="label">Purpose</span>Good visualization isn’t a property of a chart — it’s a property of a chart–audience pair. Useful when you present your project.</div>
         <ul class="what-you-draw">
-          <li>Three versions of the same insight, in three labeled boxes</li>
-          <li>Red marks where the public version is simplified</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- 08: Big data -->
-    <div class="sketch-card">
-      <div class="ico">🗄️</div>
-      <div>
-        <div class="head">
-          <h3>Sketch 08 · Plan the join</h3>
-          <div class="meta">
-            <span class="skill-chip skill-identify">Identify</span>
-            <span class="time-chip">~25 min</span>
-          </div>
-        </div>
-        <div class="prompt">
-          You have three tables: <strong>nodes</strong> (id, label, group), <strong>edges</strong> (from, to, weight, time), and a <strong>node-attributes</strong> table (id, country, financial_score). Draw the schema as boxes with arrows. Mark the keys you'd join on. Now sketch the <em>output</em> table the GNN needs — one row per node per timestep — and trace, with arrows, where every column comes from.
-        </div>
-        <div class="purpose"><span class="label">Purpose</span>Makes the data-wrangling step concrete. Edge lists are easy. Joining node attributes back to edge-context features is where most students stall.</div>
-        <ul class="what-you-draw">
-          <li>Three table boxes with column names</li>
-          <li>Join keys marked</li>
-          <li>An output table sketch with column-provenance arrows</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- 09: GNN by Hand -->
-    <div class="sketch-card">
-      <div class="ico">🧠</div>
-      <div>
-        <div class="head">
-          <h3>Sketch 09 · Trace a forward pass</h3>
-          <div class="meta">
-            <span class="skill-chip skill-predict">Predict</span>
-            <span class="time-chip">~25 min</span>
-          </div>
-        </div>
-        <div class="prompt">
-          Draw a five-node directed graph of your own. Label each node with a feature <strong>x ∈ [0, 1]</strong> and a ground-truth label <strong>y ∈ {0, 1}</strong>. By hand, compute the first GNN aggregation step: <strong>x̃ᵢ = xᵢ + mean(neighbors' x)</strong>. Then pick small weights (w₁ = 0.5, w₂ = 0.4, b = 0.1), push x̃ through ReLU and Sigmoid, and write the final ŷᵢ for each node. Where in the math does the graph structure actually show up?
-        </div>
-        <div class="purpose"><span class="label">Purpose</span>Demystifies the GNN. The neighborhood aggregation step is the only thing that distinguishes a GNN forward pass from a plain-NN forward pass — and you'll feel it the moment you do the arithmetic.</div>
-        <ul class="what-you-draw">
-          <li>Five nodes, each labeled with x and y</li>
-          <li>x̃ value circled at each node after one aggregation step</li>
-          <li>Final ŷ written next to each node</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- 10: Joins · Sketch the pipeline -->
-    <div class="sketch-card" id="sketch-10">
-      <div class="ico">🔗</div>
-      <div>
-        <div class="head">
-          <h3>Sketch 10 · Sketch the pipeline</h3>
-          <div class="meta">
-            <span class="skill-chip skill-identify">Identify</span>
-            <span class="time-chip">~20 min</span>
-          </div>
-        </div>
-        <div class="prompt">
-          Pick three real tables from any system you know (your work data, a course dataset, anything). For each table, draw a box with column names. Then identify, in writing next to your boxes: <strong>(a) the join key</strong>, <strong>(b) what the column collision will be after the first join</strong> (which two columns will share a name?), and <strong>(c) what you'll rename it to</strong>. Finally, write the final pipeline as a sequence of verbs — <code>left_join → rename → mutate</code> or <code>merge → rename → assign</code>.
-        </div>
-        <div class="purpose"><span class="label">Purpose</span>Surfaces the column-collision moment <em>before</em> it becomes an error message in the lab. The rename step is the part everyone forgets — sketching it forces you to remember.</div>
-        <ul class="what-you-draw">
-          <li>Three table boxes with column names</li>
-          <li>Arrows marking join keys</li>
-          <li>The two columns that will collide after the first join, with the new names you'll give them</li>
-          <li>The final pipeline as 4–6 verbs in sequence</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- 11: Aggregation · Lose detail to gain insight -->
-    <div class="sketch-card" id="sketch-11">
-      <div class="ico">🗺️</div>
-      <div>
-        <div class="head">
-          <h3>Sketch 11 · Lose detail to gain insight</h3>
-          <div class="meta">
-            <span class="skill-chip skill-identify">Identify</span>
-            <span class="time-chip">~25 min</span>
-          </div>
-        </div>
-        <div class="prompt">
-          Pick a many-node network — real or sketched, 20+ nodes. Draw it three times at three zoom levels: <strong>(1)</strong> all nodes individually, <strong>(2)</strong> grouped into 5–8 categories of your choice, <strong>(3)</strong> grouped into 2–3 high-level buckets. For each zoom level, write one insight you can see at <em>that</em> level that you couldn't see at the others. Mark with an arrow the level that best supports your one-sentence engineering recommendation.
-        </div>
-        <div class="purpose"><span class="label">Purpose</span>Internalizes that aggregation isn't "losing data" — it's choosing what to make visible. The level that best supports the recommendation is rarely the most detailed one.</div>
-        <ul class="what-you-draw">
-          <li>The same network at three zoom levels, side by side</li>
-          <li>One insight written under each level</li>
-          <li>An arrow marking the level that supports your engineering recommendation</li>
-          <li>The one-sentence recommendation itself</li>
+          <li>Three versions of one insight, in labeled boxes</li>
+          <li>Marks where the public version is simplified</li>
         </ul>
       </div>
     </div>
@@ -496,7 +528,7 @@
 
   <p class="site-footer">
     <strong>SYSEN 5470 · Sketchpad Prompts Library</strong><br>
-    Cornell Engineering · Summer 2026 · The whole library, including prompts for case studies not yet built, is here as a preview.
+    Cornell Engineering · Summer 2026 · One sketch per case study, plus optional prompts for planning your project. Each sketch matches the one inside its case study.
   </p>
 
 </div>
