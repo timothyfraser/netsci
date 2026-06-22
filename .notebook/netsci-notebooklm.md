@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-22 18:59 UTC_
+_Auto-generated NotebookLM source · 2026-06-22 20:24 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -777,7 +777,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-22 18:59 UTC_
+_Auto-generated NotebookLM source · 2026-06-22 20:24 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -4942,222 +4942,273 @@ Every case study includes a sketchpad activity — hand\-drawn, keyboard\-free, 
 * Your phone, for photographing the finished sketch
 
 
-The Eleven Prompts — one per lab
-
+The Eleven Sketches — one per case study
 
 🕸️
 
 
-### Sketch 01 · Map your network
+### Sketch 01 · One paragraph, two networks
 
 
 Identify
-\~20 min
 
 
- Pick a system you know well — your team, your supply chain, your transit commute, a household. Draw **five to twelve nodes** with edges between them. Label each node. Label at least two edges with what flows along them (information, goods, money, trust). Use one color for directed edges, another for undirected.
+Read this scenario carefully: *"The city’s emergency operations center (EOC) coordinates response with the fire department, police department, and hospital. The fire chief and police chief exchange text messages directly throughout each shift. During the last storm, the hospital emailed status reports to the EOC every two hours, and the police called the EOC whenever a road was closed. The EOC, in turn, broadcast briefings to all three agencies over a shared radio channel. The fire department posts its dispatch log to a shared portal that the police and EOC read but the hospital does not."* On your sketchpad, draw this network **two ways**: first **undirected** (an edge means "these two parties communicate at all"), then **directed**, possibly multi\-edge, where each arrow is one specific channel (call, email, text, radio, portal post). Then write underneath: who would find each version more useful? Name a specific **role** — the actual person whose job depends on that view.
+PurposeA network is a choice about what counts as a tie. The question you’re asking determines which version is "right" — there is no universally correct answer.
+* The scenario as an undirected network
+* The same scenario as a directed, multi\-edge network
+* A written note naming who needs each view, and why
 
-PurposeDismantles the assumption that "real systems are too messy to model." If you can draw it, you can analyze it.
-* Five to twelve nodes, labeled
-* Edges with explicit direction (arrowheads)
-* Two edge labels naming what flows
 
-
-📊
-
-
-### Sketch 02 · Predict the bottleneck
-
-
-Measure
-\~25 min
-
-
- Look at your Sketch 01\. Circle the node you think has the **highest degree** (most edges). Now circle the node you think has the **highest betweenness** (sits on the most shortest paths). If they're the same node, your network is too simple — add edges until they diverge.
-
-PurposeDismantles the "busiest \= most critical" misconception before the code lab gives you the data.
-* Two circled nodes (degree, betweenness) on Sketch 01
-* A one\-sentence prediction: which node, if removed, breaks the most paths
-
-
-📐
-
-
-### Sketch 03a · Two null distributions — Bluebikes case
-
-
-Infer
-\~20 min
-
-
- Sketch the five Bluebikes neighborhoods as labeled circles. Mark each as high\-income (one color) or low\-income (other color). Draw the arrows you'd *expect* to be heaviest. Now sketch two histograms side by side: an "unblocked permutation" null and a "block permutation" null. Mark the observed value with a vertical line. Which test would call the observed pattern significant, and which wouldn't?
-
-PurposeSurfaces the gap between "random shuffle" and "structurally plausible shuffle" — the heart of network\-aware inference. Lab\-specific version.
-* Five labeled nodes, color\-coded by group
-* Expected heavy edges (arrows)
-* Two histograms with the observed value drawn in
-
-
-📐
-
-
-### Sketch 03b · Two null distributions — your network
-
-
-Infer
-\~25 min
-
-
- Now substitute **your own network and your own grouping variable**. Sketch the nodes as labeled circles, colored by your grouping (gender, region, tier, faction, role — whatever makes sense for your project). Draw the arrows you'd expect to be heaviest based on your domain knowledge. Then sketch the same two histograms: an unblocked permutation that ignores groups, and a block permutation that preserves within\-group structure. Mark the observed value. Which null is the right one for *your* question?
-
-PurposeForces you to define the grouping that matters for your project, and to commit to a null hypothesis before running it. Project\-track students do this version in their project week.
-* 5–15 labeled nodes from your network, colored by your grouping
-* Expected heavy edges, with a one\-sentence "why" in the margin
-* Two histograms with the observed value, plus a one\-line interpretation
-
-
-🚦
-
-
-### Sketch 04 · Pick where to add a road
-
-
-Predict
-\~25 min
-
-
- Draw a transit or supply network with at least **three components** that are not yet connected. Pick *one* edge you could add. Predict which metric — average path length, diameter, number of components, total flow — will change most, and by roughly how much. Now pick the *wrong* edge: one that *looks* like a good addition but isn't.
-
-PurposeTrains your eye for counterfactual graph mutation before the code lab automates it.
-* 3\+ disconnected components
-* Two candidate edges, with a written prediction for each
-
-
-🧩
-
-
-### Sketch 05 · Draw the seams
-
-
-Measure
-\~20 min
-
-
- Take a 15\-to\-25 node graph (your own data, or a sketched one). Draw the **boundaries** you'd cut the graph along to separate it into 2–4 communities. Now find one node that sits *on* a boundary — a bridge between communities. What would happen to your cluster assignments if that node disappeared?
-
-PurposeInternalizes the difference between modular structure and structural holes before the algorithm finds them for you.
-* 15\+ nodes
-* 2–4 cluster boundaries (drawn as loops or dashed lines)
-* One identified bridge node
-
-
-🤖
-
-
-### Sketch 06 · Two\-hop neighborhood
-
-
-Predict
-\~20 min
-
-
- Pick a node in your sketched supply network. Highlight its **two\-hop neighborhood** — every node reachable within two edges. List the features of those neighbors (size, country, delay rate, sole\-source status). Now write a one\-sentence prediction: based *only* on its neighborhood (not its own attributes), is this node at higher or lower risk of disruption?
-
-PurposeMakes the message\-passing intuition visible. The GNN does the same thing, just numerically.
-* One highlighted center node
-* Its two\-hop neighborhood shaded
-* A list of 4–6 neighbor features and a one\-line risk prediction
-
-
-🗺️
-
-
-### Sketch 07 · One chart, three audiences
-
-
-Identify
-\~30 min
-
-
- Pick one network insight from a previous lab (a bottleneck, a community, a risk score). Sketch the **same insight three times** — once for a technical peer, once for a non\-technical executive, once for a public\-facing dashboard. What changes? What stays? Mark in red anything you'd remove for the public version.
-
-PurposeForces the recognition that "good visualization" isn't a property of a chart — it's a property of a chart\-audience pair.
-* Three versions of the same insight, in three labeled boxes
-* Red marks where the public version is simplified
-
-
-🗄️
-
-
-### Sketch 08 · Plan the join
-
-
-Identify
-\~25 min
-
-
- You have three tables: **nodes** (id, label, group), **edges** (from, to, weight, time), and a **node\-attributes** table (id, country, financial\_score). Draw the schema as boxes with arrows. Mark the keys you'd join on. Now sketch the *output* table the GNN needs — one row per node per timestep — and trace, with arrows, where every column comes from.
-
-PurposeMakes the data\-wrangling step concrete. Edge lists are easy. Joining node attributes back to edge\-context features is where most students stall.
-* Three table boxes with column names
-* Join keys marked
-* An output table sketch with column\-provenance arrows
-
-
-🧠
-
-
-### Sketch 09 · Trace a forward pass
-
-
-Predict
-\~25 min
-
-
- Draw a five\-node directed graph of your own. Label each node with a feature **x ∈ \[0, 1]** and a ground\-truth label **y ∈ {0, 1}**. By hand, compute the first GNN aggregation step: **x̃ᵢ \= xᵢ \+ mean(neighbors' x)**. Then pick small weights (w₁ \= 0\.5, w₂ \= 0\.4, b \= 0\.1\), push x̃ through ReLU and Sigmoid, and write the final ŷᵢ for each node. Where in the math does the graph structure actually show up?
-
-PurposeDemystifies the GNN. The neighborhood aggregation step is the only thing that distinguishes a GNN forward pass from a plain\-NN forward pass — and you'll feel it the moment you do the arithmetic.
-* Five nodes, each labeled with x and y
-* x̃ value circled at each node after one aggregation step
-* Final ŷ written next to each node
+Open case study 01 →
 
 
 🔗
 
 
-### Sketch 10 · Sketch the pipeline
+### Sketch 02 · Draw the join key
 
 
 Identify
-\~20 min
 
 
- Pick three real tables from any system you know (your work data, a course dataset, anything). For each table, draw a box with column names. Then identify, in writing next to your boxes: **(a) the join key**, **(b) what the column collision will be after the first join** (which two columns will share a name?), and **(c) what you'll rename it to**. Finally, write the final pipeline as a sequence of verbs — `left_join → rename → mutate` or `merge → rename → assign`.
+On your physical sketchpad, sketch the **nodes** and **edges** tables side by side and list their columns. Draw an arrow from `edges.from_id` to `nodes.node_id` — that arrow *is* your join key. Now sketch what the joined table looks like: which columns survive, how many rows, and what happens to `tier` if you join twice (once on `from_id`, once on `to_id`). Write down: **when does the rename step become essential, and what is it renaming?**
+PurposeThe join key is a visual idea before it is code, and the rename step is the part everyone forgets — sketching it forces you to remember.
+* Two table boxes with column names
+* The join\-key arrow between them
+* The joined table, with the columns that collide and their new names
 
-PurposeSurfaces the column\-collision moment *before* it becomes an error message in the lab. The rename step is the part everyone forgets — sketching it forces you to remember.
-* Three table boxes with column names
-* Arrows marking join keys
-* The two columns that will collide after the first join, with the new names you'll give them
-* The final pipeline as 4–6 verbs in sequence
+
+Open case study 02 →
 
 
 🗺️
 
 
-### Sketch 11 · Lose detail to gain insight
+### Sketch 03 · Predict the O–D matrix
 
 
 Identify
-\~25 min
 
 
- Pick a many\-node network — real or sketched, 20\+ nodes. Draw it three times at three zoom levels: **(1\)** all nodes individually, **(2\)** grouped into 5–8 categories of your choice, **(3\)** grouped into 2–3 high\-level buckets. For each zoom level, write one insight you can see at *that* level that you couldn't see at the others. Mark with an arrow the level that best supports your one\-sentence engineering recommendation.
+Before you switch to the income\-quintiles view, pause and sketch: what pattern do you expect in a **5×5 origin–destination matrix** between income quintiles during a morning commute? Where will the heaviest flows go? Draw a 5×5 grid with arrows for the dominant flows you predict — then check the matrix view against your guess.
+PurposeAggregation isn’t losing data — it’s choosing what to make visible. Commit to a prediction before the grid shows you the answer.
+* A 5×5 quintile grid
+* Arrows for the flows you expect to dominate
+* A one\-line note on what surprised you
 
-PurposeInternalizes that aggregation isn't "losing data" — it's choosing what to make visible. The level that best supports the recommendation is rarely the most detailed one.
-* The same network at three zoom levels, side by side
-* One insight written under each level
-* An arrow marking the level that supports your engineering recommendation
-* The one\-sentence recommendation itself
+
+Open case study 03 →
+
+
+📊
+
+
+### Sketch 04 · Predict the bottleneck
+
+
+Measure
+
+
+Before you remove a single station, predict **by eye** which two stations would do the most damage if knocked out. Mark them on paper. Then remove them in the lab and see whether your intuition matched **degree**, **betweenness**, or neither.
+PurposeDismantles the "busiest \= most critical" misconception before the code lab hands you the numbers.
+* The network sketched by eye
+* Two circled stations you predict are most critical
+* A one\-line guess: degree, betweenness, or neither
+
+
+Open case study 04 →
+
+
+🛡️
+
+
+### Sketch 05 · Predict the damage curves
+
+
+Measure
+
+
+Before you run any simulation, sketch your predictions for all three disruption strategies on paper. **Which one degrades the network fastest? How far behind is the slowest?** Draw rough damage curves on a single axis. Then run the lab and see which prediction held — and where you were surprised.
+PurposeTrains your eye for how a network falls apart before the simulation automates it.
+* One axis with three rough damage curves
+* A ranking of which strategy is worst
+* A marked spot where you expect to be surprised
+
+
+Open case study 05 →
+
+
+🧩
+
+
+### Sketch 06 · Draw the system you don’t see
+
+
+Measure
+
+
+Pick one of three systems (**rocket, drone, software**). Without looking at the matrix, sketch it as a node\-link diagram — 8–15 components with arrows for what depends on what. Then draw a blank **8×8 grid** with your components as both row and column labels and fill in the dependencies you think exist: this is your *predicted DSM*. Load the real DSM and compare — how many dependencies did you miss, how many did you imagine? Which view would convince a program manager the system is over\-coupled?
+PurposeNode\-link diagrams hide coupling; matrices expose it. The gap between your two sketches is the lesson.
+* A node\-link sketch of your chosen system
+* A predicted 8×8 DSM grid
+* A tally of missed vs. imagined dependencies
+
+
+Open case study 06 →
+
+
+📐
+
+
+### Sketch 07 · Predict the null distribution
+
+
+Infer
+
+
+Before you click Run, predict on paper what the null distribution should look like **if there were no real structure**: where should the observed statistic sit relative to the bulk of the null? Draw the histogram you expect and mark the observed value. Then run the sampler and compare.
+PurposeForces you to commit to what "no real structure" looks like before the permutation test shows you.
+* The null histogram you expect
+* A vertical line for the observed value
+* A note on whether it should land in the tail
+
+
+Open case study 07 →
+
+
+🎯
+
+
+### Sketch 08 · Choose your five
+
+
+Identify
+
+
+Without running the visualization, draw a quick map: **which 5 of the 40 parishes** would you measure if you could only afford 5? Mark them, then write down what you expect to lose — geographic blind spots, missing triangles, biased degree estimates. Now resample with each strategy at 12\.5% (5 nodes’ worth) and see whether the strategies even produce the kind of network you expected.
+PurposeThe sampling strategy determines the biases you inherit — name them before you sample.
+* 5 chosen parishes marked on a rough map
+* A list of what that choice loses
+* A comparison against the resampled networks
+
+
+Open case study 08 →
+
+
+🚦
+
+
+### Sketch 09 · Pick the best treatment
+
+
+Predict
+
+
+Look at the Lakeside map. By eye, predict which of the **three proposed treatments** will produce the largest improvement in average path length. Draw the treatment on paper, mark which nodes you think will benefit, and note your prediction. We will return to it.
+PurposeTrains the counterfactual instinct — "what if we added this edge?" — before the lab computes it for you.
+* The chosen treatment drawn onto the map
+* The nodes you expect to benefit
+* Your predicted winner, written down
+
+
+Open case study 09 →
+
+
+🧠
+
+
+### Sketch 10 · Trace a message\-passing step
+
+
+Predict
+
+
+Put down the keyboard. Draw a **six\-node supply chain** of your own design. Label each node with a feature **x ∈ \[0, 1]**, and mark which nodes are true bottlenecks (**y \= 1**) and which aren’t (**y \= 0**). Now trace one message\-passing step by hand: for each node write **x̃ \= x \+ mean(neighbors’ x)**. Circle the node where x̃ is highest. Is it a true bottleneck? Could the GNN get it right with the right trained weights — why or why not?
+PurposeThe neighborhood\-aggregation step is the only thing separating a GNN forward pass from a plain\-NN one. You feel it the moment you do the arithmetic.
+* A six\-node graph with x and y on each node
+* x̃ computed at each node after one step
+* The highest\-x̃ node circled, with your verdict
+
+
+Open case study 10 →
+
+
+🤖
+
+
+### Sketch 11 · Predict the AUCs
+
+
+Predict
+
+
+Before you click Train, predict the **AUC for all three model variants**. Will the GNN\-augmented model beat the lag\-augmented one by a lot, by a little, or not at all? Write your three predictions on paper, then train and compare — the gap between your guesses and the actual AUCs is where the lab’s real lesson lives.
+PurposeCalibrates your expectations for what graph features actually buy you — sometimes less than you would think.
+* Three predicted AUC values
+* Your ranking of the three variants
+* The actual gap, noted after training
+
+
+Open case study 11 →
+
+
+Optional Sketches — for planning your project
+
+**These are optional and ungraded — not extra credit.** They aren’t tied to a
+ specific case study. They’re here because students have found them useful when scoping their
+ own project network: modeling a system from scratch, choosing a grouping and null for your own
+ data, and communicating a result to different audiences.
+
+
+🗺️
+
+
+### Map your own network
+
+
+Identify
+Optional
+
+
+Pick a system you know well — your team, your supply chain, your transit commute, a household. Draw **five to twelve nodes** with edges between them. Label each node. Label at least two edges with what flows along them (information, goods, money, trust). Use one color for directed edges, another for undirected.
+PurposeA blank\-page warm\-up for modeling your own project system: if you can draw it, you can analyze it.
+* Five to twelve labeled nodes
+* Edges with explicit direction
+* Two edge labels naming what flows
+
+
+📐
+
+
+### Two null distributions — your network
+
+
+Infer
+Optional
+
+
+Take **your own project network and grouping variable** (gender, region, tier, faction, role — whatever fits). Sketch the nodes as labeled circles colored by your grouping, and draw the arrows you’d expect to be heaviest. Then sketch two histograms: an *unblocked* permutation that ignores groups, and a *block* permutation that preserves within\-group structure. Mark the observed value. **Which null is the right one for your question?**
+PurposeHelps you define the grouping that matters for your project and commit to a null hypothesis before you run it.
+* Your network’s nodes, colored by your grouping
+* Expected heavy edges, with a margin "why"
+* Two histograms with the observed value marked
+
+
+🎤
+
+
+### One chart, three audiences
+
+
+Identify
+Optional
+
+
+Pick one network insight from a lab or your project (a bottleneck, a community, a risk score). Sketch the **same insight three times** — once for a technical peer, once for a non\-technical executive, once for a public\-facing dashboard. What changes? What stays? Mark in a second color anything you’d remove for the public version.
+PurposeGood visualization isn’t a property of a chart — it’s a property of a chart–audience pair. Useful when you present your project.
+* Three versions of one insight, in labeled boxes
+* Marks where the public version is simplified
 
 
 Sharing \& Submission
@@ -5167,7 +5218,7 @@ Sharing \& Submission
 
 **SYSEN 5470 · Sketchpad Prompts Library**
 
- Cornell Engineering · Summer 2026 · The whole library, including prompts for case studies not yet built, is here as a preview.
+ Cornell Engineering · Summer 2026 · One sketch per case study, plus optional prompts for planning your project. Each sketch matches the one inside its case study.
 
 ---
 
@@ -5778,7 +5829,7 @@ Tue Jun 23day 2
 
 Wed Jun 24day 3
 
-**Sketch 01 · Map your network.** 20 min sketchpad, no keyboard. Open the prompt →
+**Sketch 01 · One paragraph, two networks.** 20 min sketchpad, no keyboard. Open the prompt →
 
 
 Thu Jun 25day 4
@@ -5793,7 +5844,7 @@ Fri Jun 26day 5
 
 Sat Jun 27day 6
 
-Weekend block**Run the three labs.** Plan \~4 hours. Open the Build\-a\-Network lab first, then Network Statistics, then Centrality. Sketch 02 \+ 03a in between.
+Weekend block**Run the three labs.** Plan \~4 hours. Open the Build\-a\-Network lab first, then Network Statistics, then Centrality. Sketch 07 (Network Statistics) and Sketch 04 (Centrality) in between.
 
 
 Sun Jun 28day 7
@@ -5826,17 +5877,17 @@ Tue Jun 30day 9
 
 Wed Jul 01day 10
 
-🚦 Routing Skim Bertsekas reference chapter. **Sketch 04 · Pick where to add a road.**
+🚦 Routing Skim Bertsekas reference chapter. **Sketch 09 · Pick the best treatment.** Open the prompt →
 
 
 Thu Jul 02day 11
 
-🧩 Clustering Read Barabási Ch. 9 (communities). **Sketch 05 · Draw the seams.**
+🧩 Clustering Read Barabási Ch. 9 (communities). **Sketch 06 · Draw the system you don't see.** Open the prompt →
 
 
 Fri Jul 03day 12
 
-🗺️ Aggregation Read Bellantuono 2025 (accessibility via transit). **Sketch 11 · Lose detail to gain insight.** Light evening.
+🗺️ Aggregation Read Bellantuono 2025 (accessibility via transit). **Sketch 03 · Predict the O–D matrix.** Open the prompt → Light evening.
 
 
 Sat Jul 04day 13
@@ -5874,12 +5925,12 @@ Tue Jul 07day 16
 
 Wed Jul 08day 17
 
-🗄️ Sampling Skim Easley \& Kleinberg §2\.4 (network datasets). **Sketch 09 · Trace a forward pass** for the GNN labs.
+🗄️ Sampling Skim Easley \& Kleinberg §2\.4 (network datasets). **Sketch 10 · Trace a message\-passing step** for the GNN labs. Open the prompt →
 
 
 Thu Jul 09day 18
 
-🔗 Joins **Sketch 10 · Sketch the pipeline.** Light evening — final crunch starts tomorrow.
+🔗 Joins **Sketch 02 · Draw the join key.** Open the prompt → Light evening — final crunch starts tomorrow.
 
 
 Fri Jul 10day 19
@@ -6009,7 +6060,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-22 18:59 UTC_
+_Auto-generated NotebookLM source · 2026-06-22 20:24 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
