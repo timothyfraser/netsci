@@ -15,6 +15,7 @@ Below are prompts you can copy-paste into the Study Companion to activate specif
 
 | Command | Mode | What it does |
 |---|---|---|
+| `/study` | Start here | Tell it what you're working on; it coaches you and points you to the right command |
 | `/glossary` | Define a term | Defines/contrasts vocabulary, flags common mistakes |
 | `/flashcards` | Make cards | Copy-pasteable card set on a topic |
 | `/quizme` | Quiz me | One question at a time, scored, ends with weak spots |

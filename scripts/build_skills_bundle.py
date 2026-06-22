@@ -27,8 +27,9 @@ OUT = NB / "skills.md"
 # Ordered list of invokable skills: (folder, command, one-line description).
 # The persona must be first — it's what makes the commands work.
 SKILLS = [
-    ("study_companion_persona", "(setup)",
-     "The persona to paste into NotebookLM's Configure Chat — defines and enforces all commands."),
+    ("study_companion_persona", "/study",
+     "General study mode + the persona to paste into Configure Chat. Tell it what "
+     "you're working on and it coaches you (and lists the other commands)."),
     ("study_companion_prompts", "/prompts",
      "The command quick-reference and the full copy-paste prompt library."),
     ("glossary", "/glossary",
