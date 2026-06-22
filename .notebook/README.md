@@ -31,8 +31,11 @@ The Study Companion is a [NotebookLM](https://notebooklm.google.com) notebook co
 | File | What it is |
 |------|-----------|
 | `README.md` | This file |
-| `study_companion_persona.md` | The system persona text to paste into NotebookLM's Configure Chat |
-| `study_companion_prompts.md` | The prompt library to publish to students on Canvas |
+| `study_companion_persona/SKILL.md` | The system persona to paste into NotebookLM's Configure Chat. Defines and enforces all the slash commands. |
+| `study_companion_prompts/SKILL.md` | The prompt library + command quick-reference to publish to students on Canvas |
+| `glossary/`, `flashcards/`, `quizme/`, `interpret/`, `method-picker/`, `sketchpad/` | The chat-invokable student skills, one per `SKILL.md` (`/glossary`, `/flashcards`, `/quizme`, `/interpret`, `/methodpick`, `/sketch`) |
+| `cheatsheet/`, `videos/` | Non-chat skills (printable cheatsheet, Audio/Video Overview prompts) — not slash commands |
+| `skills.md` | Auto-generated bundle of the invokable skills (built into `netsci-notebooklm.md`) |
 
 ---
 
@@ -42,9 +45,9 @@ The Study Companion is a [NotebookLM](https://notebooklm.google.com) notebook co
 
 2. **Upload course sources.** The easiest path is the **single combined bundle**:
    - **`.notebook/netsci-notebooklm.md`** — one file containing the resource index,
-     the full course website text, and every code/dataset/skill module
-     (~128k words; well under NotebookLM's 500k-words-per-source limit). Upload
-     just this one and you're done.
+     the full course website text, every code/dataset/skill module, and the
+     **student skills & commands** section (~137k words; well under NotebookLM's
+     500k-words-per-source limit). Upload just this one and you're done.
 
    It is built and kept current automatically by the *Build NotebookLM bundles*
    GitHub Action (which also still emits the three section files —
@@ -55,11 +58,11 @@ The Study Companion is a [NotebookLM](https://notebooklm.google.com) notebook co
 
    *Free tier limit: 50 sources per notebook; the single-file bundle keeps you to one.*
 
-3. **Set the persona.** Click the gear icon in the chat panel → **Configure Chat** → **Custom** mode. Paste the entire contents of `study_companion_persona.md`. Save.
+3. **Set the persona.** Click the gear icon in the chat panel → **Configure Chat** → **Custom** mode. Paste the persona text from `study_companion_persona/SKILL.md` (the block between the `---` lines). Save. This is what makes the slash commands (`/glossary`, `/quizme`, `/interpret`, `/methodpick`, `/sketch`, …) work.
 
 4. **Share the notebook** with the class. Use the share button to generate a read-only link, then post it on Canvas. Students access without needing to sign in beyond a Google account.
 
-5. **Publish the prompt library.** Copy `study_companion_prompts.md` onto a Canvas page titled "Study Companion — Prompt Library." Link it from the course homepage.
+5. **Publish the prompt library.** Copy `study_companion_prompts/SKILL.md` onto a Canvas page titled "Study Companion — Prompt Library." Its command quick-reference table tells students how to invoke each study mode. Link it from the course homepage.
 
 6. **Run the Week 1 orientation activity** (described at the bottom of the prompt library) during the first synchronous session.
 

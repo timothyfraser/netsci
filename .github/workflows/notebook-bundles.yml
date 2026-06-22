@@ -39,6 +39,9 @@ jobs:
       - name: Build resource index (.notebook/index.md)
         run: python scripts/build_index.py
 
+      - name: Build student skills bundle (.notebook/skills.md)
+        run: python scripts/build_skills_bundle.py
+
       - name: Build combined single-file bundle (.notebook/netsci-notebooklm.md)
         run: python scripts/build_combined_bundle.py
 
