@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-22 22:06 UTC_
+_Auto-generated NotebookLM source · 2026-06-22 22:11 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -4805,7 +4805,7 @@ Item 4 · Project Case Study
 ### Your project code \& report for this week's case study
 
 
-Each week you pick **one** of the 11 case studies and apply *its* technique to your project network — the network *you* chose. Over the three weeks that's **three case studies total, one per week**. You're strongly encouraged to keep the **same network all three weeks** (you'll come to know it inside\-out); switch only if you really need to. For the week you submit (a) a `project.R` or `project.py` that runs your full analysis on that network, and (b) a 5\-page\-minimum report in your own words — that's five pages of *text*; figures and tables are encouraged but don't count toward the five. See the Project section below for the full spec.
+Each week you pick **one** of the 11 case studies and apply *its* technique to your project network — the network *you* chose. Over the three weeks that's **three case studies total, one per week**. You're strongly encouraged to keep the **same network all three weeks** (you'll come to know it inside\-out); switch only if you really need to. For the week you submit (a) a `project.R` or `project.py` that runs your full analysis on that network **end\-to\-end on the dataset you submit alongside it**, and (b) a 5\-page\-minimum report in your own words — that's five pages of *text*; figures and tables are encouraged but don't count toward the five. See the Project section below for the full spec.
 
 
 Project case studies
@@ -4823,6 +4823,11 @@ Project case studies
  quantities of interest in prose. Each report should comfortably
  fill at least five pages of text — figures and tables are encouraged,
  but they sit on top of the five pages rather than counting toward them.
+ Two hard requirements on the network itself: it must have
+ **at least 100 nodes** (**1,000\+ are strongly
+ preferred** — wrangling real\-world scale is the whole point), and
+ if you haven't settled on one by the **end of week 1**, tell
+ the instructor and one will be manufactured to fit your field or industry.
 
 
 Pick a case study — and a project question
@@ -4870,19 +4875,6 @@ One real, full\-length exemplar so you know what five pages of "numbers in prose
 ↗ Open in new tab
 
 Source markdown lives at `assignments/sample-report.md` if you want to read the raw text.
-
-
- Hard requirements
- ≥ 100 nodes; your own writing; both script and PDF
-
-
-### Hard requirements
-
-
-* The *writing must be your own*. See the AI Use Policy — AI can help with code; the prose has to come from you.
-* Your network must have **at least 100 nodes**. Networks of **1,000\+ nodes are strongly preferred** — they force you to handle the difficulty of real\-world data, which is the whole point of the course.
-* If you haven't decided on a network by the *end of week 1*, contact the instructor and one will be manufactured to fit your field or chosen industry.
-* Submit both the script (`project.R` or `project.py`) and the report (PDF preferred). The script must run end\-to\-end on the dataset you submit alongside it.
 
 
  ⚖ AI Use Policy
