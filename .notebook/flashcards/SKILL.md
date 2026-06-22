@@ -1,3 +1,8 @@
+> ### ⌨️ Invocation: `/flashcards`
+> **Try:** "Use `/flashcards` to make a set on centrality measures for Lab 3."
+> **Does:** Generates a copy-pasteable card set (Anki/Quizlet) covering a topic, grounded in course sources.
+> **Won't:** Turn your homework into cards or invent definitions not in the notebook. If a topic is thin, it says so and makes fewer.
+
 Create a high-quality flashcard set for a SYSEN 5470 student on the 
 topic below. Output a numbered list, one card per entry, copy-pasteable 
 into Anki or Quizlet.

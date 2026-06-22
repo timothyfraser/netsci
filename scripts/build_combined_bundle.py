@@ -11,6 +11,7 @@ a title, provenance note, and a table of contents. Run after the other builders:
     python scripts/build_notebooklm_source.py
     python scripts/build_coding_bundle.py
     python scripts/build_index.py
+    python scripts/build_skills_bundle.py
     python scripts/build_combined_bundle.py
 """
 from __future__ import annotations
@@ -30,6 +31,9 @@ SECTIONS = [
     ("coding-modules.md", "Coding Modules",
      "Every Markdown / R / Python file in the repo — case-study code, project "
      "datasets (READMEs + loaders + generators), and skills."),
+    ("skills.md", "Student Skills & Commands",
+     "The Study Companion's chat-invokable slash commands (/glossary, /quizme, "
+     "/interpret, /methodpick, /sketch, ...) and the persona that powers them."),
 ]
 
 

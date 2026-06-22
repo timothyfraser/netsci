@@ -1,10 +1,32 @@
 # SYSEN 5470 Study Companion — Prompt Library
 
+> ### ⌨️ Invocation: `/prompts`
+> **Try:** "Use `/prompts` to show me the study modes I can use."
+> **Does:** Lists every study-mode command the Companion understands, with examples.
+> **Won't:** Do the work — each mode is built to make *you* think.
+
 The Study Companion is a NotebookLM-powered tutor for this course. It knows your syllabus, labs, and readings, and it's set up to **help you think — not to hand you answers**.
 
-Below are prompts you can copy-paste into the Study Companion to activate specific study modes. Replace bracketed text like `[Lab X]` with your actual lab number or concept.
+Below are prompts you can copy-paste into the Study Companion to activate specific study modes. Each mode also has a short **slash command** (e.g. `/check`) you can type instead of pasting the full prompt. Replace bracketed text like `[Lab X]` with your actual lab number or concept.
 
 **Tip:** The Companion is designed to ask you questions back. That's the point. If it feels like it's not just giving you the answer — it isn't, and that's working as intended.
+
+## Command quick reference
+
+| Command | Mode | What it does |
+|---|---|---|
+| `/study` | Start here | Tell it what you're working on; it coaches you and points you to the right command |
+| `/glossary` | Define a term | Defines/contrasts vocabulary, flags common mistakes |
+| `/flashcards` | Make cards | Copy-pasteable card set on a topic |
+| `/quizme` | Quiz me | One question at a time, scored, ends with weak spots |
+| `/orient` | Explain like I'm new | 4-sentence pre-reading orientation |
+| `/check` | Concept check | You explain; it finds gaps via questions |
+| `/interpret` | Interpretation coach | You bring a result; it stress-tests your reading |
+| `/errorhelp` | Error decoder | Explains the *category* of an error, never your code |
+| `/methodpick` | Pick a method | Helps you choose an approach by interrogating your question |
+| `/sketch` | Sketchpad warm-up | By-hand questions to draw before you open R |
+| `/connect` | Cross-lab connection | Relates two ideas via Socratic questions |
+| `/lens` | Engineer's lens | Why a concept matters for your systems-engineering domain |
 
 ---
 
@@ -18,7 +40,7 @@ whether I was close and what I missed. Keep a running score. At the end,
 list the terms I got wrong so I can review them.
 ```
 
-### Explain like I'm new to this
+### Explain like I'm new to this — `/orient`
 ```
 I'm about to read [Lab X]. Before I start, give me a 4-sentence orientation:
 what's the core concept, why does it matter for engineered systems, what's
@@ -30,7 +52,7 @@ I read?
 
 ## Group 2: Debug My Thinking
 
-### Concept check
+### Concept check — `/check`
 ```
 I'm going to explain [concept] in my own words. After I'm done, identify
 any gaps or misconceptions — but don't tell me the right answer. Instead,
@@ -39,14 +61,14 @@ ask me 2-3 questions that will help me find them myself.
 Here's my explanation: [...]
 ```
 
-### Interpretation coach
+### Interpretation coach — `/interpret`
 ```
 I ran [analysis] and got [result]. I think it means [my interpretation].
 Don't tell me if I'm right. Instead, ask me what else could explain this
 result, or what I'd need to check to be more confident in my interpretation.
 ```
 
-### Error decoder
+### Error decoder — `/errorhelp`
 ```
 I got this R error: [paste error]
 Explain what this category of error usually means conceptually — what
@@ -59,7 +81,7 @@ the fix in my own code myself.
 
 ## Group 3: Prep for Lab
 
-### Sketchpad warm-up
+### Sketchpad warm-up — `/sketch`
 ```
 I'm about to start [Lab X]. Before I open R, walk me through 3 questions
 I should sketch out by hand. Don't tell me the answers — just give me good
@@ -85,14 +107,14 @@ it means, increasing in difficulty. After each of my answers, tell me one
 thing to think harder about — but don't grade me.
 ```
 
-### Cross-lab connection
+### Cross-lab connection — `/connect`
 ```
 How does the concept of [X from Lab N] relate to [Y from Lab M]? Don't
 just tell me — ask me 2 questions first that help me see the connection
 myself, then confirm or extend what I figure out.
 ```
 
-### Engineer's lens
+### Engineer's lens — `/lens`
 ```
 I just learned [concept]. Help me see why this matters for a systems
 engineer working on [my domain: e.g. power grid resilience / supply chain /
