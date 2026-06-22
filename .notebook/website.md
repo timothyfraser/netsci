@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-22 21:46 UTC_
+_Auto-generated NotebookLM source · 2026-06-22 22:06 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -4825,69 +4825,27 @@ Project case studies
  but they sit on top of the five pages rather than counting toward them.
 
 
-How your project is graded — the rubric
+Pick a case study — and a project question
 
- Each project case study is scored against the skill it primarily exercises — Identify, Measure, Infer, or Predict. Four tiers per skill. Aim for *Meets*; *Exceeds* takes the same time but more care.
-
-
-### Identify
-
-
-Make the network legible
-
-Not yet
-Node, edge, and weight are undefined or contradictory.
-Approaching
-Defined but not justified — could be defended in five different ways.
-Meets
-Node, edge, weight, and data source are stated and justified in plain prose.
-Exceeds
-Reports an alternative encoding that was considered and rejected, with reasoning.
+ Each case study folder under `code/` has a dedicated
+ *Your Project Case Study* section in its README, with 3
+ suggested project questions to pick from. You don't have to use
+ one of the suggestions — they're starting points.
 
 
-### Measure
-
-
-Compute the right number
-
-Not yet
-One metric reported with no argument for it.
-Approaching
-Right metric for the question, but no robustness check or alternative.
-Meets
-Metric is argued from the question. Sensitivity or alternative metric appears.
-Exceeds
-Two metrics compared; honest discussion of where they disagree and why.
-
-
-### Infer
-
-
-Say what's real, not just observed
-
-Not yet
-A point estimate with no comparison.
-Approaching
-Compared to a null, but the null is unjustified (e.g. unblocked when blocks matter).
-Meets
-Null model justified, p\-value or CI reported, claim is no stronger than the test supports.
-Exceeds
-Two nulls compared, with explicit discussion of which is right for the question.
-
-
-### Predict
-
-
-Use the network to anticipate
-
-Not yet
-Model fits but its decision\-relevance is unstated.
-Approaching
-AUC or accuracy reported, but no baseline, threshold, or operational framing.
-Meets
-Compared against a non\-network baseline; threshold or operating point chosen and defended.
-Exceeds
-Reports where the model fails, and how a stakeholder would catch it before acting on it.
+| \# | Case study | Suggested project questions (README) | Interactive lab |
+| --- | --- | --- | --- |
+| 01 | Build a Network | Project questions \& how\-to → | Lab → |
+| 02 | Network Joins | Project questions \& how\-to → | Lab → |
+| 03 | Aggregation | Project questions \& how\-to → | Lab → |
+| 04 | Centrality \& Criticality | Project questions \& how\-to → | Lab → |
+| 05 | Supply Chain Resilience | Project questions \& how\-to → | Lab → |
+| 06 | DSM Clustering | Project questions \& how\-to → | Lab → |
+| 07 | Network Permutation | Project questions \& how\-to → | Lab → |
+| 08 | Sampling Big Networks | Project questions \& how\-to → | Lab → |
+| 09 | Counterfactual Monte Carlo | Project questions \& how\-to → | Lab → |
+| 10 | GNN by Hand | Project questions \& how\-to → | Lab → |
+| 11 | GNN \+ XGBoost | Project questions \& how\-to → | Lab → |
 
 
 ### Every project report must include
@@ -4898,6 +4856,33 @@ Reports where the model fails, and how a stakeholder would catch it before actin
 * The procedure you ran, in plain language, in order.
 * Your results stated as *numbers in prose*, with at most 1–2 supporting figures and 1 table.
 * What this tells you, and what it doesn't (2–3 sentences).
+
+
+📄
+
+### What does a project report actually look like?
+
+
+One real, full\-length exemplar so you know what five pages of "numbers in prose" actually looks like on the page — figures and tables sit on top of the five. Open it on a phone or laptop, skim once before you start your own. The point is the *shape* of the analysis, not the specific topic — yours should look like this on the page.
+
+
+⬇ Download sample report (PDF)
+↗ Open in new tab
+
+Source markdown lives at `assignments/sample-report.md` if you want to read the raw text.
+
+
+ Hard requirements
+ ≥ 100 nodes; your own writing; both script and PDF
+
+
+### Hard requirements
+
+
+* The *writing must be your own*. See the AI Use Policy — AI can help with code; the prose has to come from you.
+* Your network must have **at least 100 nodes**. Networks of **1,000\+ nodes are strongly preferred** — they force you to handle the difficulty of real\-world data, which is the whole point of the course.
+* If you haven't decided on a network by the *end of week 1*, contact the instructor and one will be manufactured to fit your field or chosen industry.
+* Submit both the script (`project.R` or `project.py`) and the report (PDF preferred). The script must run end\-to\-end on the dataset you submit alongside it.
 
 
  ⚖ AI Use Policy
@@ -4934,63 +4919,11 @@ The **Course Companion** (NotebookLM) is grounded in this course's own materials
 Read the full AI Use Policy →
 
 
- Hard requirements
- ≥ 100 nodes; your own writing; both script and PDF
-
-
-### Hard requirements
-
-
-* The *writing must be your own*. See the AI Use Policy — AI can help with code; the prose has to come from you.
-* Your network must have **at least 100 nodes**. Networks of **1,000\+ nodes are strongly preferred** — they force you to handle the difficulty of real\-world data, which is the whole point of the course.
-* If you haven't decided on a network by the *end of week 1*, contact the instructor and one will be manufactured to fit your field or chosen industry.
-* Submit both the script (`project.R` or `project.py`) and the report (PDF preferred). The script must run end\-to\-end on the dataset you submit alongside it.
-
-
-📄
-
-### What does a project report actually look like?
-
-
-One real, full\-length exemplar so you know what five pages of "numbers in prose" actually looks like on the page — figures and tables sit on top of the five. Open it on a phone or laptop, skim once before you start your own. The point is the *shape* of the analysis, not the specific topic — yours should look like this on the page.
-
-
-⬇ Download sample report (PDF)
-↗ Open in new tab
-
-Source markdown lives at `assignments/sample-report.md` if you want to read the raw text.
-
-
  Self\-grade before you submit
  12\-item checklist with copy\-to\-Canvas output
 
 
  Click through these before you hit submit. Most missed\-point situations are catches this list would have flagged. The **Copy** button writes a paste\-able status block to your clipboard — paste it into the project box on Canvas so Tim can see what you flagged for yourself.
-
-
- All 11 case studies
- Lab \+ GitHub code folder \+ suggested project questions
-
-
- Each case study folder under `code/` has a dedicated
- *Your Project Case Study* section in its README, with 3
- suggested project questions to pick from. You don't have to use
- one of the suggestions — they're starting points.
-
-
-| \# | Case study | Skill | Interactive lab | Code folder (GitHub) |
-| --- | --- | --- | --- | --- |
-| 01 | Build a Network | Identify | Lab | Code \& README |
-| 02 | Network Joins | Identify | Lab | Code \& README |
-| 03 | Aggregation | Identify | Lab | Code \& README |
-| 04 | Centrality \& Criticality | Measure | Lab | Code \& README |
-| 05 | Supply Chain Resilience | Measure | Lab | Code \& README |
-| 06 | DSM Clustering | Measure | Lab | Code \& README |
-| 07 | Network Permutation | Infer | Lab | Code \& README |
-| 08 | Sampling Big Networks | Identify | Lab | Code \& README |
-| 09 | Counterfactual Monte Carlo | Predict | Lab | Code \& README |
-| 10 | GNN by Hand | Predict | Lab | Code \& README |
-| 11 | GNN \+ XGBoost | Predict | Lab | Code \& README |
 
 
 Office hours \& meetings
