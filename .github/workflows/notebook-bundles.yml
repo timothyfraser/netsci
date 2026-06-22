@@ -2,7 +2,7 @@ name: Build NotebookLM bundles
 
 on:
   push:
-    branches: [main]
+    branches: [instructor]
     paths-ignore:
       - '.notebook/**'
       - 'README.md'

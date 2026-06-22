@@ -1,0 +1,72 @@
+# Publishes the student-facing subset of the `instructor` branch to `main`.
+#
+# `instructor` is the gold-standard source of truth (full course content incl.
+# the website in docs/, NotebookLM bundles, scripts, and tooling). `main` is
+# GENERATED from it and contains ONLY the student-facing paths in WHITELIST.
+#
+#   DO NOT commit to `main` directly — it is overwritten on every instructor push.
+#   All work happens on `instructor` (feature branch -> PR into instructor).
+#
+# GitHub Pages is served from `instructor` -> /docs, so the live site updates
+# straight from this branch and never depends on `main`.
+name: Publish student subset
+
+on:
+  push:
+    branches: [instructor]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-student-subset
+  cancel-in-progress: true
+
+env:
+  SRC: instructor
+  DST: main
+  # Space-separated paths students should see. EVERYTHING else is pruned from main.
+  WHITELIST: "data code quickstart setup.sh .Rprofile README.md LICENSE .gitignore"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rebuild main as the student subset
+        run: |
+          set -euo pipefail
+          git config user.name  "course-bot"
+          git config user.email "actions@github.com"
+
+          SHA="$(git rev-parse --short "origin/${SRC}")"
+          git fetch origin "${DST}" || true
+
+          # Commit on top of the existing main (no force-push), or start fresh.
+          if git show-ref --verify --quiet "refs/remotes/origin/${DST}"; then
+            git checkout -B "${DST}" "origin/${DST}"
+          else
+            git checkout --orphan "${DST}"
+          fi
+
+          # Prune EVERYTHING, then restore only the whitelisted paths from the
+          # source branch. This mirrors edits, additions, and deletions, and
+          # guarantees no instructor-only file can ever linger on main.
+          git rm -r -q . || true
+          for p in ${WHITELIST}; do
+            if git cat-file -e "origin/${SRC}:${p}" 2>/dev/null; then
+              git checkout "origin/${SRC}" -- "${p}"
+            fi
+          done
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "main already matches the student subset; nothing to publish."
+            exit 0
+          fi
+          git commit -m "Publish student subset from ${SRC}@${SHA}"
+          git push origin "HEAD:${DST}"

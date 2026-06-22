@@ -6,7 +6,7 @@ name: Build sample report PDF
 
 on:
   push:
-    branches: [main]
+    branches: [instructor]
     paths:
       - 'docs/assignments/sample-report.md'
       - 'docs/assignments/sample-report-fig1.png'
