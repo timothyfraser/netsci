@@ -217,8 +217,7 @@
     margin-bottom: 0;
   }
 
-  /* Collapsible sections — used for AI Policy, Hard requirements,
-     Self-grade, and the 11-row case-studies table */
+  /* Collapsible sections — used for AI Policy and Self-grade */
   details.collapsible {
     margin: 18px 0;
     scroll-margin-top: 80px;
@@ -376,7 +375,7 @@
       <div>
         <div class="meta">Item 4 · Project Case Study</div>
         <h3>Your project code &amp; report for this week's case study</h3>
-        <p>Each week you pick <strong>one</strong> of the 11 case studies and apply <em>its</em> technique to your project network — the network <em>you</em> chose. Over the three weeks that's <strong>three case studies total, one per week</strong>. You're strongly encouraged to keep the <strong>same network all three weeks</strong> (you'll come to know it inside-out); switch only if you really need to. For the week you submit (a) a <code>project.R</code> or <code>project.py</code> that runs your full analysis on that network, and (b) a 5-page-minimum report in your own words — that's five pages of <em>text</em>; figures and tables are encouraged but don't count toward the five. See the Project section below for the full spec.</p>
+        <p>Each week you pick <strong>one</strong> of the 11 case studies and apply <em>its</em> technique to your project network — the network <em>you</em> chose. Over the three weeks that's <strong>three case studies total, one per week</strong>. You're strongly encouraged to keep the <strong>same network all three weeks</strong> (you'll come to know it inside-out); switch only if you really need to. For the week you submit (a) a <code>project.R</code> or <code>project.py</code> that runs your full analysis on that network <strong>end-to-end on the dataset you submit alongside it</strong>, and (b) a 5-page-minimum report in your own words — that's five pages of <em>text</em>; figures and tables are encouraged but don't count toward the five. See the Project section below for the full spec.</p>
       </div>
     </div>
   </section>
@@ -397,6 +396,11 @@
       quantities of interest in prose. Each report should comfortably
       fill at least five pages of text — figures and tables are encouraged,
       but they sit on top of the five pages rather than counting toward them.
+      Two hard requirements on the network itself: it must have
+      <strong>at least 100 nodes</strong> (<strong>1,000+ are strongly
+      preferred</strong> — wrangling real-world scale is the whole point), and
+      if you haven't settled on one by the <strong>end of week 1</strong>, tell
+      the instructor and one will be manufactured to fit your field or industry.
     </p>
 
     <div class="sec-label" style="margin-top: 28px;">Pick a case study — and a project question</div>
@@ -476,24 +480,6 @@
         <p class="srep-note">Source markdown lives at <code style="background: rgba(57,255,20,0.08); padding: 0 4px; border-radius: 3px;">assignments/sample-report.md</code> if you want to read the raw text.</p>
       </div>
     </div>
-
-    <details class="collapsible" id="hard-requirements">
-      <summary>
-        Hard requirements
-        <span class="preview">≥ 100 nodes; your own writing; both script and PDF</span>
-      </summary>
-      <div class="collapse-body">
-        <div class="checklist">
-          <h3>Hard requirements</h3>
-          <ul>
-            <li>The <em>writing must be your own</em>. See the <a href="help/ai-policy.html" style="color: var(--green-bright);">AI Use Policy</a> — AI can help with code; the prose has to come from you.</li>
-            <li>Your network must have <strong>at least 100 nodes</strong>. Networks of <strong>1,000+ nodes are strongly preferred</strong> — they force you to handle the difficulty of real-world data, which is the whole point of the course.</li>
-            <li>If you haven't decided on a network by the <em>end of week 1</em>, contact the instructor and one will be manufactured to fit your field or chosen industry.</li>
-            <li>Submit both the script (<code>project.R</code> or <code>project.py</code>) and the report (PDF preferred). The script must run end-to-end on the dataset you submit alongside it.</li>
-          </ul>
-        </div>
-      </div>
-    </details>
 
     <details class="collapsible" id="ai-policy">
       <summary>
