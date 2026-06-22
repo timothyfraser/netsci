@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-22 20:24 UTC_
+_Auto-generated NotebookLM source · 2026-06-22 21:46 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -777,7 +777,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-22 20:24 UTC_
+_Auto-generated NotebookLM source · 2026-06-22 21:46 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -4647,7 +4647,7 @@ SYSEN 5470 · Readings
 # Readings
 
 
-Every case study pairs a textbook chapter with one engineering application paper — the textbook keeps it rigorous, the paper keeps it real. Most links are free or open\-access; excerpts from non\-open texts are distributed as PDFs in the course.
+Every case study has at most **two required readings** — typically a textbook chapter and one engineering application paper: the textbook keeps it rigorous, the paper keeps it real. Everything else is **optional further reading**. Most links are free or open\-access; excerpts from non\-open texts are distributed as PDFs in the course.
 
 
 Anchor Texts
@@ -4700,22 +4700,22 @@ By Case Study
 Classify nodes, edges, direction, weighting, and small\-world phenomena. Recognize when your problem is a graph problem.
 
 
-Primary
-Barabási, Ch. 1: *Introduction*. Why network thinking matters.
-Read →
-
-
-Primary
+Required
 Barabási, Ch. 2: *Graph Theory*. Nodes, edges, direction, weighting, paths.
 Read →
 
 
-Applied
+Required
 Gladwell, M. (1999\). *Six Degrees of Lois Weinberg.* The New Yorker.
 Open →
 
 
-Primary
+Optional
+Barabási, Ch. 1: *Introduction*. Why network thinking matters.
+Read →
+
+
+Optional
 Easley \& Kleinberg, Ch. 3: *Strong and Weak Ties.*
 Read →
 
@@ -4736,27 +4736,27 @@ Open lab →
 Identify bottlenecks, hubs, and vulnerabilities in any system. Calculate centrality with tidygraph; bipartite networks; cascading failure.
 
 
-Primary
-Barabási, Ch. 3: *Random Networks.*
-Read →
-
-
-Primary
+Required
 Barabási, Ch. 8: *Network Robustness.*
 Read →
 
 
-Primary
-Barabási, Ch. 10: *Spreading Phenomena.*
-Read →
-
-
-Applied
+Required
 Easley \& Kleinberg, §3\.6: *Betweenness Measures and Graph Partitioning.*
 Read →
 
 
-Applied
+Optional
+Barabási, Ch. 3: *Random Networks.*
+Read →
+
+
+Optional
+Barabási, Ch. 10: *Spreading Phenomena.*
+Read →
+
+
+Optional
 Easley \& Kleinberg, Ch. 19: *Cascading Behavior in Networks.*
 Read →
 
@@ -4777,7 +4777,7 @@ Open lab →
 Permutation tests, jackknife, bootstrap on networks. Does income shape who rides with whom?
 
 
-Applied
+Required
 Farine, D. R. (2017\). *A guide to null models for animal social network analysis.* Methods Ecol. Evol. 8: 1309–1320\.
 DOI →
 
@@ -4793,12 +4793,12 @@ Open lab →
 Solve real flow and routing problems in logistics and transit. Counterfactual graph mutation — add a node, measure metric M, resample.
 
 
-Primary
+Required
 Bertsekas. *Network Optimization.* MIT.
 PDF →
 
 
-Applied
+Required
 *Supply Chain Network Design.* Resource on production\-distribution graph design.
 Open →
 
@@ -4814,22 +4814,22 @@ Open lab →
 Detect structure in large\-scale networks automatically. Bipartite graphs, affiliation, matching markets.
 
 
-Primary
+Required
 Barabási, Ch. 9: *Communities.*
 Read →
 
 
-Applied
-Barabási, Ch. 2: §*Bipartite Graphs.*
-Read →
-
-
-Applied
+Required
 Easley \& Kleinberg, Ch. 10: *Matching Markets* (bipartite focus).
 Read →
 
 
-Applied
+Optional
+Barabási, Ch. 2: §*Bipartite Graphs.*
+Read →
+
+
+Optional
 Easley \& Kleinberg, §4\.3: *Affiliation.*
 Read →
 
@@ -4845,12 +4845,12 @@ Open lab →
 Neural networks, graph neural nets, and ML for network inference. Static and temporal GNNs.
 
 
-Applied
+Required
 Khan et al. (2025\). *Optimizing machine learning for network inference.* Sci Rep 15, 24472\.
 DOI →
 
 
-Applied
+Required
 Resce et al. (2022\). *Machine learning prediction of academic collaboration networks.* Sci Rep 12, 21993\.
 DOI →
 
@@ -4876,7 +4876,7 @@ Open lab →
 Communicate network insight with beautiful, interactive graphics. Bluebikes, hurricane evacuation, healthcare accessibility.
 
 
-Applied
+Required
 Bellantuono et al. (2025\). *Analyzing the accessibility of Rome's healthcare services via public transportation.* Sci Rep 15, 22880\.
 DOI →
 
@@ -4892,7 +4892,7 @@ Open lab →
 Wrangling edgelists and nodelists at scale. Grouping, joins, network joins, aggregation, intro to SQLite.
 
 
-Primary
+Required
 Easley \& Kleinberg, §2\.4: *Network Datasets — An Overview.*
 Read →
 
@@ -6060,7 +6060,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-22 20:24 UTC_
+_Auto-generated NotebookLM source · 2026-06-22 21:46 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
