@@ -58,6 +58,23 @@
     "midterm-eval":  "2026-07-02T03:59:00Z"
   },
 
+  "section_overrides": {
+    "_comment": "SYSEN-5940 in-person students get a later due via Canvas Assign-to section override. sync_contract.py --seed adds these; --apply-overrides-only pushes to Canvas. section_name must match the Canvas section exactly.",
+    "section_name": "SYSEN-5940",
+    "due_at": "2026-07-02T13:00:00Z",
+    "assignments": [
+      "lc-build-a-network",
+      "lc-permutation",
+      "lc-centrality",
+      "drawing-build-a-network",
+      "drawing-permutation",
+      "drawing-centrality",
+      "ed-week-1",
+      "office-week-1",
+      "project-1"
+    ]
+  },
+
   "case_studies": [
     { "key": "build-a-network", "num": "01", "name": "Build a Network",                       "short": "Build a Network",        "icon": "🕸️", "skill": "Identify", "week": 1, "lab": "case-studies/build-a-network.html", "code": "code/01_build-a-network", "sketch_title": "Sketch 01 · Map your network",            "sketch_anchor": "sketchpad.html" },
     { "key": "permutation",     "num": "07", "name": "Network Statistics (Permutation)",       "short": "Network Statistics",     "icon": "📐", "skill": "Infer",    "week": 1, "lab": "case-studies/permutation.html",     "code": "code/07_permutation",     "sketch_title": "Sketch 03 · Two null distributions",      "sketch_anchor": "sketchpad.html#sketch-03a" },

@@ -1,15 +1,15 @@
 {
   "meta": {
-    "course_id": "81765",
+    "course_id": "87652",
     "base_url": "https://canvas.cornell.edu",
-    "last_pull": "2026-06-01T16:42:22Z",
+    "last_pull": "2026-06-23T18:41:42Z",
     "note": "Edit due_at (ISO 8601, e.g. 2026-06-29T13:00:00Z), points_possible, and group weight/drop_lowest here, then run: sync_contract.py --apply. Or edit on Canvas and run --pull. Set due_at to null to leave a date unset."
   },
   "assignment_groups": [
     {
       "key": "drawings",
       "name": "Drawings",
-      "canvas_id": 248724,
+      "canvas_id": 248764,
       "group_weight": 20.0,
       "position": 1,
       "drop_lowest": 2
@@ -17,49 +17,49 @@
     {
       "key": "casestudies",
       "name": "Case Studies",
-      "canvas_id": 248725,
+      "canvas_id": 248765,
       "group_weight": 25.0,
-      "position": 2,
+      "position": 1,
       "drop_lowest": 2
     },
     {
       "key": "participation",
       "name": "Participation",
-      "canvas_id": 248726,
+      "canvas_id": 248766,
       "group_weight": 5.0,
-      "position": 3,
+      "position": 2,
       "drop_lowest": 0
     },
     {
       "key": "finalpres",
       "name": "Final Presentation",
-      "canvas_id": 248731,
+      "canvas_id": 248767,
       "group_weight": 5.0,
-      "position": 4,
+      "position": 3,
       "drop_lowest": 0
     },
     {
       "key": "hw1",
       "name": "Weekly Homework 1 · Project Case Study",
-      "canvas_id": 248727,
+      "canvas_id": 248768,
       "group_weight": 15.0,
-      "position": 5,
+      "position": 4,
       "drop_lowest": 0
     },
     {
       "key": "hw2",
       "name": "Weekly Homework 2 · Project Case Study",
-      "canvas_id": 248728,
+      "canvas_id": 248769,
       "group_weight": 15.0,
-      "position": 6,
+      "position": 5,
       "drop_lowest": 0
     },
     {
       "key": "hw3",
       "name": "Weekly Homework 3 · Project Case Study",
-      "canvas_id": 248729,
+      "canvas_id": 248770,
       "group_weight": 15.0,
-      "position": 7,
+      "position": 6,
       "drop_lowest": 0
     }
   ],
@@ -71,9 +71,17 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 1,
-      "due_at": "2026-06-29T13:00:00Z",
-      "canvas_id": 968346,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968346"
+      "due_at": "2026-07-02T13:00:00Z",
+      "canvas_id": 968699,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968699",
+      "overrides": [
+        {
+          "canvas_override_id": 171684,
+          "section_id": 139822,
+          "section_name": "SYSEN-5940",
+          "due_at": "2026-07-02T13:00:00Z"
+        }
+      ]
     },
     {
       "key": "lc-build-a-network",
@@ -82,9 +90,17 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 1,
-      "due_at": "2026-06-29T13:00:00Z",
-      "canvas_id": 968347,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968347"
+      "due_at": "2026-07-02T13:00:00Z",
+      "canvas_id": 968700,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968700",
+      "overrides": [
+        {
+          "canvas_override_id": 171681,
+          "section_id": 139822,
+          "section_name": "SYSEN-5940",
+          "due_at": "2026-07-02T13:00:00Z"
+        }
+      ]
     },
     {
       "key": "drawing-permutation",
@@ -93,9 +109,17 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 1,
-      "due_at": "2026-06-29T13:00:00Z",
-      "canvas_id": 968348,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968348"
+      "due_at": "2026-07-02T13:00:00Z",
+      "canvas_id": 968701,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968701",
+      "overrides": [
+        {
+          "canvas_override_id": 171686,
+          "section_id": 139822,
+          "section_name": "SYSEN-5940",
+          "due_at": "2026-07-02T13:00:00Z"
+        }
+      ]
     },
     {
       "key": "lc-permutation",
@@ -104,9 +128,17 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 1,
-      "due_at": "2026-06-29T13:00:00Z",
-      "canvas_id": 968349,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968349"
+      "due_at": "2026-07-02T13:00:00Z",
+      "canvas_id": 968702,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968702",
+      "overrides": [
+        {
+          "canvas_override_id": 171682,
+          "section_id": 139822,
+          "section_name": "SYSEN-5940",
+          "due_at": "2026-07-02T13:00:00Z"
+        }
+      ]
     },
     {
       "key": "drawing-centrality",
@@ -115,9 +147,17 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 1,
-      "due_at": "2026-06-29T13:00:00Z",
-      "canvas_id": 968350,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968350"
+      "due_at": "2026-07-02T13:00:00Z",
+      "canvas_id": 968703,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968703",
+      "overrides": [
+        {
+          "canvas_override_id": 171687,
+          "section_id": 139822,
+          "section_name": "SYSEN-5940",
+          "due_at": "2026-07-02T13:00:00Z"
+        }
+      ]
     },
     {
       "key": "lc-centrality",
@@ -126,9 +166,17 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 1,
-      "due_at": "2026-06-29T13:00:00Z",
-      "canvas_id": 968351,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968351"
+      "due_at": "2026-07-02T13:00:00Z",
+      "canvas_id": 968704,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968704",
+      "overrides": [
+        {
+          "canvas_override_id": 171688,
+          "section_id": 139822,
+          "section_name": "SYSEN-5940",
+          "due_at": "2026-07-02T13:00:00Z"
+        }
+      ]
     },
     {
       "key": "drawing-supply-chain",
@@ -138,8 +186,9 @@
       "points_possible": 1,
       "week": 2,
       "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968352,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968352"
+      "canvas_id": 968705,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968705",
+      "overrides": []
     },
     {
       "key": "lc-supply-chain",
@@ -149,8 +198,9 @@
       "points_possible": 1,
       "week": 2,
       "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968353,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968353"
+      "canvas_id": 968706,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968706",
+      "overrides": []
     },
     {
       "key": "drawing-counterfactual",
@@ -160,8 +210,9 @@
       "points_possible": 1,
       "week": 2,
       "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968354,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968354"
+      "canvas_id": 968707,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968707",
+      "overrides": []
     },
     {
       "key": "lc-counterfactual",
@@ -171,8 +222,9 @@
       "points_possible": 1,
       "week": 2,
       "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968355,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968355"
+      "canvas_id": 968708,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968708",
+      "overrides": []
     },
     {
       "key": "drawing-dsm-clustering",
@@ -182,8 +234,9 @@
       "points_possible": 1,
       "week": 2,
       "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968356,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968356"
+      "canvas_id": 968709,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968709",
+      "overrides": []
     },
     {
       "key": "lc-dsm-clustering",
@@ -193,8 +246,9 @@
       "points_possible": 1,
       "week": 2,
       "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968357,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968357"
+      "canvas_id": 968710,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968710",
+      "overrides": []
     },
     {
       "key": "drawing-aggregation",
@@ -204,8 +258,9 @@
       "points_possible": 1,
       "week": 2,
       "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968358,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968358"
+      "canvas_id": 968711,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968711",
+      "overrides": []
     },
     {
       "key": "lc-aggregation",
@@ -215,8 +270,9 @@
       "points_possible": 1,
       "week": 2,
       "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968359,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968359"
+      "canvas_id": 968712,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968712",
+      "overrides": []
     },
     {
       "key": "drawing-gnn-by-hand",
@@ -226,8 +282,9 @@
       "points_possible": 1,
       "week": 3,
       "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968360,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968360"
+      "canvas_id": 968713,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968713",
+      "overrides": []
     },
     {
       "key": "lc-gnn-by-hand",
@@ -237,8 +294,9 @@
       "points_possible": 1,
       "week": 3,
       "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968361,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968361"
+      "canvas_id": 968714,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968714",
+      "overrides": []
     },
     {
       "key": "drawing-gnn-xgboost",
@@ -248,8 +306,9 @@
       "points_possible": 1,
       "week": 3,
       "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968362,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968362"
+      "canvas_id": 968715,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968715",
+      "overrides": []
     },
     {
       "key": "lc-gnn-xgboost",
@@ -259,8 +318,9 @@
       "points_possible": 1,
       "week": 3,
       "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968363,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968363"
+      "canvas_id": 968716,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968716",
+      "overrides": []
     },
     {
       "key": "drawing-sampling",
@@ -270,8 +330,9 @@
       "points_possible": 1,
       "week": 3,
       "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968364,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968364"
+      "canvas_id": 968717,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968717",
+      "overrides": []
     },
     {
       "key": "lc-sampling",
@@ -281,8 +342,9 @@
       "points_possible": 1,
       "week": 3,
       "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968365,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968365"
+      "canvas_id": 968718,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968718",
+      "overrides": []
     },
     {
       "key": "drawing-joins",
@@ -292,8 +354,9 @@
       "points_possible": 1,
       "week": 3,
       "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968366,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968366"
+      "canvas_id": 968719,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968719",
+      "overrides": []
     },
     {
       "key": "lc-joins",
@@ -303,8 +366,9 @@
       "points_possible": 1,
       "week": 3,
       "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968367,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968367"
+      "canvas_id": 968720,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968720",
+      "overrides": []
     },
     {
       "key": "ed-week-1",
@@ -313,9 +377,17 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 1,
-      "due_at": "2026-06-29T13:00:00Z",
-      "canvas_id": 968368,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968368"
+      "due_at": "2026-07-02T13:00:00Z",
+      "canvas_id": 968721,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968721",
+      "overrides": [
+        {
+          "canvas_override_id": 171689,
+          "section_id": 139822,
+          "section_name": "SYSEN-5940",
+          "due_at": "2026-07-02T13:00:00Z"
+        }
+      ]
     },
     {
       "key": "ed-week-2",
@@ -325,8 +397,9 @@
       "points_possible": 1,
       "week": 2,
       "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968369,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968369"
+      "canvas_id": 968722,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968722",
+      "overrides": []
     },
     {
       "key": "ed-week-3",
@@ -336,8 +409,9 @@
       "points_possible": 1,
       "week": 3,
       "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968370,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968370"
+      "canvas_id": 968723,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968723",
+      "overrides": []
     },
     {
       "key": "office-week-1",
@@ -346,9 +420,23 @@
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 1,
-      "due_at": "2026-06-24T03:59:00Z",
-      "canvas_id": 968371,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968371"
+      "due_at": "2026-07-02T13:00:00Z",
+      "canvas_id": 968724,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968724",
+      "overrides": [
+        {
+          "canvas_override_id": 171690,
+          "section_id": 139822,
+          "section_name": "SYSEN-5940",
+          "due_at": "2026-07-02T13:00:00Z"
+        },
+        {
+          "canvas_override_id": 171692,
+          "section_id": 131520,
+          "section_name": "LEC001-AD",
+          "due_at": "2026-06-25T03:59:59Z"
+        }
+      ]
     },
     {
       "key": "office-week-2",
@@ -358,8 +446,9 @@
       "points_possible": 1,
       "week": 2,
       "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968372,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968372"
+      "canvas_id": 968725,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968725",
+      "overrides": []
     },
     {
       "key": "office-week-3",
@@ -369,8 +458,9 @@
       "points_possible": 1,
       "week": 3,
       "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968373,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968373"
+      "canvas_id": 968726,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968726",
+      "overrides": []
     },
     {
       "key": "project-1",
@@ -379,9 +469,17 @@
       "grading_type": "points",
       "points_possible": 100,
       "week": 1,
-      "due_at": "2026-06-29T13:00:00Z",
-      "canvas_id": 968374,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968374"
+      "due_at": "2026-07-02T13:00:00Z",
+      "canvas_id": 968727,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968727",
+      "overrides": [
+        {
+          "canvas_override_id": 171691,
+          "section_id": 139822,
+          "section_name": "SYSEN-5940",
+          "due_at": "2026-07-02T13:00:00Z"
+        }
+      ]
     },
     {
       "key": "project-2",
@@ -391,8 +489,9 @@
       "points_possible": 100,
       "week": 2,
       "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968375,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968375"
+      "canvas_id": 968728,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968728",
+      "overrides": []
     },
     {
       "key": "project-3",
@@ -402,8 +501,9 @@
       "points_possible": 100,
       "week": 3,
       "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968376,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968376"
+      "canvas_id": 968729,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968729",
+      "overrides": []
     },
     {
       "key": "final-presentation",
@@ -413,8 +513,9 @@
       "points_possible": 1,
       "week": 3,
       "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968377,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968377"
+      "canvas_id": 968730,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968730",
+      "overrides": []
     },
     {
       "key": "intro-survey",
@@ -424,8 +525,9 @@
       "points_possible": 1,
       "week": 1,
       "due_at": "2026-06-24T03:59:00Z",
-      "canvas_id": 968417,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968417"
+      "canvas_id": 968731,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968731",
+      "overrides": []
     },
     {
       "key": "midterm-eval",
@@ -435,8 +537,9 @@
       "points_possible": 1,
       "week": 2,
       "due_at": "2026-07-02T03:59:00Z",
-      "canvas_id": 968418,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968418"
+      "canvas_id": 968732,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968732",
+      "overrides": []
     },
     {
       "key": "final-eval",
@@ -446,14 +549,15 @@
       "points_possible": 1,
       "week": 3,
       "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968419,
-      "html_url": "https://canvas.cornell.edu/courses/81765/assignments/968419"
+      "canvas_id": 968733,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968733",
+      "overrides": []
     }
   ],
   "modules": [
     {
       "name": "Getting Started",
-      "canvas_id": 542666,
+      "canvas_id": 542815,
       "position": 1,
       "items": [
         {
@@ -515,31 +619,55 @@
           "indent": 0
         },
         {
+          "type": "ExternalUrl",
+          "title": "🎬 Watch - 0.1 - Trailer: Network Science & Applications",
+          "indent": 1,
+          "url": "https://cornell.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=8d3c9771-ff73-4671-abbc-b471011d803a"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🎬 Watch - 0.2 - Welcome to NETSCI - Course Logistics",
+          "indent": 1,
+          "url": "https://cornell.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=e83574dc-815a-41b6-b0e3-b4710121c73e"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🎬 Watch - 0.3 - Canvas & Course Website",
+          "indent": 1,
+          "url": "https://cornell.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=38b3a48d-f56e-4ba4-811b-b471012e9b49"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🎬 Watch - 0.4 - Course Overview",
+          "indent": 1,
+          "url": "https://cornell.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=539dd34d-804d-4fac-9012-b471011d8eaa"
+        },
+        {
           "type": "Assignment",
           "title": "Intro Course Survey",
           "indent": 1,
-          "content_id": 968417,
+          "content_id": 968731,
           "ref": "intro-survey"
         },
         {
           "type": "Assignment",
           "title": "Office Hours — Week 1",
           "indent": 1,
-          "content_id": 968371,
+          "content_id": 968724,
           "ref": "office-week-1"
         },
         {
           "type": "Assignment",
           "title": "Ed Discussion — Week 1",
           "indent": 1,
-          "content_id": 968368,
+          "content_id": 968721,
           "ref": "ed-week-1"
         }
       ]
     },
     {
       "name": "Week 1 — Think Like a Graph",
-      "canvas_id": 542667,
+      "canvas_id": 542816,
       "position": 2,
       "items": [
         {
@@ -549,9 +677,21 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "🎬 Week 1 Overview Video (coming soon)",
+          "title": "🎬 Week 1 Overview Video",
           "indent": 1,
-          "url": "https://timothyfraser.com/netsci/index.html"
+          "url": "https://cornell.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=654d6ea3-1241-4ff7-9193-b4720125cd28"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "SLIDES: Week 1 Overview",
+          "indent": 2,
+          "url": "https://docs.google.com/presentation/d/1boIkI7NHWDJxRkEJQ3N8cF-YpVq1rHub/edit?usp=sharing&ouid=116043209775835785592&rtpof=true&sd=true"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🎬Watch - Project Homeworks",
+          "indent": 1,
+          "url": "https://cornell.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=e0985f6b-44e6-4f9b-bfcc-b472012a94ce"
         },
         {
           "type": "ExternalUrl",
@@ -566,16 +706,23 @@
         },
         {
           "type": "Assignment",
+          "title": "Intro Course Survey",
+          "indent": 1,
+          "content_id": 968731,
+          "ref": "intro-survey"
+        },
+        {
+          "type": "Assignment",
           "title": "Office Hours — Week 1",
           "indent": 1,
-          "content_id": 968371,
+          "content_id": 968724,
           "ref": "office-week-1"
         },
         {
           "type": "Assignment",
           "title": "Ed Discussion — Week 1",
           "indent": 1,
-          "content_id": 968368,
+          "content_id": 968721,
           "ref": "ed-week-1"
         },
         {
@@ -588,14 +735,14 @@
           "type": "Assignment",
           "title": "Drawing — Build a Network",
           "indent": 2,
-          "content_id": 968346,
+          "content_id": 968699,
           "ref": "drawing-build-a-network"
         },
         {
           "type": "Assignment",
           "title": "Learning Checks — Build a Network",
           "indent": 2,
-          "content_id": 968347,
+          "content_id": 968700,
           "ref": "lc-build-a-network"
         },
         {
@@ -608,14 +755,14 @@
           "type": "Assignment",
           "title": "Drawing — Network Statistics",
           "indent": 2,
-          "content_id": 968348,
+          "content_id": 968701,
           "ref": "drawing-permutation"
         },
         {
           "type": "Assignment",
           "title": "Learning Checks — Network Statistics",
           "indent": 2,
-          "content_id": 968349,
+          "content_id": 968702,
           "ref": "lc-permutation"
         },
         {
@@ -628,14 +775,14 @@
           "type": "Assignment",
           "title": "Drawing — Centrality",
           "indent": 2,
-          "content_id": 968350,
+          "content_id": 968703,
           "ref": "drawing-centrality"
         },
         {
           "type": "Assignment",
           "title": "Learning Checks — Centrality",
           "indent": 2,
-          "content_id": 968351,
+          "content_id": 968704,
           "ref": "lc-centrality"
         },
         {
@@ -653,14 +800,14 @@
           "type": "Assignment",
           "title": "Project Case Study — Submission 1",
           "indent": 1,
-          "content_id": 968374,
+          "content_id": 968727,
           "ref": "project-1"
         }
       ]
     },
     {
       "name": "Week 2 — Find What Matters",
-      "canvas_id": 542668,
+      "canvas_id": 542817,
       "position": 3,
       "items": [
         {
@@ -673,6 +820,12 @@
           "title": "🎬 Week 2 Overview Video (coming soon)",
           "indent": 1,
           "url": "https://timothyfraser.com/netsci/index.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "SLIDES: Week 2 Overview",
+          "indent": 2,
+          "url": "https://docs.google.com/presentation/d/1Q6vTMh8QQ5b8qkxtp5LPLA5Bkkgdx1_G/edit?usp=sharing&ouid=116043209775835785592&rtpof=true&sd=true"
         },
         {
           "type": "ExternalUrl",
@@ -689,14 +842,14 @@
           "type": "Assignment",
           "title": "Office Hours — Week 2",
           "indent": 1,
-          "content_id": 968372,
+          "content_id": 968725,
           "ref": "office-week-2"
         },
         {
           "type": "Assignment",
           "title": "Ed Discussion — Week 2",
           "indent": 1,
-          "content_id": 968369,
+          "content_id": 968722,
           "ref": "ed-week-2"
         },
         {
@@ -709,14 +862,14 @@
           "type": "Assignment",
           "title": "Drawing — Supply Chain",
           "indent": 2,
-          "content_id": 968352,
+          "content_id": 968705,
           "ref": "drawing-supply-chain"
         },
         {
           "type": "Assignment",
           "title": "Learning Checks — Supply Chain",
           "indent": 2,
-          "content_id": 968353,
+          "content_id": 968706,
           "ref": "lc-supply-chain"
         },
         {
@@ -729,14 +882,14 @@
           "type": "Assignment",
           "title": "Drawing — Routing",
           "indent": 2,
-          "content_id": 968354,
+          "content_id": 968707,
           "ref": "drawing-counterfactual"
         },
         {
           "type": "Assignment",
           "title": "Learning Checks — Routing",
           "indent": 2,
-          "content_id": 968355,
+          "content_id": 968708,
           "ref": "lc-counterfactual"
         },
         {
@@ -749,14 +902,14 @@
           "type": "Assignment",
           "title": "Drawing — DSM Clustering",
           "indent": 2,
-          "content_id": 968356,
+          "content_id": 968709,
           "ref": "drawing-dsm-clustering"
         },
         {
           "type": "Assignment",
           "title": "Learning Checks — DSM Clustering",
           "indent": 2,
-          "content_id": 968357,
+          "content_id": 968710,
           "ref": "lc-dsm-clustering"
         },
         {
@@ -769,21 +922,21 @@
           "type": "Assignment",
           "title": "Drawing — Aggregation",
           "indent": 2,
-          "content_id": 968358,
+          "content_id": 968711,
           "ref": "drawing-aggregation"
         },
         {
           "type": "Assignment",
           "title": "Learning Checks — Aggregation",
           "indent": 2,
-          "content_id": 968359,
+          "content_id": 968712,
           "ref": "lc-aggregation"
         },
         {
           "type": "Assignment",
           "title": "Midterm Course Evaluation",
           "indent": 1,
-          "content_id": 968418,
+          "content_id": 968732,
           "ref": "midterm-eval"
         },
         {
@@ -801,14 +954,14 @@
           "type": "Assignment",
           "title": "Project Case Study — Submission 2",
           "indent": 1,
-          "content_id": 968375,
+          "content_id": 968728,
           "ref": "project-2"
         }
       ]
     },
     {
       "name": "Week 3 — Move & Predict",
-      "canvas_id": 542669,
+      "canvas_id": 542818,
       "position": 4,
       "items": [
         {
@@ -821,6 +974,12 @@
           "title": "🎬 Week 3 Overview Video (coming soon)",
           "indent": 1,
           "url": "https://timothyfraser.com/netsci/index.html"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "SLIDES: Week 3 Overview",
+          "indent": 2,
+          "url": "https://docs.google.com/presentation/d/1UkBH15ADMCVD_I7lvnTqgdW1vVRZ4aPx/edit?usp=sharing&ouid=116043209775835785592&rtpof=true&sd=true"
         },
         {
           "type": "ExternalUrl",
@@ -837,14 +996,14 @@
           "type": "Assignment",
           "title": "Office Hours — Week 3",
           "indent": 1,
-          "content_id": 968373,
+          "content_id": 968726,
           "ref": "office-week-3"
         },
         {
           "type": "Assignment",
           "title": "Ed Discussion — Week 3",
           "indent": 1,
-          "content_id": 968370,
+          "content_id": 968723,
           "ref": "ed-week-3"
         },
         {
@@ -857,14 +1016,14 @@
           "type": "Assignment",
           "title": "Drawing — GNN by Hand",
           "indent": 2,
-          "content_id": 968360,
+          "content_id": 968713,
           "ref": "drawing-gnn-by-hand"
         },
         {
           "type": "Assignment",
           "title": "Learning Checks — GNN by Hand",
           "indent": 2,
-          "content_id": 968361,
+          "content_id": 968714,
           "ref": "lc-gnn-by-hand"
         },
         {
@@ -877,14 +1036,14 @@
           "type": "Assignment",
           "title": "Drawing — GNN + XGBoost",
           "indent": 2,
-          "content_id": 968362,
+          "content_id": 968715,
           "ref": "drawing-gnn-xgboost"
         },
         {
           "type": "Assignment",
           "title": "Learning Checks — GNN + XGBoost",
           "indent": 2,
-          "content_id": 968363,
+          "content_id": 968716,
           "ref": "lc-gnn-xgboost"
         },
         {
@@ -897,14 +1056,14 @@
           "type": "Assignment",
           "title": "Drawing — Sampling",
           "indent": 2,
-          "content_id": 968364,
+          "content_id": 968717,
           "ref": "drawing-sampling"
         },
         {
           "type": "Assignment",
           "title": "Learning Checks — Sampling",
           "indent": 2,
-          "content_id": 968365,
+          "content_id": 968718,
           "ref": "lc-sampling"
         },
         {
@@ -917,14 +1076,14 @@
           "type": "Assignment",
           "title": "Drawing — Joins",
           "indent": 2,
-          "content_id": 968366,
+          "content_id": 968719,
           "ref": "drawing-joins"
         },
         {
           "type": "Assignment",
           "title": "Learning Checks — Joins",
           "indent": 2,
-          "content_id": 968367,
+          "content_id": 968720,
           "ref": "lc-joins"
         },
         {
@@ -942,33 +1101,68 @@
           "type": "Assignment",
           "title": "Final Course Evaluation",
           "indent": 1,
-          "content_id": 968419,
+          "content_id": 968733,
           "ref": "final-eval"
         },
         {
           "type": "Assignment",
           "title": "Final Presentation",
           "indent": 1,
-          "content_id": 968377,
+          "content_id": 968730,
           "ref": "final-presentation"
         },
         {
           "type": "Assignment",
           "title": "Project Case Study — Submission 3 (final)",
           "indent": 1,
-          "content_id": 968376,
+          "content_id": 968729,
           "ref": "project-3"
         }
       ]
     },
     {
       "name": "Wrapping Up",
-      "canvas_id": 542670,
+      "canvas_id": 542819,
       "position": 5,
       "items": [
         {
           "type": "SubHeader",
-          "title": "OVERVIEW",
+          "title": "ACTIVITIES",
+          "indent": 0
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🎬 Watch: Z: Conclusion",
+          "indent": 1,
+          "url": "http://xxx"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "SLIDES: Conclusion",
+          "indent": 2,
+          "url": "https://docs.google.com/presentation/d/1kllhT466eAqaUt-aGsm2VkGx-6nhLGzZ/edit?usp=sharing&ouid=116043209775835785592&rtpof=true&sd=true"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🎬 Watch - Where to Go from Here!",
+          "indent": 1,
+          "url": "https://cornell.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=e2c8e2fc-e57d-470c-905e-b471011ef392"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "SLIDES: Where to Go From Here!",
+          "indent": 2,
+          "url": "https://docs.google.com/presentation/d/1W3sWTSMOAF4wmRxTF1CUes8v-m3S3G7Z/edit?usp=sharing&ouid=116043209775835785592&rtpof=true&sd=true"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "GRAPHIC: Where to Go from Here? (My courses + Projects!)",
+          "indent": 2,
+          "url": "https://drive.google.com/file/d/1m5_AxQ10G47TAgZxggnZtJ_HOri7Vo6s/view?usp=sharing"
+        },
+        {
+          "type": "SubHeader",
+          "title": "RESOURCES",
           "indent": 0
         },
         {
@@ -1000,11 +1194,6 @@
           "title": "📁 Course GitHub Repository",
           "indent": 1,
           "url": "https://github.com/timothyfraser/netsci"
-        },
-        {
-          "type": "SubHeader",
-          "title": "REMINDERS",
-          "indent": 0
         }
       ]
     }
