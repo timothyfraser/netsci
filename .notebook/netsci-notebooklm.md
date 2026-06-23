@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-23 09:47 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 10:46 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -777,7 +777,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-23 09:47 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 10:46 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -5532,7 +5532,7 @@ SYSEN 5470 · Assignments
 # A Weekly Rhythm.Three Weeks. One Report at a Time.
 
 
-Every Monday at 9 a.m., you submit the same four things from the previous week — a sketch, a case\-study check, a code check, and your project case study. Rinse, repeat, three times. By the end, you'll have shipped three short reports applying network science to a problem you chose.
+Every Monday at 9 a.m. you submit the same four things, three weeks running — and finish with three short reports on a network you chose.
 
 
 📦 Need a network for your project case study?
@@ -5544,7 +5544,7 @@ Every Monday at 9:00 a.m.
 
 
 ⏱
-**Why a steady weekly cadence?** Network science is a habit, not a one\-shot performance. The Monday cadence is short enough that you'll never have a week's worth of work to catch up on, and long enough that you can sit with hard ideas before producing something. You're encouraged to submit earlier — there's no bonus for going to the wire.
+**Why weekly?** Network science is a habit, not a one\-shot. The Monday rhythm keeps each week's load small and gives hard ideas time to sit. Submit early if you like — there's no prize for waiting.
 
 
 What you submit each week
@@ -5552,37 +5552,37 @@ What you submit each week
 ✏️
 
 Item 1 · Sketchpad
-### Sketches for the current week
+### This week's sketches
 
 
-Hand\-drawn sketches for every sketchpad prompt assigned to the current week. Photograph and upload. The sketch precedes the code — it's how you check that you understand the structure before syntax can hide it.
+Photos or screenshots of your hand\-drawn sketchpad prompts for the week — sketching first is how you see the structure before code can hide it. Its own submission.
 
 
 🧪
 
-Item 2 · Case Study Learning Checks
-### One LC per case study from last week
+Item 2 · Case\-study learning checks
+### Last week's lab answers
 
 
-For every interactive case study lab assigned to the previous week, submit the in\-lab Learning Check answer.
+One Learning Check answer per interactive lab you did last week — e.g. `LC1: B, LC2: C`, or a screenshot. Completion\-based, and its own submission.
 
 
 ⌨️
 
-Item 3 · Code Learning Checks
-### One LC per `example.R` / `example.py` from last week
+Item 3 · Code labs · low\-stakes
+### Last week's code answers
 
 
-For every case study you completed last week, you also run the `example.R` or `example.py` script in the matching `code/` folder. Each script prints a single numeric (or string) answer at the bottom — that's your code Learning Check answer. Pick either track (R or Python). You don't need to do both.
+Run each case study's `example.R` or `example.py` on the **data provided** and submit the single answer it prints. You're just running existing code, so don't sweat it — pick R *or* Python, and write it wherever you like. **This isn't the real coding; the project is.**
 
 
 📄
 
-Item 4 · Project Case Study
-### Your project code \& report for this week's case study
+Item 4 · Project · the real work
+### Your own code \& report
 
 
-Each week you pick **one** of the 11 case studies and apply *its* technique to your project network — the network *you* chose. Over the three weeks that's **three case studies total, one per week**. You're strongly encouraged to keep the **same network all three weeks** (you'll come to know it inside\-out); switch only if you really need to. For the week you submit (a) a `project.R` or `project.py` that runs your full analysis on that network **end\-to\-end on the dataset you submit alongside it**, and (b) a 5\-page\-minimum report in your own words — that's five pages of *text*; figures and tables are encouraged but don't count toward the five. See the Project section below for the full spec.
+**This is the coding that counts.** Each week, pick one case\-study method and apply it to **your own network**: your data, your own code (one script is ideal), your report. Keep the same network all three weeks. Full spec below.
 
 
 Project case studies
@@ -5639,7 +5639,7 @@ A real, full\-length exemplar — skim it before you start. Copy the *shape* of 
 ⬇ Download sample report (PDF)
 ↗ Open in new tab
 
-Source markdown lives at `assignments/sample-report.md` if you want to read the raw text.
+Raw markdown: `assignments/sample-report.md`
 
 
  ⚖ AI Use Policy
@@ -5650,7 +5650,7 @@ Source markdown lives at `assignments/sample-report.md` if you want to read the 
 ### What AI is for in this course (and what it isn't).
 
 
-The short version: AI is welcome for **syntax and debugging**, not for **writing your reports or answering reflections**. The course is about your thinking; reports are how we see your thinking.
+AI is welcome for **syntax and debugging**, not for **writing reports or answering reflections**. The course is about your thinking.
 
 
 #### You may use AI for
@@ -5680,19 +5680,19 @@ Read the full AI Use Policy →
  12\-item checklist with copy\-to\-Canvas output
 
 
- Click through these before you hit submit. Most missed\-point situations are catches this list would have flagged. The **Copy** button writes a paste\-able status block to your clipboard — paste it into the project box on Canvas so Tim can see what you flagged for yourself.
+ Run through these before you submit — most lost points are things this list would have caught. **Copy** writes a paste\-able status block to your clipboard; drop it into the Canvas project box.
 
 
 Office hours \& meetings
 
 ☎️
-You're required to meet with the instructor for **three virtual office\-hour sessions** across the course. These count toward your activities grade. They're informal — bring a question, a stuck spot, or a project you're considering. Sign up via the link in the course site.
+Meet the instructor for **three virtual office\-hour sessions** over the term — informal; bring a question, a stuck spot, or a project idea. Counts toward your activities grade; sign up via the course site.
 
 
 Final presentation
 
 🎤
-At the end of the term, you give a short presentation on your **strongest of the three project case studies**. We'll use these to share what worked across cohorts. Format and length are confirmed in the course site once enrollment closes.
+At term's end, give a short talk on your **strongest of the three projects**. Format and length are posted once enrollment closes.
 
 
 **SYSEN 5470 · Assignments**
@@ -5973,7 +5973,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-23 09:47 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 10:46 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
