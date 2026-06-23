@@ -43,9 +43,10 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent.parent
 PLAN = json.loads((ROOT / "canvas_plan.json").read_text())
 
-BASE = os.environ.get("CANVAS_BASE_URL", "").rstrip("/")
-TOKEN = os.environ.get("CANVAS_API_TOKEN", "")
-COURSE = os.environ.get("CANVAS_COURSE_ID", "")
+sys.path.insert(0, str(ROOT / "scripts"))
+from canvas_env import get_canvas_env
+
+BASE, TOKEN, COURSE = get_canvas_env()
 DRY = "--dry-run" in sys.argv
 
 if not DRY and not (BASE and TOKEN and COURSE):

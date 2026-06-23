@@ -30,13 +30,18 @@ MODES (combine freely; they run in this order: pull, seed, apply, render)
                     Never overwrites an existing date.
   --apply           Contract → Canvas. PUT due_at + points_possible per
                     assignment, group_weight + drop_lowest per group.
+  --apply-overrides-only
+                    Contract → Canvas. Push section overrides ONLY (no base
+                    due_at, points, or group changes). Combine with --only.
+  --only <key>      Limit --apply / --apply-overrides-only to assignment key(s).
+                    Repeatable.
   --render          Write HANDOFF_DUEDATES.md (links + proposed dates table).
   --dry-run         With --apply: print the PUTs, change nothing.
   --force           With --apply: skip the course-id safety guard.
 
-ENVIRONMENT (same as push_to_canvas.py)
+ENVIRONMENT (same as push_to_canvas.py; also reads ../.env if present)
   CANVAS_BASE_URL   e.g. https://canvas.cornell.edu   (no trailing /api)
-  CANVAS_API_TOKEN  a user access token
+  CANVAS_API_TOKEN  a user access token (CANVAS_API_KEY alias accepted)
   CANVAS_COURSE_ID  the numeric course id
 """
 
@@ -58,18 +63,38 @@ MANIFEST = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
 CONTRACT_PATH = ROOT / "canvas_contract.json"
 HANDOFF_PATH = ROOT / "HANDOFF_DUEDATES.md"
 
-BASE = os.environ.get("CANVAS_BASE_URL", "").rstrip("/")
-TOKEN = os.environ.get("CANVAS_API_TOKEN", "")
-COURSE = os.environ.get("CANVAS_COURSE_ID", "")
+sys.path.insert(0, str(ROOT / "scripts"))
+from canvas_env import get_canvas_env
 
-ARGS = set(sys.argv[1:])
-DO_PULL = "--pull" in ARGS
-DO_SEED = "--seed" in ARGS
-DO_APPLY = "--apply" in ARGS
-DO_RENDER = "--render" in ARGS
-IDS_ONLY = "--ids-only" in ARGS
-DRY = "--dry-run" in ARGS
-FORCE = "--force" in ARGS
+BASE, TOKEN, COURSE = get_canvas_env()
+
+
+def parse_argv():
+    argv = sys.argv[1:]
+    only_keys = []
+    flags = set()
+    i = 0
+    while i < len(argv):
+        if argv[i] == "--only" and i + 1 < len(argv):
+            only_keys.append(argv[i + 1])
+            i += 2
+        elif argv[i].startswith("--"):
+            flags.add(argv[i])
+            i += 1
+        else:
+            i += 1
+    return flags, only_keys
+
+
+FLAGS, ONLY_KEYS = parse_argv()
+DO_PULL = "--pull" in FLAGS
+DO_SEED = "--seed" in FLAGS
+DO_APPLY_OVERRIDES_ONLY = "--apply-overrides-only" in FLAGS
+DO_APPLY = "--apply" in FLAGS or DO_APPLY_OVERRIDES_ONLY
+DO_RENDER = "--render" in FLAGS
+IDS_ONLY = "--ids-only" in FLAGS
+DRY = "--dry-run" in FLAGS
+FORCE = "--force" in FLAGS
 
 if not (DO_PULL or DO_SEED or DO_APPLY or DO_RENDER):
     sys.exit("Nothing to do. Pass at least one of --pull --seed --apply --render "
@@ -122,6 +147,10 @@ def get_all(path, **params):
 DUE_DATES = {k: v for k, v in MANIFEST["due_dates"].items() if not k.startswith("_")}
 DUE_OVERRIDES = {k: v for k, v in MANIFEST.get("due_overrides", {}).items()
                  if not k.startswith("_")}
+SECTION_OVERRIDES = MANIFEST.get("section_overrides", {})
+SECTION_OVERRIDE_NAME = SECTION_OVERRIDES.get("section_name")
+SECTION_OVERRIDE_DUE = SECTION_OVERRIDES.get("due_at")
+SECTION_OVERRIDE_KEYS = set(SECTION_OVERRIDES.get("assignments", []))
 CS_WEEK = {c["key"]: c["week"] for c in MANIFEST["case_studies"]}
 PROJ_DUE = {p["n"]: p["due"] for p in MANIFEST["extras"]["projects"]}
 FINAL_DUE = MANIFEST["extras"]["final_presentation"]["due"]
@@ -181,6 +210,7 @@ def build_skeleton():
             "points_possible": a["points"],
             "week": week_of(a["key"]),
             "due_at": None,
+            "overrides": [],
             "canvas_id": 0,
             "html_url": "",
         })
@@ -239,6 +269,29 @@ def reconcile_with_plan(contract):
 def save_contract(c):
     CONTRACT_PATH.write_text(json.dumps(c, indent=2, ensure_ascii=False) + "\n",
                              encoding="utf-8")
+
+
+def fetch_sections():
+    return get_all(f"/courses/{COURSE}/sections")
+
+
+def pull_assignment_overrides(contract, sections):
+    """Canvas → contract: record section overrides per assignment."""
+    id_to_name = {s["id"]: s["name"] for s in sections}
+    n = 0
+    for a in contract["assignments"]:
+        if not a.get("canvas_id"):
+            continue
+        ovs = get_all(f"/courses/{COURSE}/assignments/{a['canvas_id']}/overrides")
+        a["overrides"] = [{
+            "canvas_override_id": o["id"],
+            "section_id": o.get("course_section_id"),
+            "section_name": id_to_name.get(o.get("course_section_id"), o.get("title")),
+            "due_at": o.get("due_at"),
+        } for o in ovs]
+        if ovs:
+            n += 1
+    print(f"• pull overrides: recorded overrides on {n} assignment(s)")
 
 
 # ---------------------------------------------------------------------------
@@ -302,6 +355,10 @@ def pull(contract):
                      "position": m.get("position"), "items": items})
     contract["modules"] = mods
 
+    if not IDS_ONLY:
+        sections = fetch_sections()
+        pull_assignment_overrides(contract, sections)
+
     contract["meta"]["course_id"] = COURSE
     contract["meta"]["base_url"] = BASE
     contract["meta"]["last_pull"] = now_iso()
@@ -333,6 +390,28 @@ def seed(contract):
             filled += 1
     print(f"• seed: filled {filled} blank due dates from week mapping; "
           f"applied {overridden} per-item override(s)")
+    added = seed_section_overrides(contract)
+    if added:
+        print(f"• seed: added {added} section override(s) from manifest")
+
+
+def seed_section_overrides(contract):
+    if not SECTION_OVERRIDE_NAME or not SECTION_OVERRIDE_DUE:
+        return 0
+    added = 0
+    for a in contract["assignments"]:
+        if a["key"] not in SECTION_OVERRIDE_KEYS:
+            continue
+        ovs = a.setdefault("overrides", [])
+        if any(o.get("section_name") == SECTION_OVERRIDE_NAME for o in ovs):
+            continue
+        ovs.append({
+            "section_name": SECTION_OVERRIDE_NAME,
+            "section_id": 0,
+            "due_at": SECTION_OVERRIDE_DUE,
+        })
+        added += 1
+    return added
 
 
 # ---------------------------------------------------------------------------
@@ -373,6 +452,62 @@ def apply(contract):
 
     verb = "would apply" if DRY else "applied"
     print(f"• {verb}: {n_a} assignments, {n_g} groups")
+
+
+def apply_overrides(contract):
+    """Contract → Canvas: create/update section overrides only."""
+    meta_course = str(contract.get("meta", {}).get("course_id") or "")
+    if not FORCE and meta_course and meta_course != str(COURSE):
+        sys.exit(f"✗ contract was last pulled for course {meta_course} but "
+                 f"CANVAS_COURSE_ID={COURSE}. Refusing to apply (use --force).")
+
+    sec_map = {s["name"]: s["id"] for s in fetch_sections()}
+    n = 0
+    for a in contract["assignments"]:
+        if ONLY_KEYS and a["key"] not in ONLY_KEYS:
+            continue
+        if not a.get("canvas_id"):
+            print(f"  ! skip (no canvas_id): {a['name']} — run --pull first")
+            continue
+        overrides = a.get("overrides") or []
+        if not overrides:
+            continue
+        live = {o["course_section_id"]: o
+                for o in get_all(f"/courses/{COURSE}/assignments/{a['canvas_id']}/overrides")}
+        for ov in overrides:
+            sid = ov.get("section_id") or sec_map.get(ov.get("section_name"))
+            if not sid:
+                print(f"  ! skip override (unknown section): {a['name']} "
+                      f"section={ov.get('section_name')}")
+                continue
+            due = ov.get("due_at")
+            if not due:
+                print(f"  ! skip override (no due_at): {a['name']}")
+                continue
+            existing = live.get(sid)
+            if existing and existing.get("due_at") == due:
+                print(f"  - override (ok) {a['name']}  {ov.get('section_name')}  due={due}")
+                continue
+            data = [
+                ("assignment_override[course_section_id]", str(sid)),
+                ("assignment_override[due_at]", due),
+            ]
+            if existing:
+                oid = existing["id"]
+                print(f"  - override (update) {a['name']}  {ov.get('section_name')}  due={due}")
+                _req("PUT",
+                     f"/courses/{COURSE}/assignments/{a['canvas_id']}/overrides/{oid}",
+                     data=data)
+            else:
+                print(f"  - override (create) {a['name']}  {ov.get('section_name')}  due={due}")
+                res = _req("POST",
+                           f"/courses/{COURSE}/assignments/{a['canvas_id']}/overrides",
+                           data=data)
+                ov["canvas_override_id"] = res.get("id")
+            ov["section_id"] = sid
+            n += 1
+    verb = "would apply" if DRY else "applied"
+    print(f"• {verb} {n} section override(s)")
 
 
 # ---------------------------------------------------------------------------
@@ -431,13 +566,17 @@ def render(contract):
     week_titles = {1: "Week 1", 2: "Week 2", 3: "Week 3", 0: "Unscheduled"}
     for w in sorted(by_week):
         lines.append(f"## {week_titles.get(w, f'Week {w}')}\n")
-        lines.append("| Assignment | Group | Grading | Points | Proposed due |")
-        lines.append("|---|---|---|---|---|")
+        lines.append("| Assignment | Group | Grading | Points | Due (default) | Section overrides |")
+        lines.append("|---|---|---|---|---|---|")
         for a in by_week[w]:
             gname = groups.get(a["group"], {}).get("name", a["group"])
             grading = "Completion" if a["grading_type"] == "pass_fail" else "Points"
+            ov_txt = "; ".join(
+                f"{o.get('section_name')}: {fmt_due(o.get('due_at'))}"
+                for o in (a.get("overrides") or [])
+            ) or "—"
             lines.append(f"| {link(a)} | {gname} | {grading} | "
-                         f"{a['points_possible']} | {fmt_due(a.get('due_at'))} |")
+                         f"{a['points_possible']} | {fmt_due(a.get('due_at'))} | {ov_txt} |")
         lines.append("")
 
     HANDOFF_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -454,13 +593,16 @@ def main():
     if DO_SEED:
         seed(contract)
     if DO_APPLY:
-        apply(contract)
+        if DO_APPLY_OVERRIDES_ONLY:
+            apply_overrides(contract)
+        else:
+            apply(contract)
     # Persist contract unless this was a pure dry-run apply (no other mutation).
     if not (DRY and DO_APPLY and not (DO_PULL or DO_SEED)):
         save_contract(contract)
     if DO_RENDER:
         render(contract)
-    print("✓ done.")
+    print("done.")
 
 
 if __name__ == "__main__":
