@@ -42,6 +42,7 @@ DATA = [
     ("satellite-supply-chain", "Multi-tier satellite supply chain: materials → subsystems → programs."),
     ("aircraft-supply-chain", "Multi-tier airplane supply chain: materials → systems → programs."),
     ("ups-ground-network", "Truck line-haul: plant→plant lanes (packages, trucks, distance, transit)."),
+    ("ups-package-flow", "Package-level parcels: one edge per package, with service & on-time."),
 ]
 
 GRID = ("display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));"
