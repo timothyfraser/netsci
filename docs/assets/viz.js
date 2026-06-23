@@ -83,7 +83,7 @@
     return {
       nodeId:    find('id', 'node', 'name', 'label'),
       nodeLabel: find('label', 'name', 'title'),
-      nodeGroup: find('group', 'community', 'cluster', 'type', 'category')
+      nodeGroup: find('group', 'community', 'cluster', 'type', 'category', 'kind', 'tier')
     };
   }
 
@@ -291,6 +291,59 @@
     renderControls();
     layout();
     render();
+  }
+
+  // ── Project-dataset loader (fetch CSVs from playground-data/) ───
+  // Endpoint columns are always the first two columns of each edges.csv;
+  // node id is the first column of each nodes.csv. We fall back to those
+  // when the name-based auto-mapper doesn't recognize the headers.
+  const PROJECT_WEIGHTS = {
+    'amazon-last-mile': 'packages',         'uber-manhattan': 'fare',
+    'semiconductor-supply': 'annual_volume','aerospace-components': 'qty_per_aircraft',
+    'mutualaid-quake': 'amount',            'financial-contagion': 'exposure',
+    'airline-delays': 'number_of_flights',  'power-grid': 'capacity_mw',
+    'campus-contact': 'contact_minutes',    'opensource-deps': 'import_count',
+    'trade-commodity': 'tonnes',            'reorg-comms': 'message_count',
+    'satellite-constellation': 'capacity_gbps', 'drone-components': 'coupling_strength',
+    'transit-multimodal': 'capacity'
+  };
+
+  function parseCsvUrl(url, cb, err) {
+    Papa.parse(url, {
+      download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
+      complete: (res) => cb(res.data, res.meta.fields || []),
+      error: err || (() => {})
+    });
+  }
+
+  function loadProjectDataset(key) {
+    if (!key) return;
+    setStatus('Loading ' + key + '…');
+    const base = 'playground-data/';
+    parseCsvUrl(base + key + '-edges.csv', (edata, ecols) => {
+      state.edgeCsv = edata;
+      state.edgeCols = ecols;
+      const m = autoMap(ecols);
+      if (!m.from) m.from = ecols[0];
+      if (!m.to)   m.to   = ecols[1];
+      const w = PROJECT_WEIGHTS[key];
+      if (!m.weight && w && ecols.includes(w)) m.weight = w;
+      state.mapping = Object.assign({}, state.mapping, m);
+      parseCsvUrl(base + key + '-nodes.csv', (ndata, ncols) => {
+        state.nodeCsv = ndata;
+        state.nodeCols = ncols;
+        const nm = autoMapNodes(ncols);
+        if (!nm.nodeId) nm.nodeId = ncols[0];
+        Object.assign(state.mapping, nm);
+        renderMappers();
+        loadGraph();
+      }, () => {           // nodes file optional — build from edges alone
+        state.nodeCsv = null;
+        state.nodeCols = [];
+        renderMappers();
+        loadGraph();
+      });
+    }, () => setStatus('Could not load dataset "' + key + '".', 'err'));
   }
 
   // ── Layout ──────────────────────────────────────────────────
@@ -648,6 +701,9 @@
       if (e.target.files[0]) handleNodeFile(e.target.files[0]);
     });
 
+    const sampleSel = $('sample-select');
+    if (sampleSel) sampleSel.addEventListener('change', (e) => loadProjectDataset(e.target.value));
+
     window.addEventListener('resize', () => { if (state.graph) { layout(); } });
   }
 
@@ -755,5 +811,5 @@
   }
   document.addEventListener('DOMContentLoaded', init);
 
-  global.NetSciViz = { state, loadSampleGraph, loadGraph };
+  global.NetSciViz = { state, loadSampleGraph, loadGraph, loadProjectDataset };
 })(window);

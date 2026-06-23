@@ -70,6 +70,12 @@
   border: 1px solid var(--green-bright); border-radius: var(--radius-sm);
   padding: 6px 10px; margin-right: 10px; cursor: pointer;
 }
+.file-row select.viz-select {
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 8px 9px; background: rgba(5,46,22,0.55);
+  border: 1px solid var(--green-bright); border-radius: var(--radius-sm);
+  color: var(--green-mint); cursor: pointer; width: 100%;
+}
 
 #viz-status {
   font-family: var(--font-mono); font-size: 11px;
@@ -332,6 +338,7 @@
           <a href="help/office-hours.html"  data-page="office-hours"  role="menuitem">Office Hours</a>
           <a href="https://edstem.org/us/courses/99843" target="_blank" rel="noopener" role="menuitem">Ed Discussion</a>
           <a href="calendar.html"           data-page="calendar"      role="menuitem">Calendar</a>
+          <a href="assignments.html#pick-a-dataset" data-page="datasets" role="menuitem">Datasets</a>
           <div class="nav-sep" role="separator"></div>
           <a href="help/setup.html"         data-page="setup"         role="menuitem">Environment Setup</a>
           <a href="help/quickstart-r.html"  data-page="quickstart-r"  role="menuitem">R Quickstart</a>
@@ -360,6 +367,29 @@
 
       <div class="viz-panel">
         <h3>📥 Data</h3>
+        <div class="file-row">
+          <label>Load project dataset <span class="opt">autoloads — no upload</span></label>
+          <select id="sample-select" class="viz-select">
+            <option value="">▾ Load sample…</option>
+            <optgroup label="Project datasets (15)">
+              <option value="amazon-last-mile">Amazon Last-Mile (313 nodes)</option>
+              <option value="uber-manhattan">Uber Manhattan (370 nodes)</option>
+              <option value="semiconductor-supply">Semiconductor Supply (368 nodes)</option>
+              <option value="aerospace-components">Aerospace Components (300 nodes)</option>
+              <option value="mutualaid-quake">Mutual Aid · Quake (250 nodes)</option>
+              <option value="financial-contagion">Financial Contagion (220 nodes)</option>
+              <option value="airline-delays">Airline Delays (200 nodes)</option>
+              <option value="power-grid">Power Grid (300 nodes)</option>
+              <option value="campus-contact">Campus Contact (300 nodes)</option>
+              <option value="opensource-deps">Open-Source Deps (400 nodes)</option>
+              <option value="trade-commodity">Trade · Commodity (140 nodes)</option>
+              <option value="reorg-comms">Reorg Comms (250 nodes)</option>
+              <option value="satellite-constellation">Satellite Constellation (298 nodes)</option>
+              <option value="drone-components">Drone Components (183 nodes)</option>
+              <option value="transit-multimodal">Transit · Multimodal (152 nodes)</option>
+            </optgroup>
+          </select>
+        </div>
         <div class="file-row">
           <label>Edgelist CSV <span class="opt">required</span></label>
           <input type="file" id="edge-file" accept=".csv,text/csv">
