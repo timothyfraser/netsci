@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-23 18:40 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 19:21 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -777,7 +777,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-23 18:40 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 19:21 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -4087,6 +4087,11 @@ Live drift
 Your Network
 
 
+＋
+－
+⤢
+
+
 0Nodes
 0Edges shown
 0Components
@@ -4173,62 +4178,6 @@ CPython compiled to WebAssembly. Scientific Python's core packages, ready to go.
 
 
 Open Python Playground →
-
-
-Project datasets
-
-15 larger networks (100–500\+ nodes) for your project case study — supply
- chains, a satellite constellation, a city transit map, mutual aid in a crisis, and more.
- Open either playground and choose one from the **▾ Load sample** menu; the CSVs
- load straight into your session (no upload needed). Click a tile to browse its files and
- codebook on GitHub.
-
-
-![](playground-data/amazon-last-mile-thumb.png)amazon\-last\-mile
-313 nodes · 2,142 edges
-A week of package flow: hubs → stations → delivery zones.
-![](playground-data/uber-manhattan-thumb.png)uber\-manhattan
-370 nodes · 3,000 edges
-Bipartite driver↔rider ride\-matching across downtown Manhattan.
-![](playground-data/semiconductor-supply-thumb.png)semiconductor\-supply
-368 nodes · 739 edges
-Multi\-tier global chip supply chain, raw materials → products.
-![](playground-data/aerospace-components-thumb.png)aerospace\-components
-300 nodes · 777 edges
-An aircraft's bill\-of\-materials \+ supplier network.
-![](playground-data/mutualaid-quake-thumb.png)mutualaid\-quake
-250 nodes · 2,935 edges
-Neighborhood mutual aid before / during / after an earthquake.
-![](playground-data/financial-contagion-thumb.png)financial\-contagion
-220 nodes · 1,701 edges
-Interbank exposure network across a financial crisis.
-![](playground-data/airline-delays-thumb.png)airline\-delays
-200 nodes · 2,244 edges
-Route network with delay propagation over a day.
-![](playground-data/power-grid-thumb.png)power\-grid
-300 nodes · 422 edges
-A regional electrical transmission grid.
-![](playground-data/campus-contact-thumb.png)campus\-contact
-300 nodes · 3,699 edges
-Campus face\-to\-face contact network during an outbreak.
-![](playground-data/opensource-deps-thumb.png)opensource\-deps
-400 nodes · 2,251 edges
-An open\-source package dependency graph.
-![](playground-data/trade-commodity-thumb.png)trade\-commodity
-140 nodes · 1,210 edges
-International commodity trade across a supply shock.
-![](playground-data/reorg-comms-thumb.png)reorg\-comms
-250 nodes · 7,926 edges
-Corporate comms before / during / after a reorg \+ layoff.
-![](playground-data/satellite-constellation-thumb.png)satellite\-constellation
-298 nodes · 733 edges
-Multi\-operator LEO satellites, links \& ground stations.
-![](playground-data/drone-components-thumb.png)drone\-components
-183 nodes · 617 edges
-A drone's component \+ software dependency graph.
-![](playground-data/transit-multimodal-thumb.png)transit\-multimodal
-152 nodes · 384 edges
-A city's bus \+ metro network with neighborhood nodes.
 
 
 Why two playgrounds?
@@ -5639,6 +5588,53 @@ Pick a dataset
 ⚡ Open the Playground →
 
 
+![](playground-data/amazon-last-mile-thumb.png)amazon\-last\-mile
+313 nodes · 2,142 edges
+A week of package flow: hubs → stations → delivery zones.
+![](playground-data/uber-manhattan-thumb.png)uber\-manhattan
+370 nodes · 3,000 edges
+Bipartite driver↔rider ride\-matching across downtown Manhattan.
+![](playground-data/semiconductor-supply-thumb.png)semiconductor\-supply
+368 nodes · 739 edges
+Multi\-tier global chip supply chain, raw materials → products.
+![](playground-data/aerospace-components-thumb.png)aerospace\-components
+300 nodes · 777 edges
+An aircraft's bill\-of\-materials \+ supplier network.
+![](playground-data/mutualaid-quake-thumb.png)mutualaid\-quake
+250 nodes · 2,935 edges
+Neighborhood mutual aid before / during / after an earthquake.
+![](playground-data/financial-contagion-thumb.png)financial\-contagion
+220 nodes · 1,701 edges
+Interbank exposure network across a financial crisis.
+![](playground-data/airline-delays-thumb.png)airline\-delays
+200 nodes · 2,244 edges
+Route network with delay propagation over a day.
+![](playground-data/power-grid-thumb.png)power\-grid
+300 nodes · 422 edges
+A regional electrical transmission grid.
+![](playground-data/campus-contact-thumb.png)campus\-contact
+300 nodes · 3,699 edges
+Campus face\-to\-face contact network during an outbreak.
+![](playground-data/opensource-deps-thumb.png)opensource\-deps
+400 nodes · 2,251 edges
+An open\-source package dependency graph.
+![](playground-data/trade-commodity-thumb.png)trade\-commodity
+140 nodes · 1,210 edges
+International commodity trade across a supply shock.
+![](playground-data/reorg-comms-thumb.png)reorg\-comms
+250 nodes · 7,926 edges
+Corporate comms before / during / after a reorg \+ layoff.
+![](playground-data/satellite-constellation-thumb.png)satellite\-constellation
+298 nodes · 733 edges
+Multi\-operator LEO satellites, links \& ground stations.
+![](playground-data/drone-components-thumb.png)drone\-components
+183 nodes · 617 edges
+A drone's component \+ software dependency graph.
+![](playground-data/transit-multimodal-thumb.png)transit\-multimodal
+152 nodes · 384 edges
+A city's bus \+ metro network with neighborhood nodes.
+
+
 Pick a case study — and a project question
 
  Each case study's README has a *Your Project Case Study* section with
@@ -6005,7 +6001,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-23 18:40 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 19:21 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
