@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-23 10:54 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 18:40 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -777,7 +777,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-23 10:54 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 18:40 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -4009,6 +4009,27 @@ Bring your own data. Drop an edgelist CSV (and an optional nodelist), pick which
 ### 📥 Data
 
 
+Load project dataset autoloads — no upload
+
+▾ Load sample…
+
+Amazon Last\-Mile (313 nodes)
+Uber Manhattan (370 nodes)
+Semiconductor Supply (368 nodes)
+Aerospace Components (300 nodes)
+Mutual Aid · Quake (250 nodes)
+Financial Contagion (220 nodes)
+Airline Delays (200 nodes)
+Power Grid (300 nodes)
+Campus Contact (300 nodes)
+Open\-Source Deps (400 nodes)
+Trade · Commodity (140 nodes)
+Reorg Comms (250 nodes)
+Satellite Constellation (298 nodes)
+Drone Components (183 nodes)
+Transit · Multimodal (152 nodes)
+
+
 Edgelist CSV required
 
 
@@ -5535,10 +5556,6 @@ SYSEN 5470 · Assignments
 Every Monday at 9 a.m. you submit the same four things, three weeks running — and finish with three short reports on a network you chose.
 
 
-📦 Need a network for your project case study?
-Browse the project datasets on GitHub →
-
-
 **Submission deadline**
 Every Monday at 9:00 a.m.
 
@@ -5605,6 +5622,21 @@ Project case studies
 * What it tells you — and what it doesn't (2–3 sentences).
 * A network of **≥ 100 nodes** (1,000\+ strongly preferred). No network by end of week 1? Tell the instructor — one will be made for your field.
 * **≥ 5 pages of text**, up to 1\.15 line spacing; figures and tables sit on top of the five.
+
+
+Pick a dataset
+
+ 15 ready\-made networks (100–500\+ nodes) built for the project — supply chains, a
+ satellite constellation, a city transit map, mutual aid in a crisis, and more. Open the
+ **Visualizer** or either **Playground** and pick one from the
+ **▾ Load sample** menu — the CSVs load straight into your session, no upload
+ needed. Or browse a dataset's files and codebook on GitHub. (You're also free to bring your
+ own network.)
+
+
+📦 Browse datasets on GitHub →
+🔎 Open the Visualizer →
+⚡ Open the Playground →
 
 
 Pick a case study — and a project question
@@ -5973,7 +6005,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-23 10:54 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 18:40 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
