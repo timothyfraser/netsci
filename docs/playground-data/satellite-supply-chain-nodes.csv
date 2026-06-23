@@ -1,0 +1,277 @@
+node_id,kind,tier,region,subtype,capacity,lead_time_days,label
+M001,material,4,India,radhard_wafer,1870,181,Radhard Wafer Co 001
+M002,material,4,Europe,solar_cell,2739,42,Solar Cell Co 002
+M003,material,4,China,propellant,500,83,Propellant Co 003
+M004,material,4,India,composite_prepreg,3106,92,Composite Prepreg Co 004
+M005,material,4,Europe,battery_cell,544,97,Battery Cell Co 005
+M006,material,4,Other,optics_blank,2324,72,Optics Blank Co 006
+M007,material,4,India,tungsten_target,1520,98,Tungsten Target Co 007
+M008,material,4,China,space_capacitor,1859,75,Space Capacitor Co 008
+M009,material,4,USA,radhard_wafer,3972,55,Radhard Wafer Co 009
+M010,material,4,Europe,solar_cell,3442,59,Solar Cell Co 010
+M011,material,4,Europe,propellant,3451,83,Propellant Co 011
+M012,material,4,Other,composite_prepreg,1269,95,Composite Prepreg Co 012
+M013,material,4,Japan,battery_cell,679,83,Battery Cell Co 013
+M014,material,4,China,optics_blank,2316,93,Optics Blank Co 014
+M015,material,4,Europe,tungsten_target,1754,90,Tungsten Target Co 015
+M016,material,4,USA,space_capacitor,1744,65,Space Capacitor Co 016
+M017,material,4,Europe,radhard_wafer,1470,71,Radhard Wafer Co 017
+M018,material,4,Japan,solar_cell,286,53,Solar Cell Co 018
+M019,material,4,China,propellant,2847,69,Propellant Co 019
+M020,material,4,Japan,composite_prepreg,1955,80,Composite Prepreg Co 020
+M021,material,4,India,battery_cell,3764,89,Battery Cell Co 021
+M022,material,4,Europe,optics_blank,778,94,Optics Blank Co 022
+M023,material,4,Other,tungsten_target,831,70,Tungsten Target Co 023
+M024,material,4,China,space_capacitor,1647,78,Space Capacitor Co 024
+M025,material,4,India,radhard_wafer,2507,48,Radhard Wafer Co 025
+M026,material,4,USA,solar_cell,1574,50,Solar Cell Co 026
+M027,material,4,Europe,propellant,1487,88,Propellant Co 027
+M028,material,4,USA,composite_prepreg,3855,60,Composite Prepreg Co 028
+M029,material,4,USA,battery_cell,1938,108,Battery Cell Co 029
+M030,material,4,India,optics_blank,1210,72,Optics Blank Co 030
+M031,material,4,Other,tungsten_target,1192,59,Tungsten Target Co 031
+M032,material,4,Other,space_capacitor,2924,75,Space Capacitor Co 032
+M033,material,4,USA,radhard_wafer,501,72,Radhard Wafer Co 033
+M034,material,4,Europe,solar_cell,566,98,Solar Cell Co 034
+M035,material,4,Europe,propellant,2875,89,Propellant Co 035
+M036,material,4,USA,composite_prepreg,968,85,Composite Prepreg Co 036
+M037,material,4,USA,battery_cell,2278,48,Battery Cell Co 037
+M038,material,4,Europe,optics_blank,871,81,Optics Blank Co 038
+M039,material,4,USA,tungsten_target,2072,85,Tungsten Target Co 039
+M040,material,4,USA,space_capacitor,2933,80,Space Capacitor Co 040
+M041,material,4,China,radhard_wafer,732,74,Radhard Wafer Co 041
+M042,material,4,China,solar_cell,2419,57,Solar Cell Co 042
+M043,material,4,India,propellant,3078,84,Propellant Co 043
+M044,material,4,USA,composite_prepreg,1780,109,Composite Prepreg Co 044
+M045,material,4,China,battery_cell,915,87,Battery Cell Co 045
+M046,material,4,China,optics_blank,1453,112,Optics Blank Co 046
+M047,material,4,Europe,tungsten_target,865,65,Tungsten Target Co 047
+M048,material,4,USA,space_capacitor,2433,59,Space Capacitor Co 048
+M049,material,4,India,radhard_wafer,3960,49,Radhard Wafer Co 049
+M050,material,4,USA,solar_cell,2408,93,Solar Cell Co 050
+M051,material,4,USA,propellant,1320,47,Propellant Co 051
+M052,material,4,USA,composite_prepreg,286,57,Composite Prepreg Co 052
+M053,material,4,China,battery_cell,1975,98,Battery Cell Co 053
+M054,material,4,Japan,optics_blank,3174,123,Optics Blank Co 054
+M055,material,4,India,tungsten_target,2750,89,Tungsten Target Co 055
+M056,material,4,China,space_capacitor,2064,58,Space Capacitor Co 056
+M057,material,4,Europe,radhard_wafer,2260,85,Radhard Wafer Co 057
+M058,material,4,Japan,solar_cell,1999,62,Solar Cell Co 058
+M059,material,4,India,propellant,2271,66,Propellant Co 059
+M060,material,4,USA,composite_prepreg,2178,76,Composite Prepreg Co 060
+C001,component,3,China,harness,187,131,Harness Unit 001
+C002,component,3,China,thermal_blanket,188,91,Thermal Blanket Unit 002
+C003,component,3,USA,radhard_obc,168,206,Radhard Obc Unit 003
+C004,component,3,Europe,solar_array,180,121,Solar Array Unit 004
+C005,component,3,USA,imu,286,117,Imu Unit 005
+C006,component,3,Japan,harness,175,113,Harness Unit 006
+C007,component,3,USA,thermal_blanket,84,158,Thermal Blanket Unit 007
+C008,component,3,China,radhard_obc,244,53,Radhard Obc Unit 008
+C009,component,3,Europe,twt_amplifier,352,124,Twt Amplifier Unit 009
+C010,component,3,India,imu,194,127,Imu Unit 010
+C011,component,3,USA,harness,32,74,Harness Unit 011
+C012,component,3,China,thermal_blanket,47,128,Thermal Blanket Unit 012
+C013,component,3,USA,structure_panel,140,80,Structure Panel Unit 013
+C014,component,3,USA,solar_array,66,142,Solar Array Unit 014
+C015,component,3,Europe,deployable_boom,167,118,Deployable Boom Unit 015
+C016,component,3,Europe,harness,85,92,Harness Unit 016
+C017,component,3,China,reaction_wheel,134,153,Reaction Wheel Unit 017
+C018,component,3,China,radhard_obc,158,135,Radhard Obc Unit 018
+C019,component,3,USA,solar_array,190,150,Solar Array Unit 019
+C020,component,3,Other,deployable_boom,116,131,Deployable Boom Unit 020
+C021,component,3,China,star_tracker,424,131,Star Tracker Unit 021
+C022,component,3,Europe,thermal_blanket,189,141,Thermal Blanket Unit 022
+C023,component,3,USA,structure_panel,130,121,Structure Panel Unit 023
+C024,component,3,Other,solar_array,126,101,Solar Array Unit 024
+C025,component,3,USA,deployable_boom,55,89,Deployable Boom Unit 025
+C026,component,3,USA,star_tracker,332,140,Star Tracker Unit 026
+C027,component,3,Europe,reaction_wheel,240,121,Reaction Wheel Unit 027
+C028,component,3,Other,structure_panel,192,150,Structure Panel Unit 028
+C029,component,3,China,solar_array,147,167,Solar Array Unit 029
+C030,component,3,India,deployable_boom,39,139,Deployable Boom Unit 030
+C031,component,3,China,harness,124,118,Harness Unit 031
+C032,component,3,China,reaction_wheel,414,89,Reaction Wheel Unit 032
+C033,component,3,Europe,radhard_obc,106,159,Radhard Obc Unit 033
+C034,component,3,USA,solar_array,180,136,Solar Array Unit 034
+C035,component,3,India,deployable_boom,219,93,Deployable Boom Unit 035
+C036,component,3,Japan,star_tracker,358,120,Star Tracker Unit 036
+C037,component,3,Europe,reaction_wheel,328,102,Reaction Wheel Unit 037
+C038,component,3,USA,structure_panel,138,128,Structure Panel Unit 038
+C039,component,3,India,twt_amplifier,90,135,Twt Amplifier Unit 039
+C040,component,3,USA,deployable_boom,132,60,Deployable Boom Unit 040
+C041,component,3,Other,star_tracker,310,121,Star Tracker Unit 041
+C042,component,3,USA,reaction_wheel,248,130,Reaction Wheel Unit 042
+C043,component,3,India,structure_panel,123,66,Structure Panel Unit 043
+C044,component,3,Europe,twt_amplifier,236,104,Twt Amplifier Unit 044
+C045,component,3,USA,imu,378,78,Imu Unit 045
+C046,component,3,USA,star_tracker,86,158,Star Tracker Unit 046
+C047,component,3,Japan,reaction_wheel,234,142,Reaction Wheel Unit 047
+C048,component,3,China,radhard_obc,302,105,Radhard Obc Unit 048
+C049,component,3,Japan,twt_amplifier,122,147,Twt Amplifier Unit 049
+C050,component,3,USA,imu,308,126,Imu Unit 050
+C051,component,3,India,star_tracker,366,127,Star Tracker Unit 051
+C052,component,3,Other,thermal_blanket,172,97,Thermal Blanket Unit 052
+C053,component,3,USA,structure_panel,126,116,Structure Panel Unit 053
+C054,component,3,USA,twt_amplifier,164,129,Twt Amplifier Unit 054
+C055,component,3,USA,imu,74,92,Imu Unit 055
+C056,component,3,USA,harness,207,116,Harness Unit 056
+C057,component,3,USA,thermal_blanket,45,100,Thermal Blanket Unit 057
+C058,component,3,Japan,structure_panel,165,98,Structure Panel Unit 058
+C059,component,3,USA,twt_amplifier,184,141,Twt Amplifier Unit 059
+C060,component,3,Europe,imu,352,120,Imu Unit 060
+C061,component,3,India,star_tracker,300,142,Star Tracker Unit 061
+C062,component,3,Japan,reaction_wheel,434,141,Reaction Wheel Unit 062
+C063,component,3,USA,structure_panel,104,180,Structure Panel Unit 063
+C064,component,3,China,twt_amplifier,86,114,Twt Amplifier Unit 064
+C065,component,3,India,imu,88,161,Imu Unit 065
+C066,component,3,India,star_tracker,88,108,Star Tracker Unit 066
+C067,component,3,USA,thermal_blanket,128,154,Thermal Blanket Unit 067
+C068,component,3,USA,radhard_obc,44,78,Radhard Obc Unit 068
+C069,component,3,Other,solar_array,106,78,Solar Array Unit 069
+C070,component,3,Europe,imu,158,99,Imu Unit 070
+C071,component,3,USA,harness,22,133,Harness Unit 071
+C072,component,3,Europe,reaction_wheel,160,127,Reaction Wheel Unit 072
+S001,subsystem,2,USA,structure,279,58,STRUCTURE Subsystem 001
+S002,subsystem,2,Other,thermal_control,203,72,THERMAL CONTROL Subsystem 002
+S003,subsystem,2,China,power_eps,234,70,POWER EPS Subsystem 003
+S004,subsystem,2,USA,structure,171,48,STRUCTURE Subsystem 004
+S005,subsystem,2,China,comms_payload,142,166,COMMS PAYLOAD Subsystem 005
+S006,subsystem,2,China,power_eps,255,44,POWER EPS Subsystem 006
+S007,subsystem,2,USA,adcs,84,161,ADCS Subsystem 007
+S008,subsystem,2,Japan,thermal_control,256,56,THERMAL CONTROL Subsystem 008
+S009,subsystem,2,Japan,power_eps,165,52,POWER EPS Subsystem 009
+S010,subsystem,2,USA,structure,151,83,STRUCTURE Subsystem 010
+S011,subsystem,2,USA,thermal_control,255,64,THERMAL CONTROL Subsystem 011
+S012,subsystem,2,USA,command_data_handling,233,165,COMMAND DATA HANDLING Subsystem 012
+S013,subsystem,2,USA,structure,278,44,STRUCTURE Subsystem 013
+S014,subsystem,2,Japan,comms_payload,70,132,COMMS PAYLOAD Subsystem 014
+S015,subsystem,2,India,power_eps,283,34,POWER EPS Subsystem 015
+S016,subsystem,2,USA,adcs,42,150,ADCS Subsystem 016
+S017,subsystem,2,USA,comms_payload,82,158,COMMS PAYLOAD Subsystem 017
+S018,subsystem,2,Japan,command_data_handling,162,101,COMMAND DATA HANDLING Subsystem 018
+S019,subsystem,2,USA,adcs,33,113,ADCS Subsystem 019
+S020,subsystem,2,USA,comms_payload,52,126,COMMS PAYLOAD Subsystem 020
+S021,subsystem,2,USA,power_eps,260,57,POWER EPS Subsystem 021
+S022,subsystem,2,Japan,structure,202,55,STRUCTURE Subsystem 022
+S023,subsystem,2,China,comms_payload,244,143,COMMS PAYLOAD Subsystem 023
+S024,subsystem,2,USA,command_data_handling,235,123,COMMAND DATA HANDLING Subsystem 024
+S025,subsystem,2,USA,adcs,230,150,ADCS Subsystem 025
+S026,subsystem,2,USA,thermal_control,175,66,THERMAL CONTROL Subsystem 026
+S027,subsystem,2,USA,command_data_handling,119,144,COMMAND DATA HANDLING Subsystem 027
+S028,subsystem,2,USA,adcs,160,172,ADCS Subsystem 028
+S029,subsystem,2,USA,comms_payload,129,135,COMMS PAYLOAD Subsystem 029
+S030,subsystem,2,India,power_eps,166,47,POWER EPS Subsystem 030
+S031,subsystem,2,China,adcs,62,120,ADCS Subsystem 031
+S032,subsystem,2,USA,thermal_control,259,45,THERMAL CONTROL Subsystem 032
+S033,subsystem,2,USA,power_eps,35,65,POWER EPS Subsystem 033
+S034,subsystem,2,India,structure,137,60,STRUCTURE Subsystem 034
+S035,subsystem,2,Europe,thermal_control,135,74,THERMAL CONTROL Subsystem 035
+S036,subsystem,2,India,power_eps,77,71,POWER EPS Subsystem 036
+S037,subsystem,2,Japan,adcs,99,129,ADCS Subsystem 037
+S038,subsystem,2,China,thermal_control,36,68,THERMAL CONTROL Subsystem 038
+S039,subsystem,2,USA,power_eps,143,36,POWER EPS Subsystem 039
+S040,subsystem,2,India,adcs,113,138,ADCS Subsystem 040
+S041,subsystem,2,USA,thermal_control,142,45,THERMAL CONTROL Subsystem 041
+S042,subsystem,2,USA,command_data_handling,105,143,COMMAND DATA HANDLING Subsystem 042
+S043,subsystem,2,India,structure,222,81,STRUCTURE Subsystem 043
+S044,subsystem,2,Other,thermal_control,295,79,THERMAL CONTROL Subsystem 044
+S045,subsystem,2,Japan,power_eps,295,65,POWER EPS Subsystem 045
+S046,subsystem,2,USA,structure,235,21,STRUCTURE Subsystem 046
+S047,subsystem,2,Japan,thermal_control,106,55,THERMAL CONTROL Subsystem 047
+S048,subsystem,2,USA,power_eps,290,42,POWER EPS Subsystem 048
+S049,subsystem,2,China,structure,50,91,STRUCTURE Subsystem 049
+S050,subsystem,2,USA,comms_payload,60,121,COMMS PAYLOAD Subsystem 050
+S051,subsystem,2,USA,power_eps,205,63,POWER EPS Subsystem 051
+S052,subsystem,2,USA,structure,179,85,STRUCTURE Subsystem 052
+S053,subsystem,2,USA,comms_payload,58,143,COMMS PAYLOAD Subsystem 053
+S054,subsystem,2,USA,command_data_handling,295,169,COMMAND DATA HANDLING Subsystem 054
+I001,integrator,1,India,navigation,188,58,Integrator 001 (navigation)
+I002,integrator,1,Europe,science,97,14,Integrator 002 (science)
+I003,integrator,1,USA,science,153,34,Integrator 003 (science)
+I004,integrator,1,USA,leo_broadband,38,14,Integrator 004 (leo_broadband)
+I005,integrator,1,India,geo_comsat,122,32,Integrator 005 (geo_comsat)
+I006,integrator,1,Europe,leo_broadband,31,42,Integrator 006 (leo_broadband)
+I007,integrator,1,Other,science,162,41,Integrator 007 (science)
+I008,integrator,1,Europe,earth_obs,76,30,Integrator 008 (earth_obs)
+I009,integrator,1,Other,earth_obs,134,59,Integrator 009 (earth_obs)
+I010,integrator,1,Europe,geo_comsat,89,31,Integrator 010 (geo_comsat)
+I011,integrator,1,China,navigation,100,52,Integrator 011 (navigation)
+I012,integrator,1,USA,geo_comsat,57,41,Integrator 012 (geo_comsat)
+I013,integrator,1,Europe,navigation,61,44,Integrator 013 (navigation)
+I014,integrator,1,China,leo_broadband,94,54,Integrator 014 (leo_broadband)
+I015,integrator,1,Other,science,94,44,Integrator 015 (science)
+I016,integrator,1,China,navigation,175,42,Integrator 016 (navigation)
+I017,integrator,1,USA,science,69,23,Integrator 017 (science)
+I018,integrator,1,Europe,earth_obs,108,54,Integrator 018 (earth_obs)
+I019,integrator,1,USA,science,119,30,Integrator 019 (science)
+I020,integrator,1,USA,earth_obs,160,43,Integrator 020 (earth_obs)
+I021,integrator,1,Japan,navigation,61,14,Integrator 021 (navigation)
+I022,integrator,1,India,leo_broadband,78,24,Integrator 022 (leo_broadband)
+I023,integrator,1,India,navigation,175,65,Integrator 023 (navigation)
+I024,integrator,1,China,science,142,48,Integrator 024 (science)
+I025,integrator,1,India,science,64,29,Integrator 025 (science)
+I026,integrator,1,Japan,geo_comsat,187,29,Integrator 026 (geo_comsat)
+I027,integrator,1,USA,geo_comsat,175,45,Integrator 027 (geo_comsat)
+I028,integrator,1,USA,science,148,52,Integrator 028 (science)
+I029,integrator,1,Japan,geo_comsat,77,48,Integrator 029 (geo_comsat)
+I030,integrator,1,China,earth_obs,44,47,Integrator 030 (earth_obs)
+I031,integrator,1,USA,earth_obs,187,56,Integrator 031 (earth_obs)
+I032,integrator,1,Europe,navigation,53,22,Integrator 032 (navigation)
+I033,integrator,1,Japan,navigation,147,59,Integrator 033 (navigation)
+I034,integrator,1,USA,science,131,61,Integrator 034 (science)
+I035,integrator,1,Europe,geo_comsat,61,18,Integrator 035 (geo_comsat)
+I036,integrator,1,China,leo_broadband,126,46,Integrator 036 (leo_broadband)
+I037,integrator,1,Japan,science,70,70,Integrator 037 (science)
+I038,integrator,1,USA,earth_obs,173,52,Integrator 038 (earth_obs)
+I039,integrator,1,India,leo_broadband,181,32,Integrator 039 (leo_broadband)
+I040,integrator,1,Europe,science,159,45,Integrator 040 (science)
+I041,integrator,1,China,leo_broadband,64,30,Integrator 041 (leo_broadband)
+I042,integrator,1,USA,geo_comsat,185,73,Integrator 042 (geo_comsat)
+P001,program,0,Other,earth_observation,530,30,Program 001 (earth_observation)
+P002,program,0,Europe,gov_comsat,445,30,Program 002 (gov_comsat)
+P003,program,0,China,navigation_sat,259,42,Program 003 (navigation_sat)
+P004,program,0,USA,navigation_sat,319,7,Program 004 (navigation_sat)
+P005,program,0,India,earth_observation,329,45,Program 005 (earth_observation)
+P006,program,0,Japan,navigation_sat,474,18,Program 006 (navigation_sat)
+P007,program,0,USA,navigation_sat,471,22,Program 007 (navigation_sat)
+P008,program,0,Europe,earth_observation,544,21,Program 008 (earth_observation)
+P009,program,0,USA,gov_comsat,311,44,Program 009 (gov_comsat)
+P010,program,0,USA,navigation_sat,77,48,Program 010 (navigation_sat)
+P011,program,0,USA,navigation_sat,284,49,Program 011 (navigation_sat)
+P012,program,0,Europe,deep_space_probe,33,30,Program 012 (deep_space_probe)
+P013,program,0,USA,broadband_constellation,486,29,Program 013 (broadband_constellation)
+P014,program,0,USA,earth_observation,437,31,Program 014 (earth_observation)
+P015,program,0,India,deep_space_probe,383,61,Program 015 (deep_space_probe)
+P016,program,0,India,earth_observation,205,38,Program 016 (earth_observation)
+P017,program,0,India,deep_space_probe,243,39,Program 017 (deep_space_probe)
+P018,program,0,USA,broadband_constellation,257,26,Program 018 (broadband_constellation)
+P019,program,0,China,broadband_constellation,312,39,Program 019 (broadband_constellation)
+P020,program,0,Japan,navigation_sat,291,30,Program 020 (navigation_sat)
+P021,program,0,USA,gov_comsat,230,30,Program 021 (gov_comsat)
+P022,program,0,USA,earth_observation,248,33,Program 022 (earth_observation)
+P023,program,0,India,earth_observation,198,10,Program 023 (earth_observation)
+P024,program,0,USA,earth_observation,417,36,Program 024 (earth_observation)
+P025,program,0,India,deep_space_probe,441,15,Program 025 (deep_space_probe)
+P026,program,0,Other,broadband_constellation,161,29,Program 026 (broadband_constellation)
+P027,program,0,USA,navigation_sat,358,23,Program 027 (navigation_sat)
+P028,program,0,USA,deep_space_probe,531,38,Program 028 (deep_space_probe)
+P029,program,0,Other,navigation_sat,585,25,Program 029 (navigation_sat)
+P030,program,0,China,gov_comsat,127,24,Program 030 (gov_comsat)
+P031,program,0,USA,broadband_constellation,283,32,Program 031 (broadband_constellation)
+P032,program,0,China,navigation_sat,170,19,Program 032 (navigation_sat)
+P033,program,0,China,earth_observation,72,30,Program 033 (earth_observation)
+P034,program,0,Europe,broadband_constellation,576,11,Program 034 (broadband_constellation)
+P035,program,0,Japan,gov_comsat,532,29,Program 035 (gov_comsat)
+P036,program,0,USA,deep_space_probe,84,27,Program 036 (deep_space_probe)
+P037,program,0,USA,gov_comsat,201,29,Program 037 (gov_comsat)
+P038,program,0,Japan,broadband_constellation,463,32,Program 038 (broadband_constellation)
+P039,program,0,USA,navigation_sat,81,18,Program 039 (navigation_sat)
+P040,program,0,Japan,broadband_constellation,591,18,Program 040 (broadband_constellation)
+P041,program,0,China,deep_space_probe,361,32,Program 041 (deep_space_probe)
+P042,program,0,USA,deep_space_probe,61,42,Program 042 (deep_space_probe)
+P043,program,0,Japan,deep_space_probe,148,7,Program 043 (deep_space_probe)
+P044,program,0,USA,deep_space_probe,340,12,Program 044 (deep_space_probe)
+P045,program,0,China,gov_comsat,450,24,Program 045 (gov_comsat)
+P046,program,0,USA,gov_comsat,377,25,Program 046 (gov_comsat)
+P047,program,0,Japan,gov_comsat,67,26,Program 047 (gov_comsat)
+P048,program,0,Japan,earth_observation,166,40,Program 048 (earth_observation)

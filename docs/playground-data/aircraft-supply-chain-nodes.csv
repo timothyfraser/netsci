@@ -1,0 +1,301 @@
+node_id,kind,tier,region,subtype,capacity,lead_time_days,label
+M001,material,4,Japan,titanium,2383,104,Titanium Co 001
+M002,material,4,Europe,aluminium,2611,107,Aluminium Co 002
+M003,material,4,Brazil,cfrp_composite,3220,81,Cfrp Composite Co 003
+M004,material,4,Japan,fastener,1355,78,Fastener Co 004
+M005,material,4,USA,nickel_superalloy,3934,175,Nickel Superalloy Co 005
+M006,material,4,China,avionics_ic,1015,59,Avionics Ic Co 006
+M007,material,4,Japan,steel_forging,331,67,Steel Forging Co 007
+M008,material,4,Brazil,sealant,1088,101,Sealant Co 008
+M009,material,4,USA,titanium,3687,106,Titanium Co 009
+M010,material,4,Europe,aluminium,1315,79,Aluminium Co 010
+M011,material,4,Europe,cfrp_composite,2119,105,Cfrp Composite Co 011
+M012,material,4,Japan,fastener,3178,82,Fastener Co 012
+M013,material,4,Canada,nickel_superalloy,1788,74,Nickel Superalloy Co 013
+M014,material,4,Brazil,avionics_ic,3293,81,Avionics Ic Co 014
+M015,material,4,Europe,steel_forging,603,61,Steel Forging Co 015
+M016,material,4,USA,sealant,542,101,Sealant Co 016
+M017,material,4,USA,titanium,2924,90,Titanium Co 017
+M018,material,4,USA,aluminium,812,101,Aluminium Co 018
+M019,material,4,Brazil,cfrp_composite,2089,105,Cfrp Composite Co 019
+M020,material,4,Canada,fastener,2846,87,Fastener Co 020
+M021,material,4,Japan,nickel_superalloy,1107,88,Nickel Superalloy Co 021
+M022,material,4,Europe,avionics_ic,1345,49,Avionics Ic Co 022
+M023,material,4,China,steel_forging,3846,58,Steel Forging Co 023
+M024,material,4,China,sealant,533,66,Sealant Co 024
+M025,material,4,Japan,titanium,1591,68,Titanium Co 025
+M026,material,4,USA,aluminium,3652,80,Aluminium Co 026
+M027,material,4,Europe,cfrp_composite,3104,81,Cfrp Composite Co 027
+M028,material,4,USA,fastener,3882,107,Fastener Co 028
+M029,material,4,USA,nickel_superalloy,3198,85,Nickel Superalloy Co 029
+M030,material,4,Japan,avionics_ic,1907,67,Avionics Ic Co 030
+M031,material,4,Japan,steel_forging,1898,110,Steel Forging Co 031
+M032,material,4,China,sealant,3629,48,Sealant Co 032
+M033,material,4,Europe,titanium,2942,95,Titanium Co 033
+M034,material,4,Europe,aluminium,1362,75,Aluminium Co 034
+M035,material,4,China,cfrp_composite,1960,91,Cfrp Composite Co 035
+M036,material,4,USA,fastener,3455,77,Fastener Co 036
+M037,material,4,USA,nickel_superalloy,2720,90,Nickel Superalloy Co 037
+M038,material,4,China,avionics_ic,1841,128,Avionics Ic Co 038
+M039,material,4,USA,steel_forging,559,65,Steel Forging Co 039
+M040,material,4,Canada,sealant,2669,94,Sealant Co 040
+M041,material,4,Europe,titanium,3190,122,Titanium Co 041
+M042,material,4,Brazil,aluminium,358,110,Aluminium Co 042
+M043,material,4,Japan,cfrp_composite,2710,125,Cfrp Composite Co 043
+M044,material,4,USA,fastener,749,61,Fastener Co 044
+M045,material,4,China,nickel_superalloy,3215,67,Nickel Superalloy Co 045
+M046,material,4,China,avionics_ic,848,80,Avionics Ic Co 046
+M047,material,4,Europe,steel_forging,1898,105,Steel Forging Co 047
+M048,material,4,USA,sealant,1518,84,Sealant Co 048
+M049,material,4,China,titanium,775,65,Titanium Co 049
+M050,material,4,USA,aluminium,3842,97,Aluminium Co 050
+M051,material,4,USA,cfrp_composite,446,137,Cfrp Composite Co 051
+M052,material,4,USA,fastener,514,159,Fastener Co 052
+M053,material,4,Brazil,nickel_superalloy,1876,66,Nickel Superalloy Co 053
+M054,material,4,Canada,avionics_ic,3763,38,Avionics Ic Co 054
+M055,material,4,Japan,steel_forging,3268,70,Steel Forging Co 055
+M056,material,4,Brazil,sealant,1214,80,Sealant Co 056
+M057,material,4,Europe,titanium,3429,86,Titanium Co 057
+M058,material,4,Europe,aluminium,1867,115,Aluminium Co 058
+M059,material,4,Brazil,cfrp_composite,237,86,Cfrp Composite Co 059
+M060,material,4,USA,fastener,3605,65,Fastener Co 060
+M061,material,4,USA,nickel_superalloy,1399,78,Nickel Superalloy Co 061
+M062,material,4,Europe,avionics_ic,612,88,Avionics Ic Co 062
+M063,material,4,Canada,steel_forging,2975,93,Steel Forging Co 063
+M064,material,4,Japan,sealant,2962,113,Sealant Co 064
+C001,component,3,China,turbine_blade,260,131,Turbine Blade Unit 001
+C002,component,3,USA,fadec,418,252,Fadec Unit 002
+C003,component,3,USA,skin_panel,159,180,Skin Panel Unit 003
+C004,component,3,Europe,ducting,40,150,Ducting Unit 004
+C005,component,3,Europe,bearing,135,128,Bearing Unit 005
+C006,component,3,Brazil,wiring_harness,225,97,Wiring Harness Unit 006
+C007,component,3,Brazil,fadec,114,172,Fadec Unit 007
+C008,component,3,USA,actuator,392,147,Actuator Unit 008
+C009,component,3,China,ducting,239,101,Ducting Unit 009
+C010,component,3,USA,bearing,194,130,Bearing Unit 010
+C011,component,3,Europe,turbine_blade,356,111,Turbine Blade Unit 011
+C012,component,3,USA,fadec,298,138,Fadec Unit 012
+C013,component,3,China,skin_panel,48,147,Skin Panel Unit 013
+C014,component,3,USA,avionics_lru,288,65,Avionics Lru Unit 014
+C015,component,3,USA,bearing,169,132,Bearing Unit 015
+C016,component,3,Europe,turbine_blade,268,141,Turbine Blade Unit 016
+C017,component,3,China,fadec,266,72,Fadec Unit 017
+C018,component,3,China,skin_panel,128,113,Skin Panel Unit 018
+C019,component,3,Europe,avionics_lru,410,85,Avionics Lru Unit 019
+C020,component,3,China,fuel_pump,92,171,Fuel Pump Unit 020
+C021,component,3,China,turbine_blade,254,153,Turbine Blade Unit 021
+C022,component,3,Europe,fadec,328,114,Fadec Unit 022
+C023,component,3,USA,actuator,130,159,Actuator Unit 023
+C024,component,3,Japan,avionics_lru,334,136,Avionics Lru Unit 024
+C025,component,3,Canada,fuel_pump,398,137,Fuel Pump Unit 025
+C026,component,3,Europe,turbine_blade,374,105,Turbine Blade Unit 026
+C027,component,3,USA,bracket,137,125,Bracket Unit 027
+C028,component,3,Japan,skin_panel,89,140,Skin Panel Unit 028
+C029,component,3,USA,avionics_lru,76,100,Avionics Lru Unit 029
+C030,component,3,China,fuel_pump,450,126,Fuel Pump Unit 030
+C031,component,3,USA,wiring_harness,48,109,Wiring Harness Unit 031
+C032,component,3,USA,bracket,180,106,Bracket Unit 032
+C033,component,3,Brazil,skin_panel,99,153,Skin Panel Unit 033
+C034,component,3,USA,avionics_lru,382,130,Avionics Lru Unit 034
+C035,component,3,USA,fuel_pump,326,153,Fuel Pump Unit 035
+C036,component,3,Canada,turbine_blade,474,153,Turbine Blade Unit 036
+C037,component,3,China,fadec,226,195,Fadec Unit 037
+C038,component,3,USA,skin_panel,46,124,Skin Panel Unit 038
+C039,component,3,USA,avionics_lru,94,174,Avionics Lru Unit 039
+C040,component,3,Japan,fuel_pump,92,117,Fuel Pump Unit 040
+C041,component,3,China,turbine_blade,278,166,Turbine Blade Unit 041
+C042,component,3,Europe,bracket,22,85,Bracket Unit 042
+C043,component,3,USA,actuator,228,85,Actuator Unit 043
+C044,component,3,USA,ducting,84,107,Ducting Unit 044
+C045,component,3,Brazil,fuel_pump,44,144,Fuel Pump Unit 045
+C046,component,3,USA,wiring_harness,86,137,Wiring Harness Unit 046
+C047,component,3,Canada,fadec,278,65,Fadec Unit 047
+C048,component,3,USA,skin_panel,44,131,Skin Panel Unit 048
+C049,component,3,Europe,ducting,170,142,Ducting Unit 049
+C050,component,3,Japan,bearing,82,149,Bearing Unit 050
+C051,component,3,Canada,wiring_harness,166,111,Wiring Harness Unit 051
+C052,component,3,USA,bracket,239,133,Bracket Unit 052
+C053,component,3,Brazil,skin_panel,157,136,Skin Panel Unit 053
+C054,component,3,Japan,ducting,39,144,Ducting Unit 054
+C055,component,3,Japan,fuel_pump,148,124,Fuel Pump Unit 055
+C056,component,3,USA,wiring_harness,72,135,Wiring Harness Unit 056
+C057,component,3,USA,bracket,197,118,Bracket Unit 057
+C058,component,3,China,skin_panel,63,144,Skin Panel Unit 058
+C059,component,3,Europe,ducting,220,126,Ducting Unit 059
+C060,component,3,USA,fuel_pump,54,153,Fuel Pump Unit 060
+C061,component,3,Europe,wiring_harness,200,93,Wiring Harness Unit 061
+C062,component,3,Canada,fadec,306,88,Fadec Unit 062
+C063,component,3,China,actuator,166,111,Actuator Unit 063
+C064,component,3,USA,ducting,206,150,Ducting Unit 064
+C065,component,3,China,fuel_pump,466,135,Fuel Pump Unit 065
+C066,component,3,USA,turbine_blade,448,160,Turbine Blade Unit 066
+C067,component,3,Europe,fadec,400,128,Fadec Unit 067
+C068,component,3,Canada,actuator,408,167,Actuator Unit 068
+C069,component,3,USA,avionics_lru,280,106,Avionics Lru Unit 069
+C070,component,3,USA,fuel_pump,316,113,Fuel Pump Unit 070
+C071,component,3,Europe,wiring_harness,198,105,Wiring Harness Unit 071
+C072,component,3,China,fadec,362,119,Fadec Unit 072
+C073,component,3,Canada,skin_panel,41,178,Skin Panel Unit 073
+C074,component,3,China,ducting,176,91,Ducting Unit 074
+C075,component,3,Brazil,bearing,132,100,Bearing Unit 075
+C076,component,3,Europe,turbine_blade,62,143,Turbine Blade Unit 076
+C077,component,3,Brazil,bracket,68,78,Bracket Unit 077
+C078,component,3,USA,skin_panel,214,155,Skin Panel Unit 078
+C079,component,3,USA,ducting,101,115,Ducting Unit 079
+C080,component,3,Brazil,bearing,40,100,Bearing Unit 080
+C081,component,3,Brazil,wiring_harness,150,141,Wiring Harness Unit 081
+C082,component,3,Brazil,bracket,120,124,Bracket Unit 082
+C083,component,3,Europe,actuator,422,140,Actuator Unit 083
+C084,component,3,Canada,ducting,145,166,Ducting Unit 084
+C085,component,3,China,fuel_pump,278,88,Fuel Pump Unit 085
+C086,component,3,Canada,wiring_harness,86,159,Wiring Harness Unit 086
+S001,system,2,USA,engine,163,172,Engine System 001
+S002,system,2,USA,avionics_suite,281,195,Avionics Suite System 002
+S003,system,2,USA,landing_gear,264,54,Landing Gear System 003
+S004,system,2,Europe,wing_box,157,74,Wing Box System 004
+S005,system,2,Europe,fuselage_section,150,47,Fuselage Section System 005
+S006,system,2,Europe,flight_controls,311,164,Flight Controls System 006
+S007,system,2,USA,wing_box,268,40,Wing Box System 007
+S008,system,2,USA,fuselage_section,242,46,Fuselage Section System 008
+S009,system,2,USA,flight_controls,177,150,Flight Controls System 009
+S010,system,2,USA,wing_box,255,84,Wing Box System 010
+S011,system,2,USA,avionics_suite,279,128,Avionics Suite System 011
+S012,system,2,USA,flight_controls,164,169,Flight Controls System 012
+S013,system,2,Canada,wing_box,51,92,Wing Box System 013
+S014,system,2,USA,avionics_suite,260,148,Avionics Suite System 014
+S015,system,2,USA,flight_controls,186,169,Flight Controls System 015
+S016,system,2,USA,wing_box,262,83,Wing Box System 016
+S017,system,2,Canada,fuselage_section,99,39,Fuselage Section System 017
+S018,system,2,USA,landing_gear,40,79,Landing Gear System 018
+S019,system,2,USA,wing_box,137,74,Wing Box System 019
+S020,system,2,Europe,fuselage_section,61,44,Fuselage Section System 020
+S021,system,2,Europe,flight_controls,220,145,Flight Controls System 021
+S022,system,2,USA,engine,254,136,Engine System 022
+S023,system,2,USA,avionics_suite,144,164,Avionics Suite System 023
+S024,system,2,USA,flight_controls,262,148,Flight Controls System 024
+S025,system,2,Japan,wing_box,59,62,Wing Box System 025
+S026,system,2,Japan,avionics_suite,210,160,Avionics Suite System 026
+S027,system,2,Canada,landing_gear,305,58,Landing Gear System 027
+S028,system,2,USA,engine,179,168,Engine System 028
+S029,system,2,Brazil,avionics_suite,250,152,Avionics Suite System 029
+S030,system,2,Europe,landing_gear,146,94,Landing Gear System 030
+S031,system,2,USA,engine,103,116,Engine System 031
+S032,system,2,Canada,avionics_suite,98,188,Avionics Suite System 032
+S033,system,2,USA,flight_controls,256,152,Flight Controls System 033
+S034,system,2,Europe,wing_box,277,35,Wing Box System 034
+S035,system,2,Japan,fuselage_section,160,64,Fuselage Section System 035
+S036,system,2,China,landing_gear,145,66,Landing Gear System 036
+S037,system,2,USA,engine,281,170,Engine System 037
+S038,system,2,Europe,avionics_suite,84,169,Avionics Suite System 038
+S039,system,2,Europe,landing_gear,160,82,Landing Gear System 039
+S040,system,2,Brazil,wing_box,238,106,Wing Box System 040
+S041,system,2,USA,fuselage_section,215,63,Fuselage Section System 041
+S042,system,2,Brazil,landing_gear,115,67,Landing Gear System 042
+S043,system,2,Europe,wing_box,64,38,Wing Box System 043
+S044,system,2,USA,avionics_suite,196,162,Avionics Suite System 044
+S045,system,2,USA,flight_controls,173,193,Flight Controls System 045
+S046,system,2,Brazil,wing_box,295,66,Wing Box System 046
+S047,system,2,Brazil,avionics_suite,59,140,Avionics Suite System 047
+S048,system,2,USA,landing_gear,135,80,Landing Gear System 048
+S049,system,2,Europe,wing_box,190,54,Wing Box System 049
+S050,system,2,USA,fuselage_section,35,73,Fuselage Section System 050
+S051,system,2,USA,landing_gear,285,64,Landing Gear System 051
+S052,system,2,Japan,wing_box,129,39,Wing Box System 052
+S053,system,2,USA,fuselage_section,309,53,Fuselage Section System 053
+S054,system,2,Brazil,landing_gear,248,63,Landing Gear System 054
+S055,system,2,Brazil,wing_box,130,39,Wing Box System 055
+S056,system,2,Europe,avionics_suite,290,130,Avionics Suite System 056
+S057,system,2,USA,landing_gear,288,60,Landing Gear System 057
+S058,system,2,Canada,wing_box,293,23,Wing Box System 058
+I001,integrator,1,USA,widebody,32,50,Integrator 001 (widebody)
+I002,integrator,1,Canada,narrowbody,54,31,Integrator 002 (narrowbody)
+I003,integrator,1,USA,regional,72,48,Integrator 003 (regional)
+I004,integrator,1,USA,cargo,20,75,Integrator 004 (cargo)
+I005,integrator,1,Europe,narrowbody,135,50,Integrator 005 (narrowbody)
+I006,integrator,1,USA,narrowbody,136,53,Integrator 006 (narrowbody)
+I007,integrator,1,China,narrowbody,38,47,Integrator 007 (narrowbody)
+I008,integrator,1,USA,regional,196,34,Integrator 008 (regional)
+I009,integrator,1,Europe,widebody,56,39,Integrator 009 (widebody)
+I010,integrator,1,Brazil,regional,74,32,Integrator 010 (regional)
+I011,integrator,1,Europe,narrowbody,46,55,Integrator 011 (narrowbody)
+I012,integrator,1,Europe,widebody,78,24,Integrator 012 (widebody)
+I013,integrator,1,Europe,regional,57,63,Integrator 013 (regional)
+I014,integrator,1,China,regional,23,64,Integrator 014 (regional)
+I015,integrator,1,Canada,regional,189,50,Integrator 015 (regional)
+I016,integrator,1,Brazil,business_jet,194,38,Integrator 016 (business_jet)
+I017,integrator,1,China,regional,57,54,Integrator 017 (regional)
+I018,integrator,1,Brazil,cargo,130,55,Integrator 018 (cargo)
+I019,integrator,1,USA,regional,126,65,Integrator 019 (regional)
+I020,integrator,1,China,widebody,165,48,Integrator 020 (widebody)
+I021,integrator,1,USA,widebody,163,45,Integrator 021 (widebody)
+I022,integrator,1,Canada,widebody,216,53,Integrator 022 (widebody)
+I023,integrator,1,China,regional,208,41,Integrator 023 (regional)
+I024,integrator,1,Canada,widebody,22,53,Integrator 024 (widebody)
+I025,integrator,1,Europe,cargo,105,41,Integrator 025 (cargo)
+I026,integrator,1,USA,regional,101,54,Integrator 026 (regional)
+I027,integrator,1,China,cargo,151,53,Integrator 027 (cargo)
+I028,integrator,1,USA,business_jet,99,53,Integrator 028 (business_jet)
+I029,integrator,1,USA,widebody,91,43,Integrator 029 (widebody)
+I030,integrator,1,USA,widebody,212,70,Integrator 030 (widebody)
+I031,integrator,1,USA,business_jet,203,54,Integrator 031 (business_jet)
+I032,integrator,1,Europe,widebody,191,33,Integrator 032 (widebody)
+I033,integrator,1,Europe,widebody,88,23,Integrator 033 (widebody)
+I034,integrator,1,USA,cargo,113,50,Integrator 034 (cargo)
+I035,integrator,1,Japan,regional,149,48,Integrator 035 (regional)
+I036,integrator,1,USA,narrowbody,95,66,Integrator 036 (narrowbody)
+I037,integrator,1,Europe,regional,150,55,Integrator 037 (regional)
+I038,integrator,1,USA,regional,166,71,Integrator 038 (regional)
+I039,integrator,1,Japan,cargo,108,44,Integrator 039 (cargo)
+I040,integrator,1,USA,business_jet,40,39,Integrator 040 (business_jet)
+I041,integrator,1,USA,narrowbody,192,45,Integrator 041 (narrowbody)
+I042,integrator,1,Europe,narrowbody,179,69,Integrator 042 (narrowbody)
+I043,integrator,1,Europe,business_jet,106,45,Integrator 043 (business_jet)
+I044,integrator,1,Canada,narrowbody,168,76,Integrator 044 (narrowbody)
+P001,program,0,Europe,military_transport,145,46,Program 001 (military_transport)
+P002,program,0,Japan,military_transport,186,48,Program 002 (military_transport)
+P003,program,0,China,freighter,410,23,Program 003 (freighter)
+P004,program,0,Europe,freighter,614,41,Program 004 (freighter)
+P005,program,0,USA,regional_jet,509,12,Program 005 (regional_jet)
+P006,program,0,Canada,regional_jet,188,31,Program 006 (regional_jet)
+P007,program,0,Canada,regional_jet,44,36,Program 007 (regional_jet)
+P008,program,0,Europe,narrowbody,659,28,Program 008 (narrowbody)
+P009,program,0,Canada,narrowbody,243,57,Program 009 (narrowbody)
+P010,program,0,China,widebody,372,32,Program 010 (widebody)
+P011,program,0,Europe,regional_jet,287,32,Program 011 (regional_jet)
+P012,program,0,USA,narrowbody,384,35,Program 012 (narrowbody)
+P013,program,0,Europe,narrowbody,264,40,Program 013 (narrowbody)
+P014,program,0,Europe,military_transport,105,48,Program 014 (military_transport)
+P015,program,0,USA,widebody,587,38,Program 015 (widebody)
+P016,program,0,USA,regional_jet,668,42,Program 016 (regional_jet)
+P017,program,0,Japan,regional_jet,672,33,Program 017 (regional_jet)
+P018,program,0,Europe,freighter,161,46,Program 018 (freighter)
+P019,program,0,China,freighter,278,37,Program 019 (freighter)
+P020,program,0,USA,widebody,100,45,Program 020 (widebody)
+P021,program,0,USA,military_transport,642,49,Program 021 (military_transport)
+P022,program,0,Japan,widebody,433,38,Program 022 (widebody)
+P023,program,0,China,military_transport,379,39,Program 023 (military_transport)
+P024,program,0,USA,regional_jet,381,7,Program 024 (regional_jet)
+P025,program,0,USA,narrowbody,116,7,Program 025 (narrowbody)
+P026,program,0,USA,freighter,576,14,Program 026 (freighter)
+P027,program,0,Europe,narrowbody,590,40,Program 027 (narrowbody)
+P028,program,0,Europe,freighter,123,21,Program 028 (freighter)
+P029,program,0,Brazil,narrowbody,400,51,Program 029 (narrowbody)
+P030,program,0,USA,widebody,54,29,Program 030 (widebody)
+P031,program,0,Europe,freighter,467,34,Program 031 (freighter)
+P032,program,0,China,military_transport,443,39,Program 032 (military_transport)
+P033,program,0,Canada,regional_jet,582,36,Program 033 (regional_jet)
+P034,program,0,Europe,narrowbody,164,22,Program 034 (narrowbody)
+P035,program,0,USA,widebody,215,34,Program 035 (widebody)
+P036,program,0,USA,military_transport,454,18,Program 036 (military_transport)
+P037,program,0,Brazil,freighter,210,26,Program 037 (freighter)
+P038,program,0,Japan,narrowbody,211,46,Program 038 (narrowbody)
+P039,program,0,China,widebody,562,31,Program 039 (widebody)
+P040,program,0,Brazil,widebody,107,33,Program 040 (widebody)
+P041,program,0,Canada,narrowbody,357,42,Program 041 (narrowbody)
+P042,program,0,China,military_transport,287,23,Program 042 (military_transport)
+P043,program,0,China,freighter,301,48,Program 043 (freighter)
+P044,program,0,USA,narrowbody,513,30,Program 044 (narrowbody)
+P045,program,0,USA,freighter,467,40,Program 045 (freighter)
+P046,program,0,USA,regional_jet,427,40,Program 046 (regional_jet)
+P047,program,0,Europe,narrowbody,377,37,Program 047 (narrowbody)
+P048,program,0,USA,regional_jet,253,43,Program 048 (regional_jet)

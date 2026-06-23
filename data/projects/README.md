@@ -34,8 +34,10 @@ Each dataset folder contains:
 | [`satellite-constellation`](satellite-constellation/) | 298 | 733 | — | ✓ | — | — | Multi-operator LEO satellite comms: orbits, inter-satellite links, ground stations. |
 | [`drone-components`](drone-components/) | 183 | 617 | ✓ | ✓ | — | — | A drone's functional component + software dependency graph (what needs what to fly). |
 | [`transit-multimodal`](transit-multimodal/) | 152 | 384 | — | ✓ | — | — | A city's bus + metro network with neighborhood nodes (hub-spoke + ring). |
+| [`satellite-supply-chain`](satellite-supply-chain/) | 276 | 562 | ✓ | ✓ | — | — | Multi-tier satellite manufacturing supply chain, materials → subsystems → programs. |
+| [`aircraft-supply-chain`](aircraft-supply-chain/) | 300 | 624 | ✓ | ✓ | — | — | Multi-tier commercial-aircraft supply chain, materials → systems → programs. |
 
-All 15 are larger than the lab datasets, mostly weighted, and several are temporal
+All 17 are larger than the lab datasets, mostly weighted, and several are temporal
 (`period`/`day`/`hour`/`week` columns), bipartite, or multimodal (`kind`/`mode`
 columns). `satellite-constellation` and `transit-multimodal` are multi-layer (link
 type / transit mode); `transit-multimodal` is purpose-built for counterfactual
@@ -54,6 +56,7 @@ otherwise a force-directed layout. Click a thumbnail for its dataset.
 | <a href="airline-delays/"><img src="airline-delays/thumb.png" width="260" alt="airline-delays"><br>airline-delays</a> | <a href="power-grid/"><img src="power-grid/thumb.png" width="260" alt="power-grid"><br>power-grid</a> | <a href="campus-contact/"><img src="campus-contact/thumb.png" width="260" alt="campus-contact"><br>campus-contact</a> |
 | <a href="opensource-deps/"><img src="opensource-deps/thumb.png" width="260" alt="opensource-deps"><br>opensource-deps</a> | <a href="trade-commodity/"><img src="trade-commodity/thumb.png" width="260" alt="trade-commodity"><br>trade-commodity</a> | <a href="reorg-comms/"><img src="reorg-comms/thumb.png" width="260" alt="reorg-comms"><br>reorg-comms</a> |
 | <a href="satellite-constellation/"><img src="satellite-constellation/thumb.png" width="260" alt="satellite-constellation"><br>satellite-constellation</a> | <a href="drone-components/"><img src="drone-components/thumb.png" width="260" alt="drone-components"><br>drone-components</a> | <a href="transit-multimodal/"><img src="transit-multimodal/thumb.png" width="260" alt="transit-multimodal"><br>transit-multimodal</a> |
+| <a href="satellite-supply-chain/"><img src="satellite-supply-chain/thumb.png" width="260" alt="satellite-supply-chain"><br>satellite-supply-chain</a> | <a href="aircraft-supply-chain/"><img src="aircraft-supply-chain/thumb.png" width="260" alt="aircraft-supply-chain"><br>aircraft-supply-chain</a> |  |
 
 ## How to use them
 
