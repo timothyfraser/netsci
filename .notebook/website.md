@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-23 19:21 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 19:36 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -3251,6 +3251,8 @@ Reorg Comms (250 nodes)
 Satellite Constellation (298 nodes)
 Drone Components (183 nodes)
 Transit · Multimodal (152 nodes)
+Satellite Supply Chain (276 nodes)
+Aircraft Supply Chain (300 nodes)
 
 
 Edgelist CSV required
@@ -3559,6 +3561,12 @@ A drone's component \+ software dependency graph.
 ![](playground-data/transit-multimodal-thumb.png)transit\-multimodal
 152 nodes · 384 edges
 A city's bus \+ metro network with neighborhood nodes.
+![](playground-data/satellite-supply-chain-thumb.png)satellite\-supply\-chain
+276 nodes · 562 edges
+Multi\-tier satellite supply chain: materials → subsystems → programs.
+![](playground-data/aircraft-supply-chain-thumb.png)aircraft\-supply\-chain
+300 nodes · 624 edges
+Multi\-tier airplane supply chain: materials → systems → programs.
 
 
 ### 📝 Code Editor
@@ -3589,6 +3597,8 @@ Reorg Comms (250 nodes)
 Satellite Constellation (298 nodes)
 Drone Components (183 nodes)
 Transit · Multimodal (152 nodes)
+Satellite Supply Chain (276 nodes)
+Aircraft Supply Chain (300 nodes)
 
 
 ⬆ Upload CSV
@@ -3741,6 +3751,12 @@ A drone's component \+ software dependency graph.
 ![](playground-data/transit-multimodal-thumb.png)transit\-multimodal
 152 nodes · 384 edges
 A city's bus \+ metro network with neighborhood nodes.
+![](playground-data/satellite-supply-chain-thumb.png)satellite\-supply\-chain
+276 nodes · 562 edges
+Multi\-tier satellite supply chain: materials → subsystems → programs.
+![](playground-data/aircraft-supply-chain-thumb.png)aircraft\-supply\-chain
+300 nodes · 624 edges
+Multi\-tier airplane supply chain: materials → systems → programs.
 
 
 ### 📝 Code Editor
@@ -3771,6 +3787,8 @@ Reorg Comms (250 nodes)
 Satellite Constellation (298 nodes)
 Drone Components (183 nodes)
 Transit · Multimodal (152 nodes)
+Satellite Supply Chain (276 nodes)
+Aircraft Supply Chain (300 nodes)
 
 
 ⬆ Upload CSV
@@ -4856,6 +4874,12 @@ A drone's component \+ software dependency graph.
 ![](playground-data/transit-multimodal-thumb.png)transit\-multimodal
 152 nodes · 384 edges
 A city's bus \+ metro network with neighborhood nodes.
+![](playground-data/satellite-supply-chain-thumb.png)satellite\-supply\-chain
+276 nodes · 562 edges
+Multi\-tier satellite supply chain: materials → subsystems → programs.
+![](playground-data/aircraft-supply-chain-thumb.png)aircraft\-supply\-chain
+300 nodes · 624 edges
+Multi\-tier airplane supply chain: materials → systems → programs.
 
 
 Pick a case study — and a project question
@@ -5187,6 +5211,8 @@ WASM virtual filesystem when you pick a sample from the loader dropdown.
 | `satellite-constellation` | 298 | 733 | **Project dataset.** Multi-operator LEO satellites + ground stations, weighted by `capacity_gbps`; `link_type` distinguishes ISL vs feeder. |
 | `drone-components` | 183 | 617 | **Project dataset.** Directed drone component/software dependency graph, weighted by `coupling_strength`. |
 | `transit-multimodal` | 152 | 384 | **Project dataset.** Undirected bus + metro multiplex (`mode`), weighted by `capacity`; ships a `lines.csv` lookup. |
+| `satellite-supply-chain` | 276 | 562 | **Project dataset.** Directed multi-tier satellite supply chain (material→component→subsystem→integrator→program), weighted by `units_per_year`. |
+| `aircraft-supply-chain` | 300 | 624 | **Project dataset.** Directed multi-tier aircraft supply chain (material→component→system→integrator→program), weighted by `units_per_year`. |
 
 All `*-project` datasets above are mirrored from `data/projects/<name>/` by
 `data/projects/_sync_to_playground.py`.
