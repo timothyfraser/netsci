@@ -309,7 +309,7 @@
     'satellite-constellation': 'capacity_gbps', 'drone-components': 'coupling_strength',
     'transit-multimodal': 'capacity',
     'satellite-supply-chain': 'units_per_year', 'aircraft-supply-chain': 'units_per_year',
-    'ups-ground-network': 'packages'
+    'ups-ground-network': 'packages', 'ups-package-flow': 'weight_kg'
   };
 
   function parseCsvUrl(url, cb, err) {

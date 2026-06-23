@@ -45,6 +45,7 @@ ICONS = {
     "satellite-supply-chain":  "📡",
     "aircraft-supply-chain":   "🛩️",
     "ups-ground-network":      "🚛",
+    "ups-package-flow":        "📦",
 }
 
 
