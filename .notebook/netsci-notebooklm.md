@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-23 10:46 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 10:54 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -777,7 +777,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-23 10:46 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 10:54 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -5973,7 +5973,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-23 10:46 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 10:54 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
