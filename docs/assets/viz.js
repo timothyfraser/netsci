@@ -307,7 +307,8 @@
     'campus-contact': 'contact_minutes',    'opensource-deps': 'import_count',
     'trade-commodity': 'tonnes',            'reorg-comms': 'message_count',
     'satellite-constellation': 'capacity_gbps', 'drone-components': 'coupling_strength',
-    'transit-multimodal': 'capacity'
+    'transit-multimodal': 'capacity',
+    'satellite-supply-chain': 'units_per_year', 'aircraft-supply-chain': 'units_per_year'
   };
 
   function parseCsvUrl(url, cb, err) {

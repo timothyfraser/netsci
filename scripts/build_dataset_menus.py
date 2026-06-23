@@ -39,6 +39,8 @@ DATA = [
     ("satellite-constellation", "Multi-operator LEO satellites, links & ground stations."),
     ("drone-components", "A drone's component + software dependency graph."),
     ("transit-multimodal", "A city's bus + metro network with neighborhood nodes."),
+    ("satellite-supply-chain", "Multi-tier satellite supply chain: materials → subsystems → programs."),
+    ("aircraft-supply-chain", "Multi-tier airplane supply chain: materials → systems → programs."),
 ]
 
 GRID = ("display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));"

@@ -42,6 +42,8 @@ ICONS = {
     "satellite-constellation": "🛰️",
     "drone-components":        "🚁",
     "transit-multimodal":      "🚇",
+    "satellite-supply-chain":  "📡",
+    "aircraft-supply-chain":   "🛩️",
 }
 
 
