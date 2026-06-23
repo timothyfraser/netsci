@@ -44,6 +44,7 @@ ICONS = {
     "transit-multimodal":      "🚇",
     "satellite-supply-chain":  "📡",
     "aircraft-supply-chain":   "🛩️",
+    "ups-ground-network":      "🚛",
 }
 
 
