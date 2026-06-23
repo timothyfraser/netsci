@@ -28,6 +28,8 @@
     timeRange: null,  // [min, max]
     selectedNode: null,
     simulation: null,
+    zoom: null,            // d3.zoom behavior
+    zoomTransform: null,   // current pan/zoom transform (persists across renders)
     metrics: {}       // per-node { degree, weighted, betweenness, component }
   };
 
@@ -363,6 +365,7 @@
         .force('center',  d3.forceCenter(W / 2, H / 2))
         .force('collide', d3.forceCollide().radius((d) => 6 + Math.sqrt(d.deg) * 2.2));
       sim.on('tick', render);
+      sim.on('end', () => fitToView());
       if (!state.showDrift) sim.alphaDecay(0.05); else sim.alphaDecay(0.018);
       state.simulation = sim;
     } else if (state.layout === 'radial') {
@@ -456,6 +459,41 @@
       });
       render();
     }
+    // Static layouts are positioned synchronously — fit them right away.
+    if (state.layout !== 'force') fitToView(false);
+  }
+
+  // ── Zoom / pan / fit-to-view ────────────────────────────────
+  function setupZoom() {
+    const svgEl = $('graph'); if (!svgEl) return;
+    const svg = d3.select(svgEl);
+    state.zoom = d3.zoom().scaleExtent([0.05, 8]).on('zoom', (e) => {
+      state.zoomTransform = e.transform;
+      svg.select('g.viewport').attr('transform', e.transform);
+    });
+    svg.call(state.zoom).on('dblclick.zoom', null);
+  }
+
+  function fitToView(animate = true) {
+    if (!state.graph || !state.graph.nodes.length || !state.zoom) return;
+    const svgEl = $('graph');
+    const W = svgEl.clientWidth, H = svgEl.clientHeight;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    state.graph.nodes.forEach((n) => {
+      if (!isFinite(n.x) || !isFinite(n.y)) return;
+      if (n.x < minX) minX = n.x; if (n.x > maxX) maxX = n.x;
+      if (n.y < minY) minY = n.y; if (n.y > maxY) maxY = n.y;
+    });
+    if (!isFinite(minX)) return;
+    const pad = 50;
+    const cw = Math.max(1, maxX - minX), ch = Math.max(1, maxY - minY);
+    let scale = Math.min((W - 2 * pad) / cw, (H - 2 * pad) / ch);
+    scale = Math.max(0.05, Math.min(scale, 4));
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    const t = d3.zoomIdentity.translate(W / 2 - scale * cx, H / 2 - scale * cy).scale(scale);
+    const sel = d3.select(svgEl);
+    if (animate) sel.transition().duration(450).call(state.zoom.transform, t);
+    else sel.call(state.zoom.transform, t);
   }
 
   // Release fixed positions when switching layouts
@@ -500,8 +538,13 @@
     const maxW = d3.max(state.graph.links, (l) => l.weight) || 1;
     const vlinks = visibleLinks();
 
+    // Zoomable / pannable viewport — everything draws inside this group so the
+    // d3.zoom transform pans and scales the whole network together.
+    const root = svg.append('g').attr('class', 'viewport');
+    if (state.zoomTransform) root.attr('transform', state.zoomTransform);
+
     // Edges
-    const g = svg.append('g').attr('class', 'links');
+    const g = root.append('g').attr('class', 'links');
     g.selectAll('line').data(vlinks).enter().append('line')
       .attr('stroke', 'rgba(57,255,20,0.55)')
       .attr('stroke-width', (l) => 0.6 + (l.weight / maxW) * 3.5)
@@ -512,7 +555,7 @@
       .attr('y2', (l) => (l.target.y ?? 0));
 
     if (state.showEdgeLabels) {
-      svg.append('g').selectAll('text').data(vlinks).enter().append('text')
+      root.append('g').selectAll('text').data(vlinks).enter().append('text')
         .attr('x', (l) => ((l.source.x ?? 0) + (l.target.x ?? 0)) / 2)
         .attr('y', (l) => ((l.source.y ?? 0) + (l.target.y ?? 0)) / 2)
         .attr('text-anchor', 'middle')
@@ -523,7 +566,7 @@
     }
 
     // Nodes
-    const ng = svg.append('g').attr('class', 'nodes');
+    const ng = root.append('g').attr('class', 'nodes');
     const nsel = ng.selectAll('g').data(state.graph.nodes).enter().append('g')
       .attr('transform', (n) => `translate(${n.x ?? 0},${n.y ?? 0})`)
       .style('cursor', 'pointer')
@@ -704,6 +747,12 @@
     const sampleSel = $('sample-select');
     if (sampleSel) sampleSel.addEventListener('change', (e) => loadProjectDataset(e.target.value));
 
+    const svgSel = () => d3.select($('graph'));
+    const zin = $('btn-zoom-in'), zout = $('btn-zoom-out'), zfit = $('btn-fit');
+    if (zin)  zin.addEventListener('click',  () => state.zoom && svgSel().transition().duration(180).call(state.zoom.scaleBy, 1.4));
+    if (zout) zout.addEventListener('click', () => state.zoom && svgSel().transition().duration(180).call(state.zoom.scaleBy, 1 / 1.4));
+    if (zfit) zfit.addEventListener('click', () => fitToView());
+
     window.addEventListener('resize', () => { if (state.graph) { layout(); } });
   }
 
@@ -806,6 +855,7 @@
 
   // ── Init ────────────────────────────────────────────────────
   function init() {
+    setupZoom();
     wireControls();
     renderControls();
   }
