@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-23 19:53 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 20:12 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -3254,6 +3254,7 @@ Transit · Multimodal (152 nodes)
 Satellite Supply Chain (276 nodes)
 Aircraft Supply Chain (300 nodes)
 UPS Ground Network (149 nodes)
+UPS Package Flow (149 nodes · 5,200 pkgs)
 
 
 Edgelist CSV required
@@ -3571,6 +3572,9 @@ Multi\-tier airplane supply chain: materials → systems → programs.
 ![](playground-data/ups-ground-network-thumb.png)ups\-ground\-network
 149 nodes · 347 edges
 Truck line\-haul: plant→plant lanes (packages, trucks, distance, transit).
+![](playground-data/ups-package-flow-thumb.png)ups\-package\-flow
+149 nodes · 5,200 edges
+Package\-level parcels: one edge per package, with service \& on\-time.
 
 
 ### 📝 Code Editor
@@ -3604,6 +3608,7 @@ Transit · Multimodal (152 nodes)
 Satellite Supply Chain (276 nodes)
 Aircraft Supply Chain (300 nodes)
 UPS Ground Network (149 nodes)
+UPS Package Flow (5,200 packages)
 
 
 ⬆ Upload CSV
@@ -3765,6 +3770,9 @@ Multi\-tier airplane supply chain: materials → systems → programs.
 ![](playground-data/ups-ground-network-thumb.png)ups\-ground\-network
 149 nodes · 347 edges
 Truck line\-haul: plant→plant lanes (packages, trucks, distance, transit).
+![](playground-data/ups-package-flow-thumb.png)ups\-package\-flow
+149 nodes · 5,200 edges
+Package\-level parcels: one edge per package, with service \& on\-time.
 
 
 ### 📝 Code Editor
@@ -3798,6 +3806,7 @@ Transit · Multimodal (152 nodes)
 Satellite Supply Chain (276 nodes)
 Aircraft Supply Chain (300 nodes)
 UPS Ground Network (149 nodes)
+UPS Package Flow (5,200 packages)
 
 
 ⬆ Upload CSV
@@ -4892,6 +4901,9 @@ Multi\-tier airplane supply chain: materials → systems → programs.
 ![](playground-data/ups-ground-network-thumb.png)ups\-ground\-network
 149 nodes · 347 edges
 Truck line\-haul: plant→plant lanes (packages, trucks, distance, transit).
+![](playground-data/ups-package-flow-thumb.png)ups\-package\-flow
+149 nodes · 5,200 edges
+Package\-level parcels: one edge per package, with service \& on\-time.
 
 
 Pick a case study — and a project question
@@ -5226,6 +5238,7 @@ WASM virtual filesystem when you pick a sample from the loader dropdown.
 | `satellite-supply-chain` | 276 | 562 | **Project dataset.** Directed multi-tier satellite supply chain (material→component→subsystem→integrator→program), weighted by `units_per_year`. |
 | `aircraft-supply-chain` | 300 | 624 | **Project dataset.** Directed multi-tier aircraft supply chain (material→component→system→integrator→program), weighted by `units_per_year`. |
 | `ups-ground-network` | 149 | 347 | **Project dataset.** Directed UPS-style truck line-haul; plant→plant lanes weighted by `packages`, with `trucks`, `distance_km`, `transit_hours`. |
+| `ups-package-flow` | 149 | 5,200 | **Project dataset.** Package-level companion; one directed edge per parcel weighted by `weight_kg`, with `service_level`, `distance_km`, `transit_hours`, `on_time`. |
 
 All `*-project` datasets above are mirrored from `data/projects/<name>/` by
 `data/projects/_sync_to_playground.py`.

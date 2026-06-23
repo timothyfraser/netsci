@@ -1,10 +1,10 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-23 19:53 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 20:12 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
-**146 files included.**
+**150 files included.**
 
 ---
 
@@ -8792,8 +8792,9 @@ Each dataset folder contains:
 | [`satellite-supply-chain`](satellite-supply-chain/) | 276 | 562 | ✓ | ✓ | — | — | Multi-tier satellite manufacturing supply chain, materials → subsystems → programs. |
 | [`aircraft-supply-chain`](aircraft-supply-chain/) | 300 | 624 | ✓ | ✓ | — | — | Multi-tier commercial-aircraft supply chain, materials → systems → programs. |
 | [`ups-ground-network`](ups-ground-network/) | 149 | 347 | ✓ | ✓ | — | — | UPS-style truck line-haul: plant→plant lanes (packages, trucks, distance, transit time). |
+| [`ups-package-flow`](ups-package-flow/) | 149 | 5,200 | ✓ | ✓ | — | — | Package-level companion: one edge per parcel (service, weight, distance, on-time). |
 
-All 18 are larger than the lab datasets, mostly weighted, and several are temporal
+All 19 are larger than the lab datasets, mostly weighted, and several are temporal
 (`period`/`day`/`hour`/`week` columns), bipartite, or multimodal (`kind`/`mode`
 columns). `satellite-constellation` and `transit-multimodal` are multi-layer (link
 type / transit mode); `transit-multimodal` is purpose-built for counterfactual
@@ -8813,6 +8814,7 @@ otherwise a force-directed layout. Click a thumbnail for its dataset.
 | <a href="opensource-deps/"><img src="opensource-deps/thumb.png" width="260" alt="opensource-deps"><br>opensource-deps</a> | <a href="trade-commodity/"><img src="trade-commodity/thumb.png" width="260" alt="trade-commodity"><br>trade-commodity</a> | <a href="reorg-comms/"><img src="reorg-comms/thumb.png" width="260" alt="reorg-comms"><br>reorg-comms</a> |
 | <a href="satellite-constellation/"><img src="satellite-constellation/thumb.png" width="260" alt="satellite-constellation"><br>satellite-constellation</a> | <a href="drone-components/"><img src="drone-components/thumb.png" width="260" alt="drone-components"><br>drone-components</a> | <a href="transit-multimodal/"><img src="transit-multimodal/thumb.png" width="260" alt="transit-multimodal"><br>transit-multimodal</a> |
 | <a href="satellite-supply-chain/"><img src="satellite-supply-chain/thumb.png" width="260" alt="satellite-supply-chain"><br>satellite-supply-chain</a> | <a href="aircraft-supply-chain/"><img src="aircraft-supply-chain/thumb.png" width="260" alt="aircraft-supply-chain"><br>aircraft-supply-chain</a> | <a href="ups-ground-network/"><img src="ups-ground-network/thumb.png" width="260" alt="ups-ground-network"><br>ups-ground-network</a> |
+| <a href="ups-package-flow/"><img src="ups-package-flow/thumb.png" width="260" alt="ups-package-flow"><br>ups-package-flow</a> |  |  |
 
 ## How to use them
 
@@ -8917,6 +8919,7 @@ ICONS = {
     "satellite-supply-chain":  "📡",
     "aircraft-supply-chain":   "🛩️",
     "ups-ground-network":      "🚛",
+    "ups-package-flow":        "📦",
 }
 
 
@@ -18556,7 +18559,7 @@ One row per plant. Every node has every column populated.
 | `x` | Longitude | Plant longitude (decimal degrees). | double | `-85.76`, `-71.06` |
 | `y` | Latitude | Plant latitude (decimal degrees). | double | `38.25`, `42.36` |
 | `daily_packages` | Daily throughput | Nominal parcels handled per day at this plant. | integer | `130710`, `71515`, `29913` |
-| `label` | Display name | Human-readable city / plant name. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Louisville KY`, `Boston MA`, `Ithaca NY` |
+| `label` | Display name | Self-describing plant name: `<city> Gateway` / `<city> Hub` / `<town> Center`. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Louisville KY Gateway`, `Syracuse NY Hub`, `Ithaca NY Center` |
 
 ## `edges.csv`
 
@@ -18567,10 +18570,10 @@ destination plant (`to_id`), aggregated over a day.
 |---|---|---|---|---|
 | `from_id` | Origin plant ID | Sending plant. | character | `C001`, `H001`, `G01` |
 | `to_id` | Destination plant ID | Receiving plant. | character | `H001`, `C001`, `G04` |
-| `packages` | Packages per day | Parcels moved on this lane per day (the edge weight). | integer | `5299`, `24700`, `4545` |
-| `trucks` | Trucks per day | Large trucks dispatched on this lane per day. | integer | `8`, `30`, `7` |
-| `distance_km` | Distance | Lane distance between the two plants, kilometres. | double | `63.0`, `1344.1`, `19.6` |
-| `transit_hours` | Transit time | Door-to-door time in transit on the lane, hours. | double | `4.71`, `20.29`, `2.75` |
+| `packages` | Packages per day | Parcels moved on this lane per day (the edge weight). | integer | `5299`, `26493`, `4545` |
+| `trucks` | Trucks per day | Large trucks dispatched on this lane per day. | integer | `8`, `25`, `7` |
+| `distance_km` | Distance | Lane distance between the two plants, kilometres. | double | `56.7`, `3120.1`, `17.6` |
+| `transit_hours` | Transit time | Door-to-door time in transit on the lane, hours. | double | `4.6`, `45.68`, `2.71` |
 
 A useful derived quantity is **packages ÷ trucks** (parcels per truck): lanes near
 the trailer's capacity have little slack to absorb a disruption.
@@ -18707,14 +18710,52 @@ HUBS = [
     ("Sacramento CA", "West", 38.58, -121.49),
 ]
 
-# A few real satellite towns so the feeder lanes read true (e.g., Ithaca ->
-# Syracuse). Any hub not listed gets generic "<City> Ctr N" centers.
-REAL_CENTERS = {
+# Three real satellite towns per regional hub, so every package center has a
+# recognizable place name (e.g. Ithaca / Utica / Binghamton feed Syracuse).
+CENTER_TOWNS = {
+    # Northeast
+    "Boston MA": ["Cambridge MA", "Worcester MA", "Providence RI"],
     "Syracuse NY": ["Ithaca NY", "Utica NY", "Binghamton NY"],
-    "Boston MA": ["Worcester MA", "Providence RI", "Manchester NH"],
-    "Denver CO": ["Boulder CO", "Fort Collins CO", "Colorado Springs CO"],
-    "Charlotte NC": ["Greensboro NC", "Asheville NC", "Columbia SC"],
-    "Dallas TX": ["Fort Worth TX", "Waco TX", "Tyler TX"],
+    "Albany NY": ["Schenectady NY", "Troy NY", "Saratoga Springs NY"],
+    "Buffalo NY": ["Niagara Falls NY", "Rochester NY", "Jamestown NY"],
+    "Hartford CT": ["New Haven CT", "Springfield MA", "Waterbury CT"],
+    # Mid-Atlantic
+    "New York NY": ["Newark NJ", "Yonkers NY", "Jersey City NJ"],
+    "Philadelphia PA": ["Camden NJ", "Wilmington DE", "Allentown PA"],
+    "Pittsburgh PA": ["Greensburg PA", "Washington PA", "Altoona PA"],
+    "Baltimore MD": ["Annapolis MD", "Towson MD", "Frederick MD"],
+    "Richmond VA": ["Petersburg VA", "Charlottesville VA", "Fredericksburg VA"],
+    # Southeast
+    "Charlotte NC": ["Gastonia NC", "Concord NC", "Rock Hill SC"],
+    "Nashville TN": ["Murfreesboro TN", "Franklin TN", "Clarksville TN"],
+    "Orlando FL": ["Kissimmee FL", "Sanford FL", "Lakeland FL"],
+    "Miami FL": ["Fort Lauderdale FL", "Hialeah FL", "West Palm Beach FL"],
+    "Memphis TN": ["Southaven MS", "Jackson TN", "West Memphis AR"],
+    # Midwest
+    "Indianapolis IN": ["Carmel IN", "Bloomington IN", "Lafayette IN"],
+    "Columbus OH": ["Dublin OH", "Newark OH", "Lancaster OH"],
+    "Detroit MI": ["Ann Arbor MI", "Warren MI", "Dearborn MI"],
+    "Minneapolis MN": ["St Paul MN", "Bloomington MN", "Rochester MN"],
+    "St Louis MO": ["St Charles MO", "Florissant MO", "Belleville IL"],
+    "Kansas City MO": ["Overland Park KS", "Independence MO", "Olathe KS"],
+    # South
+    "Houston TX": ["Pasadena TX", "Sugar Land TX", "Galveston TX"],
+    "San Antonio TX": ["New Braunfels TX", "Schertz TX", "Seguin TX"],
+    "Austin TX": ["Round Rock TX", "San Marcos TX", "Georgetown TX"],
+    "New Orleans LA": ["Metairie LA", "Baton Rouge LA", "Slidell LA"],
+    "Oklahoma City OK": ["Norman OK", "Edmond OK", "Moore OK"],
+    # Mountain
+    "Denver CO": ["Boulder CO", "Aurora CO", "Fort Collins CO"],
+    "Salt Lake City UT": ["Provo UT", "Ogden UT", "Orem UT"],
+    "Phoenix AZ": ["Mesa AZ", "Tempe AZ", "Scottsdale AZ"],
+    "Albuquerque NM": ["Santa Fe NM", "Rio Rancho NM", "Los Lunas NM"],
+    # West
+    "Los Angeles CA": ["Long Beach CA", "Anaheim CA", "Pasadena CA"],
+    "San Francisco CA": ["Oakland CA", "San Jose CA", "Berkeley CA"],
+    "Seattle WA": ["Tacoma WA", "Bellevue WA", "Everett WA"],
+    "Portland OR": ["Beaverton OR", "Gresham OR", "Salem OR"],
+    "Las Vegas NV": ["Henderson NV", "North Las Vegas NV", "Pahrump NV"],
+    "Sacramento CA": ["Roseville CA", "Elk Grove CA", "Davis CA"],
 }
 
 
@@ -18744,7 +18785,7 @@ def main() -> None:
         rows.append({"node_id": nid, "kind": "gateway", "region": region,
                      "x": round(lon, 3), "y": round(lat, 3),
                      "daily_packages": int(rng.integers(120000, 240000)),
-                     "label": city})
+                     "label": f"{city} Gateway"})
     gw_by_city = {GATEWAYS[i][0]: gateway_ids[i] for i in range(len(GATEWAYS))}
 
     # ----- hubs -----------------------------------------------------------
@@ -18758,7 +18799,7 @@ def main() -> None:
         rows.append({"node_id": nid, "kind": "hub", "region": region,
                      "x": round(lon, 3), "y": round(lat, 3),
                      "daily_packages": int(rng.integers(20000, 80000)),
-                     "label": city})
+                     "label": f"{city} Hub"})
 
     # ----- centers (origin/destination plants) ----------------------------
     center_ids = []
@@ -18767,21 +18808,16 @@ def main() -> None:
     for h in hub_ids:
         city = hub_city[h]
         hlat, hlon = coord[h]
-        names = REAL_CENTERS.get(city)
+        towns = CENTER_TOWNS[city]
         for k in range(CENTERS_PER_HUB):
             cidx += 1
             nid = f"C{cidx:03d}"
             center_ids.append(nid)
             centers_of_hub[h].append(nid)
-            if names and k < len(names):
-                lbl = names[k]
-                # nudge coords toward a plausible nearby spot
-                clat = hlat + rng.normal(0, 0.5)
-                clon = hlon + rng.normal(0, 0.5)
-            else:
-                lbl = f"{city} Ctr {k+1}"
-                clat = hlat + rng.normal(0, 0.45)
-                clon = hlon + rng.normal(0, 0.45)
+            lbl = f"{towns[k]} Center"
+            # nudge coords toward a plausible nearby spot
+            clat = hlat + rng.normal(0, 0.45)
+            clon = hlon + rng.normal(0, 0.45)
             coord[nid] = (clat, clon); region_of[nid] = region_of[h]; kind_of[nid] = "center"
             rows.append({"node_id": nid, "kind": "center", "region": region_of[h],
                          "x": round(clon, 3), "y": round(clat, 3),
@@ -19016,6 +19052,502 @@ if __name__ == "__main__":
           f"{edges['transit_hours'].mean():.1f} h")
     print("🎉 Graph ready. Object `g` is a directed, weighted igraph "
           "(weight = packages).")
+```
+
+---
+
+## `data/projects/ups-package-flow/README.md`
+
+# ups-package-flow
+
+*The package-level companion to `ups-ground-network` — one row per individual
+parcel, origin plant → destination plant, with its service, weight, distance, and
+whether it arrived on time.*
+
+![Preview of the ups-package-flow network](thumb.png)
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Directed (a parcel goes from its origin plant to its destination plant) |
+| **Weights** | Weighted (`weight_kg`; each parcel also carries distance, transit, promise, on-time) |
+| **Unit of analysis** | **The individual package** — one edge per parcel (a directed multigraph) |
+| **Modality** | Multimodal plants (`gateway`, `hub`, `center`) across the continental US |
+| **Temporal** | No — a single day of shipments |
+| **Nodes** | 149 plants (5 gateway + 36 hub + 108 center) |
+| **Edges** | 5,200 packages |
+| **Files** | `nodes.csv`, `edges.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+This is the **disaggregated** view of the same parcel system as
+[`ups-ground-network`](../ups-ground-network/). There, each row is a truck *lane*
+(the unit of analysis is the truck). **Here, each row is a single package** — its
+origin plant, its destination plant, and what happened to it. Group the package
+rows by `(from_id, to_id)` and you get back a lane-level view; that round trip is
+half the point.
+
+Each parcel records its `service_level` (ground / two-day / overnight), its
+`weight_kg`, the `distance_km` between origin and destination, the actual
+`transit_hours`, the `promised_hours` for its service, whether it was `on_time`,
+and whether it was `damaged`. Plants carry coordinates (`x` = longitude,
+`y` = latitude), a `region`, and a daily throughput.
+
+This is a service-performance and inference network. Some questions to chew on:
+
+- Which plants are the worst to *ship to*? Rank destinations by on-time rate — and
+  check whether that ranking just reflects how far away they are, or something
+  else.
+- Is there a service gap that survives controlling for distance and service level?
+  Who eats it?
+- Do cross-region parcels arrive late more often than within-region ones the same
+  distance apart? Is the penalty the same for every service tier?
+- Aggregate to lanes (sum packages, average transit) — does the busy-lane picture
+  match the package-level one, or does aggregation hide who is being failed?
+- Build a model to predict `on_time` from package + network features. What carries
+  the signal — distance, service, destination, region crossing?
+
+> **Note.** The interesting findings here are deliberately *not* documented.
+> "Farther parcels take longer" is the starting point, not a finding. Push past it
+> — control for the obvious things and see what's left.
+
+## `nodes.csv`
+
+One row per plant. Every node has every column populated.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique key. `G##` gateway, `H###` hub, `C###` center. Referenced by edges. | character | `G01`, `H001`, `C054` |
+| `kind` | Plant kind | Role in the network. | character | `gateway`, `hub`, `center` |
+| `region` | Region | US region the plant sits in. | character | `Northeast`, `Mid-Atlantic`, `Southeast`, `Midwest`, `South`, `Mountain`, `West` |
+| `x` | Longitude | Plant longitude (decimal degrees). | double | `-85.76`, `-71.06` |
+| `y` | Latitude | Plant latitude (decimal degrees). | double | `38.25`, `42.36` |
+| `daily_packages` | Daily throughput | Nominal parcels handled per day at this plant. | integer | `130710`, `71515`, `4820` |
+| `label` | Display name | Self-describing plant name: `<city> Gateway` / `<city> Hub` / `<town> Center`. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Louisville KY Gateway`, `Boston MA Hub`, `Cambridge MA Center` |
+
+## `edges.csv`
+
+One row per **package**, directed from the origin plant (`from_id`) to the
+destination plant (`to_id`).
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | Origin plant ID | Where the parcel was inducted. | character | `C054`, `C052`, `C092` |
+| `to_id` | Destination plant ID | Where the parcel is delivered. | character | `C010`, `C047`, `C058` |
+| `package_id` | Package ID | Unique parcel identifier. | character | `PKG000001`, `PKG005200` |
+| `service_level` | Service level | Service tier purchased. | character | `ground`, `two_day`, `overnight` |
+| `weight_kg` | Weight | Parcel weight, kilograms. | double | `1.21`, `3.18`, `12.4` |
+| `distance_km` | Distance | Great-circle distance origin → destination, kilometres. | double | `361.4`, `2441.2` |
+| `transit_hours` | Transit time | Actual time in transit, hours. | double | `30.23`, `32.08` |
+| `promised_hours` | Promised time | Service commitment for this parcel, hours. | double | `30.6`, `48.0` |
+| `on_time` | On time | 1 if `transit_hours <= promised_hours`, else 0. | integer | `1`, `0` |
+| `damaged` | Damaged | 1 if the parcel was damaged in transit, else 0. | integer | `0`, `1` |
+
+## Load it
+
+```bash
+Rscript data/projects/ups-package-flow/load.R     # R    (igraph)
+python  data/projects/ups-package-flow/load.py     # Python (python-igraph)
+```
+
+Both build a directed, weighted `igraph` **multigraph** (one edge per package) and
+print a one-screen summary. In the
+[R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**ups-package-flow** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/ups-package-flow>
+
+---
+
+## `data/projects/ups-package-flow/_generate.py`
+
+```python
+"""Generate the `ups-package-flow` project network (deterministic).
+
+The PACKAGE-LEVEL companion to `ups-ground-network`: where that dataset
+aggregates flow to one row per truck lane, here the **unit of analysis is the
+individual package** -- one row per parcel. Each parcel is a directed edge from
+its origin plant to its destination plant, so the edge list is a directed
+multigraph over the same plant universe (gateways / hubs / centers). Aggregating
+the package rows by (from_id, to_id) reproduces a lane-level view.
+
+Per-package attributes: service_level, weight_kg, distance_km, transit_hours,
+promised_hours, on_time, damaged.
+
+Node attributes: kind, region, x (lon), y (lat), daily_packages, label.
+
+Design parameters (the only record of the planted structure):
+  - SERVICE mix drives the promise: `overnight` < `two_day` < `ground` lead time;
+    on_time = (transit_hours <= promised_hours).
+  - CROSS_REGION_PENALTY: parcels whose origin and destination are in different
+    regions take extra hours (more hand-offs across the backbone) *independent of
+    distance*, so their on-time rate is worse even after controlling for distance.
+  - RURAL_DEST_PENALTY: parcels delivered to low-throughput (rural) destination
+    plants run slower *controlling for distance* -- a planted service-equity gap.
+  - WEIGHT effects: heavier parcels are a little slower and a little more likely
+    to be `damaged`.
+  - Distance is real (haversine of plant coordinates).
+
+Run:
+    python data/projects/ups-package-flow/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import math
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+N_PACKAGES = 5200
+CENTERS_PER_HUB = 3
+
+# planted effect sizes (hours unless noted)
+CROSS_REGION_PENALTY = (5.0, 16.0)   # uniform extra hours for inter-region parcels
+RURAL_DEST_MAX = 13.0                 # max extra hours for the smallest dest plant
+HEAVY_PENALTY_PER_KG = 0.25          # extra hours per kg over 5 kg
+DAMAGE_BASE = 0.012
+
+# (city, region, lat, lon)
+GATEWAYS = [
+    ("Louisville KY", "Midwest", 38.25, -85.76),
+    ("Chicago IL", "Midwest", 41.88, -87.63),
+    ("Dallas TX", "South", 32.78, -96.80),
+    ("Atlanta GA", "Southeast", 33.75, -84.39),
+    ("Ontario CA", "West", 34.06, -117.65),
+]
+HUBS = [
+    ("Boston MA", "Northeast", 42.36, -71.06), ("Syracuse NY", "Northeast", 43.05, -76.15),
+    ("Albany NY", "Northeast", 42.65, -73.76), ("Buffalo NY", "Northeast", 42.89, -78.88),
+    ("Hartford CT", "Northeast", 41.76, -72.69),
+    ("New York NY", "Mid-Atlantic", 40.71, -74.01), ("Philadelphia PA", "Mid-Atlantic", 39.95, -75.17),
+    ("Pittsburgh PA", "Mid-Atlantic", 40.44, -79.99), ("Baltimore MD", "Mid-Atlantic", 39.29, -76.61),
+    ("Richmond VA", "Mid-Atlantic", 37.54, -77.44),
+    ("Charlotte NC", "Southeast", 35.23, -80.84), ("Nashville TN", "Southeast", 36.16, -86.78),
+    ("Orlando FL", "Southeast", 28.54, -81.38), ("Miami FL", "Southeast", 25.76, -80.19),
+    ("Memphis TN", "Southeast", 35.15, -90.05),
+    ("Indianapolis IN", "Midwest", 39.77, -86.16), ("Columbus OH", "Midwest", 39.96, -82.99),
+    ("Detroit MI", "Midwest", 42.33, -83.05), ("Minneapolis MN", "Midwest", 44.98, -93.27),
+    ("St Louis MO", "Midwest", 38.63, -90.20), ("Kansas City MO", "Midwest", 39.10, -94.58),
+    ("Houston TX", "South", 29.76, -95.37), ("San Antonio TX", "South", 29.42, -98.49),
+    ("Austin TX", "South", 30.27, -97.74), ("New Orleans LA", "South", 29.95, -90.07),
+    ("Oklahoma City OK", "South", 35.47, -97.52),
+    ("Denver CO", "Mountain", 39.74, -104.99), ("Salt Lake City UT", "Mountain", 40.76, -111.89),
+    ("Phoenix AZ", "Mountain", 33.45, -112.07), ("Albuquerque NM", "Mountain", 35.08, -106.65),
+    ("Los Angeles CA", "West", 34.05, -118.24), ("San Francisco CA", "West", 37.77, -122.42),
+    ("Seattle WA", "West", 47.61, -122.33), ("Portland OR", "West", 45.52, -122.68),
+    ("Las Vegas NV", "West", 36.17, -115.14), ("Sacramento CA", "West", 38.58, -121.49),
+]
+CENTER_TOWNS = {
+    "Boston MA": ["Cambridge MA", "Worcester MA", "Providence RI"],
+    "Syracuse NY": ["Ithaca NY", "Utica NY", "Binghamton NY"],
+    "Albany NY": ["Schenectady NY", "Troy NY", "Saratoga Springs NY"],
+    "Buffalo NY": ["Niagara Falls NY", "Rochester NY", "Jamestown NY"],
+    "Hartford CT": ["New Haven CT", "Springfield MA", "Waterbury CT"],
+    "New York NY": ["Newark NJ", "Yonkers NY", "Jersey City NJ"],
+    "Philadelphia PA": ["Camden NJ", "Wilmington DE", "Allentown PA"],
+    "Pittsburgh PA": ["Greensburg PA", "Washington PA", "Altoona PA"],
+    "Baltimore MD": ["Annapolis MD", "Towson MD", "Frederick MD"],
+    "Richmond VA": ["Petersburg VA", "Charlottesville VA", "Fredericksburg VA"],
+    "Charlotte NC": ["Gastonia NC", "Concord NC", "Rock Hill SC"],
+    "Nashville TN": ["Murfreesboro TN", "Franklin TN", "Clarksville TN"],
+    "Orlando FL": ["Kissimmee FL", "Sanford FL", "Lakeland FL"],
+    "Miami FL": ["Fort Lauderdale FL", "Hialeah FL", "West Palm Beach FL"],
+    "Memphis TN": ["Southaven MS", "Jackson TN", "West Memphis AR"],
+    "Indianapolis IN": ["Carmel IN", "Bloomington IN", "Lafayette IN"],
+    "Columbus OH": ["Dublin OH", "Newark OH", "Lancaster OH"],
+    "Detroit MI": ["Ann Arbor MI", "Warren MI", "Dearborn MI"],
+    "Minneapolis MN": ["St Paul MN", "Bloomington MN", "Rochester MN"],
+    "St Louis MO": ["St Charles MO", "Florissant MO", "Belleville IL"],
+    "Kansas City MO": ["Overland Park KS", "Independence MO", "Olathe KS"],
+    "Houston TX": ["Pasadena TX", "Sugar Land TX", "Galveston TX"],
+    "San Antonio TX": ["New Braunfels TX", "Schertz TX", "Seguin TX"],
+    "Austin TX": ["Round Rock TX", "San Marcos TX", "Georgetown TX"],
+    "New Orleans LA": ["Metairie LA", "Baton Rouge LA", "Slidell LA"],
+    "Oklahoma City OK": ["Norman OK", "Edmond OK", "Moore OK"],
+    "Denver CO": ["Boulder CO", "Aurora CO", "Fort Collins CO"],
+    "Salt Lake City UT": ["Provo UT", "Ogden UT", "Orem UT"],
+    "Phoenix AZ": ["Mesa AZ", "Tempe AZ", "Scottsdale AZ"],
+    "Albuquerque NM": ["Santa Fe NM", "Rio Rancho NM", "Los Lunas NM"],
+    "Los Angeles CA": ["Long Beach CA", "Anaheim CA", "Pasadena CA"],
+    "San Francisco CA": ["Oakland CA", "San Jose CA", "Berkeley CA"],
+    "Seattle WA": ["Tacoma WA", "Bellevue WA", "Everett WA"],
+    "Portland OR": ["Beaverton OR", "Gresham OR", "Salem OR"],
+    "Las Vegas NV": ["Henderson NV", "North Las Vegas NV", "Pahrump NV"],
+    "Sacramento CA": ["Roseville CA", "Elk Grove CA", "Davis CA"],
+}
+SERVICES = ["ground", "two_day", "overnight"]
+SERVICE_P = [0.62, 0.26, 0.12]
+
+
+def haversine_km(a_lat, a_lon, b_lat, b_lon):
+    R = 6371.0
+    p1, p2 = math.radians(a_lat), math.radians(b_lat)
+    dphi = math.radians(b_lat - a_lat)
+    dlmb = math.radians(b_lon - a_lon)
+    h = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlmb / 2) ** 2
+    return 2 * R * math.asin(math.sqrt(h))
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    rows = []
+    coord = {}
+    for i, (city, region, lat, lon) in enumerate(GATEWAYS):
+        nid = f"G{i+1:02d}"; coord[nid] = (lat, lon)
+        rows.append({"node_id": nid, "kind": "gateway", "region": region,
+                     "x": round(lon, 3), "y": round(lat, 3),
+                     "daily_packages": int(rng.integers(120000, 240000)),
+                     "label": f"{city} Gateway"})
+    hub_ids, hub_city = [], {}
+    for i, (city, region, lat, lon) in enumerate(HUBS):
+        nid = f"H{i+1:03d}"; hub_ids.append(nid); hub_city[nid] = city; coord[nid] = (lat, lon)
+        rows.append({"node_id": nid, "kind": "hub", "region": region,
+                     "x": round(lon, 3), "y": round(lat, 3),
+                     "daily_packages": int(rng.integers(20000, 80000)),
+                     "label": f"{city} Hub"})
+    center_ids = []
+    cidx = 0
+    for h in hub_ids:
+        city = hub_city[h]; hlat, hlon = coord[h]
+        for k in range(CENTERS_PER_HUB):
+            cidx += 1; nid = f"C{cidx:03d}"; center_ids.append(nid)
+            clat = hlat + rng.normal(0, 0.45); clon = hlon + rng.normal(0, 0.45)
+            coord[nid] = (clat, clon)
+            rows.append({"node_id": nid, "kind": "center",
+                         "region": next(r for c, r, *_ in HUBS if c == city),
+                         "x": round(clon, 3), "y": round(clat, 3),
+                         "daily_packages": int(rng.integers(1500, 9000)),
+                         "label": f"{CENTER_TOWNS[city][k]} Center"})
+
+    nodes = pd.DataFrame(rows)
+    region_of = dict(zip(nodes.node_id, nodes.region))
+    size_of = dict(zip(nodes.node_id, nodes.daily_packages))
+
+    # parcels originate and terminate at local centers
+    centers = np.array(center_ids)
+    csize = np.array([size_of[c] for c in centers], dtype=float)
+    p_origin = csize / csize.sum()
+    # destination size normaliser for the rural-dest penalty (0 = smallest)
+    smin, smax = csize.min(), csize.max()
+    size_norm = {c: (size_of[c] - smin) / (smax - smin) for c in center_ids}
+    clat = {c: coord[c][0] for c in center_ids}
+    clon = {c: coord[c][1] for c in center_ids}
+
+    origins = rng.choice(centers, size=N_PACKAGES, p=p_origin)
+    services = rng.choice(SERVICES, size=N_PACKAGES, p=SERVICE_P)
+
+    eds = []
+    for i in range(N_PACKAGES):
+        o = origins[i]
+        # destination: distance-decayed, size-weighted, not the origin
+        olat, olon = coord[o]
+        d_to = np.array([haversine_km(olat, olon, clat[c], clon[c]) for c in centers])
+        w = csize / (1.0 + (d_to / 800.0) ** 2)
+        w[centers == o] = 0.0
+        w = w / w.sum()
+        dest = centers[rng.choice(len(centers), p=w)]
+        dist = haversine_km(olat, olon, clat[dest], clon[dest])
+
+        svc = services[i]
+        wkg = float(np.clip(rng.lognormal(0.6, 0.8), 0.1, 40.0))
+
+        if svc == "ground":
+            transit = dist / 80.0 + rng.uniform(8, 20)
+            promised = 24.0 + dist / 55.0
+            pscale = 1.0                  # ground rides the full hand-off chain
+        elif svc == "two_day":
+            transit = dist / 280.0 + rng.uniform(14, 26)
+            promised = 48.0
+            pscale = 0.6
+        else:  # overnight (air) — bypasses most ground hand-off delay
+            transit = dist / 650.0 + rng.uniform(9, 16)
+            promised = 30.0
+            pscale = 0.3
+
+        # planted penalties (independent of distance), scaled by service mode
+        pen = 0.0
+        if region_of[o] != region_of[dest]:
+            pen += rng.uniform(*CROSS_REGION_PENALTY)                 # cross-region hand-offs
+        pen += RURAL_DEST_MAX * (1.0 - size_norm[dest])              # rural dest gap
+        if wkg > 5.0:
+            pen += (wkg - 5.0) * HEAVY_PENALTY_PER_KG
+        transit += pen * pscale + rng.normal(0, 3.0)                  # + noise
+        transit = max(1.0, round(transit, 2))
+        promised = round(promised, 1)
+
+        on_time = int(transit <= promised)
+        p_damage = DAMAGE_BASE + max(0.0, (wkg - 10.0)) * 0.004 + \
+            (0.01 if region_of[o] != region_of[dest] else 0.0)
+        damaged = int(rng.random() < p_damage)
+
+        eds.append({
+            "from_id": o, "to_id": dest, "package_id": f"PKG{i+1:06d}",
+            "service_level": svc, "weight_kg": round(wkg, 2),
+            "distance_km": round(dist, 1), "transit_hours": round(transit, 2),
+            "promised_hours": round(promised, 1), "on_time": on_time,
+            "damaged": damaged,
+        })
+
+    edges = pd.DataFrame(eds)
+    nodes = nodes[["node_id", "kind", "region", "x", "y", "daily_packages", "label"]]
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+
+    kc = nodes.kind.value_counts()
+    print(f"ups-package-flow: {len(nodes)} plants "
+          f"({kc.get('gateway',0)} gateway + {kc.get('hub',0)} hub + "
+          f"{kc.get('center',0)} center), {len(edges)} packages. "
+          f"on-time {edges.on_time.mean():.1%}, damaged {edges.damaged.mean():.1%}.")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/ups-package-flow/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `ups-package-flow` project network (R)
+#' @description
+#'
+#' Reads the two CSVs in this folder and builds a directed, weighted igraph
+#' multigraph where the **unit of analysis is the individual package**: one edge
+#' per parcel, from its origin plant to its destination plant. Run it straight
+#' (`Rscript load.R`) for a quick summary, or `source()` it and call
+#' `load_packages()` in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "ups-package-flow")
+
+#' Load the node table (one row per plant: gateway / hub / center).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per package).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the directed, weighted multigraph (one edge per package).
+#'
+#' Edge weight is `weight_kg`. Each package edge also carries `service_level`,
+#' `distance_km`, `transit_hours`, `promised_hours`, `on_time`, and `damaged`.
+#' Aggregate the edges by (from, to) to recover a lane-level view, or summarise
+#' `on_time` by destination plant to compare service across facilities.
+load_packages <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = TRUE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$weight_kg
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n📦 ups-package-flow (R)\n")
+  cat("   One edge per package: origin plant -> destination plant;",
+      "weight = weight_kg.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_packages(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d plants (%d gateway, %d hub, %d center) and %d packages.\n",
+              nrow(nodes), sum(nodes$kind == "gateway"),
+              sum(nodes$kind == "hub"), sum(nodes$kind == "center"),
+              nrow(edges)))
+  cat(sprintf("🔗 Directed: %s | on-time: %.1f%% | damaged: %.1f%% | mean transit: %.1f h\n",
+              is_directed(g),
+              100 * mean(edges$on_time), 100 * mean(edges$damaged),
+              mean(edges$transit_hours)))
+  cat("🎉 Graph ready. `g` is a directed, weighted multigraph (weight = weight_kg).\n")
+}
+```
+
+---
+
+## `data/projects/ups-package-flow/load.py`
+
+```python
+"""Load the `ups-package-flow` project network (Python).
+
+Reads the two CSVs in this folder and builds a directed, weighted python-igraph
+multigraph where the **unit of analysis is the individual package**: one edge per
+parcel, from its origin plant to its destination plant. Run it straight
+(``python load.py``) for a quick summary, or import ``load_packages()`` into your
+own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per plant (gateway / hub / center)."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per package."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_packages(nodes: pd.DataFrame | None = None,
+                  edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the directed, weighted multigraph (one edge per package).
+
+    Edge weight is ``weight_kg``. Each package edge also carries
+    ``service_level``, ``distance_km``, ``transit_hours``, ``promised_hours``,
+    ``on_time``, and ``damaged``. Aggregate the edges by (from, to) to recover a
+    lane-level view, or summarise ``on_time`` by destination plant to compare
+    service across facilities.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=True, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["weight_kg"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n📦 ups-package-flow (Python)")
+    print("   One edge per package: origin plant -> destination plant; "
+          "weight = weight_kg.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_packages(nodes, edges)
+
+    kinds = nodes["kind"].value_counts()
+    print(f"✅ Loaded {len(nodes)} plants "
+          f"({kinds.get('gateway',0)} gateway, {kinds.get('hub',0)} hub, "
+          f"{kinds.get('center',0)} center) and {len(edges)} packages.")
+    print(f"🔗 Directed: {g.is_directed()} | on-time: "
+          f"{100 * edges['on_time'].mean():.1f}% | damaged: "
+          f"{100 * edges['damaged'].mean():.1f}% | mean transit: "
+          f"{edges['transit_hours'].mean():.1f} h")
+    print("🎉 Graph ready. Object `g` is a directed, weighted multigraph "
+          "(weight = weight_kg).")
 ```
 
 ---
