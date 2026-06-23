@@ -64,7 +64,7 @@ One row per plant. Every node has every column populated.
 | `x` | Longitude | Plant longitude (decimal degrees). | double | `-85.76`, `-71.06` |
 | `y` | Latitude | Plant latitude (decimal degrees). | double | `38.25`, `42.36` |
 | `daily_packages` | Daily throughput | Nominal parcels handled per day at this plant. | integer | `130710`, `71515`, `29913` |
-| `label` | Display name | Human-readable city / plant name. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Louisville KY`, `Boston MA`, `Ithaca NY` |
+| `label` | Display name | Self-describing plant name: `<city> Gateway` / `<city> Hub` / `<town> Center`. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Louisville KY Gateway`, `Syracuse NY Hub`, `Ithaca NY Center` |
 
 ## `edges.csv`
 
@@ -75,10 +75,10 @@ destination plant (`to_id`), aggregated over a day.
 |---|---|---|---|---|
 | `from_id` | Origin plant ID | Sending plant. | character | `C001`, `H001`, `G01` |
 | `to_id` | Destination plant ID | Receiving plant. | character | `H001`, `C001`, `G04` |
-| `packages` | Packages per day | Parcels moved on this lane per day (the edge weight). | integer | `5299`, `24700`, `4545` |
-| `trucks` | Trucks per day | Large trucks dispatched on this lane per day. | integer | `8`, `30`, `7` |
-| `distance_km` | Distance | Lane distance between the two plants, kilometres. | double | `63.0`, `1344.1`, `19.6` |
-| `transit_hours` | Transit time | Door-to-door time in transit on the lane, hours. | double | `4.71`, `20.29`, `2.75` |
+| `packages` | Packages per day | Parcels moved on this lane per day (the edge weight). | integer | `5299`, `26493`, `4545` |
+| `trucks` | Trucks per day | Large trucks dispatched on this lane per day. | integer | `8`, `25`, `7` |
+| `distance_km` | Distance | Lane distance between the two plants, kilometres. | double | `56.7`, `3120.1`, `17.6` |
+| `transit_hours` | Transit time | Door-to-door time in transit on the lane, hours. | double | `4.6`, `45.68`, `2.71` |
 
 A useful derived quantity is **packages ÷ trucks** (parcels per truck): lanes near
 the trailer's capacity have little slack to absorb a disruption.

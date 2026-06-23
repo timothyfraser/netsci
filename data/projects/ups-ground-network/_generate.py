@@ -108,14 +108,52 @@ HUBS = [
     ("Sacramento CA", "West", 38.58, -121.49),
 ]
 
-# A few real satellite towns so the feeder lanes read true (e.g., Ithaca ->
-# Syracuse). Any hub not listed gets generic "<City> Ctr N" centers.
-REAL_CENTERS = {
+# Three real satellite towns per regional hub, so every package center has a
+# recognizable place name (e.g. Ithaca / Utica / Binghamton feed Syracuse).
+CENTER_TOWNS = {
+    # Northeast
+    "Boston MA": ["Cambridge MA", "Worcester MA", "Providence RI"],
     "Syracuse NY": ["Ithaca NY", "Utica NY", "Binghamton NY"],
-    "Boston MA": ["Worcester MA", "Providence RI", "Manchester NH"],
-    "Denver CO": ["Boulder CO", "Fort Collins CO", "Colorado Springs CO"],
-    "Charlotte NC": ["Greensboro NC", "Asheville NC", "Columbia SC"],
-    "Dallas TX": ["Fort Worth TX", "Waco TX", "Tyler TX"],
+    "Albany NY": ["Schenectady NY", "Troy NY", "Saratoga Springs NY"],
+    "Buffalo NY": ["Niagara Falls NY", "Rochester NY", "Jamestown NY"],
+    "Hartford CT": ["New Haven CT", "Springfield MA", "Waterbury CT"],
+    # Mid-Atlantic
+    "New York NY": ["Newark NJ", "Yonkers NY", "Jersey City NJ"],
+    "Philadelphia PA": ["Camden NJ", "Wilmington DE", "Allentown PA"],
+    "Pittsburgh PA": ["Greensburg PA", "Washington PA", "Altoona PA"],
+    "Baltimore MD": ["Annapolis MD", "Towson MD", "Frederick MD"],
+    "Richmond VA": ["Petersburg VA", "Charlottesville VA", "Fredericksburg VA"],
+    # Southeast
+    "Charlotte NC": ["Gastonia NC", "Concord NC", "Rock Hill SC"],
+    "Nashville TN": ["Murfreesboro TN", "Franklin TN", "Clarksville TN"],
+    "Orlando FL": ["Kissimmee FL", "Sanford FL", "Lakeland FL"],
+    "Miami FL": ["Fort Lauderdale FL", "Hialeah FL", "West Palm Beach FL"],
+    "Memphis TN": ["Southaven MS", "Jackson TN", "West Memphis AR"],
+    # Midwest
+    "Indianapolis IN": ["Carmel IN", "Bloomington IN", "Lafayette IN"],
+    "Columbus OH": ["Dublin OH", "Newark OH", "Lancaster OH"],
+    "Detroit MI": ["Ann Arbor MI", "Warren MI", "Dearborn MI"],
+    "Minneapolis MN": ["St Paul MN", "Bloomington MN", "Rochester MN"],
+    "St Louis MO": ["St Charles MO", "Florissant MO", "Belleville IL"],
+    "Kansas City MO": ["Overland Park KS", "Independence MO", "Olathe KS"],
+    # South
+    "Houston TX": ["Pasadena TX", "Sugar Land TX", "Galveston TX"],
+    "San Antonio TX": ["New Braunfels TX", "Schertz TX", "Seguin TX"],
+    "Austin TX": ["Round Rock TX", "San Marcos TX", "Georgetown TX"],
+    "New Orleans LA": ["Metairie LA", "Baton Rouge LA", "Slidell LA"],
+    "Oklahoma City OK": ["Norman OK", "Edmond OK", "Moore OK"],
+    # Mountain
+    "Denver CO": ["Boulder CO", "Aurora CO", "Fort Collins CO"],
+    "Salt Lake City UT": ["Provo UT", "Ogden UT", "Orem UT"],
+    "Phoenix AZ": ["Mesa AZ", "Tempe AZ", "Scottsdale AZ"],
+    "Albuquerque NM": ["Santa Fe NM", "Rio Rancho NM", "Los Lunas NM"],
+    # West
+    "Los Angeles CA": ["Long Beach CA", "Anaheim CA", "Pasadena CA"],
+    "San Francisco CA": ["Oakland CA", "San Jose CA", "Berkeley CA"],
+    "Seattle WA": ["Tacoma WA", "Bellevue WA", "Everett WA"],
+    "Portland OR": ["Beaverton OR", "Gresham OR", "Salem OR"],
+    "Las Vegas NV": ["Henderson NV", "North Las Vegas NV", "Pahrump NV"],
+    "Sacramento CA": ["Roseville CA", "Elk Grove CA", "Davis CA"],
 }
 
 
@@ -145,7 +183,7 @@ def main() -> None:
         rows.append({"node_id": nid, "kind": "gateway", "region": region,
                      "x": round(lon, 3), "y": round(lat, 3),
                      "daily_packages": int(rng.integers(120000, 240000)),
-                     "label": city})
+                     "label": f"{city} Gateway"})
     gw_by_city = {GATEWAYS[i][0]: gateway_ids[i] for i in range(len(GATEWAYS))}
 
     # ----- hubs -----------------------------------------------------------
@@ -159,7 +197,7 @@ def main() -> None:
         rows.append({"node_id": nid, "kind": "hub", "region": region,
                      "x": round(lon, 3), "y": round(lat, 3),
                      "daily_packages": int(rng.integers(20000, 80000)),
-                     "label": city})
+                     "label": f"{city} Hub"})
 
     # ----- centers (origin/destination plants) ----------------------------
     center_ids = []
@@ -168,21 +206,16 @@ def main() -> None:
     for h in hub_ids:
         city = hub_city[h]
         hlat, hlon = coord[h]
-        names = REAL_CENTERS.get(city)
+        towns = CENTER_TOWNS[city]
         for k in range(CENTERS_PER_HUB):
             cidx += 1
             nid = f"C{cidx:03d}"
             center_ids.append(nid)
             centers_of_hub[h].append(nid)
-            if names and k < len(names):
-                lbl = names[k]
-                # nudge coords toward a plausible nearby spot
-                clat = hlat + rng.normal(0, 0.5)
-                clon = hlon + rng.normal(0, 0.5)
-            else:
-                lbl = f"{city} Ctr {k+1}"
-                clat = hlat + rng.normal(0, 0.45)
-                clon = hlon + rng.normal(0, 0.45)
+            lbl = f"{towns[k]} Center"
+            # nudge coords toward a plausible nearby spot
+            clat = hlat + rng.normal(0, 0.45)
+            clon = hlon + rng.normal(0, 0.45)
             coord[nid] = (clat, clon); region_of[nid] = region_of[h]; kind_of[nid] = "center"
             rows.append({"node_id": nid, "kind": "center", "region": region_of[h],
                          "x": round(clon, 3), "y": round(clat, 3),
