@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-23 19:36 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 19:53 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -777,7 +777,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-23 19:36 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 19:53 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -4030,6 +4030,7 @@ Drone Components (183 nodes)
 Transit · Multimodal (152 nodes)
 Satellite Supply Chain (276 nodes)
 Aircraft Supply Chain (300 nodes)
+UPS Ground Network (149 nodes)
 
 
 Edgelist CSV required
@@ -4344,6 +4345,9 @@ Multi\-tier satellite supply chain: materials → subsystems → programs.
 ![](playground-data/aircraft-supply-chain-thumb.png)aircraft\-supply\-chain
 300 nodes · 624 edges
 Multi\-tier airplane supply chain: materials → systems → programs.
+![](playground-data/ups-ground-network-thumb.png)ups\-ground\-network
+149 nodes · 347 edges
+Truck line\-haul: plant→plant lanes (packages, trucks, distance, transit).
 
 
 ### 📝 Code Editor
@@ -4376,6 +4380,7 @@ Drone Components (183 nodes)
 Transit · Multimodal (152 nodes)
 Satellite Supply Chain (276 nodes)
 Aircraft Supply Chain (300 nodes)
+UPS Ground Network (149 nodes)
 
 
 ⬆ Upload CSV
@@ -4534,6 +4539,9 @@ Multi\-tier satellite supply chain: materials → subsystems → programs.
 ![](playground-data/aircraft-supply-chain-thumb.png)aircraft\-supply\-chain
 300 nodes · 624 edges
 Multi\-tier airplane supply chain: materials → systems → programs.
+![](playground-data/ups-ground-network-thumb.png)ups\-ground\-network
+149 nodes · 347 edges
+Truck line\-haul: plant→plant lanes (packages, trucks, distance, transit).
 
 
 ### 📝 Code Editor
@@ -4566,6 +4574,7 @@ Drone Components (183 nodes)
 Transit · Multimodal (152 nodes)
 Satellite Supply Chain (276 nodes)
 Aircraft Supply Chain (300 nodes)
+UPS Ground Network (149 nodes)
 
 
 ⬆ Upload CSV
@@ -5657,6 +5666,9 @@ Multi\-tier satellite supply chain: materials → subsystems → programs.
 ![](playground-data/aircraft-supply-chain-thumb.png)aircraft\-supply\-chain
 300 nodes · 624 edges
 Multi\-tier airplane supply chain: materials → systems → programs.
+![](playground-data/ups-ground-network-thumb.png)ups\-ground\-network
+149 nodes · 347 edges
+Truck line\-haul: plant→plant lanes (packages, trucks, distance, transit).
 
 
 Pick a case study — and a project question
@@ -5990,6 +6002,7 @@ WASM virtual filesystem when you pick a sample from the loader dropdown.
 | `transit-multimodal` | 152 | 384 | **Project dataset.** Undirected bus + metro multiplex (`mode`), weighted by `capacity`; ships a `lines.csv` lookup. |
 | `satellite-supply-chain` | 276 | 562 | **Project dataset.** Directed multi-tier satellite supply chain (material→component→subsystem→integrator→program), weighted by `units_per_year`. |
 | `aircraft-supply-chain` | 300 | 624 | **Project dataset.** Directed multi-tier aircraft supply chain (material→component→system→integrator→program), weighted by `units_per_year`. |
+| `ups-ground-network` | 149 | 347 | **Project dataset.** Directed UPS-style truck line-haul; plant→plant lanes weighted by `packages`, with `trucks`, `distance_km`, `transit_hours`. |
 
 All `*-project` datasets above are mirrored from `data/projects/<name>/` by
 `data/projects/_sync_to_playground.py`.
@@ -6027,11 +6040,11 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-23 19:36 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 19:53 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
-**142 files included.**
+**146 files included.**
 
 ---
 
@@ -14818,8 +14831,9 @@ Each dataset folder contains:
 | [`transit-multimodal`](transit-multimodal/) | 152 | 384 | — | ✓ | — | — | A city's bus + metro network with neighborhood nodes (hub-spoke + ring). |
 | [`satellite-supply-chain`](satellite-supply-chain/) | 276 | 562 | ✓ | ✓ | — | — | Multi-tier satellite manufacturing supply chain, materials → subsystems → programs. |
 | [`aircraft-supply-chain`](aircraft-supply-chain/) | 300 | 624 | ✓ | ✓ | — | — | Multi-tier commercial-aircraft supply chain, materials → systems → programs. |
+| [`ups-ground-network`](ups-ground-network/) | 149 | 347 | ✓ | ✓ | — | — | UPS-style truck line-haul: plant→plant lanes (packages, trucks, distance, transit time). |
 
-All 17 are larger than the lab datasets, mostly weighted, and several are temporal
+All 18 are larger than the lab datasets, mostly weighted, and several are temporal
 (`period`/`day`/`hour`/`week` columns), bipartite, or multimodal (`kind`/`mode`
 columns). `satellite-constellation` and `transit-multimodal` are multi-layer (link
 type / transit mode); `transit-multimodal` is purpose-built for counterfactual
@@ -14838,7 +14852,7 @@ otherwise a force-directed layout. Click a thumbnail for its dataset.
 | <a href="airline-delays/"><img src="airline-delays/thumb.png" width="260" alt="airline-delays"><br>airline-delays</a> | <a href="power-grid/"><img src="power-grid/thumb.png" width="260" alt="power-grid"><br>power-grid</a> | <a href="campus-contact/"><img src="campus-contact/thumb.png" width="260" alt="campus-contact"><br>campus-contact</a> |
 | <a href="opensource-deps/"><img src="opensource-deps/thumb.png" width="260" alt="opensource-deps"><br>opensource-deps</a> | <a href="trade-commodity/"><img src="trade-commodity/thumb.png" width="260" alt="trade-commodity"><br>trade-commodity</a> | <a href="reorg-comms/"><img src="reorg-comms/thumb.png" width="260" alt="reorg-comms"><br>reorg-comms</a> |
 | <a href="satellite-constellation/"><img src="satellite-constellation/thumb.png" width="260" alt="satellite-constellation"><br>satellite-constellation</a> | <a href="drone-components/"><img src="drone-components/thumb.png" width="260" alt="drone-components"><br>drone-components</a> | <a href="transit-multimodal/"><img src="transit-multimodal/thumb.png" width="260" alt="transit-multimodal"><br>transit-multimodal</a> |
-| <a href="satellite-supply-chain/"><img src="satellite-supply-chain/thumb.png" width="260" alt="satellite-supply-chain"><br>satellite-supply-chain</a> | <a href="aircraft-supply-chain/"><img src="aircraft-supply-chain/thumb.png" width="260" alt="aircraft-supply-chain"><br>aircraft-supply-chain</a> |  |
+| <a href="satellite-supply-chain/"><img src="satellite-supply-chain/thumb.png" width="260" alt="satellite-supply-chain"><br>satellite-supply-chain</a> | <a href="aircraft-supply-chain/"><img src="aircraft-supply-chain/thumb.png" width="260" alt="aircraft-supply-chain"><br>aircraft-supply-chain</a> | <a href="ups-ground-network/"><img src="ups-ground-network/thumb.png" width="260" alt="ups-ground-network"><br>ups-ground-network</a> |
 
 ## How to use them
 
@@ -14942,6 +14956,7 @@ ICONS = {
     "transit-multimodal":      "🚇",
     "satellite-supply-chain":  "📡",
     "aircraft-supply-chain":   "🛩️",
+    "ups-ground-network":      "🚛",
 }
 
 
@@ -24509,6 +24524,538 @@ if __name__ == "__main__":
     print(f"🔗 Bipartite: {g.is_bipartite()} | total fares: "
           f"${edges['fare'].sum():,.0f} | total tips: ${edges['tip'].sum():,.0f}")
     print("🎉 Graph ready. `g` is bipartite (vs['type']: rider = True), weighted by fare.")
+```
+
+---
+
+## `data/projects/ups-ground-network/README.md`
+
+# ups-ground-network
+
+*A UPS-style ground line-haul network — large trucks move parcels between package
+plants, from local centers up through regional hubs to national sort gateways.*
+
+![Preview of the ups-ground-network network](thumb.png)
+
+## At a glance
+
+| | |
+|---|---|
+| **Direction** | Directed (a lane is one origin plant → one destination plant) |
+| **Weights** | Weighted (`packages`; each lane also carries `trucks`, `distance_km`, `transit_hours`) |
+| **Modality** | Multimodal — 3 plant kinds (`gateway`, `hub`, `center`) across the continental US |
+| **Temporal** | No — a single daily snapshot (aggregated per lane) |
+| **Nodes** | 149 plants (5 gateway + 36 hub + 108 center) |
+| **Edges** | 347 directed lanes (one row per source-plant → destination-plant) |
+| **Files** | `nodes.csv`, `edges.csv`, `load.R`, `load.py`, `_generate.py` |
+
+## What this network is
+
+A stylized model of a parcel carrier's ground (truck) distribution network across
+the continental US. Three kinds of plant:
+
+- **`gateway`** — national sort hubs (the long-haul backbone, e.g. Louisville,
+  Chicago, Dallas, Atlanta, Ontario CA);
+- **`hub`** — regional metro hubs;
+- **`center`** — local package centers (the origin / destination plants).
+
+Each **edge is a lane aggregated at the source-plant → destination-plant level**:
+one row per ordered pair (e.g. *Ithaca → Syracuse* moves 2,000-odd packages on a
+couple of trucks). The lane weight is `packages`; the lane also records how many
+`trucks` it takes, the `distance_km` between the two plants, and the
+`transit_hours` in transit. Plants carry their coordinates (`x` = longitude,
+`y` = latitude), a `region`, and a `daily_packages` throughput.
+
+This is a flow-and-**resilience** network. Some questions to chew on:
+
+- If one plant went dark for a day, which one would hurt the network most — and
+  would degree, betweenness, or a knockout/criticality analysis agree? Is the
+  busiest plant the most critical one?
+- Are some regions one bad day away from being cut off from the rest of the
+  country entirely? Which single closure would isolate the most plants?
+- When a lane fails, how much longer (km and hours) is the next-best route? Where
+  is rerouting cheap, and where is it ruinous?
+- Trucks are finite. Which lanes are already running near full and have no slack
+  to absorb a surge or a reroute?
+- Does geography decide everything, or do some lanes carry far more than distance
+  alone would predict?
+
+> **Note.** The interesting findings here are deliberately *not* documented. "Big
+> hubs move more packages" is the starting point, not a finding. Push past it —
+> raw degree and raw volume will both mislead you.
+
+## `nodes.csv`
+
+One row per plant. Every node has every column populated.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `node_id` | Node ID | Unique key. `G##` gateway, `H###` hub, `C###` center. Referenced by edges. | character | `G01`, `H001`, `C040` |
+| `kind` | Plant kind | Role in the network. | character | `gateway`, `hub`, `center` |
+| `region` | Region | US region the plant sits in. | character | `Northeast`, `Mid-Atlantic`, `Southeast`, `Midwest`, `South`, `Mountain`, `West` |
+| `x` | Longitude | Plant longitude (decimal degrees). | double | `-85.76`, `-71.06` |
+| `y` | Latitude | Plant latitude (decimal degrees). | double | `38.25`, `42.36` |
+| `daily_packages` | Daily throughput | Nominal parcels handled per day at this plant. | integer | `130710`, `71515`, `29913` |
+| `label` | Display name | Human-readable city / plant name. (`name` is avoided — python-igraph reserves it for the ID.) | character | `Louisville KY`, `Boston MA`, `Ithaca NY` |
+
+## `edges.csv`
+
+One row per **lane**, directed from the origin plant (`from_id`) to the
+destination plant (`to_id`), aggregated over a day.
+
+| Variable | Full name | Description | Class | Example values |
+|---|---|---|---|---|
+| `from_id` | Origin plant ID | Sending plant. | character | `C001`, `H001`, `G01` |
+| `to_id` | Destination plant ID | Receiving plant. | character | `H001`, `C001`, `G04` |
+| `packages` | Packages per day | Parcels moved on this lane per day (the edge weight). | integer | `5299`, `24700`, `4545` |
+| `trucks` | Trucks per day | Large trucks dispatched on this lane per day. | integer | `8`, `30`, `7` |
+| `distance_km` | Distance | Lane distance between the two plants, kilometres. | double | `63.0`, `1344.1`, `19.6` |
+| `transit_hours` | Transit time | Door-to-door time in transit on the lane, hours. | double | `4.71`, `20.29`, `2.75` |
+
+A useful derived quantity is **packages ÷ trucks** (parcels per truck): lanes near
+the trailer's capacity have little slack to absorb a disruption.
+
+## Load it
+
+```bash
+Rscript data/projects/ups-ground-network/load.R     # R    (igraph)
+python  data/projects/ups-ground-network/load.py     # Python (python-igraph)
+```
+
+Both build a directed, weighted `igraph` graph and print a one-screen summary. In
+the [R](https://timothyfraser.com/netsci/playground-r.html) or
+[Python](https://timothyfraser.com/netsci/playground-py.html) playground, pick
+**ups-ground-network** from the *Load sample* menu.
+
+## Get this data
+
+Browse or download from the course repo:
+<https://github.com/timothyfraser/netsci/tree/main/data/projects/ups-ground-network>
+
+---
+
+## `data/projects/ups-ground-network/_generate.py`
+
+```python
+"""Generate the `ups-ground-network` project network (deterministic).
+
+A stylized UPS-style ground line-haul network: large trucks move parcels between
+package plants (facilities) across the continental US. Three kinds of node:
+  - gateway  national sort hubs (e.g., Louisville, Chicago, Dallas, Atlanta,
+             Ontario CA) -- the long-haul backbone;
+  - hub      regional metro hubs;
+  - center   local package centers (origin/destination plants).
+
+Edges are DIRECTED lanes aggregated at the **source-plant -> destination-plant**
+level: one row per ordered (from_id, to_id) pair (e.g., Ithaca -> Syracuse sends
+N packages on T trucks). Lane attributes are the things you track about trucks:
+`packages` (the weight), `trucks`, `distance_km`, and `transit_hours`.
+
+Node attributes: kind, region, x (lon), y (lat), daily_packages, label.
+
+Design parameters (the only record of the planted structure):
+  - GATEWAYS form a fully-meshed long-haul backbone; almost all cross-region
+    flow passes through them, so they have very high BETWEENNESS and are the real
+    single points of failure for resilience.
+  - DOMINANT_GATEWAY (Louisville): a national hub that most regional hubs also
+    feed directly, so it concentrates the most cross-region paths.
+  - SINGLE_HOMED_REGION (Southeast): its hubs connect to the backbone ONLY through
+    ATLANTA. Removing Atlanta disconnects the whole region -- a genuine cut vertex
+    a degree ranking will under-rate.
+  - DECOY_HUB (Los Angeles): a busy regional metro hub that is NOT on the
+    cross-region backbone, so removing it barely dents national connectivity --
+    a reminder that a locally busy plant is not automatically a critical one.
+  - TIGHT_BACKBONE: backbone & single-homed lanes run near truck capacity
+    (high packages-per-truck, little slack); regional lanes carry slack. So the
+    fragile lanes are the ones with the least spare capacity to absorb a surge.
+  - Distance is real (haversine of coordinates); transit time = drive time at a
+    lane-type speed + per-stop dwell + congestion noise.
+
+Run:
+    python data/projects/ups-ground-network/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import math
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+TRUCK_CAP = 1200          # max parcels a single line-haul trailer carries
+DOMINANT_GATEWAY = "Louisville KY"
+SINGLE_HOMED_REGION = "Southeast"
+SINGLE_HOME_GATEWAY = "Atlanta GA"
+DECOY_CITY = "Los Angeles CA"
+MULTIHOME_SHARE = 0.60    # share of (non-single-homed) hubs that also feed Louisville
+CENTERS_PER_HUB = 3
+
+# (city, region, lat, lon)
+GATEWAYS = [
+    ("Louisville KY", "Midwest", 38.25, -85.76),
+    ("Chicago IL", "Midwest", 41.88, -87.63),
+    ("Dallas TX", "South", 32.78, -96.80),
+    ("Atlanta GA", "Southeast", 33.75, -84.39),
+    ("Ontario CA", "West", 34.06, -117.65),
+]
+
+HUBS = [
+    # Northeast
+    ("Boston MA", "Northeast", 42.36, -71.06),
+    ("Syracuse NY", "Northeast", 43.05, -76.15),
+    ("Albany NY", "Northeast", 42.65, -73.76),
+    ("Buffalo NY", "Northeast", 42.89, -78.88),
+    ("Hartford CT", "Northeast", 41.76, -72.69),
+    # Mid-Atlantic
+    ("New York NY", "Mid-Atlantic", 40.71, -74.01),
+    ("Philadelphia PA", "Mid-Atlantic", 39.95, -75.17),
+    ("Pittsburgh PA", "Mid-Atlantic", 40.44, -79.99),
+    ("Baltimore MD", "Mid-Atlantic", 39.29, -76.61),
+    ("Richmond VA", "Mid-Atlantic", 37.54, -77.44),
+    # Southeast
+    ("Charlotte NC", "Southeast", 35.23, -80.84),
+    ("Nashville TN", "Southeast", 36.16, -86.78),
+    ("Orlando FL", "Southeast", 28.54, -81.38),
+    ("Miami FL", "Southeast", 25.76, -80.19),
+    ("Memphis TN", "Southeast", 35.15, -90.05),
+    # Midwest
+    ("Indianapolis IN", "Midwest", 39.77, -86.16),
+    ("Columbus OH", "Midwest", 39.96, -82.99),
+    ("Detroit MI", "Midwest", 42.33, -83.05),
+    ("Minneapolis MN", "Midwest", 44.98, -93.27),
+    ("St Louis MO", "Midwest", 38.63, -90.20),
+    ("Kansas City MO", "Midwest", 39.10, -94.58),
+    # South
+    ("Houston TX", "South", 29.76, -95.37),
+    ("San Antonio TX", "South", 29.42, -98.49),
+    ("Austin TX", "South", 30.27, -97.74),
+    ("New Orleans LA", "South", 29.95, -90.07),
+    ("Oklahoma City OK", "South", 35.47, -97.52),
+    # Mountain
+    ("Denver CO", "Mountain", 39.74, -104.99),
+    ("Salt Lake City UT", "Mountain", 40.76, -111.89),
+    ("Phoenix AZ", "Mountain", 33.45, -112.07),
+    ("Albuquerque NM", "Mountain", 35.08, -106.65),
+    # West
+    ("Los Angeles CA", "West", 34.05, -118.24),
+    ("San Francisco CA", "West", 37.77, -122.42),
+    ("Seattle WA", "West", 47.61, -122.33),
+    ("Portland OR", "West", 45.52, -122.68),
+    ("Las Vegas NV", "West", 36.17, -115.14),
+    ("Sacramento CA", "West", 38.58, -121.49),
+]
+
+# A few real satellite towns so the feeder lanes read true (e.g., Ithaca ->
+# Syracuse). Any hub not listed gets generic "<City> Ctr N" centers.
+REAL_CENTERS = {
+    "Syracuse NY": ["Ithaca NY", "Utica NY", "Binghamton NY"],
+    "Boston MA": ["Worcester MA", "Providence RI", "Manchester NH"],
+    "Denver CO": ["Boulder CO", "Fort Collins CO", "Colorado Springs CO"],
+    "Charlotte NC": ["Greensboro NC", "Asheville NC", "Columbia SC"],
+    "Dallas TX": ["Fort Worth TX", "Waco TX", "Tyler TX"],
+}
+
+
+def haversine_km(a_lat, a_lon, b_lat, b_lon):
+    R = 6371.0
+    p1, p2 = math.radians(a_lat), math.radians(b_lat)
+    dphi = math.radians(b_lat - a_lat)
+    dlmb = math.radians(b_lon - a_lon)
+    h = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlmb / 2) ** 2
+    return 2 * R * math.asin(math.sqrt(h))
+
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    rows = []
+    coord = {}    # node_id -> (lat, lon)
+    region_of = {}
+    kind_of = {}
+
+    # ----- gateways -------------------------------------------------------
+    gateway_ids = []
+    for i, (city, region, lat, lon) in enumerate(GATEWAYS):
+        nid = f"G{i+1:02d}"
+        gateway_ids.append(nid)
+        coord[nid] = (lat, lon); region_of[nid] = region; kind_of[nid] = "gateway"
+        rows.append({"node_id": nid, "kind": "gateway", "region": region,
+                     "x": round(lon, 3), "y": round(lat, 3),
+                     "daily_packages": int(rng.integers(120000, 240000)),
+                     "label": city})
+    gw_by_city = {GATEWAYS[i][0]: gateway_ids[i] for i in range(len(GATEWAYS))}
+
+    # ----- hubs -----------------------------------------------------------
+    hub_ids = []
+    hub_city = {}
+    for i, (city, region, lat, lon) in enumerate(HUBS):
+        nid = f"H{i+1:03d}"
+        hub_ids.append(nid)
+        hub_city[nid] = city
+        coord[nid] = (lat, lon); region_of[nid] = region; kind_of[nid] = "hub"
+        rows.append({"node_id": nid, "kind": "hub", "region": region,
+                     "x": round(lon, 3), "y": round(lat, 3),
+                     "daily_packages": int(rng.integers(20000, 80000)),
+                     "label": city})
+
+    # ----- centers (origin/destination plants) ----------------------------
+    center_ids = []
+    centers_of_hub = {h: [] for h in hub_ids}
+    cidx = 0
+    for h in hub_ids:
+        city = hub_city[h]
+        hlat, hlon = coord[h]
+        names = REAL_CENTERS.get(city)
+        for k in range(CENTERS_PER_HUB):
+            cidx += 1
+            nid = f"C{cidx:03d}"
+            center_ids.append(nid)
+            centers_of_hub[h].append(nid)
+            if names and k < len(names):
+                lbl = names[k]
+                # nudge coords toward a plausible nearby spot
+                clat = hlat + rng.normal(0, 0.5)
+                clon = hlon + rng.normal(0, 0.5)
+            else:
+                lbl = f"{city} Ctr {k+1}"
+                clat = hlat + rng.normal(0, 0.45)
+                clon = hlon + rng.normal(0, 0.45)
+            coord[nid] = (clat, clon); region_of[nid] = region_of[h]; kind_of[nid] = "center"
+            rows.append({"node_id": nid, "kind": "center", "region": region_of[h],
+                         "x": round(clon, 3), "y": round(clat, 3),
+                         "daily_packages": int(rng.integers(1500, 9000)),
+                         "label": lbl})
+
+    nodes = pd.DataFrame(rows)
+    size = dict(zip(nodes.node_id, nodes.daily_packages))
+
+    # nearest gateway for each hub (by great-circle distance)
+    def nearest_gateway(h):
+        hlat, hlon = coord[h]
+        return min(gateway_ids,
+                   key=lambda g: haversine_km(hlat, hlon, *coord[g]))
+
+    eds = []
+
+    def add_lane(frm, to, packages, critical=False):
+        d = haversine_km(*coord[frm], *coord[to])
+        # speed by lane type: long backbone faster cruising; short regional slower
+        base_speed = 88.0 if d > 600 else (78.0 if d > 200 else 64.0)
+        speed = base_speed * rng.uniform(0.92, 1.06)
+        dwell = rng.uniform(1.5, 4.0)                 # sort/handling hours
+        congest = rng.uniform(0.0, 0.25) * (d / 100)  # mild distance-scaled noise
+        transit = d / speed + dwell + congest
+        packages = int(max(packages, 1))
+        # capacity: tight on critical lanes (little slack), looser on regional
+        per_truck = rng.uniform(1050, 1180) if critical else rng.uniform(560, 950)
+        trucks = int(max(1, math.ceil(packages / per_truck)))
+        eds.append({
+            "from_id": frm, "to_id": to,
+            "packages": packages,
+            "trucks": trucks,
+            "distance_km": round(d, 1),
+            "transit_hours": round(transit, 2),
+        })
+
+    # ===== feeder + delivery: center <-> regional hub =====================
+    for h in hub_ids:
+        for c in centers_of_hub[h]:
+            # origin plant -> hub (induction)
+            add_lane(c, h, int(size[c] * rng.uniform(0.55, 0.9)))
+            # hub -> destination plant (delivery)
+            add_lane(h, c, int(size[c] * rng.uniform(0.55, 0.9)))
+
+    # ===== line-haul: hub <-> gateway =====================================
+    for h in hub_ids:
+        region = region_of[h]
+        if region == SINGLE_HOMED_REGION:
+            gws = [gw_by_city[SINGLE_HOME_GATEWAY]]      # single-homed: Atlanta only
+        else:
+            gws = [nearest_gateway(h)]
+            louis = gw_by_city[DOMINANT_GATEWAY]
+            if louis not in gws and rng.random() < MULTIHOME_SHARE:
+                gws.append(louis)                         # most also feed Louisville
+        for g in gws:
+            crit = (region == SINGLE_HOMED_REGION) or (g == gw_by_city[DOMINANT_GATEWAY])
+            vol = int(size[h] * rng.uniform(0.35, 0.7))
+            add_lane(h, g, vol, critical=crit)            # outbound to backbone
+            add_lane(g, h, int(vol * rng.uniform(0.8, 1.15)), critical=crit)  # inbound
+
+    # ===== trunk: gateway <-> gateway (full mesh) =========================
+    for a in gateway_ids:
+        for b in gateway_ids:
+            if a == b:
+                continue
+            vol = int(min(size[a], size[b]) * rng.uniform(0.20, 0.45))
+            add_lane(a, b, vol, critical=True)
+
+    # ===== a few direct intra-region hub <-> hub lanes ====================
+    by_region = {}
+    for h in hub_ids:
+        by_region.setdefault(region_of[h], []).append(h)
+    for region, hs in by_region.items():
+        if len(hs) < 2:
+            continue
+        n_direct = min(len(hs), int(rng.integers(2, 5)))
+        for _ in range(n_direct):
+            a, b = rng.choice(hs, size=2, replace=False)
+            vol = int(min(size[a], size[b]) * rng.uniform(0.12, 0.3))
+            add_lane(a, b, vol)
+
+    edges = pd.DataFrame(eds)
+    nodes = nodes[["node_id", "kind", "region", "x", "y", "daily_packages", "label"]]
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+
+    kc = nodes.kind.value_counts()
+    print(f"ups-ground-network: {len(nodes)} nodes "
+          f"({kc.get('gateway',0)} gateway + {kc.get('hub',0)} hub + "
+          f"{kc.get('center',0)} center), {len(edges)} lanes. "
+          f"{edges.packages.sum():,} packages/day on {edges.trucks.sum():,} trucks.")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `data/projects/ups-ground-network/load.R`
+
+```r
+#' @name load.R
+#' @title Load the `ups-ground-network` project network (R)
+#' @description
+#'
+#' Reads the two CSVs in this folder and builds a directed, weighted igraph
+#' object: a UPS-style ground line-haul network of large trucks moving parcels
+#' between package plants (centers -> regional hubs -> national gateways). Run it
+#' straight (`Rscript load.R`) for a quick summary, or `source()` it and call
+#' `load_ups()` in your own script.
+
+# 0. Setup ###################################################################
+library(igraph)
+library(here)
+
+.dir <- function() here::here("data", "projects", "ups-ground-network")
+
+#' Load the node table (one row per plant: gateway / hub / center).
+load_nodes <- function() {
+  read.csv(file.path(.dir(), "nodes.csv"), stringsAsFactors = FALSE)
+}
+
+#' Load the edge table (one row per source-plant -> destination-plant lane).
+load_edges <- function() {
+  read.csv(file.path(.dir(), "edges.csv"), stringsAsFactors = FALSE)
+}
+
+#' Build the directed, weighted graph.
+#'
+#' Lanes are weighted by `packages` and flow from the origin plant to the
+#' destination plant. Each lane also carries `trucks`, `distance_km`, and
+#' `transit_hours`. Knock a node out (`delete_vertices`) to test how much flow it
+#' carries, or use `distances()` to see how reroutes lengthen transit time.
+load_ups <- function(nodes = load_nodes(), edges = load_edges()) {
+  g <- graph_from_data_frame(d = edges, directed = TRUE, vertices = nodes)
+  igraph::E(g)$weight <- igraph::E(g)$packages
+  g
+}
+
+# 1. Demo ####################################################################
+if (sys.nframe() == 0) {
+  cat("\n🚛 ups-ground-network (R)\n")
+  cat("   Centers -> regional hubs -> national gateways;",
+      "lanes weighted by packages, with trucks / distance / transit time.\n\n")
+
+  nodes <- load_nodes()
+  edges <- load_edges()
+  g <- load_ups(nodes, edges)
+
+  cat(sprintf("✅ Loaded %d nodes (%d gateway, %d hub, %d center) and %d lanes.\n",
+              nrow(nodes), sum(nodes$kind == "gateway"),
+              sum(nodes$kind == "hub"), sum(nodes$kind == "center"),
+              nrow(edges)))
+  cat(sprintf("🔗 Directed: %s | total packages/day: %s on %s trucks | mean lane: %.0f km, %.1f h\n",
+              is_directed(g),
+              format(sum(edges$packages), big.mark = ","),
+              format(sum(edges$trucks), big.mark = ","),
+              mean(edges$distance_km), mean(edges$transit_hours)))
+  cat("🎉 Graph ready. `g` is a directed, weighted igraph (weight = packages).\n")
+}
+```
+
+---
+
+## `data/projects/ups-ground-network/load.py`
+
+```python
+"""Load the `ups-ground-network` project network (Python).
+
+Reads the two CSVs in this folder and builds a directed, weighted python-igraph
+object: a UPS-style ground line-haul network of large trucks moving parcels
+between package plants (centers -> regional hubs -> national gateways). Run it
+straight (``python load.py``) for a quick summary, or import ``load_ups()`` into
+your own script.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+HERE = Path(__file__).resolve().parent
+
+
+def load_nodes() -> pd.DataFrame:
+    """Node table: one row per plant (gateway / hub / center)."""
+    return pd.read_csv(HERE / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    """Edge table: one row per source-plant -> destination-plant lane."""
+    return pd.read_csv(HERE / "edges.csv")
+
+
+def load_ups(nodes: pd.DataFrame | None = None,
+             edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the directed, weighted graph (edge weight = ``packages``).
+
+    Lanes flow from the origin plant to the destination plant and also carry
+    ``trucks``, ``distance_km``, and ``transit_hours``. Delete a vertex to test
+    how much flow it carries, or use ``g.distances()`` to see how reroutes
+    lengthen transit time after a disruption.
+    """
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    g = ig.Graph.DataFrame(edges, directed=True, vertices=nodes, use_vids=False)
+    g.es["weight"] = g.es["packages"]
+    return g
+
+
+if __name__ == "__main__":
+    print("\n🚛 ups-ground-network (Python)")
+    print("   Centers -> regional hubs -> national gateways; "
+          "lanes weighted by packages, with trucks / distance / transit time.\n")
+
+    nodes = load_nodes()
+    edges = load_edges()
+    g = load_ups(nodes, edges)
+
+    kinds = nodes["kind"].value_counts()
+    print(f"✅ Loaded {len(nodes)} nodes "
+          f"({kinds.get('gateway',0)} gateway, {kinds.get('hub',0)} hub, "
+          f"{kinds.get('center',0)} center) and {len(edges)} lanes.")
+    print(f"🔗 Directed: {g.is_directed()} | total packages/day: "
+          f"{edges['packages'].sum():,} on {edges['trucks'].sum():,} trucks | "
+          f"mean lane: {edges['distance_km'].mean():.0f} km, "
+          f"{edges['transit_hours'].mean():.1f} h")
+    print("🎉 Graph ready. Object `g` is a directed, weighted igraph "
+          "(weight = packages).")
 ```
 
 ---

@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-23 19:36 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 19:53 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -3253,6 +3253,7 @@ Drone Components (183 nodes)
 Transit · Multimodal (152 nodes)
 Satellite Supply Chain (276 nodes)
 Aircraft Supply Chain (300 nodes)
+UPS Ground Network (149 nodes)
 
 
 Edgelist CSV required
@@ -3567,6 +3568,9 @@ Multi\-tier satellite supply chain: materials → subsystems → programs.
 ![](playground-data/aircraft-supply-chain-thumb.png)aircraft\-supply\-chain
 300 nodes · 624 edges
 Multi\-tier airplane supply chain: materials → systems → programs.
+![](playground-data/ups-ground-network-thumb.png)ups\-ground\-network
+149 nodes · 347 edges
+Truck line\-haul: plant→plant lanes (packages, trucks, distance, transit).
 
 
 ### 📝 Code Editor
@@ -3599,6 +3603,7 @@ Drone Components (183 nodes)
 Transit · Multimodal (152 nodes)
 Satellite Supply Chain (276 nodes)
 Aircraft Supply Chain (300 nodes)
+UPS Ground Network (149 nodes)
 
 
 ⬆ Upload CSV
@@ -3757,6 +3762,9 @@ Multi\-tier satellite supply chain: materials → subsystems → programs.
 ![](playground-data/aircraft-supply-chain-thumb.png)aircraft\-supply\-chain
 300 nodes · 624 edges
 Multi\-tier airplane supply chain: materials → systems → programs.
+![](playground-data/ups-ground-network-thumb.png)ups\-ground\-network
+149 nodes · 347 edges
+Truck line\-haul: plant→plant lanes (packages, trucks, distance, transit).
 
 
 ### 📝 Code Editor
@@ -3789,6 +3797,7 @@ Drone Components (183 nodes)
 Transit · Multimodal (152 nodes)
 Satellite Supply Chain (276 nodes)
 Aircraft Supply Chain (300 nodes)
+UPS Ground Network (149 nodes)
 
 
 ⬆ Upload CSV
@@ -4880,6 +4889,9 @@ Multi\-tier satellite supply chain: materials → subsystems → programs.
 ![](playground-data/aircraft-supply-chain-thumb.png)aircraft\-supply\-chain
 300 nodes · 624 edges
 Multi\-tier airplane supply chain: materials → systems → programs.
+![](playground-data/ups-ground-network-thumb.png)ups\-ground\-network
+149 nodes · 347 edges
+Truck line\-haul: plant→plant lanes (packages, trucks, distance, transit).
 
 
 Pick a case study — and a project question
@@ -5213,6 +5225,7 @@ WASM virtual filesystem when you pick a sample from the loader dropdown.
 | `transit-multimodal` | 152 | 384 | **Project dataset.** Undirected bus + metro multiplex (`mode`), weighted by `capacity`; ships a `lines.csv` lookup. |
 | `satellite-supply-chain` | 276 | 562 | **Project dataset.** Directed multi-tier satellite supply chain (material→component→subsystem→integrator→program), weighted by `units_per_year`. |
 | `aircraft-supply-chain` | 300 | 624 | **Project dataset.** Directed multi-tier aircraft supply chain (material→component→system→integrator→program), weighted by `units_per_year`. |
+| `ups-ground-network` | 149 | 347 | **Project dataset.** Directed UPS-style truck line-haul; plant→plant lanes weighted by `packages`, with `trucks`, `distance_km`, `transit_hours`. |
 
 All `*-project` datasets above are mirrored from `data/projects/<name>/` by
 `data/projects/_sync_to_playground.py`.
