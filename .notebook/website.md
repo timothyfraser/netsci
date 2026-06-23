@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-22 22:11 UTC_
+_Auto-generated NotebookLM source · 2026-06-23 09:47 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -4810,32 +4810,30 @@ Each week you pick **one** of the 11 case studies and apply *its* technique to y
 
 Project case studies
 
- The project is a big chunk of your grade. Over three weeks you'll
- pick **one network** you care about and stick with it: each
- week you apply a **different case\-study technique** (one of the
- 11\) to that **same network** and write a short report — three
- techniques, three reports, one network you'll know inside\-out. (You may
- switch networks between weeks if you really must, but staying with one is
- the point.) The point
- isn't to redo the example script with different data — it's to
- pose a meaningful question, justify your operationalization, run
- a defensible analysis, and report your results as quantitative
- quantities of interest in prose. Each report should comfortably
- fill at least five pages of text — figures and tables are encouraged,
- but they sit on top of the five pages rather than counting toward them.
- Two hard requirements on the network itself: it must have
- **at least 100 nodes** (**1,000\+ are strongly
- preferred** — wrangling real\-world scale is the whole point), and
- if you haven't settled on one by the **end of week 1**, tell
- the instructor and one will be manufactured to fit your field or industry.
+ The project is a big chunk of your grade. Over three weeks you apply a
+ **different case\-study technique** each week to
+ **one network you choose and keep** — three techniques, three
+ short reports, one network you'll know inside\-out. Each report poses a real
+ question, justifies how you built the network, runs a defensible analysis,
+ and reports the numbers in prose.
+
+
+### Requirements — every project must include
+
+
+* The question, in one sentence.
+* How you operationalized the network — node, edge, edge weight, data source.
+* The procedure you ran, in plain language, in order.
+* Results as *numbers in prose*, plus at most 1–2 figures and 1 table.
+* What it tells you — and what it doesn't (2–3 sentences).
+* A network of **≥ 100 nodes** (1,000\+ strongly preferred). No network by end of week 1? Tell the instructor — one will be made for your field.
+* **≥ 5 pages of text**, up to 1\.15 line spacing; figures and tables sit on top of the five.
 
 
 Pick a case study — and a project question
 
- Each case study folder under `code/` has a dedicated
- *Your Project Case Study* section in its README, with 3
- suggested project questions to pick from. You don't have to use
- one of the suggestions — they're starting points.
+ Each case study's README has a *Your Project Case Study* section with
+ 3 suggested questions — starting points, not requirements.
 
 
 | \# | Case study | Suggested project questions (README) | Interactive lab |
@@ -4853,22 +4851,12 @@ Pick a case study — and a project question
 | 11 | GNN \+ XGBoost | Project questions \& how\-to → | Lab → |
 
 
-### Every project report must include
-
-
-* The question, in one sentence.
-* How you operationalized the network — what's a node, what's an edge, what's an edge weight, where did the data come from.
-* The procedure you ran, in plain language, in order.
-* Your results stated as *numbers in prose*, with at most 1–2 supporting figures and 1 table.
-* What this tells you, and what it doesn't (2–3 sentences).
-
-
 📄
 
 ### What does a project report actually look like?
 
 
-One real, full\-length exemplar so you know what five pages of "numbers in prose" actually looks like on the page — figures and tables sit on top of the five. Open it on a phone or laptop, skim once before you start your own. The point is the *shape* of the analysis, not the specific topic — yours should look like this on the page.
+A real, full\-length exemplar — skim it before you start. Copy the *shape* of the analysis, not the topic.
 
 
 ⬇ Download sample report (PDF)
