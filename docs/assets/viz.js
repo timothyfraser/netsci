@@ -308,7 +308,8 @@
     'trade-commodity': 'tonnes',            'reorg-comms': 'message_count',
     'satellite-constellation': 'capacity_gbps', 'drone-components': 'coupling_strength',
     'transit-multimodal': 'capacity',
-    'satellite-supply-chain': 'units_per_year', 'aircraft-supply-chain': 'units_per_year'
+    'satellite-supply-chain': 'units_per_year', 'aircraft-supply-chain': 'units_per_year',
+    'ups-ground-network': 'packages'
   };
 
   function parseCsvUrl(url, cb, err) {

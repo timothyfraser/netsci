@@ -41,6 +41,7 @@ DATA = [
     ("transit-multimodal", "A city's bus + metro network with neighborhood nodes."),
     ("satellite-supply-chain", "Multi-tier satellite supply chain: materials → subsystems → programs."),
     ("aircraft-supply-chain", "Multi-tier airplane supply chain: materials → systems → programs."),
+    ("ups-ground-network", "Truck line-haul: plant→plant lanes (packages, trucks, distance, transit)."),
 ]
 
 GRID = ("display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));"

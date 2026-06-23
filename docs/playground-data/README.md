@@ -31,6 +31,7 @@ WASM virtual filesystem when you pick a sample from the loader dropdown.
 | `transit-multimodal` | 152 | 384 | **Project dataset.** Undirected bus + metro multiplex (`mode`), weighted by `capacity`; ships a `lines.csv` lookup. |
 | `satellite-supply-chain` | 276 | 562 | **Project dataset.** Directed multi-tier satellite supply chain (material→component→subsystem→integrator→program), weighted by `units_per_year`. |
 | `aircraft-supply-chain` | 300 | 624 | **Project dataset.** Directed multi-tier aircraft supply chain (material→component→system→integrator→program), weighted by `units_per_year`. |
+| `ups-ground-network` | 149 | 347 | **Project dataset.** Directed UPS-style truck line-haul; plant→plant lanes weighted by `packages`, with `trucks`, `distance_km`, `transit_hours`. |
 
 All `*-project` datasets above are mirrored from `data/projects/<name>/` by
 `data/projects/_sync_to_playground.py`.

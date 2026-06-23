@@ -1,0 +1,150 @@
+node_id,kind,region,x,y,daily_packages,label
+G01,gateway,Midwest,-85.76,38.25,130710,Louisville KY
+G02,gateway,Midwest,-87.63,41.88,212874,Chicago IL
+G03,gateway,South,-96.8,32.78,198548,Dallas TX
+G04,gateway,Southeast,-84.39,33.75,172665,Atlanta GA
+G05,gateway,West,-117.65,34.06,171961,Ontario CA
+H001,hub,Northeast,-71.06,42.36,71515,Boston MA
+H002,hub,Northeast,-76.15,43.05,25156,Syracuse NY
+H003,hub,Northeast,-73.76,42.65,61842,Albany NY
+H004,hub,Northeast,-78.88,42.89,32088,Buffalo NY
+H005,hub,Northeast,-72.69,41.76,25650,Hartford CT
+H006,hub,Mid-Atlantic,-74.01,40.71,51588,New York NY
+H007,hub,Mid-Atlantic,-75.17,39.95,78537,Philadelphia PA
+H008,hub,Mid-Atlantic,-79.99,40.44,64145,Pittsburgh PA
+H009,hub,Mid-Atlantic,-76.61,39.29,65668,Baltimore MD
+H010,hub,Mid-Atlantic,-77.44,37.54,63048,Richmond VA
+H011,hub,Southeast,-80.84,35.23,67163,Charlotte NC
+H012,hub,Southeast,-86.78,36.16,50793,Nashville TN
+H013,hub,Southeast,-81.38,28.54,27686,Orlando FL
+H014,hub,Southeast,-80.19,25.76,70384,Miami FL
+H015,hub,Southeast,-90.05,35.15,47023,Memphis TN
+H016,hub,Midwest,-86.16,39.77,50021,Indianapolis IN
+H017,hub,Midwest,-82.99,39.96,42247,Columbus OH
+H018,hub,Midwest,-83.05,42.33,30952,Detroit MI
+H019,hub,Midwest,-93.27,44.98,75605,Minneapolis MN
+H020,hub,Midwest,-90.2,38.63,66894,St Louis MO
+H021,hub,Midwest,-94.58,39.1,58631,Kansas City MO
+H022,hub,South,-95.37,29.76,44144,Houston TX
+H023,hub,South,-98.49,29.42,69365,San Antonio TX
+H024,hub,South,-97.74,30.27,52725,Austin TX
+H025,hub,South,-90.07,29.95,46604,New Orleans LA
+H026,hub,South,-97.52,35.47,47027,Oklahoma City OK
+H027,hub,Mountain,-104.99,39.74,33634,Denver CO
+H028,hub,Mountain,-111.89,40.76,25528,Salt Lake City UT
+H029,hub,Mountain,-112.07,33.45,53275,Phoenix AZ
+H030,hub,Mountain,-106.65,35.08,73273,Albuquerque NM
+H031,hub,West,-118.24,34.05,23829,Los Angeles CA
+H032,hub,West,-122.42,37.77,71497,San Francisco CA
+H033,hub,West,-122.33,47.61,69657,Seattle WA
+H034,hub,West,-122.68,45.52,36605,Portland OR
+H035,hub,West,-115.14,36.17,57899,Las Vegas NV
+H036,hub,West,-121.49,38.58,29913,Sacramento CA
+C001,center,Northeast,-70.449,42.02,7185,Worcester MA
+C002,center,Northeast,-71.274,42.283,7199,Providence RI
+C003,center,Northeast,-70.877,42.626,2959,Manchester NH
+C004,center,Northeast,-75.935,43.256,8418,Ithaca NY
+C005,center,Northeast,-76.406,42.847,7085,Utica NY
+C006,center,Northeast,-75.842,42.643,7467,Binghamton NY
+C007,center,Northeast,-74.138,42.599,2921,Albany NY Ctr 1
+C008,center,Northeast,-73.467,42.279,8552,Albany NY Ctr 2
+C009,center,Northeast,-74.059,42.894,4778,Albany NY Ctr 3
+C010,center,Northeast,-78.827,42.994,8235,Buffalo NY Ctr 1
+C011,center,Northeast,-78.779,43.282,3662,Buffalo NY Ctr 2
+C012,center,Northeast,-78.85,43.196,7476,Buffalo NY Ctr 3
+C013,center,Northeast,-73.346,42.044,7401,Hartford CT Ctr 1
+C014,center,Northeast,-72.902,41.616,5292,Hartford CT Ctr 2
+C015,center,Northeast,-72.017,41.636,5765,Hartford CT Ctr 3
+C016,center,Mid-Atlantic,-73.574,40.32,7913,New York NY Ctr 1
+C017,center,Mid-Atlantic,-73.937,40.559,5739,New York NY Ctr 2
+C018,center,Mid-Atlantic,-73.69,40.974,7461,New York NY Ctr 3
+C019,center,Mid-Atlantic,-75.378,39.793,3779,Philadelphia PA Ctr 1
+C020,center,Mid-Atlantic,-75.256,40.336,8944,Philadelphia PA Ctr 2
+C021,center,Mid-Atlantic,-75.584,39.44,7900,Philadelphia PA Ctr 3
+C022,center,Mid-Atlantic,-79.926,40.664,4757,Pittsburgh PA Ctr 1
+C023,center,Mid-Atlantic,-79.919,40.248,6464,Pittsburgh PA Ctr 2
+C024,center,Mid-Atlantic,-80.129,40.722,4634,Pittsburgh PA Ctr 3
+C025,center,Mid-Atlantic,-76.773,38.992,7605,Baltimore MD Ctr 1
+C026,center,Mid-Atlantic,-77.148,39.118,6725,Baltimore MD Ctr 2
+C027,center,Mid-Atlantic,-76.604,39.079,4964,Baltimore MD Ctr 3
+C028,center,Mid-Atlantic,-77.239,37.756,5217,Richmond VA Ctr 1
+C029,center,Mid-Atlantic,-77.63,37.496,4846,Richmond VA Ctr 2
+C030,center,Mid-Atlantic,-78.199,37.504,8697,Richmond VA Ctr 3
+C031,center,Southeast,-81.339,34.569,2157,Greensboro NC
+C032,center,Southeast,-81.293,35.43,4930,Asheville NC
+C033,center,Southeast,-81.018,35.88,3494,Columbia SC
+C034,center,Southeast,-87.2,36.492,7026,Nashville TN Ctr 1
+C035,center,Southeast,-86.933,35.732,3541,Nashville TN Ctr 2
+C036,center,Southeast,-87.557,36.538,6912,Nashville TN Ctr 3
+C037,center,Southeast,-81.647,28.647,3794,Orlando FL Ctr 1
+C038,center,Southeast,-81.348,27.889,5195,Orlando FL Ctr 2
+C039,center,Southeast,-81.37,28.645,6895,Orlando FL Ctr 3
+C040,center,Southeast,-80.298,26.481,6215,Miami FL Ctr 1
+C041,center,Southeast,-80.091,25.841,2133,Miami FL Ctr 2
+C042,center,Southeast,-79.814,26.372,6454,Miami FL Ctr 3
+C043,center,Southeast,-90.585,35.808,2583,Memphis TN Ctr 1
+C044,center,Southeast,-90.467,34.862,8922,Memphis TN Ctr 2
+C045,center,Southeast,-89.764,34.53,5857,Memphis TN Ctr 3
+C046,center,Midwest,-86.822,39.67,4636,Indianapolis IN Ctr 1
+C047,center,Midwest,-85.783,39.911,5117,Indianapolis IN Ctr 2
+C048,center,Midwest,-84.849,40.669,4808,Indianapolis IN Ctr 3
+C049,center,Midwest,-83.949,39.515,8533,Columbus OH Ctr 1
+C050,center,Midwest,-83.356,40.08,5587,Columbus OH Ctr 2
+C051,center,Midwest,-83.053,39.685,5405,Columbus OH Ctr 3
+C052,center,Midwest,-82.979,42.81,5571,Detroit MI Ctr 1
+C053,center,Midwest,-83.804,41.864,2551,Detroit MI Ctr 2
+C054,center,Midwest,-83.074,42.111,6977,Detroit MI Ctr 3
+C055,center,Midwest,-92.828,45.039,6952,Minneapolis MN Ctr 1
+C056,center,Midwest,-93.803,44.755,3273,Minneapolis MN Ctr 2
+C057,center,Midwest,-92.312,44.654,1780,Minneapolis MN Ctr 3
+C058,center,Midwest,-89.823,38.26,8724,St Louis MO Ctr 1
+C059,center,Midwest,-90.027,39.049,3878,St Louis MO Ctr 2
+C060,center,Midwest,-90.218,38.56,8935,St Louis MO Ctr 3
+C061,center,Midwest,-94.785,39.301,8520,Kansas City MO Ctr 1
+C062,center,Midwest,-95.155,38.548,2636,Kansas City MO Ctr 2
+C063,center,Midwest,-94.508,39.811,8187,Kansas City MO Ctr 3
+C064,center,South,-95.241,29.707,5021,Houston TX Ctr 1
+C065,center,South,-95.555,29.859,3869,Houston TX Ctr 2
+C066,center,South,-95.177,30.258,7024,Houston TX Ctr 3
+C067,center,South,-99.041,29.502,7100,San Antonio TX Ctr 1
+C068,center,South,-97.747,28.804,2007,San Antonio TX Ctr 2
+C069,center,South,-98.662,29.339,7733,San Antonio TX Ctr 3
+C070,center,South,-98.238,30.928,3603,Austin TX Ctr 1
+C071,center,South,-97.918,30.559,3827,Austin TX Ctr 2
+C072,center,South,-97.814,30.268,8507,Austin TX Ctr 3
+C073,center,South,-90.029,30.583,1604,New Orleans LA Ctr 1
+C074,center,South,-90.993,30.24,3724,New Orleans LA Ctr 2
+C075,center,South,-90.618,29.571,5297,New Orleans LA Ctr 3
+C076,center,South,-97.67,35.075,1688,Oklahoma City OK Ctr 1
+C077,center,South,-97.506,34.873,6865,Oklahoma City OK Ctr 2
+C078,center,South,-97.667,35.252,2491,Oklahoma City OK Ctr 3
+C079,center,Mountain,-104.321,40.009,5164,Boulder CO
+C080,center,Mountain,-105.338,39.663,5243,Fort Collins CO
+C081,center,Mountain,-104.902,39.861,1686,Colorado Springs CO
+C082,center,Mountain,-111.849,40.272,7116,Salt Lake City UT Ctr 1
+C083,center,Mountain,-111.045,41.893,4643,Salt Lake City UT Ctr 2
+C084,center,Mountain,-112.019,40.376,4740,Salt Lake City UT Ctr 3
+C085,center,Mountain,-111.928,33.184,5005,Phoenix AZ Ctr 1
+C086,center,Mountain,-112.398,33.993,3378,Phoenix AZ Ctr 2
+C087,center,Mountain,-112.143,32.484,7476,Phoenix AZ Ctr 3
+C088,center,Mountain,-106.888,34.602,2391,Albuquerque NM Ctr 1
+C089,center,Mountain,-106.692,35.586,4306,Albuquerque NM Ctr 2
+C090,center,Mountain,-107.31,34.289,5482,Albuquerque NM Ctr 3
+C091,center,West,-118.734,33.471,3358,Los Angeles CA Ctr 1
+C092,center,West,-116.933,34.877,8112,Los Angeles CA Ctr 2
+C093,center,West,-118.086,33.884,1999,Los Angeles CA Ctr 3
+C094,center,West,-122.864,38.548,8425,San Francisco CA Ctr 1
+C095,center,West,-122.224,38.12,2579,San Francisco CA Ctr 2
+C096,center,West,-122.48,37.601,4917,San Francisco CA Ctr 3
+C097,center,West,-122.45,47.503,2366,Seattle WA Ctr 1
+C098,center,West,-122.58,47.714,4719,Seattle WA Ctr 2
+C099,center,West,-122.26,48.066,5933,Seattle WA Ctr 3
+C100,center,West,-122.656,45.678,7020,Portland OR Ctr 1
+C101,center,West,-122.538,45.195,8062,Portland OR Ctr 2
+C102,center,West,-121.738,45.476,6319,Portland OR Ctr 3
+C103,center,West,-115.483,36.344,5784,Las Vegas NV Ctr 1
+C104,center,West,-114.604,35.669,2300,Las Vegas NV Ctr 2
+C105,center,West,-115.925,36.386,1889,Las Vegas NV Ctr 3
+C106,center,West,-121.286,38.997,3299,Sacramento CA Ctr 1
+C107,center,West,-121.371,38.368,8846,Sacramento CA Ctr 2
+C108,center,West,-121.621,38.604,7042,Sacramento CA Ctr 3
