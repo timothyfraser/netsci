@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-24 03:26 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 03:33 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -3299,9 +3299,15 @@ Time filter (≤)—
 ### 👁 Display
 
 
+Color nodes by
+
+Group (node attribute)
+Community (component)
+Uniform (neon green)
+
+
 Node labels
 Edge weight labels
-Community color
 Drop isolates
 Live drift
 
@@ -3336,7 +3342,7 @@ Your Network
 1. Drop an edgelist CSV. Expected columns: `from, to, weight, time` (any names — you'll map them).
 2. Auto\-detection guesses the four columns. Adjust the dropdowns if needed.
 3. Click **Load**. The graph renders with force layout; node size encodes degree.
-4. Switch layouts, toggle community color, slide the time filter, and export PNG.
+4. Switch layouts, color nodes by a group attribute (and recolor groups), slide the time filter, and export PNG.
 
 
 ### 🏷 Selected Node
