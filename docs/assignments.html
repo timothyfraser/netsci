@@ -53,14 +53,58 @@
     color: var(--green-bright); margin-bottom: 6px;
     letter-spacing: 0.04em; text-transform: uppercase;
   }
-  .cadence-card .eg-link {
-    display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;
-    font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.02em;
-    color: var(--green-bright); text-decoration: none;
-    background: rgba(57,255,20,0.08); border: 1px solid var(--border);
-    border-radius: 999px; padding: 5px 13px; transition: background .15s, border-color .15s;
+  /* Inline "see an example" — a button (matching the sample-report button) that
+     expands the example beneath the card; click again (or Collapse) to close. */
+  .eg-btn, .eg-details > summary {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
+    cursor: pointer; list-style: none;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 9px 16px; border-radius: var(--radius-sm);
+    background: var(--green-bright); color: var(--black);
+    border: 1px solid var(--green-bright); text-decoration: none; transition: all 0.15s;
   }
-  .cadence-card .eg-link:hover { background: rgba(57,255,20,0.16); border-color: var(--border-strong); }
+  .eg-btn:hover, .eg-details > summary:hover { background: var(--green-mid); border-color: var(--green-mid); }
+  .eg-details > summary::-webkit-details-marker { display: none; }
+  .eg-details[open] > summary { background: transparent; color: var(--green-bright); }
+  .eg-details[open] > summary:hover { background: rgba(57,255,20,0.08); }
+  .eg-details .eg-hide { display: none; }
+  .eg-details[open] .eg-show { display: none; }
+  .eg-details[open] .eg-hide { display: inline; }
+  .eg-panel {
+    margin-top: 14px; background: var(--card-bg-2);
+    border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px;
+  }
+  .eg-panel .eg-ptitle {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--grey); margin: 0 0 12px;
+  }
+  .eg-collapse {
+    margin-top: 16px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 7px 14px; border-radius: var(--radius-sm);
+    background: transparent; color: var(--green-bright); border: 1px solid var(--border-strong);
+  }
+  .eg-collapse:hover { background: rgba(57,255,20,0.08); }
+  .eg-sketch-frame {
+    background: #fdf8ec; border-radius: 8px; overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.25); box-shadow: 0 14px 36px rgba(0,0,0,0.45);
+  }
+  .eg-sketch-frame object, .eg-sketch-frame img { display: block; width: 100%; height: auto; }
+  .eg-lc { display: flex; gap: 14px; padding: 10px 0; border-top: 1px solid var(--border-soft); }
+  .eg-lc:first-of-type { border-top: none; }
+  .eg-lc .eg-num { font-family: var(--font-mono); font-weight: 700; font-size: 12px; color: var(--green-bright); white-space: nowrap; padding-top: 2px; }
+  .eg-lc .eg-ans { font-family: var(--font-body); font-size: 14px; color: var(--green-mint); line-height: 1.55; }
+  .eg-lc .eg-pick { font-family: var(--font-mono); font-weight: 700; color: var(--white); background: rgba(57,255,20,0.12); border: 1px solid var(--border); border-radius: 6px; padding: 1px 8px; margin-right: 8px; white-space: nowrap; }
+  .eg-console { background: #05140c; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .eg-console pre { margin: 0; padding: 16px 18px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--green-mint); white-space: pre-wrap; word-break: break-word; }
+  .eg-console .eg-prompt { color: var(--grey); }
+  .eg-console .eg-cmd { color: var(--white); }
+  .eg-console .eg-out { color: var(--green-bright); }
+  .eg-note { font-family: var(--font-body); font-size: 13px; color: var(--green-mint); line-height: 1.55; margin: 14px 0 0; padding: 10px 13px; background: rgba(57,255,20,0.06); border-left: 3px solid var(--green-bright); border-radius: 0 8px 8px 0; }
+  .eg-note b { color: var(--white); }
+  .eg-cap { font-family: var(--font-body); font-size: 12.5px; color: var(--grey); line-height: 1.55; margin: 12px 0 0; }
 
   /* Project case studies table */
   .case-table {
@@ -356,7 +400,17 @@
         <div class="meta">Item 1 · Sketchpad</div>
         <h3>This week's sketches</h3>
         <p>Photos or screenshots of your hand-drawn <a href="sketchpad.html">sketchpad prompts</a> for the week — sketching first is how you see the structure before code can hide it. Its own submission.</p>
-        <a class="eg-link" href="assignments/example-sketchpad.html" target="_blank" rel="noopener">↗ See an example submission</a>
+        <details class="eg-details">
+          <summary><span class="eg-show">▾ See an example submission</span><span class="eg-hide">▴ Hide example</span></summary>
+          <div class="eg-panel">
+            <p class="eg-ptitle">Example · a strong sketchpad submission</p>
+            <div class="eg-sketch-frame">
+              <object type="image/svg+xml" data="assignments/example-sketchpad.svg" aria-label="Hand-drawn transit-network sketch with a closed station and a detour"></object>
+            </div>
+            <p class="eg-cap">A phone photo of real paper is perfect — this one's digital so it stays crisp. <strong style="color:var(--green-mint)">What earns the check:</strong> labeled nodes, many edges, color used to carry meaning (here a highlighted route, a closed station, and the detour), and a sentence reading the structure. We grade completion and that you engaged with the structure — not artistry.</p>
+            <button type="button" class="eg-collapse" onclick="this.closest('details').open=false">▴ Collapse</button>
+          </div>
+        </details>
       </div>
     </div>
 
@@ -365,8 +419,19 @@
       <div>
         <div class="meta">Item 2 · Case-study learning checks</div>
         <h3>Last week's lab answers</h3>
-        <p>One Learning Check answer per <a href="case-studies.html">interactive lab</a> you did last week — e.g. <code>LC1: B, LC2: C</code>, or a screenshot. Completion-based, and its own submission.</p>
-        <a class="eg-link" href="assignments/example-learning-checks.html" target="_blank" rel="noopener">↗ See an example submission</a>
+        <p>One Learning Check answer per <a href="case-studies.html">interactive lab</a> you did last week — e.g. <code>LC1: B, LC2: C</code>, or a screenshot. Completion-based. <strong>Submit it together with Item 3 (your code-lab answers) in one document</strong> — there's a single Canvas spot for the two.</p>
+        <details class="eg-details">
+          <summary><span class="eg-show">▾ See an example submission</span><span class="eg-hide">▴ Hide example</span></summary>
+          <div class="eg-panel">
+            <p class="eg-ptitle">Example · pasted exactly as you'd type it (hypothetical lab)</p>
+            <div class="eg-lc"><div class="eg-num">Learning&nbsp;Check&nbsp;1</div><div class="eg-ans"><span class="eg-pick">Answer: B</span>Removing node H disconnects the east cluster from everything else, so H has the highest <b style="color:var(--white)">betweenness</b> even though its degree is only 3.</div></div>
+            <div class="eg-lc"><div class="eg-num">Learning&nbsp;Check&nbsp;2</div><div class="eg-ans"><span class="eg-pick">Answer: D</span>Average path length jumps the most, because every remaining route between the two halves has to detour the long way around.</div></div>
+            <div class="eg-lc"><div class="eg-num">Learning&nbsp;Check&nbsp;3</div><div class="eg-ans"><span class="eg-pick">Answer: A</span>Degree centrality — the question asks who has the most <i>direct</i> connections, not who sits on the most paths.</div></div>
+            <div class="eg-lc"><div class="eg-num">Learning&nbsp;Check&nbsp;4</div><div class="eg-ans"><span class="eg-pick">Answer: C</span>The random-failure curve barely moves at first; targeting high-betweenness nodes collapses connectivity far faster.</div></div>
+            <p class="eg-note"><b>One document, two items:</b> add your <b>Item 3 code-lab answer to this same file</b> — Canvas has a single submission spot for the learning checks and the code-lab answer together. These questions are made up, so you can't copy them.</p>
+            <button type="button" class="eg-collapse" onclick="this.closest('details').open=false">▴ Collapse</button>
+          </div>
+        </details>
       </div>
     </div>
 
@@ -375,8 +440,21 @@
       <div>
         <div class="meta">Item 3 · Code labs · low-stakes</div>
         <h3>Last week's code answers</h3>
-        <p>Run each case study's <code>example.R</code> or <code>example.py</code> on the <strong>data provided</strong> and submit the single answer it prints. You're just running existing code, so don't sweat it — pick R <em>or</em> Python, and write it wherever you like. <strong>This isn't the real coding; the project is.</strong></p>
-        <a class="eg-link" href="assignments/example-code-lab.html" target="_blank" rel="noopener">↗ See an example submission</a>
+        <p>Run each case study's <code>example.R</code> or <code>example.py</code> on the <strong>data provided</strong> and submit the single answer it prints. You're just running existing code, so don't sweat it — pick R <em>or</em> Python. <strong>Put it in the same document as your Item 2 learning checks</strong> — there's only one Canvas spot for both. <strong>This isn't the real coding; the project is.</strong></p>
+        <details class="eg-details">
+          <summary><span class="eg-show">▾ See an example submission</span><span class="eg-hide">▴ Hide example</span></summary>
+          <div class="eg-panel">
+            <p class="eg-ptitle">Example · the 2–3 sentence answer your run prints (hypothetical)</p>
+            <div class="eg-console"><pre><span class="eg-prompt">&gt;</span> <span class="eg-cmd">source("example.R")</span>
+
+<span class="eg-out">The network has 312 nodes and 2,140 directed edges, and it is connected.
+The most between-central node is Hub_17 (betweenness = 0.41) — it sits on
+41% of all shortest paths. Removing it raises the average path length from
+3.2 to 5.8 hops, the single largest jump of any node in the network.</span></pre></div>
+            <p class="eg-note"><b>Submit this in the same document as your Item 2 learning checks</b> — Canvas has one spot for the two together. The numbers above are made up; paste what <em>your</em> run actually prints (a console screenshot is fine too).</p>
+            <button type="button" class="eg-collapse" onclick="this.closest('details').open=false">▴ Collapse</button>
+          </div>
+        </details>
       </div>
     </div>
 
@@ -386,7 +464,7 @@
         <div class="meta">Item 4 · Project · the real work</div>
         <h3>Your own code &amp; report</h3>
         <p><strong>This is the coding that counts.</strong> Each week, pick one case-study method and apply it to <strong>your own network</strong>: your data, your own code (one script is ideal), your report. Keep the same network all three weeks. Full spec below.</p>
-        <a class="eg-link" href="assignments/sample-report.pdf" target="_blank" rel="noopener">↗ See an example report (PDF)</a>
+        <a class="eg-btn" href="assignments/sample-report.pdf" target="_blank" rel="noopener">↗ See an example report (PDF)</a>
       </div>
     </div>
   </section>
