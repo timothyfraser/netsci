@@ -48,8 +48,8 @@ edge between the two currently-farthest-apart stations.
 ## How to run
 
 ```bash
-Rscript code/09_counterfactual/example.R
-python  code/09_counterfactual/example.py
+Rscript code/07_counterfactual/example.R
+python  code/07_counterfactual/example.py
 ```
 
 ## Learning check (submit this number)

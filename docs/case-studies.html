@@ -130,8 +130,8 @@
 
   <section class="hero">
     <p class="course-number">SYSEN 5470 · Case Studies</p>
-    <h1 class="hero-title">Nine Problems.<br>One <span>Network</span> Underneath.</h1>
-    <p class="hook">Every case study starts with a system that's already broken — supply chains, transit, evacuation, suppliers — and asks you to find what a traditional analysis would miss. Eleven labs are live across nine case studies. Everything is open.</p>
+    <h1 class="hero-title">Pick a Case Study.<br>Explore the <span>Network</span> Underneath.</h1>
+    <p class="hook">Every case study starts with a system that's already broken — supply chains, transit, evacuation, suppliers — and asks you to find what a traditional analysis would miss. Every lab is live, each with its own network. Everything is open.</p>
   </section>
 
   <section class="case-intro-video">
@@ -162,15 +162,41 @@
         </div>
       </a>
 
-      <a class="case-card" href="case-studies/permutation.html" id="permutation">
-        <div class="head"><span class="ico">📐</span><h3>Network Statistics</h3></div>
+      <a class="case-card" href="case-studies/joins.html" id="joins">
+        <div class="head"><span class="ico">🔗</span><h3>Network Joins</h3></div>
         <div class="meta-row">
-          <span class="skill-chip skill-infer">Infer</span>
+          <span class="skill-chip skill-identify">Identify</span>
           <span class="status-tag">Live Lab</span>
         </div>
-        <p class="desc">Does income shape who rides with whom on Boston's Bluebikes? Permutation-test a mobility network against the right null model — and see why an unblocked permutation lies to you when the system has structure.</p>
+        <p class="desc">Drag-and-drop pipeline builder in R (dplyr) <em>or</em> Python (pandas) — student picks. Get the origin factory's tier onto every shipment edge, then add the destination's tier, and watch the column-collision rename step earn its keep. Live result table and Mermaid flowchart.</p>
         <div class="footer-row">
-          <span class="reading">Farine 2017 · Barabási Ch. 3</span>
+          <span class="reading">E&amp;K Ch. 2.4 · dplyr / pandas docs</span>
+          <span class="open-btn">Open Lab →</span>
+        </div>
+      </a>
+
+      <a class="case-card" href="case-studies/aggregation.html" id="viz">
+        <div class="head"><span class="ico">🗺️</span><h3>Visualization · Aggregation</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-identify">Identify</span>
+          <span class="status-tag">Live Lab</span>
+        </div>
+        <p class="desc">Bluebikes morning-commute flows at three zoom levels — raw stations, neighborhoods, income quintiles — plus matrix and chord views. Watch a clean socioeconomic story emerge as the hairball collapses into a 5×5 grid. The point isn't pretty graphs; it's <em>losing detail to gain insight</em>.</p>
+        <div class="footer-row">
+          <span class="reading">Bellantuono 2025</span>
+          <span class="open-btn">Open Lab →</span>
+        </div>
+      </a>
+
+      <a class="case-card" href="case-studies/centrality.html" id="centrality">
+        <div class="head"><span class="ico">📊</span><h3>Centrality &amp; Criticality</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-measure">Measure</span>
+          <span class="status-tag">Live Lab</span>
+        </div>
+        <p class="desc">Riverdale Metro. Remove Union Terminal vs. remove Ironworks — see why the bridge node (low degree, high betweenness) is more critical to the network than the biggest hub. Click any station, watch APL and components shift in real time.</p>
+        <div class="footer-row">
+          <span class="reading">Barabási Ch. 8 · E&amp;K Ch. 3.6</span>
           <span class="open-btn">Open Lab →</span>
         </div>
       </a>
@@ -188,15 +214,28 @@
         </div>
       </a>
 
-      <a class="case-card" href="case-studies/centrality.html" id="centrality">
-        <div class="head"><span class="ico">📊</span><h3>Centrality &amp; Criticality</h3></div>
+      <a class="case-card" href="case-studies/permutation.html" id="permutation">
+        <div class="head"><span class="ico">📐</span><h3>Network Statistics</h3></div>
         <div class="meta-row">
-          <span class="skill-chip skill-measure">Measure</span>
+          <span class="skill-chip skill-infer">Infer</span>
           <span class="status-tag">Live Lab</span>
         </div>
-        <p class="desc">Riverdale Metro. Remove Union Terminal vs. remove Ironworks — see why the bridge node (low degree, high betweenness) is more critical to the network than the biggest hub. Click any station, watch APL and components shift in real time.</p>
+        <p class="desc">Does income shape who rides with whom on Boston's Bluebikes? Permutation-test a mobility network against the right null model — and see why an unblocked permutation lies to you when the system has structure.</p>
         <div class="footer-row">
-          <span class="reading">Barabási Ch. 8 · E&amp;K Ch. 3.6</span>
+          <span class="reading">Farine 2017 · Barabási Ch. 3</span>
+          <span class="open-btn">Open Lab →</span>
+        </div>
+      </a>
+
+      <a class="case-card" href="case-studies/counterfactual.html" id="routing">
+        <div class="head"><span class="ico">🚦</span><h3>Routing, Counterfactuals &amp; Optimization</h3></div>
+        <div class="meta-row">
+          <span class="skill-chip skill-predict">Predict</span>
+          <span class="status-tag">Live Lab</span>
+        </div>
+        <p class="desc">Lakeside Bikeshare. Predict which proposed intervention — new station, new connector, boosted corridor — actually improves the network. Monte Carlo simulator with Poisson edge-weight resampling and a 95% CI tells you whether the effect is real or just noise.</p>
+        <div class="footer-row">
+          <span class="reading">Bertsekas · Network Optimization</span>
           <span class="open-btn">Open Lab →</span>
         </div>
       </a>
@@ -227,19 +266,6 @@
         </div>
       </a>
 
-      <a class="case-card" href="case-studies/counterfactual.html" id="routing">
-        <div class="head"><span class="ico">🚦</span><h3>Routing &amp; Optimization</h3></div>
-        <div class="meta-row">
-          <span class="skill-chip skill-predict">Predict</span>
-          <span class="status-tag">Live Lab</span>
-        </div>
-        <p class="desc">Lakeside Bikeshare. Predict which proposed intervention — new station, new connector, boosted corridor — actually improves the network. Monte Carlo simulator with Poisson edge-weight resampling and a 95% CI tells you whether the effect is real or just noise.</p>
-        <div class="footer-row">
-          <span class="reading">Bertsekas · Network Optimization</span>
-          <span class="open-btn">Open Lab →</span>
-        </div>
-      </a>
-
       <a class="case-card" href="case-studies/dsm-clustering.html" id="clusters">
         <div class="head"><span class="ico">🧩</span><h3>Clustering &amp; Communities</h3></div>
         <div class="meta-row">
@@ -253,19 +279,6 @@
         </div>
       </a>
 
-      <a class="case-card" href="case-studies/aggregation.html" id="viz">
-        <div class="head"><span class="ico">🗺️</span><h3>Visualization · Aggregation</h3></div>
-        <div class="meta-row">
-          <span class="skill-chip skill-identify">Identify</span>
-          <span class="status-tag">Live Lab</span>
-        </div>
-        <p class="desc">Bluebikes morning-commute flows at three zoom levels — raw stations, neighborhoods, income quintiles — plus matrix and chord views. Watch a clean socioeconomic story emerge as the hairball collapses into a 5×5 grid. The point isn't pretty graphs; it's <em>losing detail to gain insight</em>.</p>
-        <div class="footer-row">
-          <span class="reading">Bellantuono 2025</span>
-          <span class="open-btn">Open Lab →</span>
-        </div>
-      </a>
-
       <a class="case-card" href="case-studies/sampling.html" id="big-data">
         <div class="head"><span class="ico">🗄️</span><h3>Big Network Data · Sampling</h3></div>
         <div class="meta-row">
@@ -275,19 +288,6 @@
         <p class="desc">A 40-parish Gulf evacuation network too big to wrangle whole. Pick a sampling strategy (random node, ego, snowball, random edge), watch which features survive — triangles, degree, geographic coverage. The friendship paradox is built into the design.</p>
         <div class="footer-row">
           <span class="reading">E&amp;K Ch. 2.4</span>
-          <span class="open-btn">Open Lab →</span>
-        </div>
-      </a>
-
-      <a class="case-card" href="case-studies/joins.html" id="joins">
-        <div class="head"><span class="ico">🔗</span><h3>Big Data · Network Joins</h3></div>
-        <div class="meta-row">
-          <span class="skill-chip skill-identify">Identify</span>
-          <span class="status-tag">Live Lab</span>
-        </div>
-        <p class="desc">Drag-and-drop pipeline builder in R (dplyr) <em>or</em> Python (pandas) — student picks. Get the origin factory's tier onto every shipment edge, then add the destination's tier, and watch the column-collision rename step earn its keep. Live result table and Mermaid flowchart.</p>
-        <div class="footer-row">
-          <span class="reading">E&amp;K Ch. 2.4 · dplyr / pandas docs</span>
           <span class="open-btn">Open Lab →</span>
         </div>
       </a>

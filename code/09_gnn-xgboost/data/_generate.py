@@ -18,7 +18,7 @@ Outputs:
   - panel.csv    (500 * 52 = 26000 rows, supplier x week x label)
 
 Run:
-    python code/11_gnn-xgboost/data/_generate.py
+    python code/09_gnn-xgboost/data/_generate.py
 """
 from __future__ import annotations
 

@@ -49,8 +49,8 @@ unblocked p < 0.001, block-permuted p ≈ 0.89.
 ## How to run
 
 ```bash
-Rscript code/07_permutation/example.R
-python  code/07_permutation/example.py
+Rscript code/06_permutation/example.R
+python  code/06_permutation/example.py
 ```
 
 ## Learning check (submit this number)

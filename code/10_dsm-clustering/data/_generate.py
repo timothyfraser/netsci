@@ -14,7 +14,7 @@ Outputs:
   - nodes.csv: node_id + true module label (for verification)
 
 Run:
-    python code/06_dsm-clustering/data/_generate.py
+    python code/10_dsm-clustering/data/_generate.py
 """
 from __future__ import annotations
 

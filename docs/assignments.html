@@ -53,6 +53,14 @@
     color: var(--green-bright); margin-bottom: 6px;
     letter-spacing: 0.04em; text-transform: uppercase;
   }
+  .cadence-card .eg-link {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.02em;
+    color: var(--green-bright); text-decoration: none;
+    background: rgba(57,255,20,0.08); border: 1px solid var(--border);
+    border-radius: 999px; padding: 5px 13px; transition: background .15s, border-color .15s;
+  }
+  .cadence-card .eg-link:hover { background: rgba(57,255,20,0.16); border-color: var(--border-strong); }
 
   /* Project case studies table */
   .case-table {
@@ -348,6 +356,7 @@
         <div class="meta">Item 1 · Sketchpad</div>
         <h3>This week's sketches</h3>
         <p>Photos or screenshots of your hand-drawn <a href="sketchpad.html">sketchpad prompts</a> for the week — sketching first is how you see the structure before code can hide it. Its own submission.</p>
+        <a class="eg-link" href="assignments/example-sketchpad.html" target="_blank" rel="noopener">↗ See an example submission</a>
       </div>
     </div>
 
@@ -357,6 +366,7 @@
         <div class="meta">Item 2 · Case-study learning checks</div>
         <h3>Last week's lab answers</h3>
         <p>One Learning Check answer per <a href="case-studies.html">interactive lab</a> you did last week — e.g. <code>LC1: B, LC2: C</code>, or a screenshot. Completion-based, and its own submission.</p>
+        <a class="eg-link" href="assignments/example-learning-checks.html" target="_blank" rel="noopener">↗ See an example submission</a>
       </div>
     </div>
 
@@ -366,6 +376,7 @@
         <div class="meta">Item 3 · Code labs · low-stakes</div>
         <h3>Last week's code answers</h3>
         <p>Run each case study's <code>example.R</code> or <code>example.py</code> on the <strong>data provided</strong> and submit the single answer it prints. You're just running existing code, so don't sweat it — pick R <em>or</em> Python, and write it wherever you like. <strong>This isn't the real coding; the project is.</strong></p>
+        <a class="eg-link" href="assignments/example-code-lab.html" target="_blank" rel="noopener">↗ See an example submission</a>
       </div>
     </div>
 
@@ -375,6 +386,7 @@
         <div class="meta">Item 4 · Project · the real work</div>
         <h3>Your own code &amp; report</h3>
         <p><strong>This is the coding that counts.</strong> Each week, pick one case-study method and apply it to <strong>your own network</strong>: your data, your own code (one script is ideal), your report. Keep the same network all three weeks. Full spec below.</p>
+        <a class="eg-link" href="assignments/sample-report.pdf" target="_blank" rel="noopener">↗ See an example report (PDF)</a>
       </div>
     </div>
   </section>
@@ -474,24 +486,24 @@
         <tr><td>05</td><td>Supply Chain Resilience</td>
             <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/05_supply-chain#your-project-case-study">Project questions &amp; how-to →</a></td>
             <td><a href="case-studies/supply-chain.html">Lab →</a></td></tr>
-        <tr><td>06</td><td>DSM Clustering</td>
-            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/06_dsm-clustering#your-project-case-study">Project questions &amp; how-to →</a></td>
-            <td><a href="case-studies/dsm-clustering.html">Lab →</a></td></tr>
-        <tr><td>07</td><td>Network Permutation</td>
-            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/07_permutation#your-project-case-study">Project questions &amp; how-to →</a></td>
+        <tr><td>06</td><td>Network Permutation</td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/06_permutation#your-project-case-study">Project questions &amp; how-to →</a></td>
             <td><a href="case-studies/permutation.html">Lab →</a></td></tr>
-        <tr><td>08</td><td>Sampling Big Networks</td>
-            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/08_sampling#your-project-case-study">Project questions &amp; how-to →</a></td>
-            <td><a href="case-studies/sampling.html">Lab →</a></td></tr>
-        <tr><td>09</td><td>Counterfactual Monte Carlo</td>
-            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/09_counterfactual#your-project-case-study">Project questions &amp; how-to →</a></td>
+        <tr><td>07</td><td>Routing, Counterfactuals &amp; Optimization</td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/07_counterfactual#your-project-case-study">Project questions &amp; how-to →</a></td>
             <td><a href="case-studies/counterfactual.html">Lab →</a></td></tr>
-        <tr><td>10</td><td>GNN by Hand</td>
-            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/10_gnn-by-hand#your-project-case-study">Project questions &amp; how-to →</a></td>
+        <tr><td>08</td><td>GNN by Hand</td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/08_gnn-by-hand#your-project-case-study">Project questions &amp; how-to →</a></td>
             <td><a href="case-studies/gnn-by-hand.html">Lab →</a></td></tr>
-        <tr><td>11</td><td>GNN + XGBoost</td>
-            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/11_gnn-xgboost#your-project-case-study">Project questions &amp; how-to →</a></td>
+        <tr><td>09</td><td>GNN + XGBoost</td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/09_gnn-xgboost#your-project-case-study">Project questions &amp; how-to →</a></td>
             <td><a href="case-studies/gnn-xgboost.html">Lab →</a></td></tr>
+        <tr><td>10</td><td>DSM Clustering</td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/10_dsm-clustering#your-project-case-study">Project questions &amp; how-to →</a></td>
+            <td><a href="case-studies/dsm-clustering.html">Lab →</a></td></tr>
+        <tr><td>11</td><td>Sampling Big Networks</td>
+            <td><a href="https://github.com/timothyfraser/netsci/tree/main/code/11_sampling#your-project-case-study">Project questions &amp; how-to →</a></td>
+            <td><a href="case-studies/sampling.html">Lab →</a></td></tr>
       </tbody>
     </table>
 

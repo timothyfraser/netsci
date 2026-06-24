@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Example · Learning-checks submission · SYSEN 5470</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="../assets/design.css">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+  body { padding: 0; }
+  .eg-wrap { max-width: 820px; margin: 0 auto; padding: 28px 22px 64px; }
+  .eg-banner {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    background: var(--card-bg); border: 1px solid var(--border-strong);
+    border-radius: 14px; padding: 16px 20px; margin-bottom: 22px;
+  }
+  .eg-tag {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--black); background: var(--green-bright);
+    padding: 4px 10px; border-radius: 999px; font-weight: 700; white-space: nowrap;
+  }
+  .eg-banner h1 { font-family: var(--font-display); font-size: 30px; color: var(--white); margin: 0; letter-spacing: 0.01em; }
+  .eg-banner p { font-family: var(--font-body); font-size: 13.5px; color: var(--green-mint); margin: 4px 0 0; line-height: 1.5; }
+  .eg-banner p b { color: var(--white); }
+  /* the "pasted submission" — looks like what a student types into the box */
+  .submission {
+    background: var(--card-bg-2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 26px 28px;
+  }
+  .submission .subhead {
+    font-family: var(--font-mono); font-size: 12px; color: var(--grey);
+    letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 4px;
+  }
+  .submission .labtitle {
+    font-family: var(--font-display); font-size: 21px; color: var(--white); margin: 0 0 18px;
+  }
+  .lc { display: flex; gap: 14px; padding: 12px 0; border-top: 1px solid var(--border-soft); }
+  .lc:first-of-type { border-top: none; }
+  .lc .num {
+    font-family: var(--font-mono); font-weight: 700; font-size: 13px; color: var(--green-bright);
+    white-space: nowrap; padding-top: 2px;
+  }
+  .lc .ans { font-family: var(--font-body); font-size: 14.5px; color: var(--green-mint); line-height: 1.6; }
+  .lc .ans .pick {
+    font-family: var(--font-mono); font-weight: 700; color: var(--white);
+    background: rgba(57,255,20,0.12); border: 1px solid var(--border);
+    border-radius: 6px; padding: 1px 8px; margin-right: 8px;
+  }
+  .eg-caption { font-family: var(--font-body); font-size: 13px; color: var(--grey); margin: 22px 4px 0; line-height: 1.6; }
+  .eg-caption b { color: var(--green-mint); }
+</style>
+</head>
+<body>
+  <div class="eg-wrap">
+    <div class="eg-banner">
+      <span class="eg-tag">Example submission</span>
+      <div>
+        <h1>What a learning-checks submission looks like</h1>
+        <p>One Learning Check answer per interactive lab you did. <b>Completion-based</b> — type the letter and a sentence in your own words, or paste a screenshot. Plain text like the box below is all we need.</p>
+      </div>
+    </div>
+
+    <div class="submission">
+      <p class="subhead">Pasted exactly as a student would type it</p>
+      <h2 class="labtitle">Lab 4 · Bridges &amp; Bottlenecks <span style="font-family:var(--font-mono);font-size:12px;color:var(--grey);">(hypothetical)</span></h2>
+
+      <div class="lc">
+        <div class="num">Learning&nbsp;Check&nbsp;1</div>
+        <div class="ans"><span class="pick">Answer: B</span>Removing node H disconnects the east cluster from everything else, so H has the highest <b style="color:var(--white)">betweenness</b> even though its degree is only 3.</div>
+      </div>
+      <div class="lc">
+        <div class="num">Learning&nbsp;Check&nbsp;2</div>
+        <div class="ans"><span class="pick">Answer: D</span>Average path length jumps the most, because every remaining route between the two halves has to detour the long way around.</div>
+      </div>
+      <div class="lc">
+        <div class="num">Learning&nbsp;Check&nbsp;3</div>
+        <div class="ans"><span class="pick">Answer: A</span>Degree centrality — the question asks who has the most <i>direct</i> connections, not who sits on the most paths.</div>
+      </div>
+      <div class="lc">
+        <div class="num">Learning&nbsp;Check&nbsp;4</div>
+        <div class="ans"><span class="pick">Answer: C</span>The random-failure curve barely moves at first; targeting high-betweenness nodes collapses connectivity far faster.</div>
+      </div>
+    </div>
+
+    <p class="eg-caption">These questions are <b>made up</b> — they don't match any real lab, so you can't copy them. <b>What earns the check:</b> one answer per lab, the letter plus a short why. A screenshot of the lab's answer panel works just as well.</p>
+  </div>
+</body>
+</html>

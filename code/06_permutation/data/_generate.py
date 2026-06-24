@@ -11,7 +11,7 @@ We want a network where:
 400 nodes, 12 neighborhoods, ~25,000 weighted edges.
 
 Run:
-    python code/07_permutation/data/_generate.py
+    python code/06_permutation/data/_generate.py
 """
 from __future__ import annotations
 
