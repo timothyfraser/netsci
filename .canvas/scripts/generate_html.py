@@ -40,6 +40,12 @@ M = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
 
 T = M["theme"]
 SITE = M["course"]["site_base"].rstrip("/") + "/"
+GH = M["course"]["github"].rstrip("/")   # code folders live on GitHub, not the Pages site
+
+
+def gh_code(code_path: str) -> str:
+    """Full GitHub URL for a repo code folder (Pages only serves docs/)."""
+    return f'{GH}/tree/main/{code_path}'
 
 
 # ---------------------------------------------------------------------------
@@ -222,11 +228,17 @@ def build_home():
 def build_assignments():
     out = []
 
+    # example submissions authored on the course website (this session)
+    EX_SKETCH = url("assignments.html#example-sketchpad")
+    EX_LC     = url("assignments.html#example-learning-checks")
+    EX_REPORT = url("assignments/sample-report.pdf")
+    EX_POSTER = url("assignments/example-poster.html")
+
     # ---- per CASE STUDY: one drawing + one bundled learning check ----
     for c in M["case_studies"]:
         cs_label = f'{c["icon"]} {esc(c["name"])}'
         lab = url(c["lab"])
-        code = url(c["code"] + "#readme")
+        code = gh_code(c["code"])          # -> github.com/.../tree/main/code/NN_name
         sketch = url(c["sketch_anchor"])
 
         # Drawing (group: drawings)
@@ -248,23 +260,19 @@ def build_assignments():
                          [("Case study", cs_label), ("Skill", c["skill"])],
                          grading_pill("completion"), body,
                          [button(sketch, "Open the Sketchpad →"),
-                          button(lab, "View the Lab", primary=False)]),
+                          button(lab, "View the Lab", primary=False),
+                          button(EX_SKETCH, "See an Example Sketch", primary=False)]),
         })
 
         # Bundled Learning Check = case-study LC + code "I ran the code" LC
         # (group: casestudies)
         body = (
-            f'Your combined Learning Check for this case study — the in-lab '
-            f'case-study check <em>and</em> the “I ran the code” check, '
-            f'<strong style="color:{T["white"]};">submitted together</strong>. The full '
-            f'instructions live on the course website. '
-            f'<strong style="color:{T["white"]};">To submit (Online · Text Entry):</strong> '
-            f'include your code either (A) by pasting it at the end of the text box, or '
-            f'(B) by pasting a link to the exact file in your GitHub repo. '
-            f'<strong style="color:{T["amber"]};">Option B is the harder path</strong> — if I '
-            f'(GitHub <span style="font-family:{font("mono")};color:{T["white"]};">timothyfraser</span>) '
-            f'cannot open that repo at the deadline, the assignment is a 0, so make your repo '
-            f'public or grant me access before you submit.'
+            f'Answer this lab\'s <strong style="color:{T["white"]};">Learning Checks '
+            f'(LC 01–03 on the lab page)</strong> plus your one-line '
+            f'<strong style="color:{T["white"]};">“I ran the code”</strong> answer — '
+            f'all in one box. <strong style="color:{T["white"]};">To submit (Online · '
+            f'Text Entry):</strong> paste a short list like <em>LC1: B, LC2: C, LC3: A</em>, '
+            f'then the single answer your code printed. That\'s it.'
         )
         out.append({
             "key": f'lc-{c["key"]}',
@@ -277,6 +285,7 @@ def build_assignments():
                          [("Case study", cs_label), ("Skill", c["skill"])],
                          grading_pill("completion"), body,
                          [button(lab, "Open the Lab →"),
+                          button(EX_LC, "See an Example", primary=False),
                           button(code, "Open the Code Folder", primary=False)]),
         })
 
@@ -340,14 +349,16 @@ def build_assignments():
                          [("Case study", "Your choice — one of the methods")],
                          grading_pill("points", 100), body,
                          [button(url("assignments.html"), "Open the Project Spec & Rubric →"),
+                          button(EX_REPORT, "See an Example Report", primary=False),
                           button(url("case-studies.html"), "Browse the Case Studies", primary=False)]),
         })
 
     # ---- Final Presentation (group: participation) ----
     fp = M["extras"]["final_presentation"]
     body = (
-        f'A short presentation on your <strong style="color:{T["white"]};">strongest of '
-        f'the three project case studies</strong>. Format and details are confirmed on '
+        f'A <strong style="color:{T["white"]};">one-slide virtual poster</strong> '
+        f'(lightning talk, 3–5 min) on your <strong style="color:{T["white"]};">strongest '
+        f'of the three project case studies</strong>. Format and session details are on '
         f'the course website.'
     )
     out.append({
@@ -356,9 +367,10 @@ def build_assignments():
         "group": fp["group"],
         "grading": "completion", "points": 1,
         "submission_types": ["none"],
-        "html": card("Final Presentation", "Final Presentation",
+        "html": card("Final Presentation · Virtual Poster", "Final Presentation",
                      [], grading_pill("completion"), body,
-                     [button(url("assignments.html"), "See Presentation Details →")]),
+                     [button(url("assignments.html"), "See Presentation Details →"),
+                      button(EX_POSTER, "See an Example Poster", primary=False)]),
     })
 
     # ---- Course surveys (group: participation) ----
@@ -460,7 +472,7 @@ def build_modules():
         items.append(asg(f"ed-week-{w}"))
         # then each case-study Lab, with its Drawing + Learning Check nested under it
         for c in cs_week:
-            items.append(ext(f'{c["icon"]} {c["short"]} — Lab', path=c["lab"], indent=1))
+            items.append(ext(f'{c["icon"]} {c["short"]} — Case Study', path=c["lab"], indent=1))
             items.append(asg(f'drawing-{c["key"]}', indent=2))
             items.append(asg(f'lc-{c["key"]}', indent=2))
         for s in surveys_by_module.get(f"week{w}", []):

@@ -562,7 +562,7 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "🕸️ Build a Network — Lab",
+          "title": "🕸️ Build a Network — Case Study",
           "indent": 1,
           "path": "case-studies/build-a-network.html"
         },
@@ -578,7 +578,7 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "🔗 Joins — Lab",
+          "title": "🔗 Joins — Case Study",
           "indent": 1,
           "path": "case-studies/joins.html"
         },
@@ -594,7 +594,7 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "🗺️ Aggregation — Lab",
+          "title": "🗺️ Aggregation — Case Study",
           "indent": 1,
           "path": "case-studies/aggregation.html"
         },
@@ -610,7 +610,7 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "📊 Centrality — Lab",
+          "title": "📊 Centrality — Case Study",
           "indent": 1,
           "path": "case-studies/centrality.html"
         },
@@ -676,7 +676,7 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "📦 Supply Chain — Lab",
+          "title": "📦 Supply Chain — Case Study",
           "indent": 1,
           "path": "case-studies/supply-chain.html"
         },
@@ -692,7 +692,7 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "📐 Network Statistics — Lab",
+          "title": "📐 Network Statistics — Case Study",
           "indent": 1,
           "path": "case-studies/permutation.html"
         },
@@ -708,7 +708,7 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "🚦 Routing — Lab",
+          "title": "🚦 Routing — Case Study",
           "indent": 1,
           "path": "case-studies/counterfactual.html"
         },
@@ -779,7 +779,7 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "🧠 GNN by Hand — Lab",
+          "title": "🧠 GNN by Hand — Case Study",
           "indent": 1,
           "path": "case-studies/gnn-by-hand.html"
         },
@@ -795,7 +795,7 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "🤖 GNN + XGBoost — Lab",
+          "title": "🤖 GNN + XGBoost — Case Study",
           "indent": 1,
           "path": "case-studies/gnn-xgboost.html"
         },
@@ -811,7 +811,7 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "🧩 DSM Clustering — Lab",
+          "title": "🧩 DSM Clustering — Case Study",
           "indent": 1,
           "path": "case-studies/dsm-clustering.html"
         },
@@ -827,7 +827,7 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "🗄️ Sampling — Lab",
+          "title": "🗄️ Sampling — Case Study",
           "indent": 1,
           "path": "case-studies/sampling.html"
         },
