@@ -272,6 +272,13 @@
     color: var(--node-4); letter-spacing: 0.04em;
     margin-bottom: 0;
   }
+  .sample-report-card .fp-list {
+    margin: 2px 0 14px; padding-left: 18px;
+    font-family: var(--font-body); font-size: 14px;
+    color: var(--green-mint); line-height: 1.55;
+  }
+  .sample-report-card .fp-list li { margin-bottom: 6px; }
+  .sample-report-card .fp-list strong { color: var(--white); }
 
   /* Collapsible sections — used for AI Policy and Self-grade */
   details.collapsible {
@@ -731,9 +738,21 @@ The most between-central node is Hub_17 (betweenness = 0.41) — it sits on
 
   <section class="section">
     <div class="sec-label">Final presentation</div>
-    <div class="why-card">
-      <div class="mark">🎤</div>
-      <p>At term's end, give a short talk on your <strong>strongest of the three projects</strong>. Format and length are posted once enrollment closes.</p>
+    <div class="sample-report-card">
+      <div class="srep-ico">🎤</div>
+      <div class="srep-body">
+        <h3>A one-slide virtual poster — your strongest project</h3>
+        <p>Take your <strong>strongest of the three projects</strong> and design a <strong>single, hyper-visual slide</strong>: one big annotated network, a few supporting charts, key stats with uncertainty, and your research question as a bold header. Then talk us through it.</p>
+        <ul class="fp-list">
+          <li><strong>Lightning talk · 3–5 minutes max</strong> — one slide, one question, the headline result.</li>
+          <li><strong>Virtual poster session</strong> on the <strong>last day of class (Friday)</strong> — a 1–1.5 hour session, tentatively <strong>4:00–5:30 PM EST</strong>. Details forthcoming.</li>
+          <li><strong>Attend the session</strong> to see your peers' work and ask questions.</li>
+        </ul>
+        <div class="srep-actions">
+          <a class="srep-btn" href="assignments/example-poster.html" target="_blank" rel="noopener">↗ See an example poster</a>
+        </div>
+        <p class="srep-note">The example is built from the <a href="assignments/sample-report.pdf" target="_blank" rel="noopener" style="color: var(--green-bright);">sample report</a> — your own poster should report your own numbers.</p>
+      </div>
     </div>
   </section>
 
