@@ -440,34 +440,34 @@ table.lab-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 
     <div class="lc-card">
       <span class="lc-number">LC 01</span>
-      <div class="lc-question">Which single node disruption causes the greatest loss of retailer coverage — and is it the node with the most connections?</div>
+      <div class="lc-question">Disrupt each node in turn and watch "Retailers Supplied." Which single node strands the most retailers — and is it the node with the most connections (the highest <em>degree</em>)?</div>
       <div class="lc-options" id="lc1-options">
-        <div class="lc-option" onclick="selectOption(1,'A')"><span class="opt-label">A</span>Yes — the Central Hub has the most connections and removing it causes the most retailers to lose supply.</div>
-        <div class="lc-option" onclick="selectOption(1,'B')"><span class="opt-label">B</span>No — the Mesa Consolidator has fewer connections but removing it isolates more retailers than removing the Central Hub.</div>
-        <div class="lc-option" onclick="selectOption(1,'C')"><span class="opt-label">C</span>The highest-degree node is always most critical, because more connections means more downstream dependency.</div>
+        <div class="lc-option" onclick="selectOption(1,'A')"><span class="opt-label">A</span>Yes — the node that strands the most retailers is exactly the most-connected node, so connection count alone predicts which node is most coverage-critical.</div>
+        <div class="lc-option" onclick="selectOption(1,'B')"><span class="opt-label">B</span>No — the node that strands the most retailers (<span id="lc1-worst">—</span>, degree <span id="lc1-worst-deg">—</span>) is <em>not</em> among the most-connected nodes (highest degree is <span id="lc1-maxdeg">—</span>), so degree fails to flag it.</div>
+        <div class="lc-option" onclick="selectOption(1,'C')"><span class="opt-label">C</span>Not quite — the worst node (<span id="lc1-worst-c">—</span>, strands <span id="lc1-worst-strand">—</span>) is tied for the most connections (<span id="lc1-maxdeg-c">—</span> connections, shared with <span id="lc1-peer">—</span>), yet its equally-connected peer strands only <span id="lc1-peer-strand">—</span>. Degree alone does not tell you which node is most coverage-critical.</div>
       </div>
       <div class="lc-actions">
         <button class="lab-btn btn-neutral" onclick="showHint(1)">💡 Hint</button>
         <button class="lab-btn btn-neutral" onclick="showAnswer(1)">🔓 Reveal Answer</button>
       </div>
-      <div class="lc-feedback feedback-hint" id="lc1-hint">Try removing the <strong>Central Hub</strong> and record "Retailers Supplied." Then hit Reset, remove <strong>Mesa Consolidator</strong>, and compare. Which loss is worse?</div>
-      <div class="lc-feedback feedback-answer" id="lc1-answer"><strong>Correct: B.</strong> Removing Mesa Consolidator strands the entire Southwest retail cluster — a larger coverage loss than removing the Central Hub, which serves regions with redundant paths from other DCs. This is the core gap between <em>degree</em> and <em>betweenness</em>: what matters isn't how many routes touch a node, but whether those routes are the <em>only</em> paths to critical customers. High-degree nodes are often visible enough that engineers build redundancy around them. The quiet bottlenecks — low-degree, high-betweenness — are where supply chains actually break.</div>
+      <div class="lc-feedback feedback-hint" id="lc1-hint">Remove a node, read "Retailers Supplied," then Reset and try another. Pay attention to the two highest-degree nodes (<span id="lc1-hint-maxdeg">—</span> connections each) — do they strand the <em>same</em> number of retailers?</div>
+      <div class="lc-feedback feedback-answer" id="lc1-answer"><strong>Correct: C.</strong> The node whose removal strands the most retailers is <strong id="lc1-ans-worst">—</strong> (<span id="lc1-ans-strand">—</span> retailers lost). It is tied for the highest degree (<span id="lc1-ans-maxdeg">—</span> connections), but its equally-connected peer <span id="lc1-ans-peer">—</span> strands only <span id="lc1-ans-peerstrand">—</span>. So "most connections" does not, by itself, identify the most coverage-critical node: two nodes with identical degree can do very different damage. This is the core gap between <em>degree</em> and what really matters for customers — whether a node sits on the <em>only</em> paths to specific retailers.</div>
     </div>
 
     <div class="lc-card">
       <span class="lc-number">LC 02</span>
-      <div class="lc-question">Remove the Mesa Consolidator. What happens to the network's component structure — and which retailers are now completely cut off from supply?</div>
+      <div class="lc-question">Remove the Mesa Consolidator. What happens to the network's component structure — and which retailer(s) are now completely cut off from supply?</div>
       <div class="lc-options" id="lc2-options">
-        <div class="lc-option" onclick="selectOption(2,'A')"><span class="opt-label">A</span>The network stays connected. All retailers still receive supply through alternative routes, just with longer delivery paths.</div>
-        <div class="lc-option" onclick="selectOption(2,'B')"><span class="opt-label">B</span>The network splits into disconnected components. The Southwest retail cluster loses all supply and average path length becomes infinite.</div>
-        <div class="lc-option" onclick="selectOption(2,'C')"><span class="opt-label">C</span>The network splits, but the Central Hub immediately compensates so the Southwest cluster stays partially supplied.</div>
+        <div class="lc-option" onclick="selectOption(2,'A')"><span class="opt-label">A</span>The network stays connected (still <span id="lc2-basecomp-a">—</span> component). All retailers still receive supply through alternative routes, just with longer delivery paths.</div>
+        <div class="lc-option" onclick="selectOption(2,'B')"><span class="opt-label">B</span>The network splits into <span id="lc2-comp">—</span> disconnected components and average path length becomes infinite. Exactly <span id="lc2-strandn">—</span> retailer(s) lose all supply: <strong id="lc2-strandlist">—</strong>.</div>
+        <div class="lc-option" onclick="selectOption(2,'C')"><span class="opt-label">C</span>The network splits, but the Central Hub immediately compensates so every retailer stays fully supplied.</div>
       </div>
       <div class="lc-actions">
         <button class="lab-btn btn-neutral" onclick="showHint(2)">💡 Hint</button>
         <button class="lab-btn btn-neutral" onclick="showAnswer(2)">🔓 Reveal Answer</button>
       </div>
-      <div class="lc-feedback feedback-hint" id="lc2-hint">Select <strong>Mesa Consolidator</strong> and click "Disrupt Node." Watch the <strong>Components</strong> and <strong>Avg Path Length</strong> metrics change. Then look at which nodes have gone dark on the map.</div>
-      <div class="lc-feedback feedback-answer" id="lc2-answer"><strong>Correct: B.</strong> Mesa Consolidator is a <em>bridge node</em> — the sole connector between the Southwest supplier cluster and its retail cluster. Removing it creates two disconnected subgraphs, and average path length becomes ∞ because no finite path exists between those components. Networks don't need to lose many nodes to fragment — they only need to lose the <em>right</em> one. This is why bridge detection is a core task in supply chain resilience analysis, and why betweenness centrality is a better vulnerability signal than degree.</div>
+      <div class="lc-feedback feedback-hint" id="lc2-hint">Select <strong>Mesa Consolidator</strong> and click "Disrupt Node." Watch the <strong>Components</strong> and <strong>Avg Path Length</strong> metrics change. Then look at which retailer node goes dark on the map and check "Retailers Supplied."</div>
+      <div class="lc-feedback feedback-answer" id="lc2-answer"><strong>Correct: B.</strong> Removing Mesa Consolidator splits the network from <span id="lc2-ans-base">—</span> into <span id="lc2-ans-comp">—</span> components, so average path length becomes ∞ (no finite path between the pieces). But it does not strand a whole region — it strands exactly <span id="lc2-ans-strandn">—</span> retailer: <strong id="lc2-ans-strandlist">—</strong>, because Mesa is its <em>only</em> upstream source. Its neighbor Retailer NW-1 survives — DC West still reaches it. The lesson: a single removal can fragment a network, but you must check <em>which</em> customers actually lose supply, not assume an entire cluster goes dark.</div>
     </div>
 
     <div class="lc-card">
@@ -476,30 +476,30 @@ table.lab-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
       <div class="lc-options" id="lc3-options">
         <div class="lc-option" onclick="selectOption(3,'A')"><span class="opt-label">A</span>Yes — a 50% reduction in supplier output causes roughly 50% of retailers to lose supply, since they depend on that source.</div>
         <div class="lc-option" onclick="selectOption(3,'B')"><span class="opt-label">B</span>Yes — coverage loss is actually worse than 50%, because downstream nodes have no way to compensate for upstream shortfalls.</div>
-        <div class="lc-option" onclick="selectOption(3,'C')"><span class="opt-label">C</span>No — retailer coverage stays the same (all retailers still reachable), because path connectivity is unaffected. Only throughput volume drops, not reachability.</div>
+        <div class="lc-option" onclick="selectOption(3,'C')"><span class="opt-label">C</span>No — retailer coverage stays the same (<span id="lc3-after">—</span>/<span id="lc3-total">—</span> reachable, unchanged from <span id="lc3-before">—</span>/<span id="lc3-total2">—</span> before), because path connectivity is unaffected. Only throughput volume drops, not reachability.</div>
       </div>
       <div class="lc-actions">
         <button class="lab-btn btn-neutral" onclick="showHint(3)">💡 Hint</button>
         <button class="lab-btn btn-neutral" onclick="showAnswer(3)">🔓 Reveal Answer</button>
       </div>
       <div class="lc-feedback feedback-hint" id="lc3-hint">Select <strong>Northern Raw Supplier</strong> and click "⚡ 50% Capacity." Now check: does the <strong>Retailers Supplied</strong> metric change? Compare that to what happens when you fully disrupt the same node. What's the difference between making a link thinner vs. cutting it entirely?</div>
-      <div class="lc-feedback feedback-answer" id="lc3-answer"><strong>Correct: C.</strong> A capacity shock reduces the <em>volume</em> flowing along a node's edges, but as long as the node remains active, all downstream paths stay topologically connected. Every retailer that was reachable before is still reachable — they'll receive less product, but won't be cut off. This distinction is fundamental in supply chain risk: <strong>connectivity disruptions</strong> (node removal) and <strong>capacity disruptions</strong> (output reduction) have different structural effects and require different interventions. A fully connected but chronically undersupplied network is a different problem from a fragmented one — and fixing it requires a different playbook.</div>
+      <div class="lc-feedback feedback-answer" id="lc3-answer"><strong>Correct: C.</strong> A capacity shock reduces the <em>volume</em> flowing along a node's edges, but as long as the node remains active, all downstream paths stay topologically connected. Retailers Supplied stays at <span id="lc3-ans-after">—</span>/<span id="lc3-ans-total">—</span> — identical to the <span id="lc3-ans-before">—</span>/<span id="lc3-ans-total2">—</span> baseline. Every retailer that was reachable before is still reachable — they'll receive less product, but won't be cut off. This distinction is fundamental in supply chain risk: <strong>connectivity disruptions</strong> (node removal) and <strong>capacity disruptions</strong> (output reduction) have different structural effects and require different interventions. A fully connected but chronically undersupplied network is a different problem from a fragmented one — and fixing it requires a different playbook.</div>
     </div>
 
     <div class="lc-card">
       <span class="lc-number">LC 04</span>
-      <div class="lc-question">Compare disrupting the highest-betweenness node vs. a peripheral node like Eastern Raw Supplier. Which is worse for <em>global</em> network metrics — and which can be uniquely catastrophic for a <em>specific</em> retailer cluster?</div>
+      <div class="lc-question">Compare disrupting the highest-betweenness node (<strong id="lc4-topbetw">—</strong>, betweenness <span id="lc4-topbetw-val">—</span>) vs. the sole-source consolidator <strong>Mesa Consolidator</strong>. Which is worse for <em>global</em> network metrics — and which is uniquely catastrophic for a <em>specific</em> retailer?</div>
       <div class="lc-options" id="lc4-options">
-        <div class="lc-option" onclick="selectOption(4,'A')"><span class="opt-label">A</span>Removing the highest-betweenness node is always worse by every metric — both globally and for every specific cluster — because betweenness directly measures total criticality.</div>
-        <div class="lc-option" onclick="selectOption(4,'B')"><span class="opt-label">B</span>Removing the highest-betweenness node damages global metrics most, but a peripheral node that exclusively serves one cluster can be just as catastrophic for that cluster even when global metrics look fine.</div>
-        <div class="lc-option" onclick="selectOption(4,'C')"><span class="opt-label">C</span>Removing a peripheral node is always less damaging, because low betweenness means the rest of the network is unaffected.</div>
+        <div class="lc-option" onclick="selectOption(4,'A')"><span class="opt-label">A</span>Removing the highest-betweenness node is always worse by every metric — both globally and for every specific customer — because betweenness directly measures total criticality.</div>
+        <div class="lc-option" onclick="selectOption(4,'B')"><span class="opt-label">B</span>Removing the highest-betweenness node (<span id="lc4-topbetw-b">—</span>) damages global metrics most, yet strands <span id="lc4-topbetw-strand">—</span> retailers thanks to DC redundancy. Meanwhile Mesa Consolidator — not the top-betweenness node — strands a specific retailer (<strong id="lc4-mesa-ret">—</strong>) because it is that customer's only source.</div>
+        <div class="lc-option" onclick="selectOption(4,'C')"><span class="opt-label">C</span>Removing Mesa Consolidator is always less damaging, because lower betweenness means the rest of the network is unaffected.</div>
       </div>
       <div class="lc-actions">
         <button class="lab-btn btn-neutral" onclick="showHint(4)">💡 Hint</button>
         <button class="lab-btn btn-neutral" onclick="showAnswer(4)">🔓 Reveal Answer</button>
       </div>
-      <div class="lc-feedback feedback-hint" id="lc4-hint">Remove <strong>Mesa Consolidator</strong> (highest betweenness) and note the global metrics. Reset, then remove <strong>Eastern Raw Supplier</strong>. Global metrics may look healthier the second time — but look specifically at which retailer nodes go dark. Is "the rest of the network is fine" the same as "all customers are fine"?</div>
-      <div class="lc-feedback feedback-answer" id="lc4-answer"><strong>Correct: B.</strong> This is the gap between <em>global resilience</em> and <em>local service coverage</em>. Removing a high-betweenness node maximizes damage to network-wide metrics. But removing a peripheral node that is the <em>sole upstream source</em> for a specific retail cluster can be equally catastrophic for that cluster — even while the rest of the network runs normally. A supply chain risk manager who only tracks aggregate metrics will miss this. Real resilience analysis requires both: network-level topology metrics <em>and</em> customer-level coverage audits. Neither is sufficient alone.</div>
+      <div class="lc-feedback feedback-hint" id="lc4-hint">Sort the node table by betweenness — the top node is <strong id="lc4-hint-top">—</strong>. Remove it and note the global metrics (Components, Avg Path Length) plus "Retailers Supplied." Reset, then remove <strong>Mesa Consolidator</strong> and watch which single retailer goes dark. Is "global metrics look worse" the same as "more customers lose supply"?</div>
+      <div class="lc-feedback feedback-answer" id="lc4-answer"><strong>Correct: B.</strong> This is the gap between <em>global resilience</em> and <em>local service coverage</em>. Removing the highest-betweenness node, <strong id="lc4-ans-top">—</strong> (betweenness <span id="lc4-ans-topval">—</span>), maximizes damage to network-wide topology (it splits the graph into <span id="lc4-ans-topcomp">—</span> components) — yet thanks to redundant DCs it strands <span id="lc4-ans-topstrand">—</span> retailers. Meanwhile <strong>Mesa Consolidator</strong>, which is <em>not</em> the top-betweenness node, is the sole upstream source for <strong id="lc4-ans-mesaret">—</strong> and stranding it is catastrophic for that one customer. A risk manager who tracks only aggregate metrics will miss this. Real resilience analysis requires both: network-level topology metrics <em>and</em> customer-level coverage audits. Neither is sufficient alone.</div>
     </div>
 
   </div>
@@ -981,18 +981,142 @@ function toggleTable(id) { document.getElementById(id).classList.toggle("visible
 
 // ─── LEARNING CHECKS ──────────────────────────────────────────────────────────
 
-const correct = { 1:"B", 2:"B", 3:"C", 4:"B" };
+// Correct answers are derived from the live network in wireLearningChecks() so
+// they can never drift out of sync with the data (defaults below are a fallback).
+let LC_CORRECT = { 1:"C", 2:"B", 3:"C", 4:"B" };
 
 function selectOption(lc, opt) {
   document.querySelectorAll(`#lc${lc}-options .lc-option`).forEach((el,i) => {
     el.classList.remove("correct","incorrect");
-    if (["A","B","C"][i]===opt) el.classList.add(opt===correct[lc]?"correct":"incorrect");
+    if (["A","B","C"][i]===opt) el.classList.add(opt===LC_CORRECT[lc]?"correct":"incorrect");
   });
 }
 function showHint(lc) { const e=document.getElementById(`lc${lc}-hint`); e.style.display=e.style.display==="block"?"none":"block"; }
 function showAnswer(lc) {
   const e=document.getElementById(`lc${lc}-answer`); e.style.display=e.style.display==="block"?"none":"block";
-  document.querySelectorAll(`#lc${lc}-options .lc-option`).forEach((el,i) => { if (["A","B","C"][i]===correct[lc]) el.classList.add("revealed-correct"); });
+  document.querySelectorAll(`#lc${lc}-options .lc-option`).forEach((el,i) => { if (["A","B","C"][i]===LC_CORRECT[lc]) el.classList.add("revealed-correct"); });
+}
+
+// Compute the Learning-Check facts directly from the network and inject them into
+// the question/answer/hint text, so the LCs always match what's rendered. Numbers
+// and node names are piped live; LC_CORRECT is set from the computed conditions.
+function wireLearningChecks() {
+  if (!rawNodes.length) return;
+  const labelOf = id => (rawNodes.find(n => n.id === id) || {}).label || id;
+  const clean   = id => labelOf(id).replace(/\n/g, " ");
+  const pct = v => (v * 100).toFixed(1) + "%";       // matches node-table betweenness display
+  const set = (id, val) => { const el = document.getElementById(id); if (el != null) el.textContent = val; };
+  const fmtList = arr => arr.length ? arr.join(", ") : "none";
+
+  const ids = rawNodes.map(n => n.id);
+
+  // Baseline on the FULL network (no removals / no shocks)
+  const base = buildAdjacency(new Set());
+  const baseCP = computeAllPairs(base.activeIds, base.adj);
+  const baseComp  = baseCP.components;
+  const baseReach = countReachableRetailers(baseCP.allDists, base.activeIds);
+  const betw = computeBetweenness(base.activeIds, base.adj);
+  const deg  = computeDegree(base.activeIds, base.adj);
+
+  // Per-node removal effects (skip the retailers themselves: removing a retailer
+  // trivially "strands" itself and isn't an infrastructure-criticality question)
+  const removalInfo = {};            // id -> { stranded, list, components }
+  ids.forEach(id => {
+    const a = buildAdjacency(new Set([id]));
+    const cp = computeAllPairs(a.activeIds, a.adj);
+    const reach = countReachableRetailers(cp.allDists, a.activeIds);
+    const activeSet = new Set(a.activeIds);
+    const activeSuppliers = SUPPLIER_IDS.filter(s => activeSet.has(s));
+    const list = RETAILER_IDS.filter(rid =>
+      activeSet.has(rid) && !activeSuppliers.some(sid => cp.allDists[sid] && cp.allDists[sid][rid] !== undefined)
+    );
+    removalInfo[id] = { stranded: baseReach - reach, list, components: cp.components };
+  });
+
+  const infraIds = ids.filter(id => (rawNodes.find(n => n.id === id) || {}).role !== "retailer");
+  const maxDeg = Math.max(...ids.map(id => deg[id] || 0));
+  const maxDegIds = ids.filter(id => (deg[id] || 0) === maxDeg);
+  const maxDegSet = new Set(maxDegIds);
+
+  // Worst infrastructure node by retailers stranded (ties broken by higher degree)
+  const worst = [...infraIds].sort((a, b) =>
+    (removalInfo[b].stranded - removalInfo[a].stranded) || ((deg[b] || 0) - (deg[a] || 0))
+  )[0];
+  // An equally-connected peer (same degree) that strands fewer retailers, if any
+  const peer = maxDegSet.has(worst)
+    ? maxDegIds.filter(id => id !== worst)
+        .sort((a, b) => removalInfo[a].stranded - removalInfo[b].stranded)[0]
+    : null;
+
+  // Highest-betweenness node
+  const byBetw = [...ids].sort((a, b) => (betw[b] || 0) - (betw[a] || 0));
+  const topBetw = byBetw[0];
+
+  // ---- LC 01: most-coverage-critical node vs most-connected node ----
+  set("lc1-worst",        clean(worst));
+  set("lc1-worst-deg",    deg[worst] || 0);
+  set("lc1-maxdeg",       maxDeg);
+  set("lc1-worst-c",      clean(worst));
+  set("lc1-worst-strand", removalInfo[worst].stranded);
+  set("lc1-maxdeg-c",     maxDeg);
+  set("lc1-peer",         peer ? clean(peer) : "another node");
+  set("lc1-peer-strand",  peer ? removalInfo[peer].stranded : "—");
+  set("lc1-hint-maxdeg",  maxDeg);
+  set("lc1-ans-worst",    clean(worst));
+  set("lc1-ans-strand",   removalInfo[worst].stranded);
+  set("lc1-ans-maxdeg",   maxDeg);
+  set("lc1-ans-peer",     peer ? clean(peer) : "another node");
+  set("lc1-ans-peerstrand", peer ? removalInfo[peer].stranded : "—");
+  // A: worst IS the unique most-connected node and degree predicts it
+  // B: worst is NOT a max-degree node (degree fails to flag it)
+  // C: worst is tied for max degree but an equally-connected peer strands fewer
+  if (!maxDegSet.has(worst)) {
+    LC_CORRECT[1] = "B";
+  } else if (peer && removalInfo[peer].stranded < removalInfo[worst].stranded) {
+    LC_CORRECT[1] = "C";
+  } else {
+    LC_CORRECT[1] = "A";
+  }
+
+  // ---- LC 02: removing Mesa fragments the graph, strands a specific retailer ----
+  const mesaId = "mesa_consol";
+  const mesa = removalInfo[mesaId] || { stranded: 0, list: [], components: baseComp };
+  const mesaList = mesa.list.map(clean);
+  set("lc2-basecomp-a", baseComp);
+  set("lc2-comp",       mesa.components);
+  set("lc2-strandn",    mesa.list.length);
+  set("lc2-strandlist", fmtList(mesaList));
+  set("lc2-ans-base",   baseComp);
+  set("lc2-ans-comp",   mesa.components);
+  set("lc2-ans-strandn", mesa.list.length);
+  set("lc2-ans-strandlist", fmtList(mesaList));
+  // B if removing Mesa increases the component count (true fragmentation)
+  LC_CORRECT[2] = (mesa.components > baseComp) ? "B" : "A";
+
+  // ---- LC 03: 50% capacity shock leaves reachability unchanged ----
+  // A capacity shock never changes removedNodes, so reachable retailers == baseline.
+  set("lc3-after",   baseReach); set("lc3-total",  TOTAL_RETAILERS);
+  set("lc3-before",  baseReach); set("lc3-total2", TOTAL_RETAILERS);
+  set("lc3-ans-after",  baseReach); set("lc3-ans-total",  TOTAL_RETAILERS);
+  set("lc3-ans-before", baseReach); set("lc3-ans-total2", TOTAL_RETAILERS);
+  LC_CORRECT[3] = "C"; // reachability is topological; a volume-only shock cannot change it
+
+  // ---- LC 04: global-worst (top betweenness) vs local-catastrophic (Mesa) ----
+  const tb = removalInfo[topBetw] || { stranded: 0, list: [], components: baseComp };
+  set("lc4-topbetw",       clean(topBetw));
+  set("lc4-topbetw-val",   pct(betw[topBetw] || 0));
+  set("lc4-topbetw-b",     clean(topBetw));
+  set("lc4-topbetw-strand", tb.stranded);
+  set("lc4-mesa-ret",      fmtList(mesaList));
+  set("lc4-hint-top",      clean(topBetw));
+  set("lc4-ans-top",       clean(topBetw));
+  set("lc4-ans-topval",    pct(betw[topBetw] || 0));
+  set("lc4-ans-topcomp",   tb.components);
+  set("lc4-ans-topstrand", tb.stranded);
+  set("lc4-ans-mesaret",   fmtList(mesaList));
+  // B if the top-betweenness node is NOT the most coverage-critical (Mesa strands
+  // a specific retailer the top-betweenness node does not) — the global-vs-local gap.
+  LC_CORRECT[4] = (topBetw !== mesaId && mesa.list.length > 0) ? "B" : "A";
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
@@ -1000,7 +1124,7 @@ function showAnswer(lc) {
 window.addEventListener("load", () => {
   recompute();
   baselineStats = { avgPathLength: networkStats.avgPathLength, diameter: networkStats.diameter, components: networkStats.components, retailersReachable: networkStats.retailersReachable };
-  recompute(); drawNetwork(); updateMetricsUI(); buildEdgeTable();
+  recompute(); drawNetwork(); updateMetricsUI(); buildEdgeTable(); wireLearningChecks();
 });
 window.addEventListener("resize", () => { drawNetwork(); });
 </script>

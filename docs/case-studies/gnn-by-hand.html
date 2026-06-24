@@ -666,18 +666,18 @@ x̃_D = 0.9 + mean(x_B, x_C) = 0.9 + mean(0.3, 0.6) = 0.9 + 0.45 = <span style="
         <div class="lc-card">
           <div class="lc-card-header"><span class="lc-badge">LC 04</span><span>Message passing</span></div>
           <div class="lc-body">
-            <p class="lc-question">Factory D has the highest x̃ = 1.35, yet its own feature (x = 0.9) is only slightly higher than A's (x = 0.8). Why did D end up with such a high enriched input?</p>
+            <p class="lc-question">Factory C has the highest x̃ = 1.40 — higher even than D (x̃ = 1.35), the convergence point. Yet C's raw feature (x = 0.6) is the second-lowest. Why does C end up on top after one round of message passing?</p>
             <div class="lc-options">
-              <button class="lc-option" onclick="selectOption(4,'A',false)"><span class="opt-label">A</span> Because D has the highest raw output feature</button>
-              <button class="lc-option" onclick="selectOption(4,'B',true)"><span class="opt-label">B</span> Because D receives inputs from two neighbors, amplifying the neighborhood signal</button>
-              <button class="lc-option" onclick="selectOption(4,'C',false)"><span class="opt-label">C</span> Because the GNN weights are larger for D</button>
+              <button class="lc-option" onclick="selectOption(4,'A',false)"><span class="opt-label">A</span> Because C has the highest raw output feature</button>
+              <button class="lc-option" onclick="selectOption(4,'B',true)"><span class="opt-label">B</span> Because C's single in-neighbor (A, x = 0.8) is strong, while D averages two weaker upstream signals (B = 0.3, C = 0.6 → mean 0.45)</button>
+              <button class="lc-option" onclick="selectOption(4,'C',false)"><span class="opt-label">C</span> Because the GNN weights are larger for C</button>
             </div>
             <div class="lc-buttons">
               <button class="btn btn-neutral" onclick="toggleFeedback('lc4-hint')">Hint</button>
               <button class="btn btn-neutral" onclick="toggleFeedback('lc4-answer')">Reveal Answer</button>
             </div>
-            <div class="lc-feedback hint-box" id="lc4-hint">💡 Compare x̃_A and x̃_D. A also has a high raw feature. What does D have that A doesn't?</div>
-            <div class="lc-feedback answer-box" id="lc4-answer"><strong>B is correct.</strong> D sits at the convergence of two upstream factories (B and C). Their average feature value (0.45) adds on top of D's own value (0.9). A, despite high output, has no incoming dependencies — it's the chain's source. The GNN captures this structural difference. The weights are shared across all nodes — C is wrong.</div>
+            <div class="lc-feedback hint-box" id="lc4-hint">💡 Compare the neighbor terms: C adds mean(0.8) = 0.80, but D adds mean(0.3, 0.6) = 0.45. With MEAN aggregation, having one strong neighbor beats averaging two weaker ones.</div>
+            <div class="lc-feedback answer-box" id="lc4-answer"><strong>B is correct.</strong> Under mean aggregation, the neighbor term is the <em>average</em> of upstream features, not the sum. C inherits A's full 0.8 (its only in-neighbor), so x̃_C = 0.6 + 0.80 = 1.40. D, despite sitting at a convergence of two suppliers, averages B (0.3) and C (0.6) down to 0.45, so x̃_D = 0.9 + 0.45 = 1.35 — just short of C. Convergence does NOT automatically win when you average: dilution by a weak neighbor can outweigh the extra edge. A is wrong — C's raw feature (0.6) is not the highest. The weights are shared across all nodes — C-the-option is wrong too.</div>
           </div>
         </div>
       </div>
