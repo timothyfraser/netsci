@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-24 21:40 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 22:09 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -1235,7 +1235,7 @@ CIt doesn't matter — the network's average path length is the same under any l
 **Hint:** the question is not which layout is most "accurate" — they all encode the same edges. The question is which layout makes the *concept of "shortcut"* visually obvious. A shortcut is meaningful only when there is a longer alternative path. Where does the longer alternative show itself most clearly?
 
 
-**Answer: B.** Under circular layout, the local\-road ring becomes the literal circumference, and the three express lines visibly chord across the circle. You can *see* that each express line skips three nodes of local roads. Under force\-directed, the simulation balances forces in a way that often disrupts the ring — Northgate gets pulled toward Southpark by their shortcut edge, the ring buckles, and the "shortcut\-ness" disappears because it no longer looks like a shortcut against any visible alternative. C is wrong because it conflates analytical equivalence with communicative equivalence. The underlying graph is the same; **the story it tells is not.** This is course outcome \#2 (communicate insights) in action: layout is a choice, not a default. (Note: this network is the classic Watts\-Strogatz small\-world setup in miniature. Average path length here is about 1\.7\. If you delete the three express lines and recompute, it jumps to roughly 1\.8 → reduced to 1\.7 is small for n\=6 but the effect grows dramatically with network size.)
+**Answer: B.** Under circular layout, the local\-road ring becomes the literal circumference, and the three express lines visibly chord across the circle. You can *see* that each express line skips three nodes of local roads. Under force\-directed, the simulation balances forces in a way that often disrupts the ring — Northgate gets pulled toward Southpark by their shortcut edge, the ring buckles, and the "shortcut\-ness" disappears because it no longer looks like a shortcut against any visible alternative. C is wrong because it conflates analytical equivalence with communicative equivalence. The underlying graph is the same; **the story it tells is not.** This is course outcome \#2 (communicate insights) in action: layout is a choice, not a default. (Note: this network is the classic Watts\-Strogatz small\-world setup in miniature. Average path length here is about 1\.4 — every pair of neighborhoods is at most two hops apart. Delete the three express lines and recompute, and it rises to about 1\.8 → the reduction is small for n\=6 but the effect grows dramatically with network size.)
 
 
 LC 03
@@ -1245,12 +1245,12 @@ A supply chain — only readable once you tell the tool it's bipartite.
  "A regional electronics manufacturer sources from three suppliers. Supplier A provides capacitors and resistors. Supplier B provides circuit boards and capacitors. Supplier C provides displays, circuit boards, and connectors."
 
 
-**Build it**: 7 nodes total (3 suppliers \+ 4 components) and 7 edges connecting suppliers to the components they provide. Start in **Unipartite** mode and Force\-directed layout. Notice that even though you, the human, know suppliers and components are different kinds of things, the network treats them as one kind. Now switch **Partition** mode to **Bipartite (k\=2\)** — a Type column appears in the node table. Assign each supplier type 0 and each component type 1\. Then change **Layout** to **Bipartite stack**. The network re\-organizes itself.
+**Build it**: 8 nodes total (3 suppliers \+ 5 components) and 7 edges connecting suppliers to the components they provide. Start in **Unipartite** mode and Force\-directed layout. Notice that even though you, the human, know suppliers and components are different kinds of things, the network treats them as one kind. Now switch **Partition** mode to **Bipartite (k\=2\)** — a Type column appears in the node table. Assign each supplier type 0 and each component type 1\. Then change **Layout** to **Bipartite stack**. The network re\-organizes itself.
 
 Pick the component with only one supplier (your single point of failure). Looking at the bipartite layout, how many *other components* are second\-degree neighbors of that critical component — i.e., other components that share at least one supplier with it?
 
 AZero — the critical component is isolated since it has only one supplier.
-BOne. Connectors is the single\-supplier component (Supplier C only). Following the two\-step path connectors → Supplier C → {circuit boards, displays} reveals that connectors shares supplier C with two other components — circuit boards and displays — making 2 second\-degree neighbors.
+BOne — connectors is the single\-supplier component (Supplier C only), and it shares Supplier C with circuit boards only, so it has a single second\-degree neighbor.
 CTwo — connectors is the single\-supplier component, and via Supplier C it shares a supplier with circuit boards and displays. Those are its second\-degree neighbors. This means a disruption to Supplier C affects connectors AND its two coaffiliated components — the single point of failure cascades to three components, not one.
 
 
@@ -1404,49 +1404,49 @@ Edge List
 
 
 LC 01
-Union Terminal has the highest degree in this network — the most direct connections. Does it also have the highest betweenness centrality?
+Union Terminal has the highest degree in this network — — direct connections, more than any other station. Is it also the station with the highest *betweenness* centrality?
 
 
-A Yes — highest degree always means highest betweenness, since more connections mean more shortest paths go through you.
-B Yes in this case — Union Terminal is both the biggest hub and the highest betweenness node, but that's not always true in other networks.
-C No — Ironworks has higher betweenness than Union Terminal, despite having fewer direct connections, because it sits between two clusters that would otherwise be disconnected.
+A No — betweenness and degree are unrelated, so the busiest hub is never the top betweenness station.
+B Yes — it is at the top for betweenness too, but it is essentially tied with another central station, which reaches that level with fewer direct connections. Degree and betweenness measure different things, even when the main hub scores high on both.
+C No — a single low\-degree bridge station carries most of the traffic and has the highest betweenness by far.
 
 
 💡 Hint
 🔓 Reveal Answer
 
 
-**Hint:** Look at the color\-coding. Which node is teal (bridge color)? Now check: how many direct neighbors does it have vs. Union Terminal? Then try removing *each one* and watch what happens to the number of connected components.
+**Hint:** The station table is sorted by betweenness. Look at the top one or two rows, then check their Degree column. Do the highest\-betweenness stations also have the most direct connections?
 
 
- ✅ **Answer: C.** Ironworks sits on the narrow corridor connecting the downtown cluster to the northern suburbs. Even though Union Terminal has more direct connections (higher degree), Ironworks has higher betweenness because nearly every shortest path between downtown and the suburbs must pass through it. Degree counts neighbors; betweenness counts how many *other pairs* depend on you.
+ ✅ **Answer: B.** The two highest\-betweenness stations are — and — (both ≈ —). — reaches the top of the betweenness ranking with fewer direct connections than Union Terminal. Degree counts your neighbors; betweenness counts how many *other pairs*' shortest paths run through you — the two often agree on the busiest hub, but they are not the same measure.
 
 
 LC 02
-Try removing **Union Terminal** from the network. Then restore it and remove **Ironworks** instead. Which removal causes the number of *connected components* to increase?
+The station table is sorted by betweenness. Find **a high\-betweenness station** — it ranks \#— for betweenness (—). Remove it. Does the number of *connected components* increase?
 
 
-A Removing Union Terminal breaks the network into more components, because it has the most connections.
-B Removing Ironworks breaks the network into more components, because it's the only path connecting two otherwise separate clusters.
-C Both removals break the network into the same number of components, since both are important nodes.
+A Yes — a high\-betweenness station is always a bridge, so removing it splits the network into more components.
+B No — the network stays in one piece (still — component). High betweenness means heavy through\-traffic, not necessarily a single point of failure.
+C It only changes if you switch to a circular layout first.
 
 
 💡 Hint
 🔓 Reveal Answer
 
 
-**Hint:** Actually try it. Click Union Terminal → Remove → check Components. Then reset, click Ironworks → Remove → check again. Pay attention to whether 🧩 Components goes from 1 to 2 (or higher).
+**Hint:** Click the station → Remove → read the 🧩 Components metric. Then reset and try a humbler, lower\-betweenness station instead — does *it* split the network?
 
 
- ✅ **Answer: B.** Removing Ironworks disconnects the northern suburbs from the rest of the network — the Components metric jumps from 1 to 2\. Removing Union Terminal increases average path length and raises the diameter significantly, but the network stays connected because the remaining stations can still reach each other via alternate routes. The core insight: *a high\-betweenness bridge node can be structurally more critical than a high\-degree hub.*
+ ✅ **Answer: B.** Removing — leaves the network connected (— component) even though its betweenness is among the highest. Meanwhile — — with much lower betweenness (—) — *is* a true cut point: removing it raises Components to —. The lesson: betweenness flags where traffic concentrates; whether a station is a single point of failure (an *articulation point*) is a separate structural question.
 
 
 LC 03
-After removing Ironworks (and the network splits into 2 components), what happens to the *average path length* metric?
+Now remove **a true cut point** — one of the stations whose removal actually splits the network. What happens to the *average path length* metric?
 
 
 A Average path length increases by a small amount, since a few paths are now longer.
-B Average path length becomes undefined / infinite, because some node pairs can no longer reach each other at all.
+B Average path length becomes undefined / infinite, because some station pairs can no longer reach each other at all.
 C Average path length decreases, because the two smaller components are individually more compact than the full network.
 
 
@@ -1454,10 +1454,10 @@ C Average path length decreases, because the two smaller components are individu
 🔓 Reveal Answer
 
 
-**Hint:** Think about what "average path length" means: the average shortest path between *all pairs* of nodes. If two nodes are in disconnected components, what is the "distance" between them? How does that affect the average? Check the metric display.
+**Hint:** Think about what "average path length" means: the average shortest path between *all pairs* of stations. If two stations are in disconnected components, what is the "distance" between them? Check the metric display.
 
 
- ✅ **Answer: B.** When the network disconnects, the shortest path between a node in Component 1 and a node in Component 2 is theoretically infinite (there is no path). The tool displays this as "∞ (disconnected)". This is why *network efficiency* (1 / average path length) collapses to zero when even one bridge node is removed — a common measure in infrastructure resilience analysis. In a supply chain or power grid, this means goods or power can no longer reach certain destinations at all.
+ ✅ **Answer: B.** — is an articulation point: removing it breaks the network into — components, so some station pairs can no longer reach each other at all. Average path length becomes undefined / infinite (the tool shows "∞ (disconnected)"), and network efficiency (1 / average path length) collapses to zero — the standard signature of a severed network in resilience analysis.
 
 
 ### ⌨️ Code It
@@ -2245,19 +2245,19 @@ x̃\_D \= 0\.9 \+ mean(x\_B, x\_C) \= 0\.9 \+ mean(0\.3, 0\.6\) \= 0\.9 \+ 0\.45
 
 LC 04Message passing
 
-Factory D has the highest x̃ \= 1\.35, yet its own feature (x \= 0\.9\) is only slightly higher than A's (x \= 0\.8\). Why did D end up with such a high enriched input?
+Factory C has the highest x̃ \= 1\.40 — higher even than D (x̃ \= 1\.35\), the convergence point. Yet C's raw feature (x \= 0\.6\) is the second\-lowest. Why does C end up on top after one round of message passing?
 
 
-A Because D has the highest raw output feature
-B Because D receives inputs from two neighbors, amplifying the neighborhood signal
-C Because the GNN weights are larger for D
+A Because C has the highest raw output feature
+B Because C's single in\-neighbor (A, x \= 0\.8\) is strong, while D averages two weaker upstream signals (B \= 0\.3, C \= 0\.6 → mean 0\.45\)
+C Because the GNN weights are larger for C
 
 
 Hint
 Reveal Answer
 
-💡 Compare x̃\_A and x̃\_D. A also has a high raw feature. What does D have that A doesn't?
-**B is correct.** D sits at the convergence of two upstream factories (B and C). Their average feature value (0\.45\) adds on top of D's own value (0\.9\). A, despite high output, has no incoming dependencies — it's the chain's source. The GNN captures this structural difference. The weights are shared across all nodes — C is wrong.
+💡 Compare the neighbor terms: C adds mean(0\.8\) \= 0\.80, but D adds mean(0\.3, 0\.6\) \= 0\.45\. With MEAN aggregation, having one strong neighbor beats averaging two weaker ones.
+**B is correct.** Under mean aggregation, the neighbor term is the *average* of upstream features, not the sum. C inherits A's full 0\.8 (its only in\-neighbor), so x̃\_C \= 0\.6 \+ 0\.80 \= 1\.40\. D, despite sitting at a convergence of two suppliers, averages B (0\.3\) and C (0\.6\) down to 0\.45, so x̃\_D \= 0\.9 \+ 0\.45 \= 1\.35 — just short of C. Convergence does NOT automatically win when you average: dilution by a weak neighbor can outweigh the extra edge. A is wrong — C's raw feature (0\.6\) is not the highest. The weights are shared across all nodes — C\-the\-option is wrong too.
 
 
 Step 7### Run the same neural network — now on x̃ instead of x
@@ -3186,22 +3186,22 @@ CBoth strategies preserve triangles equally well at 30%
 
 
 LC 03
-Run **Ego\-Centric** sampling several times at 15% seeds. Notice the "Mean degree (sample)" metric versus the "true" mean degree shown below it. Why does ego\-centric sampling produce a *biased* estimate of mean degree even when it captures most of the network?
+Run **Ego\-Centric** sampling several times at 15% seeds. The "Mean degree (sample)" metric reads around **—**, *below* the population value of **—** shown beside it. The friendship paradox says ego sampling over\-recruits high\-degree nodes — so why does the displayed sample mean degree come out *lower* than the population, not higher?
 
 
-ABecause the seeds were drawn randomly, the sample is unbiased — any discrepancy is just sampling variation
-BHigh\-degree nodes are more likely to be a neighbor of *some* seed (because they have many neighbors), so they enter the sample at a higher rate than their share of the population — the friendship paradox baked into the design
-CEgo\-centric sampling under\-counts edges between non\-seed nodes, which deflates degree
+AThe metric is wrong — over\-recruiting high\-degree nodes must inflate any degree estimate, so a lower number can only be a bug
+BBecause the seeds were drawn randomly, the displayed mean degree is an unbiased estimate of the population — the gap is just sampling variation
+CThe metric is measured on the *induced* sample (a 1\-hop ego sample keeps only edges that touch a seed, dropping neighbor\-to\-neighbor edges), so each recruited neighbor shows up with just its tie to the seed — that truncation deflates the displayed degree even though the *true* degrees of the sampled nodes are over\-represented high
 
 
 💡 Hint
 🔓 Reveal Answer
 
 
-**Hint:** Think about who is *more likely* to be a neighbor of a randomly picked seed. If you pick one random person and look at their friends, are those friends a random sample of the population — or are they systematically the kinds of people who have many friends?
+**Hint:** Two things are true at once. (1\) The friendship paradox *is* at work: a node with degree d is recruited as a neighbor of a seed with probability proportional to d, so the nodes that land in your sample have higher *true* degree than average. (2\) But the "Mean degree (sample)" number is computed on the *edges this lab actually keeps*. For a 1\-hop ego sample that is only the seed\-incident edges — so a recruited neighbor is counted with just its single tie back to the seed, not its full neighborhood. Ask which of those two effects the displayed number reflects.
 
 
-**Answer: B.** This is the *friendship paradox* embedded in ego\-centric sampling. A node with degree d gets sampled (as a neighbor of a seed) with probability proportional to d — so high\-degree nodes are over\-represented relative to their population share. The mean degree in your sample is thus inflated. C is partially true but secondary; the dominant effect is the inclusion bias. This is why epidemiologists and survey methodologists distinguish "ego\-centric" from "respondent\-driven" designs with weighting corrections — and why naive snowball samples systematically overestimate degree, density, and clustering.
+**Answer: C.** The displayed sample mean degree (**—**) comes out *below* the population value (**—**) because the metric is measured on the *induced* 1\-hop ego sample: only edges incident to a seed are retained, so every neighbor you recruit is recorded with just its tie to the seed and all neighbor\-to\-neighbor edges are dropped. That truncation deflates the degree the lab reports. The friendship paradox is still real and still in the design — the *true* degree of the sampled nodes averages about **—**, which *is* higher than the population's **—** (high\-degree nodes are over\-represented exactly as B/the paradox predicts). The trap is that the rendered metric measures the truncated induced subgraph, not those true degrees — so it shows the over\-representation as *deflation*, the opposite direction. This is why ego/snowball degree estimates need correction (respondent\-driven weighting) and why you must always ask *which subgraph* a "sample" statistic was computed on. A is wrong (the lower number is correct, not a bug); B is wrong (the induced metric is biased, not unbiased).
 
 
 ### ⌨️ Code It
@@ -3339,33 +3339,33 @@ Learning Checks
 
 
 LC 01
-Which single node disruption causes the greatest loss of retailer coverage — and is it the node with the most connections?
+Disrupt each node in turn and watch "Retailers Supplied." Which single node strands the most retailers — and is it the node with the most connections (the highest *degree*)?
 
-AYes — the Central Hub has the most connections and removing it causes the most retailers to lose supply.
-BNo — the Mesa Consolidator has fewer connections but removing it isolates more retailers than removing the Central Hub.
-CThe highest\-degree node is always most critical, because more connections means more downstream dependency.
+AYes — the node that strands the most retailers is exactly the most\-connected node, so connection count alone predicts which node is most coverage\-critical.
+BNo — the node that strands the most retailers (—, degree —) is *not* among the most\-connected nodes (highest degree is —), so degree fails to flag it.
+CNot quite — the worst node (—, strands —) is tied for the most connections (— connections, shared with —), yet its equally\-connected peer strands only —. Degree alone does not tell you which node is most coverage\-critical.
 
 
 💡 Hint
 🔓 Reveal Answer
 
-Try removing the **Central Hub** and record "Retailers Supplied." Then hit Reset, remove **Mesa Consolidator**, and compare. Which loss is worse?
-**Correct: B.** Removing Mesa Consolidator strands the entire Southwest retail cluster — a larger coverage loss than removing the Central Hub, which serves regions with redundant paths from other DCs. This is the core gap between *degree* and *betweenness*: what matters isn't how many routes touch a node, but whether those routes are the *only* paths to critical customers. High\-degree nodes are often visible enough that engineers build redundancy around them. The quiet bottlenecks — low\-degree, high\-betweenness — are where supply chains actually break.
+Remove a node, read "Retailers Supplied," then Reset and try another. Pay attention to the two highest\-degree nodes (— connections each) — do they strand the *same* number of retailers?
+**Correct: C.** The node whose removal strands the most retailers is **—** (— retailers lost). It is tied for the highest degree (— connections), but its equally\-connected peer — strands only —. So "most connections" does not, by itself, identify the most coverage\-critical node: two nodes with identical degree can do very different damage. This is the core gap between *degree* and what really matters for customers — whether a node sits on the *only* paths to specific retailers.
 
 
 LC 02
-Remove the Mesa Consolidator. What happens to the network's component structure — and which retailers are now completely cut off from supply?
+Remove the Mesa Consolidator. What happens to the network's component structure — and which retailer(s) are now completely cut off from supply?
 
-AThe network stays connected. All retailers still receive supply through alternative routes, just with longer delivery paths.
-BThe network splits into disconnected components. The Southwest retail cluster loses all supply and average path length becomes infinite.
-CThe network splits, but the Central Hub immediately compensates so the Southwest cluster stays partially supplied.
+AThe network stays connected (still — component). All retailers still receive supply through alternative routes, just with longer delivery paths.
+BThe network splits into — disconnected components and average path length becomes infinite. Exactly — retailer(s) lose all supply: **—**.
+CThe network splits, but the Central Hub immediately compensates so every retailer stays fully supplied.
 
 
 💡 Hint
 🔓 Reveal Answer
 
-Select **Mesa Consolidator** and click "Disrupt Node." Watch the **Components** and **Avg Path Length** metrics change. Then look at which nodes have gone dark on the map.
-**Correct: B.** Mesa Consolidator is a *bridge node* — the sole connector between the Southwest supplier cluster and its retail cluster. Removing it creates two disconnected subgraphs, and average path length becomes ∞ because no finite path exists between those components. Networks don't need to lose many nodes to fragment — they only need to lose the *right* one. This is why bridge detection is a core task in supply chain resilience analysis, and why betweenness centrality is a better vulnerability signal than degree.
+Select **Mesa Consolidator** and click "Disrupt Node." Watch the **Components** and **Avg Path Length** metrics change. Then look at which retailer node goes dark on the map and check "Retailers Supplied."
+**Correct: B.** Removing Mesa Consolidator splits the network from — into — components, so average path length becomes ∞ (no finite path between the pieces). But it does not strand a whole region — it strands exactly — retailer: **—**, because Mesa is its *only* upstream source. Its neighbor Retailer NW\-1 survives — DC West still reaches it. The lesson: a single removal can fragment a network, but you must check *which* customers actually lose supply, not assume an entire cluster goes dark.
 
 
 LC 03
@@ -3373,29 +3373,29 @@ Select the Northern Raw Supplier and apply a 50% capacity shock (⚡ button). Do
 
 AYes — a 50% reduction in supplier output causes roughly 50% of retailers to lose supply, since they depend on that source.
 BYes — coverage loss is actually worse than 50%, because downstream nodes have no way to compensate for upstream shortfalls.
-CNo — retailer coverage stays the same (all retailers still reachable), because path connectivity is unaffected. Only throughput volume drops, not reachability.
+CNo — retailer coverage stays the same (—/— reachable, unchanged from —/— before), because path connectivity is unaffected. Only throughput volume drops, not reachability.
 
 
 💡 Hint
 🔓 Reveal Answer
 
 Select **Northern Raw Supplier** and click "⚡ 50% Capacity." Now check: does the **Retailers Supplied** metric change? Compare that to what happens when you fully disrupt the same node. What's the difference between making a link thinner vs. cutting it entirely?
-**Correct: C.** A capacity shock reduces the *volume* flowing along a node's edges, but as long as the node remains active, all downstream paths stay topologically connected. Every retailer that was reachable before is still reachable — they'll receive less product, but won't be cut off. This distinction is fundamental in supply chain risk: **connectivity disruptions** (node removal) and **capacity disruptions** (output reduction) have different structural effects and require different interventions. A fully connected but chronically undersupplied network is a different problem from a fragmented one — and fixing it requires a different playbook.
+**Correct: C.** A capacity shock reduces the *volume* flowing along a node's edges, but as long as the node remains active, all downstream paths stay topologically connected. Retailers Supplied stays at —/— — identical to the —/— baseline. Every retailer that was reachable before is still reachable — they'll receive less product, but won't be cut off. This distinction is fundamental in supply chain risk: **connectivity disruptions** (node removal) and **capacity disruptions** (output reduction) have different structural effects and require different interventions. A fully connected but chronically undersupplied network is a different problem from a fragmented one — and fixing it requires a different playbook.
 
 
 LC 04
-Compare disrupting the highest\-betweenness node vs. a peripheral node like Eastern Raw Supplier. Which is worse for *global* network metrics — and which can be uniquely catastrophic for a *specific* retailer cluster?
+Compare disrupting the highest\-betweenness node (**—**, betweenness —) vs. the sole\-source consolidator **Mesa Consolidator**. Which is worse for *global* network metrics — and which is uniquely catastrophic for a *specific* retailer?
 
-ARemoving the highest\-betweenness node is always worse by every metric — both globally and for every specific cluster — because betweenness directly measures total criticality.
-BRemoving the highest\-betweenness node damages global metrics most, but a peripheral node that exclusively serves one cluster can be just as catastrophic for that cluster even when global metrics look fine.
-CRemoving a peripheral node is always less damaging, because low betweenness means the rest of the network is unaffected.
+ARemoving the highest\-betweenness node is always worse by every metric — both globally and for every specific customer — because betweenness directly measures total criticality.
+BRemoving the highest\-betweenness node (—) damages global metrics most, yet strands — retailers thanks to DC redundancy. Meanwhile Mesa Consolidator — not the top\-betweenness node — strands a specific retailer (**—**) because it is that customer's only source.
+CRemoving Mesa Consolidator is always less damaging, because lower betweenness means the rest of the network is unaffected.
 
 
 💡 Hint
 🔓 Reveal Answer
 
-Remove **Mesa Consolidator** (highest betweenness) and note the global metrics. Reset, then remove **Eastern Raw Supplier**. Global metrics may look healthier the second time — but look specifically at which retailer nodes go dark. Is "the rest of the network is fine" the same as "all customers are fine"?
-**Correct: B.** This is the gap between *global resilience* and *local service coverage*. Removing a high\-betweenness node maximizes damage to network\-wide metrics. But removing a peripheral node that is the *sole upstream source* for a specific retail cluster can be equally catastrophic for that cluster — even while the rest of the network runs normally. A supply chain risk manager who only tracks aggregate metrics will miss this. Real resilience analysis requires both: network\-level topology metrics *and* customer\-level coverage audits. Neither is sufficient alone.
+Sort the node table by betweenness — the top node is **—**. Remove it and note the global metrics (Components, Avg Path Length) plus "Retailers Supplied." Reset, then remove **Mesa Consolidator** and watch which single retailer goes dark. Is "global metrics look worse" the same as "more customers lose supply"?
+**Correct: B.** This is the gap between *global resilience* and *local service coverage*. Removing the highest\-betweenness node, **—** (betweenness —), maximizes damage to network\-wide topology (it splits the graph into — components) — yet thanks to redundant DCs it strands — retailers. Meanwhile **Mesa Consolidator**, which is *not* the top\-betweenness node, is the sole upstream source for **—** and stranding it is catastrophic for that one customer. A risk manager who tracks only aggregate metrics will miss this. Real resilience analysis requires both: network\-level topology metrics *and* customer\-level coverage audits. Neither is sufficient alone.
 
 
 ### ⌨️ Code It
