@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-24 17:32 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 17:41 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -650,27 +650,6 @@ Structured index of every public page and code file in the course. Paste this in
 
 _These files exist on disk but don't yet have curated metadata. Add them to `scripts/build_index.py` to give them topic/use-case/tags._
 
-## Example · Code-lab submission · SYSEN 5470
-
-- **URL:** https://timothyfraser.github.io/netsci/assignments/example-code-lab.html
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## Example · Learning-checks submission · SYSEN 5470
-
-- **URL:** https://timothyfraser.github.io/netsci/assignments/example-learning-checks.html
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## Example · Sketchpad submission · SYSEN 5470
-
-- **URL:** https://timothyfraser.github.io/netsci/assignments/example-sketchpad.html
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
 ## Calendar · SYSEN 5470
 
 - **URL:** https://timothyfraser.github.io/netsci/calendar.html
@@ -1008,7 +987,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-24 17:32 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 17:41 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -5849,7 +5828,15 @@ Item 1 · Sketchpad
 Photos or screenshots of your hand\-drawn sketchpad prompts for the week — sketching first is how you see the structure before code can hide it. Its own submission.
 
 
-↗ See an example submission
+▾ See an example submission▴ Hide example
+
+Example · a strong sketchpad submission
+
+
+A phone photo of real paper is perfect — this one's digital so it stays crisp. **What earns the check:** labeled nodes, many edges, color used to carry meaning (here a highlighted route, a closed station, and the detour), and a sentence reading the structure. We grade completion and that you engaged with the structure — not artistry.
+
+
+▴ Collapse
 
 
 🧪
@@ -5858,10 +5845,22 @@ Item 2 · Case\-study learning checks
 ### Last week's lab answers
 
 
-One Learning Check answer per interactive lab you did last week — e.g. `LC1: B, LC2: C`, or a screenshot. Completion\-based, and its own submission.
+One Learning Check answer per interactive lab you did last week — e.g. `LC1: B, LC2: C`, or a screenshot. Completion\-based. **Submit it together with Item 3 (your code\-lab answers) in one document** — there's a single Canvas spot for the two.
 
 
-↗ See an example submission
+▾ See an example submission▴ Hide example
+
+Example · pasted exactly as you'd type it (hypothetical lab)
+
+
+Learning Check 1Answer: BRemoving node H disconnects the east cluster from everything else, so H has the highest **betweenness** even though its degree is only 3\.
+Learning Check 2Answer: DAverage path length jumps the most, because every remaining route between the two halves has to detour the long way around.
+Learning Check 3Answer: ADegree centrality — the question asks who has the most *direct* connections, not who sits on the most paths.
+Learning Check 4Answer: CThe random\-failure curve barely moves at first; targeting high\-betweenness nodes collapses connectivity far faster.
+**One document, two items:** add your **Item 3 code\-lab answer to this same file** — Canvas has a single submission spot for the learning checks and the code\-lab answer together. These questions are made up, so you can't copy them.
+
+
+▴ Collapse
 
 
 ⌨️
@@ -5870,10 +5869,27 @@ Item 3 · Code labs · low\-stakes
 ### Last week's code answers
 
 
-Run each case study's `example.R` or `example.py` on the **data provided** and submit the single answer it prints. You're just running existing code, so don't sweat it — pick R *or* Python, and write it wherever you like. **This isn't the real coding; the project is.**
+Run each case study's `example.R` or `example.py` on the **data provided** and submit the single answer it prints. You're just running existing code, so don't sweat it — pick R *or* Python. **Put it in the same document as your Item 2 learning checks** — there's only one Canvas spot for both. **This isn't the real coding; the project is.**
 
 
-↗ See an example submission
+▾ See an example submission▴ Hide example
+
+Example · the 2–3 sentence answer your run prints (hypothetical)
+
+
+```
+> source("example.R")
+
+The network has 312 nodes and 2,140 directed edges, and it is connected.
+The most between-central node is Hub_17 (betweenness = 0.41) — it sits on
+41% of all shortest paths. Removing it raises the average path length from
+3.2 to 5.8 hops, the single largest jump of any node in the network.
+```
+
+**Submit this in the same document as your Item 2 learning checks** — Canvas has one spot for the two together. The numbers above are made up; paste what *your* run actually prints (a console screenshot is fine too).
+
+
+▴ Collapse
 
 
 📄
@@ -6362,7 +6378,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-24 17:32 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 17:41 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
