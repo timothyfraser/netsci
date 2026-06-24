@@ -70,11 +70,37 @@
   border: 1px solid var(--green-bright); border-radius: var(--radius-sm);
   padding: 6px 10px; margin-right: 10px; cursor: pointer;
 }
-.file-row select.viz-select {
+.file-row select.viz-select,
+.color-by-row select.viz-select {
   font-family: var(--font-mono); font-size: 11px;
   padding: 8px 9px; background: rgba(5,46,22,0.55);
   border: 1px solid var(--green-bright); border-radius: var(--radius-sm);
   color: var(--green-mint); cursor: pointer; width: 100%;
+}
+
+/* Color-by selector + per-group legend */
+.color-by-row {
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;
+}
+.color-by-row label {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey);
+}
+.group-legend {
+  display: flex; flex-direction: column; gap: 5px;
+  margin-bottom: 12px; max-height: 200px; overflow-y: auto;
+}
+.group-legend .lg-row {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-body); font-size: 12px; color: var(--green-mint);
+}
+.group-legend input[type=color] {
+  width: 24px; height: 18px; flex: none; padding: 0; cursor: pointer;
+  background: none; border: 1px solid var(--border); border-radius: 4px;
+}
+.group-legend .lg-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.group-legend .lg-empty {
+  font-family: var(--font-mono); font-size: 11px; color: var(--grey-dim); line-height: 1.5;
 }
 
 #viz-status {
@@ -454,9 +480,17 @@
 
       <div class="viz-panel">
         <h3>👁 Display</h3>
+        <div class="color-by-row">
+          <label for="color-by">Color nodes by</label>
+          <select id="color-by" class="viz-select">
+            <option value="group" selected>Group (node attribute)</option>
+            <option value="community">Community (component)</option>
+            <option value="uniform">Uniform (neon green)</option>
+          </select>
+        </div>
+        <div id="group-legend" class="group-legend"></div>
         <div class="toggle-row" data-toggle="labels">Node labels<div class="toggle on"></div></div>
         <div class="toggle-row" data-toggle="edges">Edge weight labels<div class="toggle"></div></div>
-        <div class="toggle-row" data-toggle="community">Community color<div class="toggle"></div></div>
         <div class="toggle-row" data-toggle="isolates">Drop isolates<div class="toggle on"></div></div>
         <div class="toggle-row" data-toggle="drift">Live drift<div class="toggle on"></div></div>
       </div>
@@ -504,7 +538,7 @@
           <li>Drop an edgelist CSV. Expected columns: <code style="font-family: var(--font-mono); color: var(--green-bright);">from, to, weight, time</code> (any names — you'll map them).</li>
           <li>Auto-detection guesses the four columns. Adjust the dropdowns if needed.</li>
           <li>Click <strong>Load</strong>. The graph renders with force layout; node size encodes degree.</li>
-          <li>Switch layouts, toggle community color, slide the time filter, and export PNG.</li>
+          <li>Switch layouts, color nodes by a group attribute (and recolor groups), slide the time filter, and export PNG.</li>
         </ol>
       </div>
     </div>
