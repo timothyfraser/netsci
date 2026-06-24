@@ -103,6 +103,30 @@
   font-family: var(--font-mono); font-size: 11px; color: var(--grey-dim); line-height: 1.5;
 }
 
+/* Collapsible aggregate panel */
+.agg-panel { padding: 0; }
+.agg-panel > summary {
+  list-style: none; cursor: pointer; padding: 18px;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--green-bright);
+  display: flex; align-items: center; gap: 10px;
+}
+.agg-panel > summary::-webkit-details-marker { display: none; }
+.agg-panel > summary::before {
+  content: '▸'; transition: transform .15s; color: var(--green-bright); flex: none;
+}
+.agg-panel[open] > summary::before { transform: rotate(90deg); }
+.agg-panel .agg-tag {
+  font-size: 8.5px; color: var(--node-4); border: 1px solid var(--node-4);
+  border-radius: 3px; padding: 1px 5px; letter-spacing: 0.1em;
+}
+.agg-panel .agg-body { padding: 0 18px 18px; }
+.agg-note {
+  font-family: var(--font-body); font-size: 11.5px; color: var(--grey);
+  line-height: 1.5; margin: 4px 0 0;
+}
+.agg-note em { color: var(--green-mint); font-style: italic; }
+
 #viz-status {
   font-family: var(--font-mono); font-size: 11px;
   color: var(--grey); margin: 8px 0 4px;
@@ -451,6 +475,24 @@
           <div style="color: var(--grey); font-size: 12px;">Upload an edgelist to map columns.</div>
         </div>
       </div>
+
+      <details class="viz-panel agg-panel">
+        <summary>🧪 Aggregate <span class="agg-tag">experimental</span></summary>
+        <div class="agg-body">
+          <div class="color-by-row">
+            <label for="aggregate-by">Aggregate by node trait</label>
+            <select id="aggregate-by" class="viz-select"><option value="">None (raw network)</option></select>
+          </div>
+          <div class="color-by-row">
+            <label for="aggregate-mode">Combine edge weight by</label>
+            <select id="aggregate-mode" class="viz-select">
+              <option value="sum" selected>Sum</option>
+              <option value="mean">Average</option>
+            </select>
+          </div>
+          <p class="agg-note">Collapses nodes that share a trait (e.g. <em>region</em>): every edge is re-pointed to its endpoints' groups and combined. Intra-group edges are dropped. Updates live.</p>
+        </div>
+      </details>
 
       <div class="viz-panel">
         <h3>⚙ Layout</h3>
