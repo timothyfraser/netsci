@@ -20,7 +20,9 @@
     layout: 'force',  // force | radial | hierarchical
     showEdgeLabels: false,
     showNodeLabels: true,
-    showCommunity: false,
+    colorBy: 'group',     // 'group' (node attribute) | 'community' (component) | 'uniform'
+    groupPalette: {},     // group value -> default course-palette color
+    groupColors: {},      // group value -> user-overridden color
     dropIsolates: true,   // hide nodes that never appear in the edgelist (degree 0)
     showDrift: true,
     nodeScale: 1,
@@ -290,6 +292,9 @@
   function loadGraph() {
     if (!buildGraph()) return;
     setStatus(`Graph: ${state.graph.nodes.length} nodes · ${state.graph.links.length} edges.`, 'ok');
+    state.groupColors = {};        // new dataset → drop any custom group colors
+    buildGroupPalette();
+    renderGroupLegend();
     setupTimeSlider();
     renderControls();
     layout();
@@ -524,17 +529,45 @@
       : state.graph.nodes;
   }
 
+  const UNIFORM_COLOR = '#39FF14';
+
   function nodeColor(n) {
-    if (state.showCommunity && state.metrics[n.id]) {
+    if (state.colorBy === 'community' && state.metrics[n.id]) {
       const c = state.metrics[n.id].component || 0;
-      return PALETTE[(c - 1) % PALETTE.length];
+      return PALETTE[(c - 1 + PALETTE.length) % PALETTE.length];
     }
-    if (n.group && state.showCommunity) {
-      // hash group string → palette
-      let h = 0; for (let i = 0; i < n.group.length; i++) h = (h * 31 + n.group.charCodeAt(i)) | 0;
-      return PALETTE[Math.abs(h) % PALETTE.length];
+    if (state.colorBy === 'group' && n.group) {
+      return state.groupColors[n.group] || state.groupPalette[n.group] || UNIFORM_COLOR;
     }
-    return '#39FF14';
+    return UNIFORM_COLOR;
+  }
+
+  // Assign each distinct group value a default color from the course palette.
+  // Rebuilt per loaded graph; user overrides live in state.groupColors.
+  function buildGroupPalette() {
+    state.groupPalette = {};
+    if (!state.graph) return;
+    const groups = Array.from(new Set(
+      state.graph.nodes.map((n) => n.group).filter((g) => g !== null && g !== undefined && g !== '')
+    )).sort();
+    groups.forEach((g, i) => { state.groupPalette[g] = PALETTE[i % PALETTE.length]; });
+  }
+
+  // Render the per-group legend with a color picker for each group value.
+  function renderGroupLegend() {
+    const box = $('group-legend'); if (!box) return;
+    if (state.colorBy !== 'group') { box.style.display = 'none'; box.innerHTML = ''; return; }
+    box.style.display = 'flex';
+    const groups = Object.keys(state.groupPalette);
+    if (!groups.length) {
+      box.innerHTML = '<div class="lg-empty">No group attribute mapped. Set a <strong>Node group column</strong> under Column Mapping and click Load.</div>';
+      return;
+    }
+    box.innerHTML = groups.map((g) => {
+      const color = state.groupColors[g] || state.groupPalette[g];
+      const safe = String(g).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+      return `<div class="lg-row"><input type="color" value="${color}" data-group="${safe}" title="Recolor ${safe}"><span class="lg-name" title="${safe}">${safe}</span></div>`;
+    }).join('');
   }
 
   function nodeRadius(n) {
@@ -724,7 +757,6 @@
         const on = t.classList.contains('on');
         const key = row.dataset.toggle;
         if (key === 'edges')      state.showEdgeLabels = on;
-        if (key === 'community')  state.showCommunity  = on;
         if (key === 'labels')     state.showNodeLabels = on;
         if (key === 'isolates') {
           state.dropIsolates = on;
@@ -737,6 +769,23 @@
         }
         render();
       });
+    });
+
+    // Color-nodes-by selector
+    const colorBySel = $('color-by');
+    if (colorBySel) colorBySel.addEventListener('change', (e) => {
+      state.colorBy = e.target.value;
+      renderGroupLegend();
+      render();
+    });
+
+    // Per-group color overrides (event-delegated; the legend is rebuilt on load)
+    const legend = $('group-legend');
+    if (legend) legend.addEventListener('input', (e) => {
+      const inp = e.target.closest('input[type=color]');
+      if (!inp) return;
+      state.groupColors[inp.dataset.group] = inp.value;
+      render();
     });
 
     $('time-slider').addEventListener('input', (e) => {
@@ -877,6 +926,7 @@
     setupZoom();
     wireControls();
     renderControls();
+    renderGroupLegend();
   }
   document.addEventListener('DOMContentLoaded', init);
 
