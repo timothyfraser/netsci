@@ -27,7 +27,8 @@
     groupPalette: {},     // group value -> default course-palette color
     groupColors: {},      // group value -> user-overridden color
     dropIsolates: true,   // hide nodes that never appear in the edgelist (degree 0)
-    showDrift: true,
+    showDrift: false,     // off = settle then stop (default); on = keep gently moving
+    frozen: false,        // true once the layout has settled / been frozen
     nodeScale: 1,
     edgeThreshold: 0,
     timeFilter: null, // null = no filter, otherwise upper bound
@@ -36,13 +37,33 @@
     simulation: null,
     zoom: null,            // d3.zoom behavior
     zoomTransform: null,   // current pan/zoom transform (persists across renders)
+    palette: 'viridis',    // categorical color palette: viridis | plasma | mako | neon
     metrics: {}       // per-node { degree, weighted, betweenness, component }
   };
 
-  const PALETTE = [
-    '#39FF14', '#86efac', '#5eead4', '#fbbf24',
-    '#f472b6', '#818cf8', '#f97316', '#e2e8f0'
-  ];
+  // Improved neon set: distinct hues (no near-duplicate light green, no washed
+  // white); soft "neon-pastel" tints that read well on the dark background.
+  const NEON = ['#39FF14', '#5eead4', '#fbbf24', '#f472b6',
+                '#818cf8', '#fb923c', '#a78bfa', '#f87171'];
+  // Mako control points (seaborn) for a d3 basis interpolator (teal-forward).
+  const MAKO_STOPS = ['#0B0405', '#3A2C59', '#395D9C', '#3497A9',
+                      '#5CC8A7', '#A5DFB8', '#DEF5E5'];
+
+  // Categorical colors sampled from the chosen palette. Continuous palettes are
+  // sampled over [0.30, 0.98] to skip their darkest end (low contrast on the
+  // dark stage) and returned as hex (so <input type=color> swatches accept them).
+  function paletteColors(name, n) {
+    n = Math.max(1, n);
+    if (name === 'neon') return Array.from({ length: n }, (_, i) => NEON[i % NEON.length]);
+    const interp = name === 'plasma' ? d3.interpolatePlasma
+                 : name === 'mako'   ? d3.interpolateRgbBasis(MAKO_STOPS)
+                 : d3.interpolateViridis;
+    const lo = 0.30, hi = 0.98;
+    return Array.from({ length: n }, (_, i) => {
+      const t = n === 1 ? 0.6 : lo + (hi - lo) * (i / (n - 1));
+      return d3.color(interp(t)).formatHex();
+    });
+  }
 
   // ── DOM helpers ─────────────────────────────────────────────
   const $ = (id) => document.getElementById(id);
@@ -89,7 +110,9 @@
       return null;
     };
     return {
-      nodeId:    find('id', 'node', 'name', 'label'),
+      // NB: do NOT treat 'label' as the id — many node files have a 'label'
+      // display column distinct from the id key, which would mis-key nodes.
+      nodeId:    find('node_id', 'id', 'node', 'nodeid', 'name'),
       nodeLabel: find('label', 'name', 'title'),
       nodeGroup: find('group', 'community', 'cluster', 'type', 'category', 'kind', 'tier')
     };
@@ -400,27 +423,42 @@
     const good = cols.filter((c) => {
       if (skip.has(c)) return false;
       const distinct = new Set(rows.map((r) => r[c])).size;
-      return distinct >= 1 && distinct <= cap;          // categorical, not an id/coord
+      return distinct >= 2 && distinct <= cap;          // ≥2 groups, not an id/coord
     });
+    // surface the mapped group column first — it's the most useful default
+    const grp = state.mapping.nodeGroup;
+    if (grp && good.includes(grp)) { good.splice(good.indexOf(grp), 1); good.unshift(grp); }
     sel.innerHTML = '<option value="">None (raw network)</option>' +
       good.map((c) => `<option value="${String(c).replace(/"/g, '&quot;')}">${c}</option>`).join('');
   }
 
   // ── Project-dataset loader (fetch CSVs from playground-data/) ───
   // Endpoint columns are always the first two columns of each edges.csv;
-  // node id is the first column of each nodes.csv. We fall back to those
-  // when the name-based auto-mapper doesn't recognize the headers.
-  const PROJECT_WEIGHTS = {
-    'amazon-last-mile': 'packages',         'uber-manhattan': 'fare',
-    'semiconductor-supply': 'annual_volume','aerospace-components': 'qty_per_aircraft',
-    'mutualaid-quake': 'amount',            'financial-contagion': 'exposure',
-    'airline-delays': 'number_of_flights',  'power-grid': 'capacity_mw',
-    'campus-contact': 'contact_minutes',    'opensource-deps': 'import_count',
-    'trade-commodity': 'tonnes',            'reorg-comms': 'message_count',
-    'satellite-constellation': 'capacity_gbps', 'drone-components': 'coupling_strength',
-    'transit-multimodal': 'capacity',
-    'satellite-supply-chain': 'units_per_year', 'aircraft-supply-chain': 'units_per_year',
-    'ups-ground-network': 'packages', 'ups-package-flow': 'weight_kg'
+  // node id is the first column of each nodes.csv. We fall back to those when
+  // the name-based auto-mapper doesn't recognize the headers. DATASET_MAPPINGS
+  // pins the right column to each aesthetic for our hardcoded sample networks
+  // (esp. time columns that aren't called "time", and group columns the auto-
+  // mapper doesn't know about, e.g. ecosystem_area / district / operator).
+  const DATASET_MAPPINGS = {
+    'amazon-last-mile':        { weight: 'packages',          time: 'day',    group: 'kind' },
+    'uber-manhattan':          { weight: 'fare',              time: 'hour',   group: 'kind' },
+    'semiconductor-supply':    { weight: 'annual_volume',                     group: 'kind' },
+    'aerospace-components':    { weight: 'qty_per_aircraft',                  group: 'kind' },
+    'mutualaid-quake':         { weight: 'amount',            time: 'period', group: 'kind' },
+    'financial-contagion':     { weight: 'exposure',          time: 'period', group: 'type' },
+    'airline-delays':          { weight: 'number_of_flights', time: 'block',  group: 'kind' },
+    'power-grid':              { weight: 'capacity_mw',                       group: 'kind' },
+    'campus-contact':          { weight: 'contact_minutes',   time: 'week',   group: 'kind' },
+    'opensource-deps':         { weight: 'import_count',                      group: 'ecosystem_area' },
+    'trade-commodity':         { weight: 'tonnes',            time: 'period', group: 'region' },
+    'reorg-comms':             { weight: 'message_count',     time: 'period', group: 'dept' },
+    'satellite-constellation': { weight: 'capacity_gbps',                     group: 'operator' },
+    'drone-components':        { weight: 'coupling_strength',                 group: 'kind' },
+    'transit-multimodal':      { weight: 'capacity',                         group: 'district' },
+    'satellite-supply-chain':  { weight: 'units_per_year',                    group: 'kind' },
+    'aircraft-supply-chain':   { weight: 'units_per_year',                    group: 'kind' },
+    'ups-ground-network':      { weight: 'packages',                         group: 'kind' },
+    'ups-package-flow':        { weight: 'weight_kg',                        group: 'region' },
   };
 
   function parseCsvUrl(url, cb, err) {
@@ -435,20 +473,23 @@
     if (!key) return;
     setStatus('Loading ' + key + '…');
     const base = 'playground-data/';
+    const cfg = DATASET_MAPPINGS[key] || {};
     parseCsvUrl(base + key + '-edges.csv', (edata, ecols) => {
       state.edgeCsv = edata;
       state.edgeCols = ecols;
       const m = autoMap(ecols);
       if (!m.from) m.from = ecols[0];
       if (!m.to)   m.to   = ecols[1];
-      const w = PROJECT_WEIGHTS[key];
-      if (!m.weight && w && ecols.includes(w)) m.weight = w;
+      if (cfg.weight && ecols.includes(cfg.weight)) m.weight = cfg.weight;
+      if (cfg.time && ecols.includes(cfg.time)) m.time = cfg.time;   // map non-"time" temporal cols
       state.mapping = Object.assign({}, state.mapping, m);
       parseCsvUrl(base + key + '-nodes.csv', (ndata, ncols) => {
         state.nodeCsv = ndata;
         state.nodeCols = ncols;
         const nm = autoMapNodes(ncols);
-        if (!nm.nodeId) nm.nodeId = ncols[0];
+        if (cfg.nodeId && ncols.includes(cfg.nodeId)) nm.nodeId = cfg.nodeId;
+        else if (!nm.nodeId) nm.nodeId = ncols[0];
+        if (cfg.group && ncols.includes(cfg.group)) nm.nodeGroup = cfg.group;
         Object.assign(state.mapping, nm);
         renderMappers();
         loadGraph();
@@ -473,15 +514,23 @@
     const { links } = state.graph;
 
     if (state.layout === 'force') {
+      // Scale forces with graph size so dense graphs spread out instead of
+      // collapsing into a blob; cap long-range repulsion for performance.
+      const N = nodes.length, E = links.length;
+      const charge = -180 - 9 * Math.sqrt(E);
+      const linkDist = 55 + 260 / Math.sqrt(Math.max(4, N));
       const sim = d3.forceSimulation(nodes)
-        .force('link',    d3.forceLink(links).id((d) => d.id).distance(70).strength(0.5))
-        .force('charge',  d3.forceManyBody().strength(-180))
+        .force('link',    d3.forceLink(links).id((d) => d.id).distance(linkDist).strength(0.4))
+        .force('charge',  d3.forceManyBody().strength(charge).distanceMax(700))
         .force('center',  d3.forceCenter(W / 2, H / 2))
         .force('collide', d3.forceCollide().radius((d) => 6 + Math.sqrt(d.deg) * 2.2));
       sim.on('tick', render);
-      sim.on('end', () => fitToView());
-      if (!state.showDrift) sim.alphaDecay(0.05); else sim.alphaDecay(0.018);
+      sim.on('end', () => { state.frozen = true; updateFreezeBtn(); fitToView(); });
+      // Settle quickly and stop by default; "Live drift" keeps it gently moving.
+      sim.alphaDecay(state.showDrift ? 0.0228 : 0.045);
       state.simulation = sim;
+      state.frozen = false;
+      updateFreezeBtn();
     } else if (state.layout === 'radial') {
       // Group by component, place each component as a hub-and-spoke (highest-degree node at center)
       const comps = {};
@@ -606,13 +655,35 @@
     const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
     const t = d3.zoomIdentity.translate(W / 2 - scale * cx, H / 2 - scale * cy).scale(scale);
     const sel = d3.select(svgEl);
-    if (animate) sel.transition().duration(450).call(state.zoom.transform, t);
-    else sel.call(state.zoom.transform, t);
+    // Re-render once the fit settles so node/label counter-scaling uses the
+    // final zoom level (keeps markers legible when a big graph is zoomed out).
+    if (animate) sel.transition().duration(450).on('end', () => render()).call(state.zoom.transform, t);
+    else { sel.call(state.zoom.transform, t); render(); }
   }
 
   // Release fixed positions when switching layouts
   function unfix() {
     state.graph.nodes.forEach((n) => { n.fx = null; n.fy = null; });
+  }
+
+  // ── Freeze / re-run layout ──────────────────────────────────
+  function updateFreezeBtn() {
+    const b = $('btn-freeze'); if (!b) return;
+    b.textContent = state.frozen ? '▶' : '❄';
+    b.title = state.frozen ? 'Re-run layout' : 'Freeze layout';
+  }
+
+  function toggleFreeze() {
+    if (!state.graph) return;
+    if (state.frozen) {            // re-run the layout from current positions
+      state.frozen = false;
+      layout();
+      if (state.simulation) state.simulation.alpha(0.6).restart();
+    } else {                        // stop now — pin nodes where they are
+      stopSim();
+      state.frozen = true;
+    }
+    updateFreezeBtn();
   }
 
   // ── Render ──────────────────────────────────────────────────
@@ -639,7 +710,8 @@
   function nodeColor(n) {
     if (state.colorBy === 'community' && state.metrics[n.id]) {
       const c = state.metrics[n.id].component || 0;
-      return PALETTE[(c - 1 + PALETTE.length) % PALETTE.length];
+      const pal = state.commPalette || [UNIFORM_COLOR];
+      return pal[(c - 1 + pal.length) % pal.length];
     }
     if (state.colorBy === 'group' && n.group) {
       return state.groupColors[n.group] || state.groupPalette[n.group] || UNIFORM_COLOR;
@@ -647,15 +719,17 @@
     return UNIFORM_COLOR;
   }
 
-  // Assign each distinct group value a default color from the course palette.
-  // Rebuilt per loaded graph; user overrides live in state.groupColors.
+  // Assign each distinct group value a color from the chosen palette. Rebuilt
+  // per loaded graph / palette change; user overrides live in state.groupColors.
   function buildGroupPalette() {
     state.groupPalette = {};
+    state.commPalette = paletteColors(state.palette, 8);   // for community coloring
     if (!state.graph) return;
     const groups = Array.from(new Set(
       state.graph.nodes.map((n) => n.group).filter((g) => g !== null && g !== undefined && g !== '')
     )).sort();
-    groups.forEach((g, i) => { state.groupPalette[g] = PALETTE[i % PALETTE.length]; });
+    const cols = paletteColors(state.palette, groups.length);
+    groups.forEach((g, i) => { state.groupPalette[g] = cols[i]; });
   }
 
   // Render the per-group legend with a color picker for each group value.
@@ -694,12 +768,13 @@
     const root = svg.append('g').attr('class', 'viewport');
     if (state.zoomTransform) root.attr('transform', state.zoomTransform);
 
-    // Edges
+    // Edges — fade and thin them on dense graphs so structure shows through.
+    const dens = vlinks.length > 2000 ? 0.4 : vlinks.length > 800 ? 0.6 : 1;
     const g = root.append('g').attr('class', 'links');
     g.selectAll('line').data(vlinks).enter().append('line')
       .attr('stroke', 'rgba(57,255,20,0.55)')
-      .attr('stroke-width', (l) => 0.6 + (l.weight / maxW) * 3.5)
-      .attr('stroke-opacity', (l) => 0.35 + 0.55 * (l.weight / maxW))
+      .attr('stroke-width', (l) => (0.6 + (l.weight / maxW) * 3.5) * (dens < 1 ? 0.7 : 1))
+      .attr('stroke-opacity', (l) => (0.35 + 0.55 * (l.weight / maxW)) * dens)
       .attr('x1', (l) => (l.source.x ?? 0))
       .attr('y1', (l) => (l.source.y ?? 0))
       .attr('x2', (l) => (l.target.x ?? 0))
@@ -717,21 +792,44 @@
     }
 
     // Nodes
+    const nodesShown = activeNodes();
+    // Keep markers/labels legible when fit-to-view zooms a big network out:
+    // counter-scale by the inverse zoom (with a cap), and bump sizes on phones.
+    const k = (state.zoomTransform && state.zoomTransform.k) ? state.zoomTransform.k : 1;
+    const small = (typeof window !== 'undefined' ? window.innerWidth : 1000) < 700;
+    const boost = Math.min(small ? 3.0 : 2.4, Math.max(1, 1 / k));
+    const rOf = (n) => nodeRadius(n) * boost;
+
+    // On big graphs / small screens, only label the most-connected nodes
+    // (plus the selected one) — a wall of overlapping labels helps no one.
+    let labelIds = null;
+    if (state.showNodeLabels) {
+      const capN = small ? 28 : 90;
+      if (nodesShown.length > capN) {
+        const topK = small ? 12 : 24;
+        labelIds = new Set(
+          nodesShown.slice()
+            .sort((a, b) => (state.metrics[b.id]?.degree || 0) - (state.metrics[a.id]?.degree || 0))
+            .slice(0, topK).map((n) => n.id));
+      }
+    }
+    const labelFont = (small ? 13 : 10.5) * boost;
+
     const ng = root.append('g').attr('class', 'nodes');
-    const nsel = ng.selectAll('g').data(activeNodes()).enter().append('g')
+    const nsel = ng.selectAll('g').data(nodesShown).enter().append('g')
       .attr('transform', (n) => `translate(${n.x ?? 0},${n.y ?? 0})`)
       .style('cursor', 'pointer')
       .on('click', (_e, n) => { state.selectedNode = n.id; updateNodePanel(); render(); });
 
     nsel.filter((n) => state.selectedNode === n.id).append('circle')
-      .attr('r', (n) => nodeRadius(n) + 5)
+      .attr('r', (n) => rOf(n) + 5)
       .attr('fill', 'none')
       .attr('stroke', (n) => nodeColor(n))
       .attr('stroke-width', 2)
       .attr('stroke-dasharray', '4,3').attr('opacity', 0.85);
 
     nsel.append('circle')
-      .attr('r', (n) => nodeRadius(n))
+      .attr('r', (n) => rOf(n))
       .attr('fill', (n) => nodeColor(n))
       .attr('fill-opacity', 0.9)
       .attr('stroke', '#050a05')
@@ -739,14 +837,15 @@
       .style('filter', (n) => `drop-shadow(0 0 ${6 * state.nodeScale}px ${nodeColor(n)})`);
 
     if (state.showNodeLabels) {
-      nsel.append('text')
-        .attr('y', (n) => -nodeRadius(n) - 5)
+      nsel.filter((n) => (!labelIds || labelIds.has(n.id) || n.id === state.selectedNode))
+        .append('text')
+        .attr('y', (n) => -rOf(n) - 5)
         .attr('text-anchor', 'middle')
         .attr('font-family', 'Space Mono, monospace')
-        .attr('font-size', '10px')
+        .attr('font-size', labelFont + 'px')
         .attr('letter-spacing', '0.05em')
         .attr('fill', '#d1fae5')
-        .text((n) => n.label.length > 14 ? n.label.slice(0, 12) + '…' : n.label);
+        .text((n) => n.label.length > 16 ? n.label.slice(0, 14) + '…' : n.label);
     }
 
     updateStats(vlinks.length);
@@ -870,7 +969,10 @@
         }
         if (key === 'drift') {
           state.showDrift = on;
-          if (state.simulation) state.simulation.alphaDecay(on ? 0.018 : 0.1);
+          if (state.simulation) {
+            state.simulation.alphaDecay(on ? 0.0228 : 0.045);
+            if (on) { state.frozen = false; updateFreezeBtn(); state.simulation.alpha(0.4).restart(); }
+          }
         }
         render();
       });
@@ -880,6 +982,15 @@
     const colorBySel = $('color-by');
     if (colorBySel) colorBySel.addEventListener('change', (e) => {
       state.colorBy = e.target.value;
+      renderGroupLegend();
+      render();
+    });
+
+    const paletteSel = $('palette');
+    if (paletteSel) paletteSel.addEventListener('change', (e) => {
+      state.palette = e.target.value;
+      state.groupColors = {};       // palette changed → drop per-group overrides
+      buildGroupPalette();
       renderGroupLegend();
       render();
     });
@@ -937,8 +1048,10 @@
     if (zin)  zin.addEventListener('click',  () => state.zoom && svgSel().transition().duration(180).call(state.zoom.scaleBy, 1.4));
     if (zout) zout.addEventListener('click', () => state.zoom && svgSel().transition().duration(180).call(state.zoom.scaleBy, 1 / 1.4));
     if (zfit) zfit.addEventListener('click', () => fitToView());
+    const zfreeze = $('btn-freeze');
+    if (zfreeze) zfreeze.addEventListener('click', () => toggleFreeze());
 
-    window.addEventListener('resize', () => { if (state.graph) { layout(); } });
+    window.addEventListener('resize', () => { if (state.graph && !state.frozen) layout(); });
   }
 
   // ── PNG export ──────────────────────────────────────────────

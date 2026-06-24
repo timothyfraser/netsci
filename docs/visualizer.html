@@ -530,6 +530,15 @@
             <option value="uniform">Uniform (neon green)</option>
           </select>
         </div>
+        <div class="color-by-row">
+          <label for="palette">Palette</label>
+          <select id="palette" class="viz-select">
+            <option value="viridis" selected>Viridis</option>
+            <option value="plasma">Plasma</option>
+            <option value="mako">Mako</option>
+            <option value="neon">Neon</option>
+          </select>
+        </div>
         <div id="group-legend" class="group-legend"></div>
         <div class="toggle-row" data-toggle="labels">Node labels<div class="toggle on"></div></div>
         <div class="toggle-row" data-toggle="edges">Edge weight labels<div class="toggle"></div></div>
@@ -556,6 +565,7 @@
               <div class="stage-title">Your Network</div>
             </div>
             <div class="stage-actions">
+              <button class="viz-zoom-btn" id="btn-freeze" title="Freeze layout" aria-label="Freeze or re-run layout">❄</button>
               <button class="viz-zoom-btn" id="btn-zoom-in" title="Zoom in" aria-label="Zoom in">＋</button>
               <button class="viz-zoom-btn" id="btn-zoom-out" title="Zoom out" aria-label="Zoom out">－</button>
               <button class="viz-zoom-btn" id="btn-fit" title="Fit network to view" aria-label="Fit to view">⤢</button>
