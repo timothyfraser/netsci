@@ -1,6 +1,6 @@
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-24 17:41 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 19:00 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -630,6 +630,13 @@ Structured index of every public page and code file in the course. Paste this in
 # Uncurated (auto-detected, needs metadata)
 
 _These files exist on disk but don't yet have curated metadata. Add them to `scripts/build_index.py` to give them topic/use-case/tags._
+
+## Example · Final presentation poster · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/assignments/example-poster.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
 
 ## Calendar · SYSEN 5470
 

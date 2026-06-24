@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-24 17:41 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 19:00 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -650,6 +650,13 @@ Structured index of every public page and code file in the course. Paste this in
 
 _These files exist on disk but don't yet have curated metadata. Add them to `scripts/build_index.py` to give them topic/use-case/tags._
 
+## Example · Final presentation poster · SYSEN 5470
+
+- **URL:** https://timothyfraser.github.io/netsci/assignments/example-poster.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
 ## Calendar · SYSEN 5470
 
 - **URL:** https://timothyfraser.github.io/netsci/calendar.html
@@ -987,7 +994,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-24 17:41 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 19:00 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -6091,7 +6098,21 @@ Meet the instructor for **three virtual office\-hour sessions** over the term �
 Final presentation
 
 🎤
-At term's end, give a short talk on your **strongest of the three projects**. Format and length are posted once enrollment closes.
+
+### A one\-slide virtual poster — your strongest project
+
+
+Take your **strongest of the three projects** and design a **single, hyper\-visual slide**: one big annotated network, a few supporting charts, key stats with uncertainty, and your research question as a bold header. Then talk us through it.
+
+
+* **Lightning talk · 3–5 minutes max** — one slide, one question, the headline result.
+* **Virtual poster session** on the **last day of class (Friday)** — a 1–1\.5 hour session, tentatively **4:00–5:30 PM EST**. Details forthcoming.
+* **Attend the session** to see your peers' work and ask questions.
+
+
+↗ See an example poster
+
+The example is built from the sample report — your own poster should report your own numbers.
 
 
 **SYSEN 5470 · Assignments**
@@ -6378,7 +6399,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-24 17:41 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 19:00 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
