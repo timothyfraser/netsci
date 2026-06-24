@@ -21,6 +21,7 @@
     showEdgeLabels: false,
     showNodeLabels: true,
     showCommunity: false,
+    dropIsolates: true,   // hide nodes that never appear in the edgelist (degree 0)
     showDrift: true,
     nodeScale: 1,
     edgeThreshold: 0,
@@ -358,7 +359,8 @@
   function layout() {
     stopSim();
     const W = $('graph-stage').clientWidth, H = $('graph-stage').clientHeight;
-    const { nodes, links } = state.graph;
+    const nodes = activeNodes();
+    const { links } = state.graph;
 
     if (state.layout === 'force') {
       const sim = d3.forceSimulation(nodes)
@@ -481,7 +483,7 @@
     const svgEl = $('graph');
     const W = svgEl.clientWidth, H = svgEl.clientHeight;
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    state.graph.nodes.forEach((n) => {
+    activeNodes().forEach((n) => {
       if (!isFinite(n.x) || !isFinite(n.y)) return;
       if (n.x < minX) minX = n.x; if (n.x > maxX) maxX = n.x;
       if (n.y < minY) minY = n.y; if (n.y > maxY) maxY = n.y;
@@ -511,6 +513,15 @@
       if (tF !== null && l.time !== null && l.time !== undefined && l.time > tF) return false;
       return true;
     });
+  }
+
+  // Nodes to display/lay out. With dropIsolates on (default), nodes that never
+  // appear in the edgelist (degree 0) are hidden — only edge-connected plants show.
+  function activeNodes() {
+    if (!state.graph) return [];
+    return state.dropIsolates
+      ? state.graph.nodes.filter((n) => n.deg > 0)
+      : state.graph.nodes;
   }
 
   function nodeColor(n) {
@@ -569,7 +580,7 @@
 
     // Nodes
     const ng = root.append('g').attr('class', 'nodes');
-    const nsel = ng.selectAll('g').data(state.graph.nodes).enter().append('g')
+    const nsel = ng.selectAll('g').data(activeNodes()).enter().append('g')
       .attr('transform', (n) => `translate(${n.x ?? 0},${n.y ?? 0})`)
       .style('cursor', 'pointer')
       .on('click', (_e, n) => { state.selectedNode = n.id; updateNodePanel(); render(); });
@@ -606,11 +617,12 @@
   // ── Stats overlay + node panel ──────────────────────────────
   function updateStats(visibleEdges) {
     if (!state.graph) return;
-    const N = state.graph.nodes.length;
+    const shown = activeNodes();
+    const N = shown.length;
     const E = visibleEdges ?? state.graph.links.length;
     $('stat-nodes').textContent = N.toLocaleString();
     $('stat-edges').textContent = E.toLocaleString();
-    const comps = new Set(state.graph.nodes.map((n) => state.metrics[n.id]?.component)).size;
+    const comps = new Set(shown.map((n) => state.metrics[n.id]?.component)).size;
     $('stat-comps').textContent = comps;
     const density = N > 1 ? (2 * E / (N * (N - 1))).toFixed(3) : '0';
     $('stat-density').textContent = density;
@@ -714,6 +726,11 @@
         if (key === 'edges')      state.showEdgeLabels = on;
         if (key === 'community')  state.showCommunity  = on;
         if (key === 'labels')     state.showNodeLabels = on;
+        if (key === 'isolates') {
+          state.dropIsolates = on;
+          // the displayed node set changed — re-lay out, refit, and redraw
+          if (state.graph) { unfix(); layout(); fitToView(); }
+        }
         if (key === 'drift') {
           state.showDrift = on;
           if (state.simulation) state.simulation.alphaDecay(on ? 0.018 : 0.1);
