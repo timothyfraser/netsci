@@ -443,13 +443,7 @@
     <p>A network is not a picture of stuff connected to stuff — it's a deliberate choice about what counts as a node, what counts as a tie, and what direction information flows. This playground lets you construct networks from prose, see them as node-link diagrams, adjacency matrices, and edge tables simultaneously, and compute structural properties as you build. The tool is for verification and computation. The thinking happens on your sketchpad.</p>
   </section>
 
-  <div class="data-cta" style="margin: 0 0 28px; padding: 14px 18px; background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--green-bright); border-radius: var(--radius-lg); display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
-    <span style="font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; color: var(--green-mint);">📦 Need a network for your project case study?</span>
-    <a class="btn" href="https://github.com/timothyfraser/netsci/tree/main/data/projects" target="_blank" rel="noopener" style="margin-left:auto;">Browse the project datasets on GitHub →</a>
-  </div>
-
-
-  <section class="case-intro-video">
+  <section class="case-intro-video" id="video-overview" style="scroll-margin-top: 90px;">
     <div class="ratio">
       <iframe src="https://www.youtube-nocookie.com/embed/ST1tPP_7DoI"
               title="Case study intro video"
@@ -460,11 +454,11 @@
     </div>
   </section>
 
-  <section class="case-readings-link">
+  <section class="case-readings-link" id="readings" style="scroll-margin-top: 90px;">
     <a href="../readings.html#fundamentals">📚 Readings for this case study →</a>
   </section>
 
-  <div class="intro-block">
+  <div class="intro-block" id="interactive-tutorial" style="scroll-margin-top: 90px;">
     <h3>🧭 How to use this playground</h3>
     <p><strong>Three tools, exclusive — pick one at a time:</strong> 🖱 <strong>Select</strong> highlights a node and shows its details, and lets you drag it around when in manual layout. ✏️ <strong>Add Node</strong> drops a node anywhere you click on empty canvas. 🔗 <strong>Add Edge</strong> connects two nodes — click source, then target. 🗑 <strong>Delete</strong> removes the node or edge you click.</p>
     <p><strong>Three representations, one network:</strong> the node-link diagram, the node and edge tables, and the adjacency matrix are all views of the same data. Edit anywhere and the others update. This is the lab's central concept: <em>a network is its edge list and its node list.</em> The picture is just one way to draw them.</p>
@@ -607,7 +601,7 @@
     <svg id="matrix-svg"></svg>
   </div>
 
-  <h3 class="lc-section-header">📝 Learning Checks — Build, then answer</h3>
+  <h3 class="lc-section-header" id="learning-checks" style="scroll-margin-top: 90px;">📝 Learning Checks — Build, then answer</h3>
 
   <div class="lc-card">
     <div class="lc-header">
@@ -696,13 +690,35 @@
     </div>
   </div>
 
-  <div class="lab-cta-row">
-    <span class="cta-lede"><strong>Try this on your own data.</strong> Open the Coding Playground, upload your network, and use the same tools.</span>
-    <a href="../playground-r.html" class="btn primary">→ R Playground</a>
-    <a href="../playground-py.html" class="btn ghost">→ Python Playground</a>
-  </div>
+  <section id="code-it" style="scroll-margin-top: 90px; margin: 36px 0 24px; padding: 18px 22px; background: var(--card-bg); border: 1px solid var(--border); border-left: 3px solid var(--green-bright); border-radius: var(--radius-md);">
+    <h3 style="font-family: var(--font-display); font-size: 20px; color: var(--white); margin: 0 0 8px;">⌨️ Code It</h3>
+    <p style="font-family: var(--font-body); font-size: 15px; color: var(--green-mint); line-height: 1.6; margin: 0 0 14px;"><strong style="color: var(--white);">Run the code for this case study yourself.</strong> Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.</p>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <a href="https://github.com/timothyfraser/netsci/tree/main/code/01_build-a-network" target="_blank" rel="noopener" class="btn" style="background: var(--green-bright); color: var(--black); border-color: var(--green-bright);">→ Code Folder (GitHub)</a>
+      <a href="../playground-r.html" class="btn">→ R Playground</a>
+      <a href="../playground-py.html" class="btn">→ Python Playground</a>
+    </div>
+  </section>
 
-    <p class="site-footer">
+  <section id="project-seeds" style="scroll-margin-top: 90px; margin-top: 8px;">
+    <div class="sec-label">If you chose this case study's methods for your project…</div>
+    <div class="intro-block" style="margin-top: 14px;">
+      <h3 style="font-family: var(--font-display); font-size: 24px; color: var(--white); margin: 0 0 10px; letter-spacing: 0.01em;">Project Seed Questions</h3>
+      <p>Pick one of these questions for your project report — or use them as starting points for your own.</p>
+      <ul style="margin: 6px 0 0; padding-left: 18px; line-height: 1.6;">
+        <li><strong>From data to graph.</strong> Take a tabular dataset from your field that isn't obviously a graph — define what a node, edge, and weight are, justify each, then report N, E, density, and the degree distribution.</li>
+        <li><strong>Bipartite projection in your domain.</strong> Find a real two-mode structure (people↔projects, firms↔contracts, reviewers↔papers), build it, project it both ways, and report what each projection reveals.</li>
+        <li><strong>Operationalization bake-off.</strong> Define the same system two ways (directed vs. undirected, or two different edge rules) and show how the structure — and the answer — changes.</li>
+      </ul>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;">
+        <a class="btn" href="https://github.com/timothyfraser/netsci/tree/main/code/01_build-a-network#your-project-case-study" target="_blank" rel="noopener">Full project questions & how-to →</a>
+        <a class="btn ghost" href="../assignments.html">Project Homework spec →</a>
+        <a class="btn ghost" href="../assignments/sample-report.pdf" target="_blank" rel="noopener">See an example report →</a>
+      </div>
+    </div>
+  </section>
+
+  <p class="site-footer">
     <strong>SYSEN 5470 · Network Fundamentals · Build-a-Network Playground</strong><br>
     Cornell Engineering · Summer 2026 · <a href="mailto:tmf77@cornell.edu">tmf77@cornell.edu</a>
   </p>
@@ -1531,5 +1547,6 @@ window.addEventListener('resize', () => { redrawCanvas(); redrawMatrix(); });
 <script src="../assets/network-bg.js" defer></script>
 <script src="../assets/site.js" defer></script>
 <script src="../assets/notebooklm-bubble.js" defer></script>
+<script src="../assets/case-toc.js" defer></script>
 </body>
 </html>

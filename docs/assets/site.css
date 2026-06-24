@@ -704,3 +704,38 @@ select:focus-visible {
   font-family: var(--font-mono); font-size: 10.5px;
   letter-spacing: 0.16em; text-transform: uppercase; color: var(--node-4);
 }
+
+/* ── Case-study "On this page" sidebar TOC (case-toc.js) ───────────────── */
+.case-toc {
+  position: fixed; left: 14px; top: 116px; width: 214px;
+  max-height: calc(100vh - 150px); overflow: auto; z-index: 60;
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 12px 14px; backdrop-filter: blur(8px);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.45);
+  transition: transform .2s ease, opacity .2s ease;
+}
+.case-toc.collapsed { transform: translateX(-130%); opacity: 0; pointer-events: none; }
+.case-toc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.case-toc-title { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green-bright); }
+.case-toc-toggle { background: none; border: none; color: var(--grey); font-size: 19px; line-height: 1; cursor: pointer; padding: 0 2px; }
+.case-toc-toggle:hover { color: var(--white); }
+.case-toc-list { list-style: none; margin: 0; padding: 0; }
+.case-toc-list a {
+  display: flex; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 8px;
+  text-decoration: none; font-family: var(--font-body); font-size: 13px;
+  color: var(--green-mint); line-height: 1.25; border-left: 2px solid transparent;
+}
+.case-toc-list a:hover { background: rgba(57,255,20,0.08); color: var(--white); }
+.case-toc-list a.active { background: rgba(57,255,20,0.10); color: var(--white); border-left-color: var(--green-bright); }
+.case-toc-ico { font-size: 14px; flex: none; }
+.case-toc-open {
+  position: fixed; left: 14px; top: 116px; z-index: 60; display: none;
+  align-items: center; justify-content: center; width: 44px; height: 44px;
+  border-radius: 10px; background: var(--green-bright); color: var(--black);
+  border: none; cursor: pointer; font-size: 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+/* When the case-study TOC is open on wide screens, shift content right so the
+   sidebar never overlaps the page (it overlays only on narrow screens). */
+@media (min-width: 1000px) {
+  html.toc-open .page-wide { margin-left: 244px; margin-right: 16px; transition: margin .2s ease; }
+}
