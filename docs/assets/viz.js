@@ -17,6 +17,9 @@
       nodeId: null, nodeLabel: null, nodeGroup: null
     },
     graph: null,      // { nodes: [{id, label, group, x, y, deg, weighted}], links: [{source, target, weight, time}] }
+    baseGraph: null,  // the un-aggregated graph; `graph` may be an aggregated view of it
+    aggregateBy: '',  // node-trait column to collapse on ('' = raw network)
+    aggregateMode: 'sum',  // how to combine the edge weight: 'sum' | 'mean'
     layout: 'force',  // force | radial | hierarchical
     showEdgeLabels: false,
     showNodeLabels: true,
@@ -131,6 +134,7 @@
         const id = String(row[state.mapping.nodeId]);
         if (!nodeMap.has(id)) nodeMap.set(id, { id, label: id, group: null, deg: 0, weighted: 0 });
         const n = nodeMap.get(id);
+        n.attrs = row;   // keep the raw node columns so we can aggregate by any trait
         if (state.mapping.nodeLabel) n.label = String(row[state.mapping.nodeLabel] ?? id);
         if (state.mapping.nodeGroup) n.group = String(row[state.mapping.nodeGroup] ?? '');
       });
@@ -291,14 +295,115 @@
 
   function loadGraph() {
     if (!buildGraph()) return;
+    state.baseGraph = state.graph;
     setStatus(`Graph: ${state.graph.nodes.length} nodes · ${state.graph.links.length} edges.`, 'ok');
-    state.groupColors = {};        // new dataset → drop any custom group colors
+    populateAggregateOptions();
+    state.aggregateBy = '';
+    const aggSel = $('aggregate-by'); if (aggSel) aggSel.value = '';
+    rebuildView();
+  }
+
+  // ── Experimental aggregation ────────────────────────────────
+  // Collapse the base graph by a node trait: every edge is re-pointed to the
+  // trait group of its endpoints, and parallel edges are combined (sum/mean of
+  // the weight). Intra-group edges (same trait on both ends) are dropped.
+  function aggregateGraph(base, trait, mode) {
+    const groupOf = (n) => {
+      const a = n.attrs ? n.attrs[trait] : undefined;
+      return (a === undefined || a === null || a === '') ? '(none)' : String(a);
+    };
+    const gid = {};
+    base.nodes.forEach((n) => { gid[n.id] = groupOf(n); });
+
+    const nodeMap = new Map();
+    base.nodes.forEach((n) => {
+      const g = gid[n.id];
+      if (!nodeMap.has(g)) {
+        nodeMap.set(g, { id: g, label: g, group: g, deg: 0, weighted: 0,
+                         attrs: { [trait]: g }, members: 0 });
+      }
+      nodeMap.get(g).members += 1;
+    });
+
+    const agg = new Map();   // "gsgt" -> { source, target, sum, count }
+    base.links.forEach((l) => {
+      const s = typeof l.source === 'object' ? l.source.id : l.source;
+      const t = typeof l.target === 'object' ? l.target.id : l.target;
+      const gs = gid[s], gt = gid[t];
+      if (gs === gt) return;                       // drop intra-group self-loops
+      const key = gs + '' + gt;
+      let rec = agg.get(key);
+      if (!rec) { rec = { source: gs, target: gt, sum: 0, count: 0 }; agg.set(key, rec); }
+      rec.sum += (l.weight || 0);
+      rec.count += 1;
+    });
+
+    const links = [];
+    agg.forEach((rec) => {
+      const w = mode === 'mean' ? rec.sum / rec.count : rec.sum;
+      links.push({ source: rec.source, target: rec.target, weight: w, count: rec.count, time: null });
+      const A = nodeMap.get(rec.source), B = nodeMap.get(rec.target);
+      A.deg += 1; B.deg += 1; A.weighted += w; B.weighted += w;
+    });
+
+    return { nodes: Array.from(nodeMap.values()), links };
+  }
+
+  // Build the displayed graph from the base graph + current aggregation choice,
+  // then recompute metrics/palette/time-slider and redraw. Called on load and
+  // whenever the aggregation controls change.
+  function rebuildView() {
+    if (!state.baseGraph) return;
+    if (state.aggregateBy) {
+      state.graph = aggregateGraph(state.baseGraph, state.aggregateBy, state.aggregateMode);
+      state.timeRange = null;
+      state.timeFilter = null;
+    } else {
+      state.graph = state.baseGraph;
+      const times = state.baseGraph.links
+        .map((l) => l.time).filter((t) => t !== null && t !== undefined && isFinite(t));
+      state.timeRange = times.length ? [Math.min(...times), Math.max(...times)] : null;
+      state.timeFilter = state.timeRange ? state.timeRange[1] : null;
+    }
+    state.selectedNode = null;
+    state.edgeThreshold = 0;
+    const th = $('edge-thresh'); if (th) th.value = 0;
+    const tv = $('thresh-val'); if (tv) tv.textContent = '0.0';
+
+    computeMetrics();
+    state.groupColors = {};
     buildGroupPalette();
     renderGroupLegend();
     setupTimeSlider();
     renderControls();
+    updateNodePanel();
+    unfix();
     layout();
+    fitToView();
     render();
+
+    const n = state.graph.nodes.length, e = state.graph.links.length;
+    if (state.aggregateBy) {
+      setStatus(`Aggregated by ${state.aggregateBy} (${state.aggregateMode}): ${n} groups · ${e} edges.`, 'ok');
+    }
+  }
+
+  // Fill the "Aggregate by" dropdown with categorical-ish node columns only
+  // (skip the id/label and high-cardinality/continuous columns like coords).
+  function populateAggregateOptions() {
+    const sel = $('aggregate-by'); if (!sel) return;
+    const cols = state.nodeCols || [];
+    const rows = state.nodeCsv || [];
+    const N = rows.length || 1;
+    const skip = new Set([state.mapping.nodeId, state.mapping.nodeLabel].filter(Boolean));
+    const cap = Math.max(2, Math.min(40, Math.floor(N * 0.6)));
+    const good = cols.filter((c) => {
+      if (skip.has(c)) return false;
+      const distinct = new Set(rows.map((r) => r[c])).size;
+      return distinct >= 1 && distinct <= cap;          // categorical, not an id/coord
+    });
+    sel.innerHTML = '<option value="">None (raw network)</option>' +
+      good.map((c) => `<option value="${String(c).replace(/"/g, '&quot;')}">${c}</option>`).join('');
   }
 
   // ── Project-dataset loader (fetch CSVs from playground-data/) ───
@@ -786,6 +891,18 @@
       if (!inp) return;
       state.groupColors[inp.dataset.group] = inp.value;
       render();
+    });
+
+    // Experimental aggregation
+    const aggBy = $('aggregate-by');
+    if (aggBy) aggBy.addEventListener('change', (e) => {
+      state.aggregateBy = e.target.value;
+      if (state.baseGraph) rebuildView();
+    });
+    const aggMode = $('aggregate-mode');
+    if (aggMode) aggMode.addEventListener('change', (e) => {
+      state.aggregateMode = e.target.value;
+      if (state.baseGraph && state.aggregateBy) rebuildView();
     });
 
     $('time-slider').addEventListener('input', (e) => {
