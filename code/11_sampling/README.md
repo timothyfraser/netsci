@@ -51,8 +51,8 @@ two-week crisis window.
 ## How to run
 
 ```bash
-Rscript code/08_sampling/example.R
-python  code/08_sampling/example.py
+Rscript code/11_sampling/example.R
+python  code/11_sampling/example.py
 ```
 
 ## Learning check (submit this string)

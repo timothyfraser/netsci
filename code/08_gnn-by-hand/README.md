@@ -57,8 +57,8 @@ tracks are fully runnable; pick whichever you're comfortable in.
 ## How to run
 
 ```bash
-python  code/10_gnn-by-hand/example.py    # Python track
-Rscript code/10_gnn-by-hand/example.R     # R track (calls functions.py via reticulate)
+python  code/08_gnn-by-hand/example.py    # Python track
+Rscript code/08_gnn-by-hand/example.R     # R track (calls functions.py via reticulate)
 ```
 
 The R track needs the `reticulate` package and a Python with `numpy` +

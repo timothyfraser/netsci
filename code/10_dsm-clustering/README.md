@@ -45,8 +45,8 @@ automatically. Specifically:
 ## How to run
 
 ```bash
-Rscript code/06_dsm-clustering/example.R
-python  code/06_dsm-clustering/example.py
+Rscript code/10_dsm-clustering/example.R
+python  code/10_dsm-clustering/example.py
 ```
 
 ## Learning check (submit this answer)

@@ -21,7 +21,7 @@ This script expects them to have been fetched to /tmp/sts_data/:
     done
 
 Run:
-    python code/08_sampling/data/_generate.py
+    python code/11_sampling/data/_generate.py
 """
 from __future__ import annotations
 
