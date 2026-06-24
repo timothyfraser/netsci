@@ -266,10 +266,11 @@
     });
 
     if (state.nodeCsv && state.nodeCols.length) {
+      // Node group column lives in the Display panel (it drives coloring); keep
+      // only the structural id/label mapping here.
       const nf = [
         { key: 'nodeId',    label: 'Node ID column',    options: state.nodeCols },
-        { key: 'nodeLabel', label: 'Node label column', options: state.nodeCols },
-        { key: 'nodeGroup', label: 'Node group column', options: state.nodeCols }
+        { key: 'nodeLabel', label: 'Node label column', options: state.nodeCols }
       ];
       const div = document.createElement('div');
       div.className = 'mapper-divider';
@@ -321,6 +322,7 @@
     state.baseGraph = state.graph;
     setStatus(`Graph: ${state.graph.nodes.length} nodes · ${state.graph.links.length} edges.`, 'ok');
     populateAggregateOptions();
+    populateGroupColumnOptions();
     state.aggregateBy = '';
     const aggSel = $('aggregate-by'); if (aggSel) aggSel.value = '';
     rebuildView();
@@ -411,21 +413,26 @@
     }
   }
 
-  // Fill the "Aggregate by" dropdown with categorical-ish node columns only
-  // (skip the id/label and high-cardinality/continuous columns like coords).
-  function populateAggregateOptions() {
-    const sel = $('aggregate-by'); if (!sel) return;
+  // Categorical-ish node columns only: skip the id/label and the high-cardinality
+  // /continuous columns (coords, counts). Used by both the aggregate and the
+  // group-color dropdowns so neither offers nonsense like node_id or x/y.
+  function categoricalNodeCols(maxCap) {
     const cols = state.nodeCols || [];
     const rows = state.nodeCsv || [];
     const N = rows.length || 1;
     const skip = new Set([state.mapping.nodeId, state.mapping.nodeLabel].filter(Boolean));
-    const cap = Math.max(2, Math.min(40, Math.floor(N * 0.6)));
-    const good = cols.filter((c) => {
+    const cap = Math.max(2, Math.min(maxCap, Math.floor(N * 0.6)));
+    return cols.filter((c) => {
       if (skip.has(c)) return false;
       const distinct = new Set(rows.map((r) => r[c])).size;
-      return distinct >= 2 && distinct <= cap;          // ≥2 groups, not an id/coord
+      return distinct >= 2 && distinct <= cap;
     });
-    // surface the mapped group column first — it's the most useful default
+  }
+
+  // Fill the "Aggregate by" dropdown (mapped group column first).
+  function populateAggregateOptions() {
+    const sel = $('aggregate-by'); if (!sel) return;
+    const good = categoricalNodeCols(40);
     const grp = state.mapping.nodeGroup;
     if (grp && good.includes(grp)) { good.splice(good.indexOf(grp), 1); good.unshift(grp); }
     sel.innerHTML = '<option value="">None (raw network)</option>' +
@@ -739,7 +746,7 @@
     box.style.display = 'flex';
     const groups = Object.keys(state.groupPalette);
     if (!groups.length) {
-      box.innerHTML = '<div class="lg-empty">No group attribute mapped. Set a <strong>Node group column</strong> under Column Mapping and click Load.</div>';
+      box.innerHTML = '<div class="lg-empty">No group attribute set. Pick a <strong>Group column</strong> above.</div>';
       return;
     }
     box.innerHTML = groups.map((g) => {
@@ -747,6 +754,31 @@
       const safe = String(g).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
       return `<div class="lg-row"><input type="color" value="${color}" data-group="${safe}" title="Recolor ${safe}"><span class="lg-name" title="${safe}">${safe}</span></div>`;
     }).join('');
+  }
+
+  // Fill the Display-panel "Group column" dropdown with categorical node columns
+  // (coloring tolerates a few more groups than aggregation). Always include the
+  // currently-mapped group even if it would otherwise be filtered out.
+  function populateGroupColumnOptions() {
+    const sel = $('group-col'); if (!sel) return;
+    const good = categoricalNodeCols(60);
+    const grp = state.mapping.nodeGroup;
+    if (grp && !good.includes(grp)) good.unshift(grp);
+    sel.innerHTML = '<option value="">(none — uniform)</option>' +
+      good.map((c) => `<option value="${String(c).replace(/"/g, '&quot;')}" ${grp === c ? 'selected' : ''}>${c}</option>`).join('');
+  }
+
+  // Live-change the node group column: recompute each node's group from its raw
+  // attributes, rebuild the palette/legend, and recolor — no reload needed.
+  function setGroupColumn(col) {
+    state.mapping.nodeGroup = col || null;
+    if (state.baseGraph) state.baseGraph.nodes.forEach((n) => {
+      const v = col && n.attrs ? n.attrs[col] : null;
+      n.group = (v === undefined || v === null || v === '') ? null : String(v);
+    });
+    buildGroupPalette();
+    renderGroupLegend();
+    render();
   }
 
   function nodeRadius(n) {
@@ -985,6 +1017,9 @@
       renderGroupLegend();
       render();
     });
+
+    const groupColSel = $('group-col');
+    if (groupColSel) groupColSel.addEventListener('change', (e) => setGroupColumn(e.target.value));
 
     const paletteSel = $('palette');
     if (paletteSel) paletteSel.addEventListener('change', (e) => {

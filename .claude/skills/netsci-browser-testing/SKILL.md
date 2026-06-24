@@ -100,6 +100,26 @@ Run with `node harness.mjs <dataset-key>` and print
 (other than a single benign `ERR_CONNECTION_CLOSED` from a blocked beacon) means
 something threw — investigate before claiming success.
 
+## Test the interaction, not just the default
+
+A control can be present but mis-wired. Don't just check default state — **flip
+each control and read the rendered DOM back**, asserting it changed:
+- palette select → node circle `fill`s differ between palettes (neon contains
+  `#39FF14`; viridis must NOT);
+- group-column select → fills change;
+- aggregate select → node count drops and links > 0.
+A test that only reads `state.*` (not the rendered `fill`s after the change) will
+miss "the selector does nothing" bugs.
+
+## Cache-busting (real-user gotcha)
+
+`visualizer.html` loads `assets/viz.js?v=YYYYMMDD`. **Bump the `?v=` whenever you
+change `viz.js`** (or other versioned assets). Without it, returning users get a
+stale cached script: the new HTML shows a new control, but the old JS ignores it
+(classic symptom: "palette stuck on neon / changing it does nothing"). If a user
+reports a shipped feature "doesn't work" but your headless test passes, suspect a
+missed `?v=` bump before suspecting the code.
+
 ## Gotchas
 - Run all of this from the **scratchpad**, never add these npm deps to the repo.
 - Always check `pageerror`/`console.error` — a silent JS throw will leave the old

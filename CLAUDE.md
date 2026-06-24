@@ -38,4 +38,11 @@ Skills live in `.claude/skills/<name>/SKILL.md`. Invoke/read the relevant one
 - It loads `d3` + `papaparse` from cdnjs and `fetch`es sample CSVs from
   `playground-data/` — see **netsci-browser-testing** for how to run it offline.
 - After editing `viz.js`, verify in headless Chromium (above), not just
-  `node --check`.
+  `node --check`. **Test the actual interaction** (flip the control, read the
+  rendered DOM colors), not just default state — a wired-wrong control can leave
+  the page looking unchanged.
+- **Cache-busting:** `docs/visualizer.html` loads `assets/viz.js?v=YYYYMMDD`.
+  When you change `viz.js` (or other versioned assets), **bump the `?v=`** so
+  returning users don't get a stale cached script. (Symptom of a missed bump:
+  "the new control appears but does nothing / colors look old" — new HTML +
+  cached old JS.)
