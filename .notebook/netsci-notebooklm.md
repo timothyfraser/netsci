@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-24 21:25 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 21:40 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -994,7 +994,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-24 21:25 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 21:40 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -1872,10 +1872,6 @@ A raw bike\-share network with 40 stations and hundreds of edges hides more than
 ⚠ Synthetic data — Boston\-flavored but not real Bluebikes records
 
 
-📦 Need a network for your project case study?
-Browse the project datasets on GitHub →
-
-
 📚 Readings for this case study →
 
 
@@ -2001,9 +1997,33 @@ CNo — only the raw view shows real data. Aggregated views are derived summarie
 **Answer: B.** Aggregation is a deliberate analytic choice, not a presentation upgrade. Every aggregation embeds assumptions — neighborhood boundaries are political, quintile cutoffs depend on the reference population, and chord diagrams emphasize flows over magnitudes. A is wrong because it treats aggregation as universally clearer when it actually *hides* the information needed for station\-level decisions. C is wrong because raw data isn't automatically more truthful — at the station level, the data is real but the *question being asked* (where do morning commuters go?) can't be answered from it without aggregation. The engineering instinct should be: **name the decision first, then choose the aggregation that supports it.**
 
 
-**Try this on your own data.** Open the Coding Playground, upload your network, and use the same tools.
+### ⌨️ Code It
+
+
+**Run the code for this case study yourself.** Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.
+
+
+→ Code Folder (GitHub)
 → R Playground
 → Python Playground
+
+
+If you chose this case study's methods for your project…
+
+### Project Seed Questions
+
+
+Pick one of these questions for your project report — or use them as starting points for your own.
+
+
+* **At what resolution does my network become legible?** Try raw, mid\-, and high\-resolution views. Report which one fits the question and why.
+* **Diagonal stickiness.** Aggregate by a categorical attribute. Report the fraction of weight on the diagonal.
+* **Two competing aggregations.** Aggregate by two attributes (e.g. tier vs region). Report which makes the pattern clearer.
+
+
+Full project questions \& how\-to →
+Project Homework spec →
+See an example report →
 
 
 **SYSEN 5470 · Visualization · Network Aggregation for Visualization**
@@ -2031,21 +2051,6 @@ A network is not a picture of stuff connected to stuff — it's a deliberate cho
 📚 Readings for this case study →
 
 
-### 🧭 How to use this playground
-
-
-**Three tools, exclusive — pick one at a time:** 🖱 **Select** highlights a node and shows its details, and lets you drag it around when in manual layout. ✏️ **Add Node** drops a node anywhere you click on empty canvas. 🔗 **Add Edge** connects two nodes — click source, then target. 🗑 **Delete** removes the node or edge you click.
-
-
-**Three representations, one network:** the node\-link diagram, the node and edge tables, and the adjacency matrix are all views of the same data. Edit anywhere and the others update. This is the lab's central concept: *a network is its edge list and its node list.* The picture is just one way to draw them.
-
-
-**Layouts:** *Manual* lets you drag nodes; *Force\-directed* runs a physics simulation; *Circular* arranges nodes on a ring; *Bipartite / Tripartite / Quadripartite stacks* become available when you switch partition mode to k\=2, 3, or 4 and assign types in the node table.
-
-
-**Undo your way out of any mistake:** ↶ Undo and ↷ Redo live in the toolbar, or use `Ctrl/Cmd+Z` and `Ctrl/Cmd+Shift+Z`. Up to 50 steps of history are kept.
-
-
 ### ✏️ Sketchpad Moment — do this before touching the tool
 
 
@@ -2063,6 +2068,21 @@ Then answer in writing under your drawings: **Who would find the first network m
 
 
 The bigger lesson: a network is a choice about what counts as a tie. The question you are asking determines which version is "right." There is no universally correct answer.
+
+
+### 🧭 How to use this playground
+
+
+**Three tools, exclusive — pick one at a time:** 🖱 **Select** highlights a node and shows its details, and lets you drag it around when in manual layout. ✏️ **Add Node** drops a node anywhere you click on empty canvas. 🔗 **Add Edge** connects two nodes — click source, then target. 🗑 **Delete** removes the node or edge you click.
+
+
+**Three representations, one network:** the node\-link diagram, the node and edge tables, and the adjacency matrix are all views of the same data. Edit anywhere and the others update. This is the lab's central concept: *a network is its edge list and its node list.* The picture is just one way to draw them.
+
+
+**Layouts:** *Manual* lets you drag nodes; *Force\-directed* runs a physics simulation; *Circular* arranges nodes on a ring; *Bipartite / Tripartite / Quadripartite stacks* become available when you switch partition mode to k\=2, 3, or 4 and assign types in the node table.
+
+
+**Undo your way out of any mistake:** ↶ Undo and ↷ Redo live in the toolbar, or use `Ctrl/Cmd+Z` and `Ctrl/Cmd+Shift+Z`. Up to 50 steps of history are kept.
 
 
 Tool
@@ -2289,10 +2309,6 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure
 Explore how removing a single transit station reshapes the entire network — and why the most dangerous node isn't always the biggest one. Click any station to inspect; remove it and watch the metrics shift.
 
 
-📦 Need a network for your project case study?
-Browse the project datasets on GitHub →
-
-
 📚 Readings for this case study →
 
 
@@ -2438,9 +2454,33 @@ C Average path length decreases, because the two smaller components are individu
  ✅ **Answer: B.** When the network disconnects, the shortest path between a node in Component 1 and a node in Component 2 is theoretically infinite (there is no path). The tool displays this as "∞ (disconnected)". This is why *network efficiency* (1 / average path length) collapses to zero when even one bridge node is removed — a common measure in infrastructure resilience analysis. In a supply chain or power grid, this means goods or power can no longer reach certain destinations at all.
 
 
-**Try this on your own data.** Open the Coding Playground, upload your network, and use the same tools.
+### ⌨️ Code It
+
+
+**Run the code for this case study yourself.** Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.
+
+
+→ Code Folder (GitHub)
 → R Playground
 → Python Playground
+
+
+If you chose this case study's methods for your project…
+
+### Project Seed Questions
+
+
+Pick one of these questions for your project report — or use them as starting points for your own.
+
+
+* **Bridges in plain sight.** Compute degree and betweenness. Find the top\-10 by (betweenness\_rank − degree\_rank) gap.
+* **Removal simulation.** Remove top\-5 by each of two centralities. Report change in LCC or shortest path.
+* **Which centrality answers my question?** Pick a real\-world question, argue from question to metric, then compute and report top 5\.
+
+
+Full project questions \& how\-to →
+Project Homework spec →
+See an example report →
 
 
 **SYSEN 5470 · Centrality \& Criticality · Interactive Lab**
@@ -2463,10 +2503,6 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Predict
 
 
 Lakeside is a fictional city of 15 bikeshare stations. Planners are debating a network change. Use Monte Carlo simulation to test whether one proposed intervention *significantly* improves the network — or just happens to look good on one noisy dataset.
-
-
-📦 Need a network for your project case study?
-Browse the project datasets on GitHub →
 
 
 📚 Readings for this case study →
@@ -2685,9 +2721,33 @@ CN \= 50 is unreliable; the result at N \= 500 is the truth.
 **Why not C:** Neither N is "the truth." Both estimate the same underlying effect; N \= 500 just estimates it with less uncertainty.
 
 
-**Try this on your own data.** Open the Coding Playground, upload your network, and use the same tools.
+### ⌨️ Code It
+
+
+**Run the code for this case study yourself.** Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.
+
+
+→ Code Folder (GitHub)
 → R Playground
 → Python Playground
+
+
+If you chose this case study's methods for your project…
+
+### Project Seed Questions
+
+
+Pick one of these questions for your project report — or use them as starting points for your own.
+
+
+* **Is this intervention real?** Pick a domain\-meaningful intervention. Compute the 95% CI on its effect on a metric.
+* **Two interventions, one budget.** Propose two competing interventions. Compute each CI; report which is more reliably beneficial.
+* **Sensitivity to R.** Vary R (e.g. 100, 500, 2000\). Find the smallest R that gives a CI within 10% of R \= 2000\.
+
+
+Full project questions \& how\-to →
+Project Homework spec →
+See an example report →
 
 
 **SYSEN 5470 · Routing, Counterfactuals \& Optimization · Counterfactual Monte Carlo Lab**
@@ -2710,10 +2770,6 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure
 
 
 A DSM is the adjacency matrix of a directed dependency graph. Trace cascading failures, then try to reorder the matrix into modular blocks by hand — and discover why clustering algorithms exist.
-
-
-📦 Need a network for your project case study?
-Browse the project datasets on GitHub →
 
 
 📚 Readings for this case study →
@@ -2874,9 +2930,33 @@ C.The software architecture — even though it's cleanly layered, its cross\-cut
 **Answer: C.** After clustering, the rocket retains roughly 43% of marks off\-block, the drone about 25%, and the software architecture about 56% — the highest of the three. The reason is instructive: the rocket's coupling is dense but *regional* (propulsion talks to propulsion, electrical to electrical), so Louvain finds tight blocks. The software DSM is cleanly layered, but components like **auth, logging, monitoring, and secrets** are *cross\-cutting concerns* — by design, every service depends on them. No reordering can fix this, because the dependencies are real and intentional. *This is the systems\-engineering punchline:* high residual off\-block marks aren't always a sign that the system is badly designed. Sometimes the network is telling you that certain components are **structurally cross\-cutting** — the matrix equivalent of a "bridge" node — and you need a different architectural pattern (aspect\-oriented programming, service mesh, sidecars) rather than more clustering. Option A is the intuitive answer but underestimates how well Louvain handles regional coupling. Option B confuses domain heterogeneity with structural coupling — mixing hardware and software doesn't itself prevent decomposition.
 
 
-**Try this on your own data.** Open the Coding Playground, upload your network, and use the same tools.
+### ⌨️ Code It
+
+
+**Run the code for this case study yourself.** Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.
+
+
+→ Code Folder (GitHub)
 → R Playground
 → Python Playground
+
+
+If you chose this case study's methods for your project…
+
+### Project Seed Questions
+
+
+Pick one of these questions for your project report — or use them as starting points for your own.
+
+
+* **What are the modules in my network?** Apply Louvain. Report number of modules, modularity, and what 2–3 modules represent.
+* **Two clustering algorithms, two stories.** Run Louvain plus fast\-greedy (or Leiden, walktrap). Compare and discuss disagreements.
+* **Cascade analysis.** Simulate k\-hop cascades from seed nodes. Report which seeds produce the largest 1\- and 2\-hop cascades.
+
+
+Full project questions \& how\-to →
+Project Homework spec →
+See an example report →
 
 
 **SYSEN 5470 · Clustering \& Communities · DSM Lab**
@@ -2899,10 +2979,6 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Predict
 
 
 Walk through every arithmetic step of a forward pass — first as a plain neural network, then as a graph neural network — on a four\-node supply chain so tiny you can check everything with a calculator.
-
-
-📦 Need a network for your project case study?
-Browse the project datasets on GitHub →
 
 
 📚 Readings for this case study →
@@ -3275,9 +3351,33 @@ Put down the keyboard. On your sketchpad, draw a six\-node supply chain of your 
 Now trace one message\-passing step by hand: for each node, write down x̃ \= x \+ mean(neighbors' x). Circle the node where x̃ is highest. Is that node a true bottleneck? Does the GNN have a chance of getting it right with appropriate trained weights? Why or why not?
 
 
-**Try this on your own data.** Open the Coding Playground, upload your network, and use the same tools.
+### ⌨️ Code It
+
+
+**Run the code for this case study yourself.** Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.
+
+
+→ Code Folder (GitHub)
 → R Playground
 → Python Playground
+
+
+If you chose this case study's methods for your project…
+
+### Project Seed Questions
+
+
+Pick one of these questions for your project report — or use them as starting points for your own.
+
+
+* **Embed your nodes.** Build a 2\-feature input. Run a 1\-layer GCN. Report top 5 by embedding L2 and what they share.
+* **Aggregation choices.** Try sum, mean, and max\-pool. Report top\-5 under each; discuss why aggregations differ.
+* **Depth matters.** Compare 1\-, 2\-, 3\-layer GCNs. Find a node whose embedding changes most between 1 and 3 layers.
+
+
+Full project questions \& how\-to →
+Project Homework spec →
+See an example report →
 
 
 **SYSEN 5470 · AI \& ML · GNN Forward Pass by Hand**
@@ -3300,10 +3400,6 @@ SYSEN 5470 · Network Science · Case Study · Skill: Predict
 
 
 Explore how graph neural networks encode network structure as node embeddings, and how those embeddings help XGBoost predict which suppliers will experience disruptions — controlling for position in the supply network.
-
-
-📦 Need a network for your project case study?
-Browse the project datasets on GitHub →
 
 
 📚 Readings for this case study →
@@ -3475,9 +3571,33 @@ Use the temporal slider to move through snapshots T6–T9\. Watch which nodes sh
 **B is correct.** The lag\-1 residual autocorrelation confirms that the model at time T is systematically under\-predicting disruptions that persist from T−1\. This means disruptions have memory — a disrupted supplier stays disrupted, and its downstream partners become increasingly exposed over subsequent periods. The lagged embedding captures the *structural pathway* of that exposure: as upstream nodes enter distress, the neighborhood structure changes in ways the GNN can encode, providing an early warning signal before the downstream disruption shows up in firm\-level metrics.
 
 
-**Try this on your own data.** Open the Coding Playground, upload your network, and use the same tools.
+### ⌨️ Code It
+
+
+**Run the code for this case study yourself.** Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.
+
+
+→ Code Folder (GitHub)
 → R Playground
 → Python Playground
+
+
+If you chose this case study's methods for your project…
+
+### Project Seed Questions
+
+
+Pick one of these questions for your project report — or use them as starting points for your own.
+
+
+* **Does network position help?** Train XGBoost on raw, then raw\+lag, then raw\+lag\+GNN. Report AUC gain at each step.
+* **Feature importance audit.** Train on the full set. Report top 5 by gain. Does the ranking match domain intuition?
+* **Class imbalance.** If imbalanced, report AUC plus precision/recall at a sensible threshold. Is it useful operationally?
+
+
+Full project questions \& how\-to →
+Project Homework spec →
+See an example report →
 
 
 **SYSEN 5470 · GNN \+ XGBoost · Supplier Disruption Risk**
@@ -3503,10 +3623,6 @@ You have factory metadata in one table and shipments in another — but to answe
 
 
 ⚠ Synthetic supply\-chain data — illustrative, not from any real company
-
-
-📦 Need a network for your project case study?
-Browse the project datasets on GitHub →
 
 
 📚 Readings for this case study →
@@ -3644,9 +3760,33 @@ C
 🔓 Reveal Answer
 
 
-**Try this on your own data.** Open the Coding Playground, upload your network, and use the same tools.
+### ⌨️ Code It
+
+
+**Run the code for this case study yourself.** Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.
+
+
+→ Code Folder (GitHub)
 → R Playground
 → Python Playground
+
+
+If you chose this case study's methods for your project…
+
+### Project Seed Questions
+
+
+Pick one of these questions for your project report — or use them as starting points for your own.
+
+
+* **Attribute homophily on edges.** Double\-node\-join a categorical attribute. Report within\-group vs cross\-group edge weight as a heatmap.
+* **Aggregate\-before\-join vs join\-before\-aggregate.** Run both orderings. Report wall\-clock time and peak memory.
+* **Silent collision audit.** Join two attributes from the same node table. Show the failure mode without renames, then the fix.
+
+
+Full project questions \& how\-to →
+Project Homework spec →
+See an example report →
 
 
 **SYSEN 5470 · Big Network Data · Joins Builder Lab**
@@ -3669,10 +3809,6 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Infer
 
 
 Boston's Bluebikes program connects neighborhoods — but does ridership flow freely across income lines, or do high\-income neighborhoods mostly exchange riders with each other? Use permutation testing to find out whether the observed income pattern could arise by chance.
-
-
-📦 Need a network for your project case study?
-Browse the project datasets on GitHub →
 
 
 📚 Readings for this case study →
@@ -3851,9 +3987,33 @@ Look at the null distribution. Are the unblocked and blocked histograms centered
 **B — The unblocked null is artificially spread, inflating significance.** Because unblocked permutations scatter any weight onto any edge (including placing commuter\-volume weights on recreational routes), they generate null networks more heterogeneous than anything that could actually exist. This pulls the null median lower and widens variance, making the observed index look more extreme — and producing an artificially small p\-value. The "stronger evidence" is an artifact of an unrealistic null, not a genuine signal. The blocked test, whose null networks all obey the system's structural constraints, is the more defensible choice — even if the p\-value is less dramatic.
 
 
-**Try this on your own data.** Open the Coding Playground, upload your network, and use the same tools.
+### ⌨️ Code It
+
+
+**Run the code for this case study yourself.** Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.
+
+
+→ Code Folder (GitHub)
 → R Playground
 → Python Playground
+
+
+If you chose this case study's methods for your project…
+
+### Project Seed Questions
+
+
+Pick one of these questions for your project report — or use them as starting points for your own.
+
+
+* **Two nulls, two stories.** Pick a categorical attribute. Compare unblocked and block\-permutation nulls; report both p\-values.
+* **What's the right block?** Try two plausible blocking variables. Report which you prefer and why.
+* **Beyond assortativity.** Replace assortativity with another network statistic. Show blocked/unblocked still applies.
+
+
+Full project questions \& how\-to →
+Project Homework spec →
+See an example report →
 
 
 **SYSEN 5470 · Permutation Testing on Mobility Networks**
@@ -3876,10 +4036,6 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify
 
 
 You are an analyst studying evacuation flows during a Gulf hurricane. The full network has 40 parishes and hundreds of weighted flow edges — too big to wrangle on your laptop. Pick a sampling strategy, choose a sample size, and watch which features of the network survive. Some strategies preserve geographic coverage. Some preserve triangles. None preserve everything.
-
-
-📦 Need a network for your project case study?
-Browse the project datasets on GitHub →
 
 
 📚 Readings for this case study →
@@ -4042,9 +4198,33 @@ CEgo\-centric sampling under\-counts edges between non\-seed nodes, which deflat
 **Answer: B.** This is the *friendship paradox* embedded in ego\-centric sampling. A node with degree d gets sampled (as a neighbor of a seed) with probability proportional to d — so high\-degree nodes are over\-represented relative to their population share. The mean degree in your sample is thus inflated. C is partially true but secondary; the dominant effect is the inclusion bias. This is why epidemiologists and survey methodologists distinguish "ego\-centric" from "respondent\-driven" designs with weighting corrections — and why naive snowball samples systematically overestimate degree, density, and clustering.
 
 
-**Try this on your own data.** Open the Coding Playground, upload your network, and use the same tools.
+### ⌨️ Code It
+
+
+**Run the code for this case study yourself.** Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.
+
+
+→ Code Folder (GitHub)
 → R Playground
 → Python Playground
+
+
+If you chose this case study's methods for your project…
+
+### Project Seed Questions
+
+
+Pick one of these questions for your project report — or use them as starting points for your own.
+
+
+* **Strategy showdown.** Sample ego\-centrically and edgewise to the same edge count. Report which metric each strategy preserves.
+* **Sample\-size convergence.** Vary sample size on one strategy. Find where density stabilizes within 5% of the population.
+* **Spatial / temporal targeting.** Filter by region or window before sampling. Compare against an unfiltered same\-size sample.
+
+
+Full project questions \& how\-to →
+Project Homework spec →
+See an example report →
 
 
 **SYSEN 5470 · Big Network Data · Sampling Strategies Lab**
@@ -4069,11 +4249,11 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Measure
 Explore how goods flow from raw\-material suppliers to end customers — and discover why the busiest node in a supply chain is rarely the most critical one to protect.
 
 
-📦 Need a network for your project case study?
-Browse the project datasets on GitHub →
-
-
 📚 Readings for this case study →
+
+
+**✏️ Sketchpad — before you click anything**
+ Before you run any simulation, sketch your predictions for all three strategies on paper. Which one degrades the network fastest? How far behind is the slowest? Draw rough damage curves on a single axis. Then run the lab and see which prediction held — and where you were surprised.
 
 
 ## The problem an engineer is solving
@@ -4083,10 +4263,6 @@ A supplier network looks resilient on paper — until you pick the wrong attack 
 
 
 The lab below lets you pick an attack strategy (random, degree\-targeted, or betweenness\-targeted) and watch the network degrade over the same number of removals. Compare the damage curves and see where the gap is widest — that's where the engineering decisions matter.
-
-
-**✏️ Sketchpad — before you click anything**
- Before you run any simulation, sketch your predictions for all three strategies on paper. Which one degrades the network fastest? How far behind is the slowest? Draw rough damage curves on a single axis. Then run the lab and see which prediction held — and where you were surprised.
 
 
  **—** active nodes
@@ -4216,9 +4392,33 @@ Remove **Mesa Consolidator** (highest betweenness) and note the global metrics. 
 **Correct: B.** This is the gap between *global resilience* and *local service coverage*. Removing a high\-betweenness node maximizes damage to network\-wide metrics. But removing a peripheral node that is the *sole upstream source* for a specific retail cluster can be equally catastrophic for that cluster — even while the rest of the network runs normally. A supply chain risk manager who only tracks aggregate metrics will miss this. Real resilience analysis requires both: network\-level topology metrics *and* customer\-level coverage audits. Neither is sufficient alone.
 
 
-**Try this on your own data.** Open the Coding Playground, upload your network, and use the same tools.
+### ⌨️ Code It
+
+
+**Run the code for this case study yourself.** Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.
+
+
+→ Code Folder (GitHub)
 → R Playground
 → Python Playground
+
+
+If you chose this case study's methods for your project…
+
+### Project Seed Questions
+
+
+Pick one of these questions for your project report — or use them as starting points for your own.
+
+
+* **Which centrality picks the load\-bearing nodes?** Run two targeted\-attack strategies (e.g. degree vs betweenness). Plot the damage curve.
+* **Random baseline.** Compare any targeted strategy against random removal. Report the area between the two curves.
+* **Tier\-specific failures.** If your network has tiers, simulate failure inside each. Report which tier is most fragile.
+
+
+Full project questions \& how\-to →
+Project Homework spec →
+See an example report →
 
 
 **SYSEN 5470 · Supply Chain Networks \& Flow Resilience**
@@ -6417,7 +6617,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-24 21:25 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 21:40 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
