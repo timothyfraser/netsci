@@ -523,22 +523,22 @@ input[type=range]::-moz-range-thumb {
   <div class="lc-card">
     <div class="lc-header">
       <span class="lc-number">LC 03</span>
-      <div class="lc-question">Run <strong>Ego-Centric</strong> sampling several times at 15% seeds. Notice the "Mean degree (sample)" metric versus the "true" mean degree shown below it. Why does ego-centric sampling produce a <em>biased</em> estimate of mean degree even when it captures most of the network?</div>
+      <div class="lc-question">Run <strong>Ego-Centric</strong> sampling several times at 15% seeds. The "Mean degree (sample)" metric reads around <strong id="lc3-sampmd">—</strong>, <em>below</em> the population value of <strong id="lc3-popmd">—</strong> shown beside it. The friendship paradox says ego sampling over-recruits high-degree nodes — so why does the displayed sample mean degree come out <em>lower</em> than the population, not higher?</div>
     </div>
     <div class="lc-options" id="lc3-options">
-      <div class="lc-option" onclick="selectOption(3, 'A')"><span class="lc-option-letter">A</span><span>Because the seeds were drawn randomly, the sample is unbiased — any discrepancy is just sampling variation</span></div>
-      <div class="lc-option" onclick="selectOption(3, 'B')"><span class="lc-option-letter">B</span><span>High-degree nodes are more likely to be a neighbor of <em>some</em> seed (because they have many neighbors), so they enter the sample at a higher rate than their share of the population — the friendship paradox baked into the design</span></div>
-      <div class="lc-option" onclick="selectOption(3, 'C')"><span class="lc-option-letter">C</span><span>Ego-centric sampling under-counts edges between non-seed nodes, which deflates degree</span></div>
+      <div class="lc-option" onclick="selectOption(3, 'A')"><span class="lc-option-letter">A</span><span>The metric is wrong — over-recruiting high-degree nodes must inflate any degree estimate, so a lower number can only be a bug</span></div>
+      <div class="lc-option" onclick="selectOption(3, 'B')"><span class="lc-option-letter">B</span><span>Because the seeds were drawn randomly, the displayed mean degree is an unbiased estimate of the population — the gap is just sampling variation</span></div>
+      <div class="lc-option" onclick="selectOption(3, 'C')"><span class="lc-option-letter">C</span><span>The metric is measured on the <em>induced</em> sample (a 1-hop ego sample keeps only edges that touch a seed, dropping neighbor-to-neighbor edges), so each recruited neighbor shows up with just its tie to the seed — that truncation deflates the displayed degree even though the <em>true</em> degrees of the sampled nodes are over-represented high</span></div>
     </div>
     <div class="lc-actions">
       <button class="btn btn-neutral" onclick="showHint(3)">💡 Hint</button>
       <button class="btn btn-neutral" onclick="showAnswer(3)">🔓 Reveal Answer</button>
     </div>
     <div class="lc-feedback feedback-hint" id="lc3-hint">
-      <strong>Hint:</strong> Think about who is <em>more likely</em> to be a neighbor of a randomly picked seed. If you pick one random person and look at their friends, are those friends a random sample of the population — or are they systematically the kinds of people who have many friends?
+      <strong>Hint:</strong> Two things are true at once. (1) The friendship paradox <em>is</em> at work: a node with degree d is recruited as a neighbor of a seed with probability proportional to d, so the nodes that land in your sample have higher <em>true</em> degree than average. (2) But the "Mean degree (sample)" number is computed on the <em>edges this lab actually keeps</em>. For a 1-hop ego sample that is only the seed-incident edges — so a recruited neighbor is counted with just its single tie back to the seed, not its full neighborhood. Ask which of those two effects the displayed number reflects.
     </div>
     <div class="lc-feedback feedback-answer" id="lc3-answer">
-      <strong>Answer: B.</strong> This is the <em>friendship paradox</em> embedded in ego-centric sampling. A node with degree d gets sampled (as a neighbor of a seed) with probability proportional to d — so high-degree nodes are over-represented relative to their population share. The mean degree in your sample is thus inflated. C is partially true but secondary; the dominant effect is the inclusion bias. This is why epidemiologists and survey methodologists distinguish "ego-centric" from "respondent-driven" designs with weighting corrections — and why naive snowball samples systematically overestimate degree, density, and clustering.
+      <strong>Answer: C.</strong> The displayed sample mean degree (<strong id="lc3-ans-sampmd">—</strong>) comes out <em>below</em> the population value (<strong id="lc3-ans-popmd">—</strong>) because the metric is measured on the <em>induced</em> 1-hop ego sample: only edges incident to a seed are retained, so every neighbor you recruit is recorded with just its tie to the seed and all neighbor-to-neighbor edges are dropped. That truncation deflates the degree the lab reports. The friendship paradox is still real and still in the design — the <em>true</em> degree of the sampled nodes averages about <strong id="lc3-ans-truemd">—</strong>, which <em>is</em> higher than the population's <strong id="lc3-ans-popmd2">—</strong> (high-degree nodes are over-represented exactly as B/the paradox predicts). The trap is that the rendered metric measures the truncated induced subgraph, not those true degrees — so it shows the over-representation as <em>deflation</em>, the opposite direction. This is why ego/snowball degree estimates need correction (respondent-driven weighting) and why you must always ask <em>which subgraph</em> a "sample" statistic was computed on. A is wrong (the lower number is correct, not a bug); B is wrong (the induced metric is biased, not unbiased).
     </div>
   </div>
 
@@ -1009,7 +1009,56 @@ function showFullNetwork() {
   document.getElementById("current-strategy-label").textContent = "FULL POPULATION (REFERENCE)";
 }
 
-const CORRECT_ANSWERS = { 1: "B", 2: "B", 3: "B" };
+// LC 03's keyed answer is derived from the live network in wireLearningChecks()
+// so it can never drift from what the metric renders (default is a fallback).
+const CORRECT_ANSWERS = { 1: "B", 2: "B", 3: "C" };
+
+// Compute the LC-03 facts directly from the data and inject them into the
+// question/answer text, mirroring what the "Mean degree (sample)" metric shows.
+function trueMeanDegreeOfSampled(nodeSet) {
+  // Full-neighborhood degree of the sampled nodes (friendship-paradox view).
+  if (nodeSet.size === 0) return 0;
+  const adj = {};
+  rawNodes.forEach(n => adj[n.id] = []);
+  edges.forEach(e => { adj[e.source].push(e.target); adj[e.target].push(e.source); });
+  let sum = 0;
+  nodeSet.forEach(id => sum += adj[id].length);
+  return sum / nodeSet.size;
+}
+
+function wireLearningChecks() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const popMD = trueStats.meanDegree;
+
+  // Average the ego (1-hop) sample at 15% over many runs to get stable,
+  // representative values for the displayed (induced) metric and the true
+  // degree of the sampled nodes.
+  const RUNS = 400;
+  let sumDisplayed = 0, sumTrueSampled = 0;
+  for (let i = 0; i < RUNS; i++) {
+    const r = sampleEgo(15, 1);
+    sumDisplayed += meanDegree(r.nodes, r.edges);
+    sumTrueSampled += trueMeanDegreeOfSampled(r.nodes);
+  }
+  const displayedMD = sumDisplayed / RUNS;
+  const trueSampledMD = sumTrueSampled / RUNS;
+
+  const popStr = popMD.toFixed(2);
+  const dispStr = displayedMD.toFixed(2);
+  const trueStr = trueSampledMD.toFixed(2);
+
+  set("lc3-sampmd", dispStr);
+  set("lc3-popmd", popStr);
+  set("lc3-ans-sampmd", dispStr);
+  set("lc3-ans-popmd", popStr);
+  set("lc3-ans-popmd2", popStr);
+  set("lc3-ans-truemd", trueStr);
+
+  // Keyed answer C is correct precisely when the rendered behavior matches the
+  // lesson: the displayed (induced) metric reads BELOW population while the true
+  // degree of the sampled nodes reads ABOVE it (the paradox shown as deflation).
+  CORRECT_ANSWERS[3] = (displayedMD < popMD && trueSampledMD > popMD) ? "C" : "B";
+}
 
 function selectOption(lc, opt) {
   const container = document.getElementById(`lc${lc}-options`);
@@ -1036,6 +1085,7 @@ function showAnswer(lc) {
 
 window.addEventListener("load", () => {
   trueStats = computeTrueStats();
+  wireLearningChecks();
   runSampling();
   drawNetwork();
   updateMetricsUI();
