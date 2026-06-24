@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-24 05:15 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 17:03 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -68,7 +68,7 @@ What You'll Learn
 🕸️Network FundamentalsNodes, edges, direction, weighting, small\-world phenomena.
 📊Centrality \& CriticalityFind bottlenecks, hubs, and vulnerabilities in any system.
 📐Network StatisticsPermutation tests, bootstrap, causal inference on networks.
-🚦Routing \& OptimizationSolve real flow and routing problems in logistics and transit.
+🚦Routing, Counterfactuals \& OptimizationSolve real flow and routing problems in logistics and transit.
 🧩Clustering \& CommunitiesDetect structure in large\-scale networks automatically.
 🤖AI \& Machine LearningNeural networks, graph neural nets, and ML for inference.
 🗺️VisualizationCommunicate insight with beautiful, interactive graphics.
@@ -281,7 +281,7 @@ Every case study is anchored to one of these four skills. You'll see the naive a
 🔮Predict · Forecast outcomes**Naive:** flat\-feature XGBoost. **Network\-aware:** embeddings, GNNs, neighborhood as feature.
 
 
-Case Studies · The Nine Units
+Case Studies · The Eleven Units
 
 
 🕸️
@@ -292,10 +292,34 @@ Build networks from prose. Switch directed / undirected, k\=1–4 partitions, fo
 Open Lab →
 
 
+🔗
+
+Network Joins \& PipelinesIdentify
+Drag\-and\-drop pipeline builder in R or Python. Joins, renames, group\-by, summarise — and the column\-collision moment that's the whole reason renames exist in network joins.
+
+Open Lab →
+
+
+🗺️
+
+Visualization — Aggregation as StrategyIdentify
+Bluebikes morning flows at three zoom levels. Watch a clean socioeconomic story emerge as a hairball collapses into a 5×5 matrix.
+
+Open Lab →
+
+
 📊
 
 Centrality \& Criticality — Riverdale MetroMeasure
 Identify bottlenecks, hubs, and vulnerabilities. Remove a station, watch the network reshape — see why a bridge node (low degree, high betweenness) can be more critical than the busiest hub.
+
+Open Lab →
+
+
+📦
+
+Supply Chain ResilienceMeasure
+Counterfactual node and edge removal. Why the busiest node is rarely the most critical one to protect.
 
 Open Lab →
 
@@ -310,24 +334,8 @@ Open Lab →
 
 🚦
 
-Routing \& Optimization — Lakeside BikesharePredict
+Routing, Counterfactuals \& Optimization — Lakeside BikesharePredict
 Counterfactual Monte Carlo on a 15\-station bikeshare. Add a station, build a connector, boost a corridor — and decide whether the improvement is real or just noisy ridership.
-
-Open Lab →
-
-
-🧩
-
-Clustering \& Communities — Design Structure MatricesMeasure
-Reorder rocket, drone, and software DSMs by hand to find modular blocks — then see what Louvain finds and what cross\-cutting components no permutation can fix.
-
-Open Lab →
-
-
-📦
-
-Supply Chain ResilienceMeasure
-Counterfactual node and edge removal. Why the busiest node is rarely the most critical one to protect.
 
 Open Lab →
 
@@ -348,10 +356,10 @@ Graph neural networks, embeddings, and ML for network inference. Static and temp
 Open Lab →
 
 
-🗺️
+🧩
 
-Visualization — Aggregation as StrategyIdentify
-Bluebikes morning flows at three zoom levels. Watch a clean socioeconomic story emerge as a hairball collapses into a 5×5 matrix.
+Clustering \& Communities — Design Structure MatricesMeasure
+Reorder rocket, drone, and software DSMs by hand to find modular blocks — then see what Louvain finds and what cross\-cutting components no permutation can fix.
 
 Open Lab →
 
@@ -360,14 +368,6 @@ Open Lab →
 
 Big Network Data · Sampling StrategiesIdentify
 40\-parish Gulf evacuation network. Pick a sampling strategy and watch which features survive — triangles, degree, geographic coverage.
-
-Open Lab →
-
-
-🔗
-
-Big Network Data · Joins \& PipelinesIdentify
-Drag\-and\-drop pipeline builder in R or Python. Joins, renames, group\-by, summarise — and the column\-collision moment that's the whole reason renames exist in network joins.
 
 Open Lab →
 
@@ -691,10 +691,10 @@ Skip to content
 SYSEN 5470 · Case Studies
 
 
-# Nine Problems.One Network Underneath.
+# Pick a Case Study.Explore the Network Underneath.
 
 
-Every case study starts with a system that's already broken — supply chains, transit, evacuation, suppliers — and asks you to find what a traditional analysis would miss. Eleven labs are live across nine case studies. Everything is open.
+Every case study starts with a system that's already broken — supply chains, transit, evacuation, suppliers — and asks you to find what a traditional analysis would miss. Every lab is live, each with its own network. Everything is open.
 
 
 Interactive Labs
@@ -713,16 +713,42 @@ Gladwell · Barabási Ch. 1–2
 Open Lab →
 
 
-📐### Network Statistics
+🔗### Network Joins
 
 
-Infer
+Identify
 Live Lab
 
-Does income shape who rides with whom on Boston's Bluebikes? Permutation\-test a mobility network against the right null model — and see why an unblocked permutation lies to you when the system has structure.
+Drag\-and\-drop pipeline builder in R (dplyr) *or* Python (pandas) — student picks. Get the origin factory's tier onto every shipment edge, then add the destination's tier, and watch the column\-collision rename step earn its keep. Live result table and Mermaid flowchart.
 
 
-Farine 2017 · Barabási Ch. 3
+E\&K Ch. 2\.4 · dplyr / pandas docs
+Open Lab →
+
+
+🗺️### Visualization · Aggregation
+
+
+Identify
+Live Lab
+
+Bluebikes morning\-commute flows at three zoom levels — raw stations, neighborhoods, income quintiles — plus matrix and chord views. Watch a clean socioeconomic story emerge as the hairball collapses into a 5×5 grid. The point isn't pretty graphs; it's *losing detail to gain insight*.
+
+
+Bellantuono 2025
+Open Lab →
+
+
+📊### Centrality \& Criticality
+
+
+Measure
+Live Lab
+
+Riverdale Metro. Remove Union Terminal vs. remove Ironworks — see why the bridge node (low degree, high betweenness) is more critical to the network than the biggest hub. Click any station, watch APL and components shift in real time.
+
+
+Barabási Ch. 8 · E\&K Ch. 3\.6
 Open Lab →
 
 
@@ -739,16 +765,29 @@ Barabási Ch. 8 · E\&K Ch. 19
 Open Lab →
 
 
-📊### Centrality \& Criticality
+📐### Network Statistics
 
 
-Measure
+Infer
 Live Lab
 
-Riverdale Metro. Remove Union Terminal vs. remove Ironworks — see why the bridge node (low degree, high betweenness) is more critical to the network than the biggest hub. Click any station, watch APL and components shift in real time.
+Does income shape who rides with whom on Boston's Bluebikes? Permutation\-test a mobility network against the right null model — and see why an unblocked permutation lies to you when the system has structure.
 
 
-Barabási Ch. 8 · E\&K Ch. 3\.6
+Farine 2017 · Barabási Ch. 3
+Open Lab →
+
+
+🚦### Routing, Counterfactuals \& Optimization
+
+
+Predict
+Live Lab
+
+Lakeside Bikeshare. Predict which proposed intervention — new station, new connector, boosted corridor — actually improves the network. Monte Carlo simulator with Poisson edge\-weight resampling and a 95% CI tells you whether the effect is real or just noise.
+
+
+Bertsekas · Network Optimization
 Open Lab →
 
 
@@ -778,19 +817,6 @@ Khan 2025 · Ding 2025
 Open Lab →
 
 
-🚦### Routing \& Optimization
-
-
-Predict
-Live Lab
-
-Lakeside Bikeshare. Predict which proposed intervention — new station, new connector, boosted corridor — actually improves the network. Monte Carlo simulator with Poisson edge\-weight resampling and a 95% CI tells you whether the effect is real or just noise.
-
-
-Bertsekas · Network Optimization
-Open Lab →
-
-
 🧩### Clustering \& Communities
 
 
@@ -804,19 +830,6 @@ Barabási Ch. 9 · E\&K Ch. 4 \& 10
 Open Lab →
 
 
-🗺️### Visualization · Aggregation
-
-
-Identify
-Live Lab
-
-Bluebikes morning\-commute flows at three zoom levels — raw stations, neighborhoods, income quintiles — plus matrix and chord views. Watch a clean socioeconomic story emerge as the hairball collapses into a 5×5 grid. The point isn't pretty graphs; it's *losing detail to gain insight*.
-
-
-Bellantuono 2025
-Open Lab →
-
-
 🗄️### Big Network Data · Sampling
 
 
@@ -827,19 +840,6 @@ A 40\-parish Gulf evacuation network too big to wrangle whole. Pick a sampling s
 
 
 E\&K Ch. 2\.4
-Open Lab →
-
-
-🔗### Big Data · Network Joins
-
-
-Identify
-Live Lab
-
-Drag\-and\-drop pipeline builder in R (dplyr) *or* Python (pandas) — student picks. Get the origin factory's tier onto every shipment edge, then add the destination's tier, and watch the column\-collision rename step earn its keep. Live result table and Mermaid flowchart.
-
-
-E\&K Ch. 2\.4 · dplyr / pandas docs
 Open Lab →
 
 
@@ -1676,7 +1676,7 @@ CN \= 50 is unreliable; the result at N \= 500 is the truth.
 → Python Playground
 
 
-**SYSEN 5470 · Routing \& Optimization · Counterfactual Monte Carlo Lab**
+**SYSEN 5470 · Routing, Counterfactuals \& Optimization · Counterfactual Monte Carlo Lab**
 
  Cornell Engineering · Summer 2026 · tmf77@cornell.edu
 
@@ -4056,7 +4056,7 @@ Companion lab: *Permutation Testing a Mobility Network.*
 Open lab →
 
 
-## 🚦Routing \& Optimization Predict\#
+## 🚦Routing, Counterfactuals \& Optimization Predict\#
 
 
 Solve real flow and routing problems in logistics and transit. Counterfactual graph mutation — add a node, measure metric M, resample.
@@ -4710,7 +4710,7 @@ Permutation tests, bootstrap, and causal inference on networks
 
 🚦
 
-**Routing \& Optimization**
+**Routing, Counterfactuals \& Optimization**
 Solve real flow and routing problems in logistics and transit
 
 
@@ -4823,6 +4823,9 @@ Item 1 · Sketchpad
 Photos or screenshots of your hand\-drawn sketchpad prompts for the week — sketching first is how you see the structure before code can hide it. Its own submission.
 
 
+↗ See an example submission
+
+
 🧪
 
 Item 2 · Case\-study learning checks
@@ -4830,6 +4833,9 @@ Item 2 · Case\-study learning checks
 
 
 One Learning Check answer per interactive lab you did last week — e.g. `LC1: B, LC2: C`, or a screenshot. Completion\-based, and its own submission.
+
+
+↗ See an example submission
 
 
 ⌨️
@@ -4841,6 +4847,9 @@ Item 3 · Code labs · low\-stakes
 Run each case study's `example.R` or `example.py` on the **data provided** and submit the single answer it prints. You're just running existing code, so don't sweat it — pick R *or* Python, and write it wherever you like. **This isn't the real coding; the project is.**
 
 
+↗ See an example submission
+
+
 📄
 
 Item 4 · Project · the real work
@@ -4848,6 +4857,9 @@ Item 4 · Project · the real work
 
 
 **This is the coding that counts.** Each week, pick one case\-study method and apply it to **your own network**: your data, your own code (one script is ideal), your report. Keep the same network all three weeks. Full spec below.
+
+
+↗ See an example report (PDF)
 
 
 Project case studies
@@ -4959,12 +4971,12 @@ Pick a case study — and a project question
 | 03 | Aggregation | Project questions \& how\-to → | Lab → |
 | 04 | Centrality \& Criticality | Project questions \& how\-to → | Lab → |
 | 05 | Supply Chain Resilience | Project questions \& how\-to → | Lab → |
-| 06 | DSM Clustering | Project questions \& how\-to → | Lab → |
-| 07 | Network Permutation | Project questions \& how\-to → | Lab → |
-| 08 | Sampling Big Networks | Project questions \& how\-to → | Lab → |
-| 09 | Counterfactual Monte Carlo | Project questions \& how\-to → | Lab → |
-| 10 | GNN by Hand | Project questions \& how\-to → | Lab → |
-| 11 | GNN \+ XGBoost | Project questions \& how\-to → | Lab → |
+| 06 | Network Permutation | Project questions \& how\-to → | Lab → |
+| 07 | Routing, Counterfactuals \& Optimization | Project questions \& how\-to → | Lab → |
+| 08 | GNN by Hand | Project questions \& how\-to → | Lab → |
+| 09 | GNN \+ XGBoost | Project questions \& how\-to → | Lab → |
+| 10 | DSM Clustering | Project questions \& how\-to → | Lab → |
+| 11 | Sampling Big Networks | Project questions \& how\-to → | Lab → |
 
 
 📄
@@ -5066,7 +5078,7 @@ Week 01
 
 
 Jun 22 – Jun 28, 2026
-Nodes, edges, small\-world phenomena. Three labs: Build\-a\-Network, Network Statistics, Centrality.
+Foundations: from prose to graph, joins, aggregation, and criticality. Four labs: Build\-a\-Network, Joins, Aggregation, Centrality.
 
 
 Mon Jun 22day 1
@@ -5076,37 +5088,37 @@ Mon Jun 22day 1
 
 Tue Jun 23day 2
 
-🕸️ Build\-a\-Network Watch the lab video, read Barabási Ch. 1–2\. \~45 min.
+🕸️ Build\-a\-Network Watch the lab video, read Barabási Ch. 1–2\. **Sketch 01 · One paragraph, two networks.** Open the prompt →
 
 
 Wed Jun 24day 3
 
-**Sketch 01 · One paragraph, two networks.** 20 min sketchpad, no keyboard. Open the prompt →
+🔗 Joins Drag\-and\-drop pipeline builder in R (dplyr) or Python (pandas). **Sketch 02 · Draw the join key.** Open the prompt →
 
 
 Thu Jun 25day 4
 
-📐 Network Statistics Read Farine 2017 (null models). Skim Bluebikes lab intro. \~30 min.
+🗺️ Aggregation Read Bellantuono 2025 (accessibility via transit). **Sketch 03 · Predict the O–D matrix.** Open the prompt →
 
 
 Fri Jun 26day 5
 
-📊 Centrality Read Barabási Ch. 3 and Ch. 8\. \~30 min. Light evening — protect Saturday.
+📊 Centrality Read Barabási Ch. 3 and Ch. 8\. **Sketch 04 · Predict the bottleneck.** Open the prompt → Light evening — protect Saturday.
 
 
 Sat Jun 27day 6
 
-Weekend block**Run the three labs.** Plan \~4 hours. Open the Build\-a\-Network lab first, then Network Statistics, then Centrality. Sketch 07 (Network Statistics) and Sketch 04 (Centrality) in between.
+Weekend block**Run the four labs.** Plan \~5 hours. Open the Build\-a\-Network lab first, then Joins, Aggregation, and Centrality.
 
 
 Sun Jun 28day 7
 
-Weekend blockWrite your three Learning Check answers and the one\-page reflection. Photograph your sketches. **Stage the Monday submission.**
+Weekend blockWrite your four Learning Check answers and the one\-page reflection. Photograph your sketches. **Stage the Monday submission.**
 
 
 Mon Jun 299 AM
 
-Due 9 AM**Week 1 submission.** Three sketch photos · three LC answers · one reflection. See Assignments for the exact spec.
+Due 9 AM**Week 1 submission.** Four sketch photos · four LC answers · one reflection. See Assignments for the exact spec.
 
 
 Week 02
@@ -5114,7 +5126,7 @@ Week 02
 
 
 Jun 29 – Jul 5, 2026
-Critical structure. Four labs: Supply Chain, Routing, Clustering, Aggregation.
+Critical structure and inference. Three labs: Supply Chain, Network Statistics, Routing \& Counterfactuals.
 
 
 Mon Jun 29day 8
@@ -5124,27 +5136,27 @@ Mon Jun 29day 8
 
 Tue Jun 30day 9
 
-📦 Supply Chain Read Barabási Ch. 10 (cascades). \~30 min.
+📦 Supply Chain Read Barabási Ch. 10 (cascades). **Sketch 05 · Predict the damage curves.** Open the prompt →
 
 
 Wed Jul 01day 10
 
-🚦 Routing Skim Bertsekas reference chapter. **Sketch 09 · Pick the best treatment.** Open the prompt →
+📐 Network Statistics Read Farine 2017 (null models). **Sketch 07 · Predict the null distribution.** Open the prompt →
 
 
 Thu Jul 02day 11
 
-🧩 Clustering Read Barabási Ch. 9 (communities). **Sketch 06 · Draw the system you don't see.** Open the prompt →
+🚦 Routing, Counterfactuals \& Optimization Skim Bertsekas reference chapter. **Sketch 09 · Pick the best treatment.** Open the prompt →
 
 
 Fri Jul 03day 12
 
-🗺️ Aggregation Read Bellantuono 2025 (accessibility via transit). **Sketch 03 · Predict the O–D matrix.** Open the prompt → Light evening.
+ Catch\-up and review — three labs makes this a lighter week. Get a head start on the weekend block. Light evening.
 
 
 Sat Jul 04day 13
 
-Weekend block**Run the four labs.** Heavier than week 1 — plan \~5 hours. Bring tea. Holiday in the US; some students prefer to start Friday evening and finish Sunday.
+Weekend block**Run the three labs.** Plan \~4 hours. Open Supply Chain, then Network Statistics, then Routing, Counterfactuals \& Optimization. Holiday in the US; some students prefer to start Friday evening.
 
 
 Sun Jul 05day 14
@@ -5154,7 +5166,7 @@ Weekend blockWrite LC answers, reflection, and (if you picked one of these for t
 
 Mon Jul 069 AM
 
-Due 9 AM**Week 2 submission.** Four sketch photos · four LC answers · one reflection · *(if applicable)* your first project case study.
+Due 9 AM**Week 2 submission.** Three sketch photos · three LC answers · one reflection · *(if applicable)* your first project case study.
 
 
 Week 03
@@ -5162,32 +5174,32 @@ Week 03
 
 
 Jul 06 – Jul 10, 2026
-Forecasting and big data. Four labs: GNN by Hand, GNN \+ XGBoost, Sampling, Joins. Plus the final project submission.
+Prediction, communities, and big data. Four labs: GNN by Hand, GNN \+ XGBoost, Clustering, Sampling. Plus the final project submission.
 
 
 Mon Jul 06day 15
 
- Submission done. Watch this week's intro video. 🧠 GNN by Hand
+ Submission done. Watch this week's intro video. 🧠 GNN by Hand **Sketch 10 · Trace a message\-passing step.** Open the prompt →
 
 
 Tue Jul 07day 16
 
-🤖 GNN \+ XGBoost Read Khan 2025 (ML for network inference). \~30 min.
+🤖 GNN \+ XGBoost Read Khan 2025 (ML for network inference). **Sketch 11 · Predict the AUCs.** Open the prompt →
 
 
 Wed Jul 08day 17
 
-🗄️ Sampling Skim Easley \& Kleinberg §2\.4 (network datasets). **Sketch 10 · Trace a message\-passing step** for the GNN labs. Open the prompt →
+🧩 Clustering Read Barabási Ch. 9 (communities). **Sketch 06 · Draw the system you don't see.** Open the prompt →
 
 
 Thu Jul 09day 18
 
-🔗 Joins **Sketch 02 · Draw the join key.** Open the prompt → Light evening — final crunch starts tomorrow.
+🗄️ Sampling Skim Easley \& Kleinberg §2\.4 (network datasets). **Sketch 08 · Choose your five.** Open the prompt → Light evening — final crunch starts tomorrow.
 
 
 Fri Jul 10day 19
 
-Final\-week blockLast labs (GNN by Hand, GNN \+ XGBoost, Sampling, Joins). Wrap your final project case study or two. **Final presentations** happen this day for cohort members who attend — see Assignments.
+Final\-week blockLast labs (GNN by Hand, GNN \+ XGBoost, Clustering, Sampling). Wrap your final project case study or two. **Final presentations** happen this day for cohort members who attend — see Assignments.
 
 
 Mon Jul 139 AM

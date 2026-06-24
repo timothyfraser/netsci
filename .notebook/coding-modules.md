@@ -1,6 +1,6 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-24 05:15 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 17:03 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
@@ -4170,635 +4170,6 @@ def remove_and_score(g: ig.Graph, victims: Iterable[str]) -> float:
 
 ---
 
-## `code/10_dsm-clustering/README.md`
-
-# Case Study 06 — DSM Clustering
-
-> Interactive lab: [`docs/case-studies/dsm-clustering.html`](../../docs/case-studies/dsm-clustering.html)
->
-> Skill: **Measure** · Data: synthetic engineered-system DSM with 200
-> components and 8 planted modules
-
-## What you'll learn
-
-How to find modular structure in a Design Structure Matrix
-automatically. Specifically:
-
-- Build a DSM as a directed graph from a long-format edge list.
-- Apply two community-detection algorithms (Louvain and fast-greedy)
-  on the undirected collapse.
-- Compare the recovered partition against ground truth using the
-  adjusted Rand index.
-- Reorder the adjacency matrix by module membership and inspect the
-  block-diagonal structure visually.
-- Run a k-hop cascade simulation from a chosen component.
-
-## Prerequisites
-
-- Case study 01 (Build a Network).
-- The interactive lab.
-- R packages: `dplyr`, `tibble`, `igraph`, `ggplot2`, `here`.
-- Python packages: see [`code/requirements.txt`](../requirements.txt).
-  This case uses `scikit-learn`'s `adjusted_rand_score`.
-
-## Files in this folder
-
-```
-06_dsm-clustering/
-├── README.md
-├── example.R
-├── example.py
-├── functions.R
-├── functions.py
-└── data/
-    ├── nodes.csv    # 200 components, with `true_module` label for verification
-    ├── edges.csv    # ~2,900 directed dependency edges
-    └── _generate.py
-```
-
-## How to run
-
-```bash
-Rscript code/10_dsm-clustering/example.R
-python  code/10_dsm-clustering/example.py
-```
-
-## Learning check (submit this answer)
-
-> **How many modules does Louvain find in this DSM, and what is the
-> modularity score (to 3 decimal places)?**  
-> Submit BOTH, separated by a comma. Example: `8, 0.612`.
-
-## Your Project Case Study
-
-If you pick this case study, you'll apply Louvain to *your* network
-and discuss what the recovered modules mean in your domain.
-
-### Suggested project questions
-
-1. **What are the modules in my network?** Apply Louvain. Report
-   the number of modules, the modularity score, and qualitatively
-   describe what 2-3 of the modules represent.
-
-2. **Two clustering algorithms, two stories.** Run Louvain AND
-   fast-greedy (or Leiden, walktrap — your choice). Report the
-   modularity and number of modules for each, and discuss
-   meaningful disagreements between them.
-
-3. **Cascade analysis.** If your network has a meaningful dependency
-   direction, simulate k-hop cascades from a few interesting seed
-   nodes. Report which seeds produce the largest 1-hop and 2-hop
-   cascades.
-
-### Report
-
-- **Question.** One sentence.
-- **Network.** Nodes, edges, whether your dependencies are directed.
-- **Procedure.** Algorithm(s) run, parameters, any preprocessing.
-- **Results.** Numbers in prose; the reordered DSM is a powerful
-  figure; at most 2 figures and 1 table.
-- **What this tells you, and what it doesn't.** 2-3 sentences.
-
-## Further reading
-
-- The sts course `26C_analytics.R` runs Louvain on a much larger
-  committee-affiliation network and uses the modules to make
-  geographic comparisons.
-- Case study 05 ([`05_supply-chain`](../05_supply-chain)) attacks the
-  same question from the other side: which *individual* nodes break
-  the network.
-
----
-
-## `code/10_dsm-clustering/data/_generate.py`
-
-```python
-"""Generate a synthetic engineered-system DSM for case 06.
-
-A Design Structure Matrix (DSM) is just an adjacency matrix where
-component i depends on component j. We plant K dense modules so the
-clustering algorithm has something to recover.
-
-  - 200 components
-  - 8 modules of 25 components each
-  - intra-module edge probability: 0.40
-  - inter-module edge probability: 0.03 (the "residual marks")
-
-Outputs:
-  - dsm.csv: long-format edge list (from, to)
-  - nodes.csv: node_id + true module label (for verification)
-
-Run:
-    python code/10_dsm-clustering/data/_generate.py
-"""
-from __future__ import annotations
-
-from pathlib import Path
-import numpy as np
-import pandas as pd
-
-HERE = Path(__file__).resolve().parent
-SEED = 42
-
-def main() -> None:
-    rng = np.random.default_rng(SEED)
-
-    n = 200
-    n_modules = 8
-    per_module = n // n_modules
-    p_intra = 0.40
-    p_inter = 0.03
-
-    # assign each component to a module
-    module = np.repeat(np.arange(n_modules), per_module)
-    rng.shuffle(module)
-
-    nodes = pd.DataFrame({
-        "node_id":   [f"C{i:03d}" for i in range(n)],
-        "true_module": module,
-    })
-
-    # build directed edges (DSM dependencies)
-    rows = []
-    for i in range(n):
-        for j in range(n):
-            if i == j:
-                continue
-            p = p_intra if module[i] == module[j] else p_inter
-            if rng.random() < p:
-                rows.append({
-                    "from": f"C{i:03d}",
-                    "to":   f"C{j:03d}",
-                })
-    edges = pd.DataFrame(rows).sort_values(["from", "to"]).reset_index(drop=True)
-
-    nodes.to_csv(HERE / "nodes.csv", index=False)
-    edges.to_csv(HERE / "edges.csv", index=False)
-    print(f"wrote {HERE / 'nodes.csv'} ({len(nodes)} nodes)")
-    print(f"wrote {HERE / 'edges.csv'} ({len(edges)} edges)")
-
-
-if __name__ == "__main__":
-    main()
-```
-
----
-
-## `code/10_dsm-clustering/example.R`
-
-```r
-#' @name example.R
-#' @title Case Study 06 — DSM Clustering
-#' @author <your-name-here>
-#' @description
-#' A Design Structure Matrix (DSM) is just an adjacency matrix where
-#' row i to column j means "component i depends on j." Reordering
-#' rows and columns so that dense blocks fall on the diagonal reveals
-#' the *modular structure* of the system. The case study lab had you
-#' drag rows around by hand; here we let an algorithm do it.
-#'
-#' Steps:
-#'   1. Build the DSM graph from a 200-component synthetic system
-#'      with 8 planted modules.
-#'   2. Run two community-detection algorithms (Louvain and
-#'      fast-greedy) on the undirected projection.
-#'   3. Reorder the DSM matrix by recovered modules and verify the
-#'      block-diagonal structure visually.
-#'   4. Simulate a k-hop cascade from a chosen component.
-
-
-# 0. Setup ###################################################################
-
-## 0.1 Packages ##############################################################
-
-# `igraph` carries the community-detection algorithms and the matrix
-# conversion. `dplyr` + `tibble` for tidy summaries. Base R `image()`
-# does the DSM heatmap (no ggplot needed).
-library(dplyr)
-library(tibble)
-library(igraph)
-library(ggplot2)
-library(here)
-
-## 0.2 Load helpers ##########################################################
-
-# `cascade_bfs()` does a bounded BFS from a starting node along the
-# directed dependency edges. It's the cascade simulator we use at the
-# end of the script.
-source(here::here("code", "06_dsm-clustering", "functions.R"))
-
-cat("\n🚀 Case Study 06 — DSM Clustering (R)\n")
-cat("   200 components, 8 planted modules. Can community detection recover them?\n\n")
-
-## 0.3 Load data #############################################################
-
-nodes <- load_nodes()
-edges <- load_edges()
-g     <- build_graph(nodes, edges)
-g
-cat(sprintf("✅ Loaded DSM: %d components, %d dependency edges.\n",
-            igraph::vcount(g), igraph::ecount(g)))
-
-
-# 1. Community detection #####################################################
-#
-# Louvain and fast-greedy both want an undirected graph, so we collapse
-# each directed dependency "A depends on B" into a plain "A and B are
-# linked." Why it's OK here: community detection asks "which components
-# clump together?", and two parts that depend on each other belong in the
-# same cluster regardless of which way the arrow points. What we give up:
-# the direction itself -- we can no longer tell driver from dependent
-# within a cluster. Fine for grouping; keep direction if you cared about
-# what cascades when one part fails.
-
-g_undirected <- igraph::as_undirected(g, mode = "collapse")
-g_undirected
-
-# A quick word on MODULARITY, the score both algorithms maximize: it
-# measures how much more edge weight falls inside communities than you'd
-# expect at random. It runs roughly -0.5 to 1; ~0 means "no more clustered
-# than random", and > ~0.3 is usually a meaningful community structure.
-# We planted 8 modules, so recovering 8 at a healthy modularity is the win.
-
-# Louvain (igraph's `cluster_louvain`): greedy modularity optimization,
-# moves nodes between communities to maximize modularity score.
-#
-# Louvain is STOCHASTIC -- it visits nodes in a randomized order, so an
-# unseeded run usually recovers the 8 planted modules (modularity 0.470)
-# but occasionally merges two and reports 7 (~0.454). We seed for a
-# reproducible Learning Check; expect your own data to wobble by a module
-# or two between runs if you don't.
-set.seed(5470)
-louvain <- igraph::cluster_louvain(g_undirected)
-cat(sprintf("📊 Louvain found %d modules. Modularity: %.3f\n",
-            length(louvain), igraph::modularity(louvain)))
-
-# Fast-greedy: agglomerative — start with each node in its own community,
-# repeatedly merge the pair whose merge most increases modularity. It often
-# recovers FEWER modules than Louvain on dense graphs: once it has merged
-# greedily it never splits back, so adjacent planted modules get fused into
-# one and the recovered count comes in under the truth. That's an algorithm
-# property, not randomness — Louvain's node-moving phase avoids it here.
-fg <- igraph::cluster_fast_greedy(g_undirected)
-cat(sprintf("📊 Fast-greedy found %d modules. Modularity: %.3f\n",
-            length(fg), igraph::modularity(fg)))
-
-
-# 2. Compare to ground truth #################################################
-#
-# Our synthetic data planted 8 modules. The Adjusted Rand Index (ARI)
-# measures how well two clusterings agree, corrected for chance:
-# 1.0 = perfect agreement, 0.0 = chance, < 0 = worse than chance.
-# Rough field convention for "how good is this recovery?": ARI > 0.8 is a
-# strong match, 0.5–0.8 partial, < 0.5 weak. So Louvain's 1.0 is a perfect
-# recovery; fast-greedy's lower score reflects the merged modules above.
-
-true_mod <- igraph::V(g)$true_module
-ari_louv <- igraph::compare(true_mod, louvain$membership, method = "adjusted.rand")
-ari_fg   <- igraph::compare(true_mod, fg$membership,     method = "adjusted.rand")
-cat(sprintf("🧪 Louvain    ARI vs truth: %.3f\n", ari_louv))
-cat(sprintf("🧪 FastGreedy ARI vs truth: %.3f\n", ari_fg))
-
-
-# 3. Reorder the DSM by recovered module #####################################
-#
-# Sort node indices by Louvain module ID. Then build the n x n
-# adjacency matrix in that order. Dense blocks should land on the
-# diagonal — that's what "modular structure" *looks like*.
-
-ord      <- order(louvain$membership)
-A        <- as.matrix(igraph::as_adjacency_matrix(g))
-A_sorted <- A[ord, ord]
-
-# Side-by-side base-R image() plots. Reverse the y-axis so row 1 lands
-# at the top, like an actual matrix. Wrapped in a function so we can draw
-# it both to the screen and to a PNG (Rscript otherwise hides it in
-# Rplots.pdf).
-draw_dsm <- function() {
-  par(mfrow = c(1, 2))
-  image(t(A)[, nrow(A):1], col = c("white", "black"), axes = FALSE,
-        main = "DSM — original order")
-  image(t(A_sorted)[, nrow(A_sorted):1], col = c("white", "black"), axes = FALSE,
-        main = "DSM — reordered by Louvain")
-  par(mfrow = c(1, 1))
-}
-
-# Show interactively...
-draw_dsm()
-
-# ...and save a copy for terminal / Rscript users.
-png(here::here("code", "06_dsm-clustering", "dsm_reordering.png"),
-    width = 9, height = 5, units = "in", res = 120)
-draw_dsm()
-invisible(dev.off())
-cat("💾 Saved dsm_reordering.png\n")
-
-
-# 4. Cascade simulation ######################################################
-#
-# When component C037 fails, every component that depends on it can
-# fail too. We bound to k hops because in a densely-coupled DSM an
-# unbounded cascade reaches everything. The interesting question:
-# how many fall in the FIRST FEW HOPS?
-#
-# Why can a cascade reach far beyond C037's own module even though Louvain
-# found clean modules? Because a cascade follows EDGES, not module walls.
-# Community detection only says edges are DENSER within modules, not that
-# none cross. C037 has a few cross-module dependency edges, and BFS happily
-# traverses them -- so a single hub failure jumps boundaries the clustering
-# drew.
-
-seed <- "C037"
-for (k in c(1, 2, 3)) {
-  cat(sprintf("🔗 Cascade from %s in %d hop(s): %d components\n",
-              seed, k, length(cascade_bfs(g, seed, n_hops = k))))
-}
-
-
-# 5. Learning Check ##########################################################
-#
-# QUESTION: How many modules does Louvain find in this DSM, and what
-# is the modularity score (to 3 decimal places)? Submit BOTH numbers,
-# separated by a comma. Example: "8, 0.612"
-
-n_modules  <- length(louvain)
-modularity <- round(igraph::modularity(louvain), 3)
-
-cat(sprintf("\n📝 Learning Check answer: %d, %.3f\n", n_modules, modularity))
-
-cat("\n🎉 Done. Move on to the case study report when you're ready.\n")
-```
-
----
-
-## `code/10_dsm-clustering/example.py`
-
-```python
-"""Case Study 06 — DSM Clustering (Python track).
-
-A Design Structure Matrix (DSM) is just an adjacency matrix where row
-i to column j means "component i depends on j." Reordering rows and
-columns so that dense blocks fall on the diagonal reveals the *modular
-structure* of the system. The case study lab had you drag rows around
-by hand; here we let an algorithm do it.
-
-Steps:
-  1. Build the DSM graph from a 200-component synthetic system with
-     8 planted modules.
-  2. Run two community-detection algorithms (Louvain and fast-greedy)
-     on the undirected projection.
-  3. Reorder the DSM matrix by recovered modules and verify the
-     block-diagonal structure visually.
-  4. Simulate a cascade: which components fail when component C037
-     fails (BFS along outgoing dependency edges).
-"""
-
-# 0. Setup ###################################################################
-
-## 0.1 Packages ##############################################################
-
-# `igraph` for community detection + matrix conversion. `numpy` for
-# matrix reordering. `matplotlib.imshow` for the DSM heatmap.
-import random
-import pandas as pd
-import numpy as np
-import igraph as ig
-import matplotlib.pyplot as plt
-
-## 0.2 Load helpers ##########################################################
-
-# `cascade_bfs()` does a bounded BFS from a starting node along the
-# directed dependency edges. It's the cascade simulator we use at the
-# end of the script.
-from functions import load_nodes, load_edges, build_graph, cascade_bfs
-
-print("\n🚀 Case Study 06 — DSM Clustering (Python)")
-print("   200 components, 8 planted modules. Can community detection recover them?\n")
-
-## 0.3 Load data #############################################################
-
-nodes = load_nodes()
-edges = load_edges()
-g     = build_graph(nodes, edges)
-print(g.summary())
-print(f"✅ Loaded DSM: {g.vcount()} components, {g.ecount()} dependency edges.")
-
-
-# 1. Community detection #####################################################
-#
-# Louvain and fast-greedy both want an undirected graph, so we collapse
-# each directed dependency "A depends on B" into a plain "A and B are
-# linked." Why it's OK here: community detection asks "which components
-# clump together?", and two parts that depend on each other belong in the
-# same cluster regardless of which way the arrow points. What we give up:
-# the direction itself -- we can no longer tell driver from dependent
-# within a cluster. That's fine for grouping, but you'd keep direction if
-# you cared about, say, what cascades when one part fails.
-
-g_undirected = g.as_undirected(mode="collapse")
-print(g_undirected.summary())
-
-# A quick word on MODULARITY, the score both algorithms maximize: it
-# measures how much more edge weight falls inside communities than you'd
-# expect at random. It runs roughly -0.5 to 1; ~0 means "no more clustered
-# than random", and > ~0.3 is usually a meaningful community structure.
-# We planted 8 modules, so recovering 8 at a healthy modularity is the win.
-
-# Louvain (igraph's `community_multilevel`): greedy modularity
-# optimization, moves nodes between communities to maximize modularity.
-#
-# Louvain is STOCHASTIC -- it visits nodes in a randomized order, so an
-# unseeded run usually recovers the 8 planted modules (modularity 0.470)
-# but can occasionally merge two and report 7 (~0.454). We seed for a
-# reproducible Learning Check; expect your own data to wobble by a module
-# or two between runs if you don't.
-random.seed(5470)
-louvain = g_undirected.community_multilevel()
-print(f"📊 Louvain found {len(louvain)} modules. Modularity: {louvain.modularity:.3f}")
-
-# Fast-greedy: agglomerative — start with each node in its own community,
-# repeatedly merge the pair whose merge most increases modularity. It often
-# recovers FEWER modules than Louvain on dense graphs: once it has merged
-# greedily it never splits back, so adjacent planted modules get fused into
-# one and the recovered count comes in under the truth. That's an algorithm
-# property, not randomness — Louvain's node-moving phase avoids it here.
-fg = g_undirected.community_fastgreedy().as_clustering()
-print(f"📊 Fast-greedy found {len(fg)} modules. Modularity: {fg.modularity:.3f}")
-
-
-# 2. Compare to ground truth #################################################
-#
-# Our synthetic data planted 8 modules. The Adjusted Rand Index (ARI)
-# measures how well two clusterings agree, corrected for chance:
-# 1.0 = perfect agreement, 0.0 = chance, < 0 = worse than chance.
-# Rough field convention: ARI > 0.8 is a strong match, 0.5–0.8 partial,
-# < 0.5 weak. So Louvain's 1.0 is a perfect recovery; fast-greedy's lower
-# score reflects the merged modules noted above.
-# (igraph ships no ARI, so we borrow sklearn's one function for it.)
-
-from sklearn.metrics import adjusted_rand_score
-true_module = np.array(g.vs["true_module"])
-louvain_lbl = np.array(louvain.membership)
-fg_lbl      = np.array(fg.membership)
-
-print(f"🧪 Louvain    ARI vs truth: {adjusted_rand_score(true_module, louvain_lbl):.3f}")
-print(f"🧪 FastGreedy ARI vs truth: {adjusted_rand_score(true_module, fg_lbl):.3f}")
-
-
-# 3. Reorder the DSM by recovered module #####################################
-#
-# Sort node indices by Louvain module ID. Then build the n x n
-# adjacency matrix in that order. Dense blocks should land on the
-# diagonal — that's what "modular structure" *looks like*.
-
-order = np.argsort(louvain_lbl, kind="stable")
-A = np.array(g.get_adjacency().data)
-A_sorted = A[np.ix_(order, order)]
-
-# Side-by-side imshow plots: original ordering vs reordered.
-fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-axes[0].imshow(A, cmap="Greys", aspect="equal")
-axes[0].set_title("DSM — original order")
-axes[1].imshow(A_sorted, cmap="Greys", aspect="equal")
-axes[1].set_title("DSM — reordered by Louvain module")
-for ax in axes:
-    ax.set_xticks([]); ax.set_yticks([])
-fig.tight_layout()
-fig.savefig("dsm_reorder.png", dpi=120)
-plt.close(fig)
-print("💾 Saved dsm_reorder.png")
-
-
-# 4. Cascade simulation ######################################################
-#
-# When component C037 fails, every component that depends on it can
-# fail too. We bound to k hops because in a densely-coupled DSM an
-# unbounded cascade reaches everything. The interesting question:
-# how many components fall in the FIRST FEW HOPS?
-#
-# Why can a cascade reach far beyond C037's own module even though Louvain
-# found clean modules? Because a cascade follows EDGES, not module walls.
-# Community detection only says edges are DENSER within modules, not that
-# none cross. C037 has a few cross-module dependency edges, and BFS happily
-# traverses them -- so a single hub failure jumps boundaries the clustering
-# drew.
-
-seed = "C037"
-for k in [1, 2, 3]:
-    failed = cascade_bfs(g, seed, n_hops=k)
-    print(f"🔗 Cascade from {seed} in {k} hop(s): {len(failed)} components")
-
-
-# 5. Learning Check ##########################################################
-#
-# QUESTION: How many modules does Louvain find in this DSM, and what
-# is the modularity score (to 3 decimal places)?
-# Submit BOTH numbers, separated by a comma.
-# Example answer format: "8, 0.612"
-
-n_modules = len(louvain)
-modularity = round(louvain.modularity, 3)
-
-print(f"\n📝 Learning Check answer: {n_modules}, {modularity:.3f}")
-
-print("\n🎉 Done. Move on to the case study report when you're ready.")
-```
-
----
-
-## `code/10_dsm-clustering/functions.R`
-
-```r
-#' @name functions.R
-#' @title Helpers for the DSM Clustering case study
-
-library(readr)
-library(dplyr)
-library(igraph)
-library(here)
-
-.case_dir <- function() here::here("code", "06_dsm-clustering", "data")
-
-load_nodes <- function() readr::read_csv(file.path(.case_dir(), "nodes.csv"),
-                                         show_col_types = FALSE)
-load_edges <- function() readr::read_csv(file.path(.case_dir(), "edges.csv"),
-                                         show_col_types = FALSE)
-
-#' Build the DSM dependency graph (directed).
-build_graph <- function(nodes = load_nodes(), edges = load_edges()) {
-  igraph::graph_from_data_frame(
-    d        = edges,
-    directed = TRUE,
-    vertices = nodes
-  )
-}
-
-#' Components that fail within `n_hops` of `seed_node`.
-#'
-#' Follows outgoing dependency edges. With high inter-module
-#' connectivity, an unbounded cascade can reach every component, so
-#' we bound to k hops to keep the simulation interpretable.
-cascade_bfs <- function(g, seed_node, n_hops = 3) {
-  idx <- which(igraph::V(g)$name == seed_node)
-  reached <- igraph::ego(g, order = n_hops, nodes = idx, mode = "out")[[1]]
-  reached$name
-}
-```
-
----
-
-## `code/10_dsm-clustering/functions.py`
-
-```python
-"""Helpers for the DSM Clustering case study."""
-from __future__ import annotations
-
-from pathlib import Path
-import pandas as pd
-import igraph as ig
-
-
-def _case_dir() -> Path:
-    return Path(__file__).resolve().parent / "data"
-
-
-def load_nodes() -> pd.DataFrame:
-    return pd.read_csv(_case_dir() / "nodes.csv")
-
-
-def load_edges() -> pd.DataFrame:
-    return pd.read_csv(_case_dir() / "edges.csv")
-
-
-def build_graph(nodes: pd.DataFrame | None = None,
-                edges: pd.DataFrame | None = None) -> ig.Graph:
-    """Build the DSM dependency graph (directed)."""
-    if nodes is None:
-        nodes = load_nodes()
-    if edges is None:
-        edges = load_edges()
-    return ig.Graph.DataFrame(
-        edges=edges,
-        directed=True,
-        vertices=nodes,
-        use_vids=False,
-    )
-
-
-def cascade_bfs(g: ig.Graph, seed_node: str, n_hops: int = 3) -> list[str]:
-    """Components that fail within ``n_hops`` of ``seed_node``.
-
-    Follows outgoing dependency edges. With high inter-module
-    connectivity, an unbounded cascade can reach every component, so
-    we bound to k hops to keep the simulation interpretable.
-    """
-    seed = g.vs.find(name=seed_node).index
-    reached = g.neighborhood(seed, order=n_hops, mode="out")
-    return [g.vs[i]["name"] for i in reached]
-```
-
----
-
 ## `code/06_permutation/README.md`
 
 # Case Study 07 — Network Permutation Testing
@@ -5524,738 +4895,6 @@ def permute_labels(g: ig.Graph, attr_name: str,
     g2 = g.copy()
     g2.vs[attr_name] = new_labels.tolist()
     return g2
-```
-
----
-
-## `code/11_sampling/README.md`
-
-# Case Study 08 — Sampling Big Networks
-
-> Interactive lab: [`docs/case-studies/sampling.html`](../../docs/case-studies/sampling.html)
->
-> Skill: **Identify** · Data: trimmed Hurricane Dorian evacuation
-> flow network (316 Florida county subdivisions, ~33,000 weighted
-> edges across 8-hour time slices in the Aug 28 - Sep 10 crisis
-> window)
-
-## What you'll learn
-
-When a network is too big to fit in memory or in your head, you
-sample. But each sampling strategy preserves *different* properties:
-
-- **Ego-centric**: pick N seed nodes, keep edges touching them.
-  Preserves node-attribute distributions; can over-sample hubs.
-- **Edgewise**: sample edges uniformly. Preserves edge-attribute
-  distributions; may miss components.
-- **Spatial buffer**: keep nodes within R km of a point of
-  interest. Preserves local structure; deeply biased by where you
-  drew the circle.
-
-We measure how well each strategy reproduces a *time series* of a
-normalized metric — `avg_edgeweight` per node — across the
-two-week crisis window.
-
-## Prerequisites
-
-- Case study 02 (Joins).
-- The interactive lab.
-- R packages: `dplyr`, `tidyr`, `readr`, `ggplot2`, `sf`, `here`.
-- Python packages: see [`code/requirements.txt`](../requirements.txt).
-  Spatial operations need `geopandas` and `shapely`.
-
-## Files in this folder
-
-```
-08_sampling/
-├── README.md
-├── example.R
-├── example.py
-├── functions.R                       # `slice_stats()` + loaders
-├── functions.py
-└── data/
-    ├── nodes.csv                  # 316 FL county subdivisions w/ centroid x,y
-    ├── edges.csv                  # ~33k 8-hour-slice evacuation flows
-    ├── county_subdivisions.geojson    # FL only, simplified polygons
-    └── _generate.py                   # trims the raw sts data
-```
-
-## How to run
-
-```bash
-Rscript code/11_sampling/example.R
-python  code/11_sampling/example.py
-```
-
-## Learning check (submit this string)
-
-> **Of the three sampling strategies above (`ego_centric`,
-> `edgewise`, `spatial_buffer`), which one best preserves the
-> population's `avg_edgeweight` time series — measured by the
-> smallest max-absolute-deviation across time slices?**
-
-Submit one of: `ego_centric`, `edgewise`, `spatial_buffer`.
-
-## Your Project Case Study
-
-If you pick this case study, you'll sample *your* large network
-under at least two strategies and report which network properties
-each one preserves vs distorts.
-
-### Suggested project questions
-
-1. **Strategy showdown.** Sample your network ego-centrically and
-   edgewise to the same edge count. Compute normalized metrics
-   (density, share of nodes linked, edge ratio, mean edge weight)
-   on each. Report which metric each strategy preserves best.
-
-2. **Sample-size convergence.** Pick one strategy. Vary the sample
-   size from very small to as-large-as-the-population. Report the
-   sample size at which density (or another metric you care about)
-   stabilizes to within 5% of the population value.
-
-3. **Spatial / temporal targeting.** If your network has a spatial
-   or temporal structure, filter by a meaningful region or window
-   *before* sampling. Compare the filtered-then-sampled network's
-   properties against an unfiltered sample of the same size.
-
-### Report
-
-- **Question.** One sentence.
-- **Network.** Nodes, edges, weight semantics, size.
-- **Procedure.** Strategy/strategies, sample sizes, RNG seed.
-- **Results.** Numbers in prose; at most 2 figures (the over-time
-  comparison plot is the strongest); 1 table of preservation
-  metrics by strategy.
-- **What this tells you, and what it doesn't.** 2-3 sentences,
-  including: sampling strategies are not generic — they trade off
-  properties, and the right strategy depends on which property
-  your question depends on.
-
-## Further reading
-
-- The sts course `29C_databases.R` is the parent workshop. It
-  covers the same network at Gulf-states scale and develops more
-  sampling strategies (random-walk, snowball).
-- For a deeper dive on sampling theory in networks, see Leskovec &
-  Faloutsos (2006) "Sampling from large graphs."
-
----
-
-## `code/11_sampling/data/_generate.py`
-
-```python
-"""Generate the slim Hurricane Dorian evacuation dataset for case 08.
-
-We start from the full Gulf-states evacuation network at
-https://github.com/timothyfraser/sts (3week branch) and trim:
-
-  - keep only Florida nodes (state FIPS = "12")
-  - keep only the columns we use: node, geoid, pop, median_income
-  - precompute x/y centroids from the geojson and store on the node
-    table, so neither R nor Python needs sf/geopandas just to load
-  - keep only edges with evacuation > 0 within Aug 28 - Sep 10, 2019
-  - bundle a slimmed florida-only county_subdivisions.geojson
-
-The source .rds files come from:
-  https://raw.githubusercontent.com/timothyfraser/sts/3week/data/evacuation/
-
-This script expects them to have been fetched to /tmp/sts_data/:
-
-    mkdir -p /tmp/sts_data && cd /tmp/sts_data
-    for f in nodes.rds edges.rds county_subdivisions.geojson states.geojson; do
-      curl -sLO "https://raw.githubusercontent.com/timothyfraser/sts/3week/data/evacuation/$f"
-    done
-
-Run:
-    python code/11_sampling/data/_generate.py
-"""
-from __future__ import annotations
-
-from pathlib import Path
-import pandas as pd
-import pyreadr
-import geopandas as gpd
-
-HERE = Path(__file__).resolve().parent
-SRC = Path("/tmp/sts_data")
-
-def main() -> None:
-    if not SRC.exists():
-        raise SystemExit(
-            f"expected sts source data at {SRC}; see the docstring at the "
-            "top of this script for the curl commands."
-        )
-
-    # --- nodes ----------------------------------------------------------------
-    n = pyreadr.read_r(str(SRC / "nodes.rds"))[None]
-    n = n.assign(state=n["geoid"].str[:2]).loc[lambda d: d["state"] == "12"]
-    n = n[["node", "geoid", "pop", "median_income"]].reset_index(drop=True)
-    n["node"] = n["node"].astype(int)
-
-    # --- subdivisions polygons (filter to FL, dissolve to centroids) ----------
-    cs = gpd.read_file(SRC / "county_subdivisions.geojson")
-    cs = cs[cs["geoid"].astype(str).str[:2] == "12"].copy()
-    # add x,y centroid to nodes via merge
-    centroids = cs.set_geometry(cs.geometry.centroid)
-    cs["x"] = centroids.geometry.x.to_numpy()
-    cs["y"] = centroids.geometry.y.to_numpy()
-    n = n.merge(cs[["geoid", "x", "y"]], on="geoid", how="left")
-
-    # --- edges ----------------------------------------------------------------
-    e = pyreadr.read_r(str(SRC / "edges.rds"))[None]
-    e = e[["from", "to", "date_time", "evacuation", "km"]].copy()
-    e["from"] = e["from"].astype(int)
-    e["to"]   = e["to"].astype(int)
-    e["date_time"] = pd.to_datetime(e["date_time"])
-
-    # Filter to Florida nodes
-    fl_nodes = set(n["node"].astype(int))
-    e = e[e["from"].isin(fl_nodes) & e["to"].isin(fl_nodes)]
-    # Filter to evacuation > 0 in the crisis window
-    start = pd.Timestamp("2019-08-28")
-    end   = pd.Timestamp("2019-09-11")
-    e = e[(e["evacuation"] > 0) & (e["date_time"] >= start) & (e["date_time"] < end)]
-    e = e.reset_index(drop=True)
-
-    # --- write outputs --------------------------------------------------------
-    n.to_csv(HERE / "nodes.csv", index=False)
-    e.to_csv(HERE / "edges.csv", index=False)
-
-    # Trim subdivisions geojson: drop attribute columns and simplify
-    # geometry to keep the file small enough to bundle in a repo.
-    cs_slim = cs[["geoid", "geometry"]].copy()
-    cs_slim["geometry"] = cs_slim.geometry.simplify(tolerance=0.005,
-                                                    preserve_topology=True)
-    cs_slim.to_file(HERE / "county_subdivisions.geojson", driver="GeoJSON")
-
-    print(f"wrote {HERE / 'nodes.csv'} ({len(n)} nodes)")
-    print(f"wrote {HERE / 'edges.csv'} ({len(e):,} edges)")
-    print(f"wrote {HERE / 'county_subdivisions.geojson'} (FL only)")
-
-
-if __name__ == "__main__":
-    main()
-```
-
----
-
-## `code/11_sampling/example.R`
-
-```r
-#' @name example.R
-#' @title Case Study 08 — Sampling Big Networks
-#' @author <your-name-here>
-#' @description
-#' You can't analyze every node in a million-node network on a laptop.
-#' So we sample. But sampling is not neutral — each strategy preserves
-#' some properties and distorts others.
-#'
-#' Data: Hurricane Dorian evacuation flows over Florida county
-#' subdivisions, Aug 28 - Sep 10, 2019. Each edge is a (from, to,
-#' date_time, evacuation) row where `evacuation` is how many MORE
-#' local Facebook users moved between two cities in that 8-hour
-#' window than usual. The original sts workshop 29C_databases.R
-#' covers this at the Gulf-states scale; we trim to Florida and the
-#' crisis weeks.
-#'
-#' We will:
-#'   1. Compute baseline per-time-slice stats on the full network.
-#'   2. Apply three sampling strategies (ego, edgewise, spatial buffer).
-#'   3. Compare each against the population over time.
-
-
-# 0. Setup ###################################################################
-
-## 0.1 Packages ##############################################################
-
-# `dplyr`/`tidyr` for the per-slice aggregations, `sf` for the spatial
-# buffer (the only part of this script that needs spatial libraries),
-# `ggplot2` for the comparison figure.
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(sf)
-library(here)
-
-## 0.2 Load helpers ##########################################################
-
-# `slice_stats()` computes the per-time-slice network statistics
-# (edgeweight, share of nodes touched, etc.) for any edge subset.
-# That's the workhorse we'll reuse on every sample.
-source(here::here("code", "08_sampling", "functions.R"))
-
-cat("\n🚀 Case Study 08 — Sampling Big Networks (R)\n")
-cat("   Three sampling strategies vs population. Which one preserves the truth?\n\n")
-
-## 0.3 Load data #############################################################
-
-nodes <- load_nodes()
-edges <- load_edges()
-cs    <- load_subdivisions()
-cat(sprintf("✅ Loaded %d nodes, %d edges, %d subdivisions.\n",
-            nrow(nodes), nrow(edges), nrow(cs)))
-
-
-# 1. Baseline (population) statistics over time ##############################
-#
-# We compute four numbers per 8-hour slice: total edgeweight, share of
-# nodes touched, edge ratio, average edgeweight per node. The figure
-# at the end compares each sample's time series to this baseline.
-
-n_total <- nrow(nodes)
-stats   <- slice_stats(edges, n_total)
-stats |> head()
-cat(sprintf("📊 Baseline: %d time slices computed.\n", nrow(stats)))
-
-
-# 2. Sampling strategies ######################################################
-
-set.seed(42)  # deterministic samples across runs
-
-## 2.1 Ego-centric: 50 random seed nodes, keep edges touching any of them ####
-
-# An ego sample is biased toward whatever the seeds are. With random
-# seeds, the bias averages out, but small samples are still noisy.
-ego_nodes <- nodes |> slice_sample(n = 50) |> pull(node)
-ego_edges <- edges |> filter(from %in% ego_nodes | to %in% ego_nodes)
-ego_stats <- slice_stats(ego_edges, n_total)
-cat(sprintf("✅ Ego sample: %d seeds, %d edges retained.\n",
-            length(ego_nodes), nrow(ego_edges)))
-
-## 2.2 Edgewise: 10,000 random edges #########################################
-
-# Uniform random sampling of edges. Preserves the marginal edge-weight
-# distribution well but tends to leave nodes with low degree under-sampled.
-edge_sample <- edges |> slice_sample(n = 10000)
-edge_stats  <- slice_stats(edge_sample, n_total)
-cat(sprintf("✅ Edge sample: %d edges.\n", nrow(edge_sample)))
-
-## 2.3 Spatial buffer: nodes within 200 km of Miami ##########################
-
-# Drop the handful of nodes whose centroid couldn't be computed (a
-# subdivision present in the node table but missing from the trimmed
-# geojson). sf is strict about NAs in coordinates.
-nodes_geo <- nodes |> filter(!is.na(x), !is.na(y))
-
-# Use Miami as our point of interest (POI). Why the projection dance?
-# EPSG:4326 is lat/lon in DEGREES, so a "200 km" buffer in degrees is
-# meaningless (a degree is a different distance at the equator vs Maine).
-# EPSG:3857 is in METERS, so we project there to draw the 200 km circle,
-# then project back to 4326 to match the node coordinates. Non-GIS
-# readers: switch to a meter ruler, measure, switch back.
-miami <- nodes_geo |> filter(geoid == "1208692158") |> slice(1)
-poi <- sf::st_as_sf(
-  data.frame(x = miami$x, y = miami$y),
-  coords = c("x", "y"), crs = 4326
-)
-buf <- poi |>
-  sf::st_transform(3857) |>
-  sf::st_buffer(dist = 200 * 1000) |>
-  sf::st_transform(4326)
-
-node_pts     <- sf::st_as_sf(nodes_geo, coords = c("x", "y"), crs = 4326)
-nodes_in_buf <- sf::st_join(node_pts, buf, join = sf::st_within, left = FALSE)
-ids_in       <- nodes_in_buf$node
-
-# Keep only edges where BOTH endpoints are inside the buffer.
-buf_edges <- edges |> filter(from %in% ids_in & to %in% ids_in)
-buf_stats <- slice_stats(buf_edges, n_total)
-cat(sprintf("✅ Buffer sample: %d nodes within 200 km of Miami, %d edges.\n",
-            length(ids_in), nrow(buf_edges)))
-
-
-# 3. Compare ##################################################################
-
-p <- bind_rows(
-  stats     |> mutate(strategy = "Population"),
-  ego_stats |> mutate(strategy = "Ego-centric"),
-  edge_stats|> mutate(strategy = "Edgewise"),
-  buf_stats |> mutate(strategy = "Spatial buffer")
-) |>
-  ggplot(aes(x = date_time, y = avg_edgeweight, color = strategy)) +
-  geom_line() +
-  labs(y     = "avg edgeweight per node",
-       title = "Sample vs population — avg edgeweight per node",
-       x     = NULL) +
-  theme_classic(base_size = 12) +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1))
-
-# This is the figure that makes the whole case: all three sample lines
-# against the population line. Show it AND save it (Rscript otherwise hides
-# it in Rplots.pdf, so the most important plot in the lab goes unseen).
-print(p)
-ggsave(here::here("code", "08_sampling", "sample_vs_population.png"),
-       p, width = 7, height = 4.5, dpi = 120)
-cat("💾 Saved sample_vs_population.png\n")
-
-
-# 4. Which strategy best preserves avg_edgeweight? ###########################
-#
-# What makes one sample "better"? It tracks the true population most
-# closely. We score that as the max absolute deviation: over the whole
-# time series, the largest gap between the sample's average edge weight
-# and the population's. Smaller = better, and we pick the strategy that
-# minimizes it. (Worst-case gap is a simple, strict choice; you could
-# instead use mean-squared error or correlation for average-case fit.)
-
-max_abs_dev <- function(sample_stats) {
-  merged <- inner_join(
-    stats        |> select(date_time, pop  = avg_edgeweight),
-    sample_stats |> select(date_time, samp = avg_edgeweight),
-    by = "date_time"
-  )
-  max(abs(merged$pop - merged$samp))
-}
-
-mad <- c(
-  ego_centric    = max_abs_dev(ego_stats),
-  edgewise       = max_abs_dev(edge_stats),
-  spatial_buffer = max_abs_dev(buf_stats)
-)
-cat("Max |population - sample| in avg_edgeweight, by strategy (smaller = better):\n")
-print(round(mad, 3))
-winner <- names(which.min(mad))
-cat(sprintf("📊 Best preservation (smallest max-absolute-deviation): %s\n", winner))
-
-# WHY does the spatial buffer usually win for this network? Evacuation flow
-# is spatially structured -- neighboring subdivisions surge together -- so a
-# geographic buffer captures a coherent, internally-intact subnetwork whose
-# per-node averages track the population. Ego and edgewise sampling slice
-# the graph arbitrarily, fragmenting that local structure.
-
-
-# 5. Learning Check ##########################################################
-#
-# QUESTION: Of the three sampling strategies above (ego-centric,
-# edgewise, spatial buffer around Miami), which one best preserves
-# the population's `avg_edgeweight` time series — measured by the
-# smallest max-absolute-deviation? Submit the strategy name.
-
-cat(sprintf("\n📝 Learning Check answer: %s\n", winner))
-
-cat("\n🎉 Done. Move on to the case study report when you're ready.\n")
-```
-
----
-
-## `code/11_sampling/example.py`
-
-```python
-"""Case Study 08 — Sampling Big Networks (Python track).
-
-You can't analyze every node in a million-node network on a laptop.
-So we sample. But sampling is not neutral — each strategy preserves
-some properties and distorts others. This case study shows you which.
-
-Data: Hurricane Dorian evacuation flows over Florida county
-subdivisions, Aug 28 - Sep 10, 2019. Each edge is a (from, to,
-date_time, evacuation) tuple where `evacuation` is how many MORE
-local Facebook users moved between two cities in that 8-hour window
-than usual. The original sts workshop 29C_databases.R covers the
-same network at a Gulf scale; we trim to Florida and to the crisis
-weeks.
-
-We will:
-  1. Compute baseline per-time-slice network statistics on the full
-     filtered network.
-  2. Take three sampling strategies (ego-centric, edgewise, spatial
-     buffer around Miami).
-  3. Compare each sample's stats against the population over time.
-"""
-
-# 0. Setup ###################################################################
-
-## 0.1 Packages ##############################################################
-
-# `pandas`/`numpy` for the per-slice aggregations, `geopandas`/`shapely`
-# for the spatial buffer (the only part of this script that needs
-# spatial libraries), `matplotlib` for the comparison figure.
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import geopandas as gpd
-from shapely.geometry import Point
-
-## 0.2 Load helpers ##########################################################
-
-# `slice_stats()` computes the per-time-slice network statistics
-# (edgeweight, share of nodes touched, etc.) for any edge subset.
-# That's the workhorse we'll reuse on every sample.
-from functions import (
-    load_nodes, load_edges, load_subdivisions, slice_stats,
-)
-
-print("\n🚀 Case Study 08 — Sampling Big Networks (Python)")
-print("   Three sampling strategies vs population. Which one preserves the truth?\n")
-
-## 0.3 Load data #############################################################
-
-nodes = load_nodes()
-edges = load_edges()
-print(f"nodes: {len(nodes):,}  edges: {len(edges):,}")
-print(edges.head())
-print(f"✅ Loaded {len(nodes)} nodes, {len(edges)} edges.")
-
-
-# 1. Baseline (population) statistics over time ##############################
-#
-# We compute four numbers per 8-hour slice: total edgeweight, share of
-# nodes touched, edge ratio, average edgeweight per node. The figure
-# at the end compares each sample's time series to this baseline.
-
-n_total = len(nodes)
-stats = slice_stats(edges, n_total)
-print(stats.head())
-print(f"📊 Baseline: {len(stats)} time slices computed.")
-
-
-# 2. Sampling strategies #####################################################
-
-rng = np.random.default_rng(42)  # deterministic samples across runs
-
-## 2.1 Ego-centric: sample N nodes, keep edges that touch any sampled node ###
-
-# An ego sample is biased toward whatever the seeds are. With random
-# seeds, the bias averages out, but small samples are still noisy.
-ego_nodes = nodes.sample(n=50, random_state=42)["node"].to_numpy()
-ego_edges = edges[edges["from"].isin(ego_nodes) | edges["to"].isin(ego_nodes)]
-print(f"ego sample: {len(ego_nodes)} seed nodes, {len(ego_edges):,} edges")
-ego_stats = slice_stats(ego_edges, n_total)
-print(f"✅ Ego sample: {len(ego_nodes)} seeds, {len(ego_edges)} edges retained.")
-
-## 2.2 Edgewise: sample edges uniformly ######################################
-
-# Uniform random sampling of edges. Preserves the marginal edge-weight
-# distribution well but tends to leave nodes with low degree under-sampled.
-edge_sample = edges.sample(n=10_000, random_state=42)
-edge_stats  = slice_stats(edge_sample, n_total)
-print(f"edge sample: {len(edge_sample):,} edges")
-print(f"✅ Edge sample: {len(edge_sample)} edges.")
-
-## 2.3 Spatial buffer: keep edges where BOTH endpoints are within 200 km of Miami
-
-# Use Miami as our point of interest (POI). Why the projection dance?
-# EPSG:4326 is lat/lon in DEGREES, so a "200 km" buffer in degrees is
-# meaningless (a degree is a different distance at the equator vs Maine).
-# EPSG:3857 is in METERS, so we project there to draw the 200 km circle,
-# then project back to 4326 to match the node coordinates. Non-GIS
-# readers: switch to a meter ruler, measure, switch back.
-miami_geoid = "1208692158"
-miami_row = nodes[nodes["geoid"] == miami_geoid].iloc[0]
-poi = gpd.GeoSeries([Point(miami_row["x"], miami_row["y"])], crs="EPSG:4326")
-poi_m   = poi.to_crs("EPSG:3857")
-buf_m   = poi_m.buffer(200_000)              # 200 km
-buf_ll  = gpd.GeoSeries(buf_m, crs="EPSG:3857").to_crs("EPSG:4326")
-
-node_pts = gpd.GeoDataFrame(
-    nodes,
-    geometry=[Point(xy) for xy in zip(nodes["x"], nodes["y"])],
-    crs="EPSG:4326",
-)
-nodes_in_buf = node_pts[node_pts.within(buf_ll.iloc[0])]
-print(f"buffer sample: {len(nodes_in_buf)} nodes within 200 km of Miami")
-
-# Keep only edges where BOTH endpoints are inside the buffer.
-ids_in = set(nodes_in_buf["node"].to_numpy())
-buf_edges = edges[edges["from"].isin(ids_in) & edges["to"].isin(ids_in)]
-buf_stats = slice_stats(buf_edges, n_total)
-print(f"✅ Buffer sample: {len(nodes_in_buf)} nodes within 200 km of Miami, "
-      f"{len(buf_edges)} edges.")
-
-
-# 3. Compare samples vs population ###########################################
-
-fig, axes = plt.subplots(1, 2, figsize=(12, 4.5), sharex=True)
-
-ax = axes[0]
-ax.plot(stats["date_time"],     stats["avg_edgeweight"],     label="Population",     color="black")
-ax.plot(ego_stats["date_time"], ego_stats["avg_edgeweight"], label="Ego-centric",     color="#3a8bc6")
-ax.plot(edge_stats["date_time"],edge_stats["avg_edgeweight"],label="Edgewise",        color="#e07b3a")
-ax.plot(buf_stats["date_time"], buf_stats["avg_edgeweight"], label="Spatial buffer", color="#7b3ae0")
-ax.set_ylabel("avg_edgeweight (per node)")
-ax.legend(fontsize=8)
-ax.set_title("avg edgeweight per node")
-
-ax = axes[1]
-ax.plot(stats["date_time"],     stats["pc_nodes_linked"],     label="Population",     color="black")
-ax.plot(ego_stats["date_time"], ego_stats["pc_nodes_linked"], label="Ego-centric",     color="#3a8bc6")
-ax.plot(edge_stats["date_time"],edge_stats["pc_nodes_linked"],label="Edgewise",        color="#e07b3a")
-ax.plot(buf_stats["date_time"], buf_stats["pc_nodes_linked"], label="Spatial buffer", color="#7b3ae0")
-ax.set_ylabel("pc_nodes_linked")
-ax.set_title("share of nodes touched by any edge")
-
-for ax in axes:
-    ax.tick_params(axis="x", rotation=30)
-fig.tight_layout()
-fig.savefig("sampling_compare.png", dpi=120)
-plt.close(fig)
-print("💾 Saved sampling_compare.png")
-
-
-# 4. Which strategy best preserves average edgeweight? #######################
-#
-# What makes one sample "better"? It tracks the true population most
-# closely. We score that as the *maximum absolute deviation*: over the
-# whole time series, the largest gap between the sample's average edge
-# weight and the population's. Smaller = better. (Worst-case gap is a
-# simple, strict choice; you could instead use mean-squared error or
-# correlation if you cared about average rather than worst-case fit.)
-
-def max_abs_dev(sample_stats):
-    merged = stats[["date_time", "avg_edgeweight"]].merge(
-        sample_stats[["date_time", "avg_edgeweight"]],
-        on="date_time", suffixes=("_pop", "_samp"))
-    return float((merged["avg_edgeweight_pop"]
-                  - merged["avg_edgeweight_samp"]).abs().max())
-
-mad = {
-    "ego_centric":     max_abs_dev(ego_stats),
-    "edgewise":        max_abs_dev(edge_stats),
-    "spatial_buffer":  max_abs_dev(buf_stats),
-}
-print("Max |population - sample| in avg_edgeweight by strategy:")
-for k, v in mad.items():
-    print(f"  {k:16s}: {v:.3f}")
-
-winner = min(mad, key=mad.get)
-print(f"📊 Best preservation (smallest max-absolute-deviation): {winner}")
-
-# WHY does the spatial buffer usually win for this network? Evacuation flow
-# is spatially structured -- neighboring subdivisions surge together -- so a
-# geographic buffer captures a coherent, internally-intact subnetwork whose
-# per-node averages track the population. Ego and edgewise sampling slice
-# the graph arbitrarily, fragmenting that local structure.
-
-
-# 5. Learning Check ##########################################################
-#
-# QUESTION: Of the three sampling strategies above (ego-centric,
-# edgewise, spatial buffer around Miami), which one best preserves
-# the population's `avg_edgeweight` time series — measured by the
-# smallest max-absolute-deviation? Submit the strategy name.
-
-print(f"\n📝 Learning Check answer: {winner}")
-
-print("\n🎉 Done. Move on to the case study report when you're ready.")
-```
-
----
-
-## `code/11_sampling/functions.R`
-
-```r
-#' @name functions.R
-#' @title Helpers for the Sampling case study
-
-library(dplyr)
-library(sf)
-library(here)
-
-.case_dir <- function() here::here("code", "08_sampling", "data")
-
-load_nodes <- function() {
-  readr::read_csv(
-    file.path(.case_dir(), "nodes.csv"),
-    # geoid is a numeric-looking string; keep it as character so
-    # comparisons like `geoid == "1208692158"` work.
-    col_types = readr::cols(geoid = readr::col_character(),
-                            .default = readr::col_guess())
-  )
-}
-load_edges <- function() {
-  readr::read_csv(
-    file.path(.case_dir(), "edges.csv"),
-    show_col_types = FALSE
-  )
-}
-load_subdivisions <- function() {
-  sf::st_read(file.path(.case_dir(), "county_subdivisions.geojson"),
-              quiet = TRUE)
-}
-
-#' Compute normalized network statistics per time slice.
-#'
-#' Mirrors the workshop helper from 29C_databases.R: edge weight,
-#' edge count, node count, # linked nodes, density, % linked, edges
-#' per node, average edgeweight per node.
-slice_stats <- function(edges, n_total_nodes) {
-  edges |>
-    group_by(date_time) |>
-    summarize(
-      edgeweight     = sum(evacuation, na.rm = TRUE),
-      n_edges        = dplyr::n(),
-      n_nodes        = n_total_nodes,
-      n_nodes_linked = length(unique(c(from, to))),
-      .groups        = "drop"
-    ) |>
-    mutate(
-      density          = 2 * n_edges / (n_nodes * (n_nodes - 1)),
-      pc_nodes_linked  = n_nodes_linked / n_nodes,
-      edge_ratio       = n_edges / n_nodes,
-      avg_edgeweight   = edgeweight / n_nodes
-    )
-}
-```
-
----
-
-## `code/11_sampling/functions.py`
-
-```python
-"""Helpers for the Sampling case study."""
-from __future__ import annotations
-
-from pathlib import Path
-import pandas as pd
-import geopandas as gpd
-
-
-def _case_dir() -> Path:
-    return Path(__file__).resolve().parent / "data"
-
-
-def load_nodes() -> pd.DataFrame:
-    # geoid is a numeric-looking string ("1208692158"); force string read
-    # so equality comparisons against literal "1208692158" succeed.
-    return pd.read_csv(_case_dir() / "nodes.csv", dtype={"geoid": "string"})
-
-
-def load_edges() -> pd.DataFrame:
-    # date_time is ISO-8601 in CSV; parse to Timestamps so groupby
-    # gives an ordered time series.
-    return pd.read_csv(_case_dir() / "edges.csv", parse_dates=["date_time"])
-
-
-def load_subdivisions() -> gpd.GeoDataFrame:
-    return gpd.read_file(_case_dir() / "county_subdivisions.geojson")
-
-
-def slice_stats(edges: pd.DataFrame, n_total_nodes: int) -> pd.DataFrame:
-    """Per-time-slice network statistics, mirrors the sts 29C workshop.
-
-    Columns: edgeweight, n_edges, n_nodes, n_nodes_linked, density,
-    pc_nodes_linked, edge_ratio, avg_edgeweight.
-    """
-    out = (
-        edges
-        .groupby("date_time", as_index=False)
-        .agg(
-            edgeweight=("evacuation", "sum"),
-            n_edges=("evacuation", "size"),
-            from_set=("from", lambda s: set(s)),
-            to_set=("to",   lambda s: set(s)),
-        )
-    )
-    out["n_nodes"] = n_total_nodes
-    out["n_nodes_linked"] = out.apply(
-        lambda r: len(r["from_set"] | r["to_set"]), axis=1)
-    out = out.drop(columns=["from_set", "to_set"])
-    out["density"] = 2 * out["n_edges"] / (out["n_nodes"] * (out["n_nodes"] - 1))
-    out["pc_nodes_linked"] = out["n_nodes_linked"] / out["n_nodes"]
-    out["edge_ratio"]      = out["n_edges"]       / out["n_nodes"]
-    out["avg_edgeweight"]  = out["edgeweight"]    / out["n_nodes"]
-    return out
 ```
 
 ---
@@ -8597,6 +7236,1367 @@ def add_gnn_embeddings(panel: pd.DataFrame, suppliers: pd.DataFrame,
     panel["gnn_1hop"] = out_1hop
     panel["gnn_2hop"] = out_2hop
     return panel.drop(columns=["_idx"])
+```
+
+---
+
+## `code/10_dsm-clustering/README.md`
+
+# Case Study 06 — DSM Clustering
+
+> Interactive lab: [`docs/case-studies/dsm-clustering.html`](../../docs/case-studies/dsm-clustering.html)
+>
+> Skill: **Measure** · Data: synthetic engineered-system DSM with 200
+> components and 8 planted modules
+
+## What you'll learn
+
+How to find modular structure in a Design Structure Matrix
+automatically. Specifically:
+
+- Build a DSM as a directed graph from a long-format edge list.
+- Apply two community-detection algorithms (Louvain and fast-greedy)
+  on the undirected collapse.
+- Compare the recovered partition against ground truth using the
+  adjusted Rand index.
+- Reorder the adjacency matrix by module membership and inspect the
+  block-diagonal structure visually.
+- Run a k-hop cascade simulation from a chosen component.
+
+## Prerequisites
+
+- Case study 01 (Build a Network).
+- The interactive lab.
+- R packages: `dplyr`, `tibble`, `igraph`, `ggplot2`, `here`.
+- Python packages: see [`code/requirements.txt`](../requirements.txt).
+  This case uses `scikit-learn`'s `adjusted_rand_score`.
+
+## Files in this folder
+
+```
+06_dsm-clustering/
+├── README.md
+├── example.R
+├── example.py
+├── functions.R
+├── functions.py
+└── data/
+    ├── nodes.csv    # 200 components, with `true_module` label for verification
+    ├── edges.csv    # ~2,900 directed dependency edges
+    └── _generate.py
+```
+
+## How to run
+
+```bash
+Rscript code/10_dsm-clustering/example.R
+python  code/10_dsm-clustering/example.py
+```
+
+## Learning check (submit this answer)
+
+> **How many modules does Louvain find in this DSM, and what is the
+> modularity score (to 3 decimal places)?**  
+> Submit BOTH, separated by a comma. Example: `8, 0.612`.
+
+## Your Project Case Study
+
+If you pick this case study, you'll apply Louvain to *your* network
+and discuss what the recovered modules mean in your domain.
+
+### Suggested project questions
+
+1. **What are the modules in my network?** Apply Louvain. Report
+   the number of modules, the modularity score, and qualitatively
+   describe what 2-3 of the modules represent.
+
+2. **Two clustering algorithms, two stories.** Run Louvain AND
+   fast-greedy (or Leiden, walktrap — your choice). Report the
+   modularity and number of modules for each, and discuss
+   meaningful disagreements between them.
+
+3. **Cascade analysis.** If your network has a meaningful dependency
+   direction, simulate k-hop cascades from a few interesting seed
+   nodes. Report which seeds produce the largest 1-hop and 2-hop
+   cascades.
+
+### Report
+
+- **Question.** One sentence.
+- **Network.** Nodes, edges, whether your dependencies are directed.
+- **Procedure.** Algorithm(s) run, parameters, any preprocessing.
+- **Results.** Numbers in prose; the reordered DSM is a powerful
+  figure; at most 2 figures and 1 table.
+- **What this tells you, and what it doesn't.** 2-3 sentences.
+
+## Further reading
+
+- The sts course `26C_analytics.R` runs Louvain on a much larger
+  committee-affiliation network and uses the modules to make
+  geographic comparisons.
+- Case study 05 ([`05_supply-chain`](../05_supply-chain)) attacks the
+  same question from the other side: which *individual* nodes break
+  the network.
+
+---
+
+## `code/10_dsm-clustering/data/_generate.py`
+
+```python
+"""Generate a synthetic engineered-system DSM for case 06.
+
+A Design Structure Matrix (DSM) is just an adjacency matrix where
+component i depends on component j. We plant K dense modules so the
+clustering algorithm has something to recover.
+
+  - 200 components
+  - 8 modules of 25 components each
+  - intra-module edge probability: 0.40
+  - inter-module edge probability: 0.03 (the "residual marks")
+
+Outputs:
+  - dsm.csv: long-format edge list (from, to)
+  - nodes.csv: node_id + true module label (for verification)
+
+Run:
+    python code/10_dsm-clustering/data/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+HERE = Path(__file__).resolve().parent
+SEED = 42
+
+def main() -> None:
+    rng = np.random.default_rng(SEED)
+
+    n = 200
+    n_modules = 8
+    per_module = n // n_modules
+    p_intra = 0.40
+    p_inter = 0.03
+
+    # assign each component to a module
+    module = np.repeat(np.arange(n_modules), per_module)
+    rng.shuffle(module)
+
+    nodes = pd.DataFrame({
+        "node_id":   [f"C{i:03d}" for i in range(n)],
+        "true_module": module,
+    })
+
+    # build directed edges (DSM dependencies)
+    rows = []
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                continue
+            p = p_intra if module[i] == module[j] else p_inter
+            if rng.random() < p:
+                rows.append({
+                    "from": f"C{i:03d}",
+                    "to":   f"C{j:03d}",
+                })
+    edges = pd.DataFrame(rows).sort_values(["from", "to"]).reset_index(drop=True)
+
+    nodes.to_csv(HERE / "nodes.csv", index=False)
+    edges.to_csv(HERE / "edges.csv", index=False)
+    print(f"wrote {HERE / 'nodes.csv'} ({len(nodes)} nodes)")
+    print(f"wrote {HERE / 'edges.csv'} ({len(edges)} edges)")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `code/10_dsm-clustering/example.R`
+
+```r
+#' @name example.R
+#' @title Case Study 06 — DSM Clustering
+#' @author <your-name-here>
+#' @description
+#' A Design Structure Matrix (DSM) is just an adjacency matrix where
+#' row i to column j means "component i depends on j." Reordering
+#' rows and columns so that dense blocks fall on the diagonal reveals
+#' the *modular structure* of the system. The case study lab had you
+#' drag rows around by hand; here we let an algorithm do it.
+#'
+#' Steps:
+#'   1. Build the DSM graph from a 200-component synthetic system
+#'      with 8 planted modules.
+#'   2. Run two community-detection algorithms (Louvain and
+#'      fast-greedy) on the undirected projection.
+#'   3. Reorder the DSM matrix by recovered modules and verify the
+#'      block-diagonal structure visually.
+#'   4. Simulate a k-hop cascade from a chosen component.
+
+
+# 0. Setup ###################################################################
+
+## 0.1 Packages ##############################################################
+
+# `igraph` carries the community-detection algorithms and the matrix
+# conversion. `dplyr` + `tibble` for tidy summaries. Base R `image()`
+# does the DSM heatmap (no ggplot needed).
+library(dplyr)
+library(tibble)
+library(igraph)
+library(ggplot2)
+library(here)
+
+## 0.2 Load helpers ##########################################################
+
+# `cascade_bfs()` does a bounded BFS from a starting node along the
+# directed dependency edges. It's the cascade simulator we use at the
+# end of the script.
+source(here::here("code", "06_dsm-clustering", "functions.R"))
+
+cat("\n🚀 Case Study 06 — DSM Clustering (R)\n")
+cat("   200 components, 8 planted modules. Can community detection recover them?\n\n")
+
+## 0.3 Load data #############################################################
+
+nodes <- load_nodes()
+edges <- load_edges()
+g     <- build_graph(nodes, edges)
+g
+cat(sprintf("✅ Loaded DSM: %d components, %d dependency edges.\n",
+            igraph::vcount(g), igraph::ecount(g)))
+
+
+# 1. Community detection #####################################################
+#
+# Louvain and fast-greedy both want an undirected graph, so we collapse
+# each directed dependency "A depends on B" into a plain "A and B are
+# linked." Why it's OK here: community detection asks "which components
+# clump together?", and two parts that depend on each other belong in the
+# same cluster regardless of which way the arrow points. What we give up:
+# the direction itself -- we can no longer tell driver from dependent
+# within a cluster. Fine for grouping; keep direction if you cared about
+# what cascades when one part fails.
+
+g_undirected <- igraph::as_undirected(g, mode = "collapse")
+g_undirected
+
+# A quick word on MODULARITY, the score both algorithms maximize: it
+# measures how much more edge weight falls inside communities than you'd
+# expect at random. It runs roughly -0.5 to 1; ~0 means "no more clustered
+# than random", and > ~0.3 is usually a meaningful community structure.
+# We planted 8 modules, so recovering 8 at a healthy modularity is the win.
+
+# Louvain (igraph's `cluster_louvain`): greedy modularity optimization,
+# moves nodes between communities to maximize modularity score.
+#
+# Louvain is STOCHASTIC -- it visits nodes in a randomized order, so an
+# unseeded run usually recovers the 8 planted modules (modularity 0.470)
+# but occasionally merges two and reports 7 (~0.454). We seed for a
+# reproducible Learning Check; expect your own data to wobble by a module
+# or two between runs if you don't.
+set.seed(5470)
+louvain <- igraph::cluster_louvain(g_undirected)
+cat(sprintf("📊 Louvain found %d modules. Modularity: %.3f\n",
+            length(louvain), igraph::modularity(louvain)))
+
+# Fast-greedy: agglomerative — start with each node in its own community,
+# repeatedly merge the pair whose merge most increases modularity. It often
+# recovers FEWER modules than Louvain on dense graphs: once it has merged
+# greedily it never splits back, so adjacent planted modules get fused into
+# one and the recovered count comes in under the truth. That's an algorithm
+# property, not randomness — Louvain's node-moving phase avoids it here.
+fg <- igraph::cluster_fast_greedy(g_undirected)
+cat(sprintf("📊 Fast-greedy found %d modules. Modularity: %.3f\n",
+            length(fg), igraph::modularity(fg)))
+
+
+# 2. Compare to ground truth #################################################
+#
+# Our synthetic data planted 8 modules. The Adjusted Rand Index (ARI)
+# measures how well two clusterings agree, corrected for chance:
+# 1.0 = perfect agreement, 0.0 = chance, < 0 = worse than chance.
+# Rough field convention for "how good is this recovery?": ARI > 0.8 is a
+# strong match, 0.5–0.8 partial, < 0.5 weak. So Louvain's 1.0 is a perfect
+# recovery; fast-greedy's lower score reflects the merged modules above.
+
+true_mod <- igraph::V(g)$true_module
+ari_louv <- igraph::compare(true_mod, louvain$membership, method = "adjusted.rand")
+ari_fg   <- igraph::compare(true_mod, fg$membership,     method = "adjusted.rand")
+cat(sprintf("🧪 Louvain    ARI vs truth: %.3f\n", ari_louv))
+cat(sprintf("🧪 FastGreedy ARI vs truth: %.3f\n", ari_fg))
+
+
+# 3. Reorder the DSM by recovered module #####################################
+#
+# Sort node indices by Louvain module ID. Then build the n x n
+# adjacency matrix in that order. Dense blocks should land on the
+# diagonal — that's what "modular structure" *looks like*.
+
+ord      <- order(louvain$membership)
+A        <- as.matrix(igraph::as_adjacency_matrix(g))
+A_sorted <- A[ord, ord]
+
+# Side-by-side base-R image() plots. Reverse the y-axis so row 1 lands
+# at the top, like an actual matrix. Wrapped in a function so we can draw
+# it both to the screen and to a PNG (Rscript otherwise hides it in
+# Rplots.pdf).
+draw_dsm <- function() {
+  par(mfrow = c(1, 2))
+  image(t(A)[, nrow(A):1], col = c("white", "black"), axes = FALSE,
+        main = "DSM — original order")
+  image(t(A_sorted)[, nrow(A_sorted):1], col = c("white", "black"), axes = FALSE,
+        main = "DSM — reordered by Louvain")
+  par(mfrow = c(1, 1))
+}
+
+# Show interactively...
+draw_dsm()
+
+# ...and save a copy for terminal / Rscript users.
+png(here::here("code", "06_dsm-clustering", "dsm_reordering.png"),
+    width = 9, height = 5, units = "in", res = 120)
+draw_dsm()
+invisible(dev.off())
+cat("💾 Saved dsm_reordering.png\n")
+
+
+# 4. Cascade simulation ######################################################
+#
+# When component C037 fails, every component that depends on it can
+# fail too. We bound to k hops because in a densely-coupled DSM an
+# unbounded cascade reaches everything. The interesting question:
+# how many fall in the FIRST FEW HOPS?
+#
+# Why can a cascade reach far beyond C037's own module even though Louvain
+# found clean modules? Because a cascade follows EDGES, not module walls.
+# Community detection only says edges are DENSER within modules, not that
+# none cross. C037 has a few cross-module dependency edges, and BFS happily
+# traverses them -- so a single hub failure jumps boundaries the clustering
+# drew.
+
+seed <- "C037"
+for (k in c(1, 2, 3)) {
+  cat(sprintf("🔗 Cascade from %s in %d hop(s): %d components\n",
+              seed, k, length(cascade_bfs(g, seed, n_hops = k))))
+}
+
+
+# 5. Learning Check ##########################################################
+#
+# QUESTION: How many modules does Louvain find in this DSM, and what
+# is the modularity score (to 3 decimal places)? Submit BOTH numbers,
+# separated by a comma. Example: "8, 0.612"
+
+n_modules  <- length(louvain)
+modularity <- round(igraph::modularity(louvain), 3)
+
+cat(sprintf("\n📝 Learning Check answer: %d, %.3f\n", n_modules, modularity))
+
+cat("\n🎉 Done. Move on to the case study report when you're ready.\n")
+```
+
+---
+
+## `code/10_dsm-clustering/example.py`
+
+```python
+"""Case Study 06 — DSM Clustering (Python track).
+
+A Design Structure Matrix (DSM) is just an adjacency matrix where row
+i to column j means "component i depends on j." Reordering rows and
+columns so that dense blocks fall on the diagonal reveals the *modular
+structure* of the system. The case study lab had you drag rows around
+by hand; here we let an algorithm do it.
+
+Steps:
+  1. Build the DSM graph from a 200-component synthetic system with
+     8 planted modules.
+  2. Run two community-detection algorithms (Louvain and fast-greedy)
+     on the undirected projection.
+  3. Reorder the DSM matrix by recovered modules and verify the
+     block-diagonal structure visually.
+  4. Simulate a cascade: which components fail when component C037
+     fails (BFS along outgoing dependency edges).
+"""
+
+# 0. Setup ###################################################################
+
+## 0.1 Packages ##############################################################
+
+# `igraph` for community detection + matrix conversion. `numpy` for
+# matrix reordering. `matplotlib.imshow` for the DSM heatmap.
+import random
+import pandas as pd
+import numpy as np
+import igraph as ig
+import matplotlib.pyplot as plt
+
+## 0.2 Load helpers ##########################################################
+
+# `cascade_bfs()` does a bounded BFS from a starting node along the
+# directed dependency edges. It's the cascade simulator we use at the
+# end of the script.
+from functions import load_nodes, load_edges, build_graph, cascade_bfs
+
+print("\n🚀 Case Study 06 — DSM Clustering (Python)")
+print("   200 components, 8 planted modules. Can community detection recover them?\n")
+
+## 0.3 Load data #############################################################
+
+nodes = load_nodes()
+edges = load_edges()
+g     = build_graph(nodes, edges)
+print(g.summary())
+print(f"✅ Loaded DSM: {g.vcount()} components, {g.ecount()} dependency edges.")
+
+
+# 1. Community detection #####################################################
+#
+# Louvain and fast-greedy both want an undirected graph, so we collapse
+# each directed dependency "A depends on B" into a plain "A and B are
+# linked." Why it's OK here: community detection asks "which components
+# clump together?", and two parts that depend on each other belong in the
+# same cluster regardless of which way the arrow points. What we give up:
+# the direction itself -- we can no longer tell driver from dependent
+# within a cluster. That's fine for grouping, but you'd keep direction if
+# you cared about, say, what cascades when one part fails.
+
+g_undirected = g.as_undirected(mode="collapse")
+print(g_undirected.summary())
+
+# A quick word on MODULARITY, the score both algorithms maximize: it
+# measures how much more edge weight falls inside communities than you'd
+# expect at random. It runs roughly -0.5 to 1; ~0 means "no more clustered
+# than random", and > ~0.3 is usually a meaningful community structure.
+# We planted 8 modules, so recovering 8 at a healthy modularity is the win.
+
+# Louvain (igraph's `community_multilevel`): greedy modularity
+# optimization, moves nodes between communities to maximize modularity.
+#
+# Louvain is STOCHASTIC -- it visits nodes in a randomized order, so an
+# unseeded run usually recovers the 8 planted modules (modularity 0.470)
+# but can occasionally merge two and report 7 (~0.454). We seed for a
+# reproducible Learning Check; expect your own data to wobble by a module
+# or two between runs if you don't.
+random.seed(5470)
+louvain = g_undirected.community_multilevel()
+print(f"📊 Louvain found {len(louvain)} modules. Modularity: {louvain.modularity:.3f}")
+
+# Fast-greedy: agglomerative — start with each node in its own community,
+# repeatedly merge the pair whose merge most increases modularity. It often
+# recovers FEWER modules than Louvain on dense graphs: once it has merged
+# greedily it never splits back, so adjacent planted modules get fused into
+# one and the recovered count comes in under the truth. That's an algorithm
+# property, not randomness — Louvain's node-moving phase avoids it here.
+fg = g_undirected.community_fastgreedy().as_clustering()
+print(f"📊 Fast-greedy found {len(fg)} modules. Modularity: {fg.modularity:.3f}")
+
+
+# 2. Compare to ground truth #################################################
+#
+# Our synthetic data planted 8 modules. The Adjusted Rand Index (ARI)
+# measures how well two clusterings agree, corrected for chance:
+# 1.0 = perfect agreement, 0.0 = chance, < 0 = worse than chance.
+# Rough field convention: ARI > 0.8 is a strong match, 0.5–0.8 partial,
+# < 0.5 weak. So Louvain's 1.0 is a perfect recovery; fast-greedy's lower
+# score reflects the merged modules noted above.
+# (igraph ships no ARI, so we borrow sklearn's one function for it.)
+
+from sklearn.metrics import adjusted_rand_score
+true_module = np.array(g.vs["true_module"])
+louvain_lbl = np.array(louvain.membership)
+fg_lbl      = np.array(fg.membership)
+
+print(f"🧪 Louvain    ARI vs truth: {adjusted_rand_score(true_module, louvain_lbl):.3f}")
+print(f"🧪 FastGreedy ARI vs truth: {adjusted_rand_score(true_module, fg_lbl):.3f}")
+
+
+# 3. Reorder the DSM by recovered module #####################################
+#
+# Sort node indices by Louvain module ID. Then build the n x n
+# adjacency matrix in that order. Dense blocks should land on the
+# diagonal — that's what "modular structure" *looks like*.
+
+order = np.argsort(louvain_lbl, kind="stable")
+A = np.array(g.get_adjacency().data)
+A_sorted = A[np.ix_(order, order)]
+
+# Side-by-side imshow plots: original ordering vs reordered.
+fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+axes[0].imshow(A, cmap="Greys", aspect="equal")
+axes[0].set_title("DSM — original order")
+axes[1].imshow(A_sorted, cmap="Greys", aspect="equal")
+axes[1].set_title("DSM — reordered by Louvain module")
+for ax in axes:
+    ax.set_xticks([]); ax.set_yticks([])
+fig.tight_layout()
+fig.savefig("dsm_reorder.png", dpi=120)
+plt.close(fig)
+print("💾 Saved dsm_reorder.png")
+
+
+# 4. Cascade simulation ######################################################
+#
+# When component C037 fails, every component that depends on it can
+# fail too. We bound to k hops because in a densely-coupled DSM an
+# unbounded cascade reaches everything. The interesting question:
+# how many components fall in the FIRST FEW HOPS?
+#
+# Why can a cascade reach far beyond C037's own module even though Louvain
+# found clean modules? Because a cascade follows EDGES, not module walls.
+# Community detection only says edges are DENSER within modules, not that
+# none cross. C037 has a few cross-module dependency edges, and BFS happily
+# traverses them -- so a single hub failure jumps boundaries the clustering
+# drew.
+
+seed = "C037"
+for k in [1, 2, 3]:
+    failed = cascade_bfs(g, seed, n_hops=k)
+    print(f"🔗 Cascade from {seed} in {k} hop(s): {len(failed)} components")
+
+
+# 5. Learning Check ##########################################################
+#
+# QUESTION: How many modules does Louvain find in this DSM, and what
+# is the modularity score (to 3 decimal places)?
+# Submit BOTH numbers, separated by a comma.
+# Example answer format: "8, 0.612"
+
+n_modules = len(louvain)
+modularity = round(louvain.modularity, 3)
+
+print(f"\n📝 Learning Check answer: {n_modules}, {modularity:.3f}")
+
+print("\n🎉 Done. Move on to the case study report when you're ready.")
+```
+
+---
+
+## `code/10_dsm-clustering/functions.R`
+
+```r
+#' @name functions.R
+#' @title Helpers for the DSM Clustering case study
+
+library(readr)
+library(dplyr)
+library(igraph)
+library(here)
+
+.case_dir <- function() here::here("code", "06_dsm-clustering", "data")
+
+load_nodes <- function() readr::read_csv(file.path(.case_dir(), "nodes.csv"),
+                                         show_col_types = FALSE)
+load_edges <- function() readr::read_csv(file.path(.case_dir(), "edges.csv"),
+                                         show_col_types = FALSE)
+
+#' Build the DSM dependency graph (directed).
+build_graph <- function(nodes = load_nodes(), edges = load_edges()) {
+  igraph::graph_from_data_frame(
+    d        = edges,
+    directed = TRUE,
+    vertices = nodes
+  )
+}
+
+#' Components that fail within `n_hops` of `seed_node`.
+#'
+#' Follows outgoing dependency edges. With high inter-module
+#' connectivity, an unbounded cascade can reach every component, so
+#' we bound to k hops to keep the simulation interpretable.
+cascade_bfs <- function(g, seed_node, n_hops = 3) {
+  idx <- which(igraph::V(g)$name == seed_node)
+  reached <- igraph::ego(g, order = n_hops, nodes = idx, mode = "out")[[1]]
+  reached$name
+}
+```
+
+---
+
+## `code/10_dsm-clustering/functions.py`
+
+```python
+"""Helpers for the DSM Clustering case study."""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import igraph as ig
+
+
+def _case_dir() -> Path:
+    return Path(__file__).resolve().parent / "data"
+
+
+def load_nodes() -> pd.DataFrame:
+    return pd.read_csv(_case_dir() / "nodes.csv")
+
+
+def load_edges() -> pd.DataFrame:
+    return pd.read_csv(_case_dir() / "edges.csv")
+
+
+def build_graph(nodes: pd.DataFrame | None = None,
+                edges: pd.DataFrame | None = None) -> ig.Graph:
+    """Build the DSM dependency graph (directed)."""
+    if nodes is None:
+        nodes = load_nodes()
+    if edges is None:
+        edges = load_edges()
+    return ig.Graph.DataFrame(
+        edges=edges,
+        directed=True,
+        vertices=nodes,
+        use_vids=False,
+    )
+
+
+def cascade_bfs(g: ig.Graph, seed_node: str, n_hops: int = 3) -> list[str]:
+    """Components that fail within ``n_hops`` of ``seed_node``.
+
+    Follows outgoing dependency edges. With high inter-module
+    connectivity, an unbounded cascade can reach every component, so
+    we bound to k hops to keep the simulation interpretable.
+    """
+    seed = g.vs.find(name=seed_node).index
+    reached = g.neighborhood(seed, order=n_hops, mode="out")
+    return [g.vs[i]["name"] for i in reached]
+```
+
+---
+
+## `code/11_sampling/README.md`
+
+# Case Study 08 — Sampling Big Networks
+
+> Interactive lab: [`docs/case-studies/sampling.html`](../../docs/case-studies/sampling.html)
+>
+> Skill: **Identify** · Data: trimmed Hurricane Dorian evacuation
+> flow network (316 Florida county subdivisions, ~33,000 weighted
+> edges across 8-hour time slices in the Aug 28 - Sep 10 crisis
+> window)
+
+## What you'll learn
+
+When a network is too big to fit in memory or in your head, you
+sample. But each sampling strategy preserves *different* properties:
+
+- **Ego-centric**: pick N seed nodes, keep edges touching them.
+  Preserves node-attribute distributions; can over-sample hubs.
+- **Edgewise**: sample edges uniformly. Preserves edge-attribute
+  distributions; may miss components.
+- **Spatial buffer**: keep nodes within R km of a point of
+  interest. Preserves local structure; deeply biased by where you
+  drew the circle.
+
+We measure how well each strategy reproduces a *time series* of a
+normalized metric — `avg_edgeweight` per node — across the
+two-week crisis window.
+
+## Prerequisites
+
+- Case study 02 (Joins).
+- The interactive lab.
+- R packages: `dplyr`, `tidyr`, `readr`, `ggplot2`, `sf`, `here`.
+- Python packages: see [`code/requirements.txt`](../requirements.txt).
+  Spatial operations need `geopandas` and `shapely`.
+
+## Files in this folder
+
+```
+08_sampling/
+├── README.md
+├── example.R
+├── example.py
+├── functions.R                       # `slice_stats()` + loaders
+├── functions.py
+└── data/
+    ├── nodes.csv                  # 316 FL county subdivisions w/ centroid x,y
+    ├── edges.csv                  # ~33k 8-hour-slice evacuation flows
+    ├── county_subdivisions.geojson    # FL only, simplified polygons
+    └── _generate.py                   # trims the raw sts data
+```
+
+## How to run
+
+```bash
+Rscript code/11_sampling/example.R
+python  code/11_sampling/example.py
+```
+
+## Learning check (submit this string)
+
+> **Of the three sampling strategies above (`ego_centric`,
+> `edgewise`, `spatial_buffer`), which one best preserves the
+> population's `avg_edgeweight` time series — measured by the
+> smallest max-absolute-deviation across time slices?**
+
+Submit one of: `ego_centric`, `edgewise`, `spatial_buffer`.
+
+## Your Project Case Study
+
+If you pick this case study, you'll sample *your* large network
+under at least two strategies and report which network properties
+each one preserves vs distorts.
+
+### Suggested project questions
+
+1. **Strategy showdown.** Sample your network ego-centrically and
+   edgewise to the same edge count. Compute normalized metrics
+   (density, share of nodes linked, edge ratio, mean edge weight)
+   on each. Report which metric each strategy preserves best.
+
+2. **Sample-size convergence.** Pick one strategy. Vary the sample
+   size from very small to as-large-as-the-population. Report the
+   sample size at which density (or another metric you care about)
+   stabilizes to within 5% of the population value.
+
+3. **Spatial / temporal targeting.** If your network has a spatial
+   or temporal structure, filter by a meaningful region or window
+   *before* sampling. Compare the filtered-then-sampled network's
+   properties against an unfiltered sample of the same size.
+
+### Report
+
+- **Question.** One sentence.
+- **Network.** Nodes, edges, weight semantics, size.
+- **Procedure.** Strategy/strategies, sample sizes, RNG seed.
+- **Results.** Numbers in prose; at most 2 figures (the over-time
+  comparison plot is the strongest); 1 table of preservation
+  metrics by strategy.
+- **What this tells you, and what it doesn't.** 2-3 sentences,
+  including: sampling strategies are not generic — they trade off
+  properties, and the right strategy depends on which property
+  your question depends on.
+
+## Further reading
+
+- The sts course `29C_databases.R` is the parent workshop. It
+  covers the same network at Gulf-states scale and develops more
+  sampling strategies (random-walk, snowball).
+- For a deeper dive on sampling theory in networks, see Leskovec &
+  Faloutsos (2006) "Sampling from large graphs."
+
+---
+
+## `code/11_sampling/data/_generate.py`
+
+```python
+"""Generate the slim Hurricane Dorian evacuation dataset for case 08.
+
+We start from the full Gulf-states evacuation network at
+https://github.com/timothyfraser/sts (3week branch) and trim:
+
+  - keep only Florida nodes (state FIPS = "12")
+  - keep only the columns we use: node, geoid, pop, median_income
+  - precompute x/y centroids from the geojson and store on the node
+    table, so neither R nor Python needs sf/geopandas just to load
+  - keep only edges with evacuation > 0 within Aug 28 - Sep 10, 2019
+  - bundle a slimmed florida-only county_subdivisions.geojson
+
+The source .rds files come from:
+  https://raw.githubusercontent.com/timothyfraser/sts/3week/data/evacuation/
+
+This script expects them to have been fetched to /tmp/sts_data/:
+
+    mkdir -p /tmp/sts_data && cd /tmp/sts_data
+    for f in nodes.rds edges.rds county_subdivisions.geojson states.geojson; do
+      curl -sLO "https://raw.githubusercontent.com/timothyfraser/sts/3week/data/evacuation/$f"
+    done
+
+Run:
+    python code/11_sampling/data/_generate.py
+"""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import pyreadr
+import geopandas as gpd
+
+HERE = Path(__file__).resolve().parent
+SRC = Path("/tmp/sts_data")
+
+def main() -> None:
+    if not SRC.exists():
+        raise SystemExit(
+            f"expected sts source data at {SRC}; see the docstring at the "
+            "top of this script for the curl commands."
+        )
+
+    # --- nodes ----------------------------------------------------------------
+    n = pyreadr.read_r(str(SRC / "nodes.rds"))[None]
+    n = n.assign(state=n["geoid"].str[:2]).loc[lambda d: d["state"] == "12"]
+    n = n[["node", "geoid", "pop", "median_income"]].reset_index(drop=True)
+    n["node"] = n["node"].astype(int)
+
+    # --- subdivisions polygons (filter to FL, dissolve to centroids) ----------
+    cs = gpd.read_file(SRC / "county_subdivisions.geojson")
+    cs = cs[cs["geoid"].astype(str).str[:2] == "12"].copy()
+    # add x,y centroid to nodes via merge
+    centroids = cs.set_geometry(cs.geometry.centroid)
+    cs["x"] = centroids.geometry.x.to_numpy()
+    cs["y"] = centroids.geometry.y.to_numpy()
+    n = n.merge(cs[["geoid", "x", "y"]], on="geoid", how="left")
+
+    # --- edges ----------------------------------------------------------------
+    e = pyreadr.read_r(str(SRC / "edges.rds"))[None]
+    e = e[["from", "to", "date_time", "evacuation", "km"]].copy()
+    e["from"] = e["from"].astype(int)
+    e["to"]   = e["to"].astype(int)
+    e["date_time"] = pd.to_datetime(e["date_time"])
+
+    # Filter to Florida nodes
+    fl_nodes = set(n["node"].astype(int))
+    e = e[e["from"].isin(fl_nodes) & e["to"].isin(fl_nodes)]
+    # Filter to evacuation > 0 in the crisis window
+    start = pd.Timestamp("2019-08-28")
+    end   = pd.Timestamp("2019-09-11")
+    e = e[(e["evacuation"] > 0) & (e["date_time"] >= start) & (e["date_time"] < end)]
+    e = e.reset_index(drop=True)
+
+    # --- write outputs --------------------------------------------------------
+    n.to_csv(HERE / "nodes.csv", index=False)
+    e.to_csv(HERE / "edges.csv", index=False)
+
+    # Trim subdivisions geojson: drop attribute columns and simplify
+    # geometry to keep the file small enough to bundle in a repo.
+    cs_slim = cs[["geoid", "geometry"]].copy()
+    cs_slim["geometry"] = cs_slim.geometry.simplify(tolerance=0.005,
+                                                    preserve_topology=True)
+    cs_slim.to_file(HERE / "county_subdivisions.geojson", driver="GeoJSON")
+
+    print(f"wrote {HERE / 'nodes.csv'} ({len(n)} nodes)")
+    print(f"wrote {HERE / 'edges.csv'} ({len(e):,} edges)")
+    print(f"wrote {HERE / 'county_subdivisions.geojson'} (FL only)")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## `code/11_sampling/example.R`
+
+```r
+#' @name example.R
+#' @title Case Study 08 — Sampling Big Networks
+#' @author <your-name-here>
+#' @description
+#' You can't analyze every node in a million-node network on a laptop.
+#' So we sample. But sampling is not neutral — each strategy preserves
+#' some properties and distorts others.
+#'
+#' Data: Hurricane Dorian evacuation flows over Florida county
+#' subdivisions, Aug 28 - Sep 10, 2019. Each edge is a (from, to,
+#' date_time, evacuation) row where `evacuation` is how many MORE
+#' local Facebook users moved between two cities in that 8-hour
+#' window than usual. The original sts workshop 29C_databases.R
+#' covers this at the Gulf-states scale; we trim to Florida and the
+#' crisis weeks.
+#'
+#' We will:
+#'   1. Compute baseline per-time-slice stats on the full network.
+#'   2. Apply three sampling strategies (ego, edgewise, spatial buffer).
+#'   3. Compare each against the population over time.
+
+
+# 0. Setup ###################################################################
+
+## 0.1 Packages ##############################################################
+
+# `dplyr`/`tidyr` for the per-slice aggregations, `sf` for the spatial
+# buffer (the only part of this script that needs spatial libraries),
+# `ggplot2` for the comparison figure.
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(sf)
+library(here)
+
+## 0.2 Load helpers ##########################################################
+
+# `slice_stats()` computes the per-time-slice network statistics
+# (edgeweight, share of nodes touched, etc.) for any edge subset.
+# That's the workhorse we'll reuse on every sample.
+source(here::here("code", "08_sampling", "functions.R"))
+
+cat("\n🚀 Case Study 08 — Sampling Big Networks (R)\n")
+cat("   Three sampling strategies vs population. Which one preserves the truth?\n\n")
+
+## 0.3 Load data #############################################################
+
+nodes <- load_nodes()
+edges <- load_edges()
+cs    <- load_subdivisions()
+cat(sprintf("✅ Loaded %d nodes, %d edges, %d subdivisions.\n",
+            nrow(nodes), nrow(edges), nrow(cs)))
+
+
+# 1. Baseline (population) statistics over time ##############################
+#
+# We compute four numbers per 8-hour slice: total edgeweight, share of
+# nodes touched, edge ratio, average edgeweight per node. The figure
+# at the end compares each sample's time series to this baseline.
+
+n_total <- nrow(nodes)
+stats   <- slice_stats(edges, n_total)
+stats |> head()
+cat(sprintf("📊 Baseline: %d time slices computed.\n", nrow(stats)))
+
+
+# 2. Sampling strategies ######################################################
+
+set.seed(42)  # deterministic samples across runs
+
+## 2.1 Ego-centric: 50 random seed nodes, keep edges touching any of them ####
+
+# An ego sample is biased toward whatever the seeds are. With random
+# seeds, the bias averages out, but small samples are still noisy.
+ego_nodes <- nodes |> slice_sample(n = 50) |> pull(node)
+ego_edges <- edges |> filter(from %in% ego_nodes | to %in% ego_nodes)
+ego_stats <- slice_stats(ego_edges, n_total)
+cat(sprintf("✅ Ego sample: %d seeds, %d edges retained.\n",
+            length(ego_nodes), nrow(ego_edges)))
+
+## 2.2 Edgewise: 10,000 random edges #########################################
+
+# Uniform random sampling of edges. Preserves the marginal edge-weight
+# distribution well but tends to leave nodes with low degree under-sampled.
+edge_sample <- edges |> slice_sample(n = 10000)
+edge_stats  <- slice_stats(edge_sample, n_total)
+cat(sprintf("✅ Edge sample: %d edges.\n", nrow(edge_sample)))
+
+## 2.3 Spatial buffer: nodes within 200 km of Miami ##########################
+
+# Drop the handful of nodes whose centroid couldn't be computed (a
+# subdivision present in the node table but missing from the trimmed
+# geojson). sf is strict about NAs in coordinates.
+nodes_geo <- nodes |> filter(!is.na(x), !is.na(y))
+
+# Use Miami as our point of interest (POI). Why the projection dance?
+# EPSG:4326 is lat/lon in DEGREES, so a "200 km" buffer in degrees is
+# meaningless (a degree is a different distance at the equator vs Maine).
+# EPSG:3857 is in METERS, so we project there to draw the 200 km circle,
+# then project back to 4326 to match the node coordinates. Non-GIS
+# readers: switch to a meter ruler, measure, switch back.
+miami <- nodes_geo |> filter(geoid == "1208692158") |> slice(1)
+poi <- sf::st_as_sf(
+  data.frame(x = miami$x, y = miami$y),
+  coords = c("x", "y"), crs = 4326
+)
+buf <- poi |>
+  sf::st_transform(3857) |>
+  sf::st_buffer(dist = 200 * 1000) |>
+  sf::st_transform(4326)
+
+node_pts     <- sf::st_as_sf(nodes_geo, coords = c("x", "y"), crs = 4326)
+nodes_in_buf <- sf::st_join(node_pts, buf, join = sf::st_within, left = FALSE)
+ids_in       <- nodes_in_buf$node
+
+# Keep only edges where BOTH endpoints are inside the buffer.
+buf_edges <- edges |> filter(from %in% ids_in & to %in% ids_in)
+buf_stats <- slice_stats(buf_edges, n_total)
+cat(sprintf("✅ Buffer sample: %d nodes within 200 km of Miami, %d edges.\n",
+            length(ids_in), nrow(buf_edges)))
+
+
+# 3. Compare ##################################################################
+
+p <- bind_rows(
+  stats     |> mutate(strategy = "Population"),
+  ego_stats |> mutate(strategy = "Ego-centric"),
+  edge_stats|> mutate(strategy = "Edgewise"),
+  buf_stats |> mutate(strategy = "Spatial buffer")
+) |>
+  ggplot(aes(x = date_time, y = avg_edgeweight, color = strategy)) +
+  geom_line() +
+  labs(y     = "avg edgeweight per node",
+       title = "Sample vs population — avg edgeweight per node",
+       x     = NULL) +
+  theme_classic(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+
+# This is the figure that makes the whole case: all three sample lines
+# against the population line. Show it AND save it (Rscript otherwise hides
+# it in Rplots.pdf, so the most important plot in the lab goes unseen).
+print(p)
+ggsave(here::here("code", "08_sampling", "sample_vs_population.png"),
+       p, width = 7, height = 4.5, dpi = 120)
+cat("💾 Saved sample_vs_population.png\n")
+
+
+# 4. Which strategy best preserves avg_edgeweight? ###########################
+#
+# What makes one sample "better"? It tracks the true population most
+# closely. We score that as the max absolute deviation: over the whole
+# time series, the largest gap between the sample's average edge weight
+# and the population's. Smaller = better, and we pick the strategy that
+# minimizes it. (Worst-case gap is a simple, strict choice; you could
+# instead use mean-squared error or correlation for average-case fit.)
+
+max_abs_dev <- function(sample_stats) {
+  merged <- inner_join(
+    stats        |> select(date_time, pop  = avg_edgeweight),
+    sample_stats |> select(date_time, samp = avg_edgeweight),
+    by = "date_time"
+  )
+  max(abs(merged$pop - merged$samp))
+}
+
+mad <- c(
+  ego_centric    = max_abs_dev(ego_stats),
+  edgewise       = max_abs_dev(edge_stats),
+  spatial_buffer = max_abs_dev(buf_stats)
+)
+cat("Max |population - sample| in avg_edgeweight, by strategy (smaller = better):\n")
+print(round(mad, 3))
+winner <- names(which.min(mad))
+cat(sprintf("📊 Best preservation (smallest max-absolute-deviation): %s\n", winner))
+
+# WHY does the spatial buffer usually win for this network? Evacuation flow
+# is spatially structured -- neighboring subdivisions surge together -- so a
+# geographic buffer captures a coherent, internally-intact subnetwork whose
+# per-node averages track the population. Ego and edgewise sampling slice
+# the graph arbitrarily, fragmenting that local structure.
+
+
+# 5. Learning Check ##########################################################
+#
+# QUESTION: Of the three sampling strategies above (ego-centric,
+# edgewise, spatial buffer around Miami), which one best preserves
+# the population's `avg_edgeweight` time series — measured by the
+# smallest max-absolute-deviation? Submit the strategy name.
+
+cat(sprintf("\n📝 Learning Check answer: %s\n", winner))
+
+cat("\n🎉 Done. Move on to the case study report when you're ready.\n")
+```
+
+---
+
+## `code/11_sampling/example.py`
+
+```python
+"""Case Study 08 — Sampling Big Networks (Python track).
+
+You can't analyze every node in a million-node network on a laptop.
+So we sample. But sampling is not neutral — each strategy preserves
+some properties and distorts others. This case study shows you which.
+
+Data: Hurricane Dorian evacuation flows over Florida county
+subdivisions, Aug 28 - Sep 10, 2019. Each edge is a (from, to,
+date_time, evacuation) tuple where `evacuation` is how many MORE
+local Facebook users moved between two cities in that 8-hour window
+than usual. The original sts workshop 29C_databases.R covers the
+same network at a Gulf scale; we trim to Florida and to the crisis
+weeks.
+
+We will:
+  1. Compute baseline per-time-slice network statistics on the full
+     filtered network.
+  2. Take three sampling strategies (ego-centric, edgewise, spatial
+     buffer around Miami).
+  3. Compare each sample's stats against the population over time.
+"""
+
+# 0. Setup ###################################################################
+
+## 0.1 Packages ##############################################################
+
+# `pandas`/`numpy` for the per-slice aggregations, `geopandas`/`shapely`
+# for the spatial buffer (the only part of this script that needs
+# spatial libraries), `matplotlib` for the comparison figure.
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import geopandas as gpd
+from shapely.geometry import Point
+
+## 0.2 Load helpers ##########################################################
+
+# `slice_stats()` computes the per-time-slice network statistics
+# (edgeweight, share of nodes touched, etc.) for any edge subset.
+# That's the workhorse we'll reuse on every sample.
+from functions import (
+    load_nodes, load_edges, load_subdivisions, slice_stats,
+)
+
+print("\n🚀 Case Study 08 — Sampling Big Networks (Python)")
+print("   Three sampling strategies vs population. Which one preserves the truth?\n")
+
+## 0.3 Load data #############################################################
+
+nodes = load_nodes()
+edges = load_edges()
+print(f"nodes: {len(nodes):,}  edges: {len(edges):,}")
+print(edges.head())
+print(f"✅ Loaded {len(nodes)} nodes, {len(edges)} edges.")
+
+
+# 1. Baseline (population) statistics over time ##############################
+#
+# We compute four numbers per 8-hour slice: total edgeweight, share of
+# nodes touched, edge ratio, average edgeweight per node. The figure
+# at the end compares each sample's time series to this baseline.
+
+n_total = len(nodes)
+stats = slice_stats(edges, n_total)
+print(stats.head())
+print(f"📊 Baseline: {len(stats)} time slices computed.")
+
+
+# 2. Sampling strategies #####################################################
+
+rng = np.random.default_rng(42)  # deterministic samples across runs
+
+## 2.1 Ego-centric: sample N nodes, keep edges that touch any sampled node ###
+
+# An ego sample is biased toward whatever the seeds are. With random
+# seeds, the bias averages out, but small samples are still noisy.
+ego_nodes = nodes.sample(n=50, random_state=42)["node"].to_numpy()
+ego_edges = edges[edges["from"].isin(ego_nodes) | edges["to"].isin(ego_nodes)]
+print(f"ego sample: {len(ego_nodes)} seed nodes, {len(ego_edges):,} edges")
+ego_stats = slice_stats(ego_edges, n_total)
+print(f"✅ Ego sample: {len(ego_nodes)} seeds, {len(ego_edges)} edges retained.")
+
+## 2.2 Edgewise: sample edges uniformly ######################################
+
+# Uniform random sampling of edges. Preserves the marginal edge-weight
+# distribution well but tends to leave nodes with low degree under-sampled.
+edge_sample = edges.sample(n=10_000, random_state=42)
+edge_stats  = slice_stats(edge_sample, n_total)
+print(f"edge sample: {len(edge_sample):,} edges")
+print(f"✅ Edge sample: {len(edge_sample)} edges.")
+
+## 2.3 Spatial buffer: keep edges where BOTH endpoints are within 200 km of Miami
+
+# Use Miami as our point of interest (POI). Why the projection dance?
+# EPSG:4326 is lat/lon in DEGREES, so a "200 km" buffer in degrees is
+# meaningless (a degree is a different distance at the equator vs Maine).
+# EPSG:3857 is in METERS, so we project there to draw the 200 km circle,
+# then project back to 4326 to match the node coordinates. Non-GIS
+# readers: switch to a meter ruler, measure, switch back.
+miami_geoid = "1208692158"
+miami_row = nodes[nodes["geoid"] == miami_geoid].iloc[0]
+poi = gpd.GeoSeries([Point(miami_row["x"], miami_row["y"])], crs="EPSG:4326")
+poi_m   = poi.to_crs("EPSG:3857")
+buf_m   = poi_m.buffer(200_000)              # 200 km
+buf_ll  = gpd.GeoSeries(buf_m, crs="EPSG:3857").to_crs("EPSG:4326")
+
+node_pts = gpd.GeoDataFrame(
+    nodes,
+    geometry=[Point(xy) for xy in zip(nodes["x"], nodes["y"])],
+    crs="EPSG:4326",
+)
+nodes_in_buf = node_pts[node_pts.within(buf_ll.iloc[0])]
+print(f"buffer sample: {len(nodes_in_buf)} nodes within 200 km of Miami")
+
+# Keep only edges where BOTH endpoints are inside the buffer.
+ids_in = set(nodes_in_buf["node"].to_numpy())
+buf_edges = edges[edges["from"].isin(ids_in) & edges["to"].isin(ids_in)]
+buf_stats = slice_stats(buf_edges, n_total)
+print(f"✅ Buffer sample: {len(nodes_in_buf)} nodes within 200 km of Miami, "
+      f"{len(buf_edges)} edges.")
+
+
+# 3. Compare samples vs population ###########################################
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 4.5), sharex=True)
+
+ax = axes[0]
+ax.plot(stats["date_time"],     stats["avg_edgeweight"],     label="Population",     color="black")
+ax.plot(ego_stats["date_time"], ego_stats["avg_edgeweight"], label="Ego-centric",     color="#3a8bc6")
+ax.plot(edge_stats["date_time"],edge_stats["avg_edgeweight"],label="Edgewise",        color="#e07b3a")
+ax.plot(buf_stats["date_time"], buf_stats["avg_edgeweight"], label="Spatial buffer", color="#7b3ae0")
+ax.set_ylabel("avg_edgeweight (per node)")
+ax.legend(fontsize=8)
+ax.set_title("avg edgeweight per node")
+
+ax = axes[1]
+ax.plot(stats["date_time"],     stats["pc_nodes_linked"],     label="Population",     color="black")
+ax.plot(ego_stats["date_time"], ego_stats["pc_nodes_linked"], label="Ego-centric",     color="#3a8bc6")
+ax.plot(edge_stats["date_time"],edge_stats["pc_nodes_linked"],label="Edgewise",        color="#e07b3a")
+ax.plot(buf_stats["date_time"], buf_stats["pc_nodes_linked"], label="Spatial buffer", color="#7b3ae0")
+ax.set_ylabel("pc_nodes_linked")
+ax.set_title("share of nodes touched by any edge")
+
+for ax in axes:
+    ax.tick_params(axis="x", rotation=30)
+fig.tight_layout()
+fig.savefig("sampling_compare.png", dpi=120)
+plt.close(fig)
+print("💾 Saved sampling_compare.png")
+
+
+# 4. Which strategy best preserves average edgeweight? #######################
+#
+# What makes one sample "better"? It tracks the true population most
+# closely. We score that as the *maximum absolute deviation*: over the
+# whole time series, the largest gap between the sample's average edge
+# weight and the population's. Smaller = better. (Worst-case gap is a
+# simple, strict choice; you could instead use mean-squared error or
+# correlation if you cared about average rather than worst-case fit.)
+
+def max_abs_dev(sample_stats):
+    merged = stats[["date_time", "avg_edgeweight"]].merge(
+        sample_stats[["date_time", "avg_edgeweight"]],
+        on="date_time", suffixes=("_pop", "_samp"))
+    return float((merged["avg_edgeweight_pop"]
+                  - merged["avg_edgeweight_samp"]).abs().max())
+
+mad = {
+    "ego_centric":     max_abs_dev(ego_stats),
+    "edgewise":        max_abs_dev(edge_stats),
+    "spatial_buffer":  max_abs_dev(buf_stats),
+}
+print("Max |population - sample| in avg_edgeweight by strategy:")
+for k, v in mad.items():
+    print(f"  {k:16s}: {v:.3f}")
+
+winner = min(mad, key=mad.get)
+print(f"📊 Best preservation (smallest max-absolute-deviation): {winner}")
+
+# WHY does the spatial buffer usually win for this network? Evacuation flow
+# is spatially structured -- neighboring subdivisions surge together -- so a
+# geographic buffer captures a coherent, internally-intact subnetwork whose
+# per-node averages track the population. Ego and edgewise sampling slice
+# the graph arbitrarily, fragmenting that local structure.
+
+
+# 5. Learning Check ##########################################################
+#
+# QUESTION: Of the three sampling strategies above (ego-centric,
+# edgewise, spatial buffer around Miami), which one best preserves
+# the population's `avg_edgeweight` time series — measured by the
+# smallest max-absolute-deviation? Submit the strategy name.
+
+print(f"\n📝 Learning Check answer: {winner}")
+
+print("\n🎉 Done. Move on to the case study report when you're ready.")
+```
+
+---
+
+## `code/11_sampling/functions.R`
+
+```r
+#' @name functions.R
+#' @title Helpers for the Sampling case study
+
+library(dplyr)
+library(sf)
+library(here)
+
+.case_dir <- function() here::here("code", "08_sampling", "data")
+
+load_nodes <- function() {
+  readr::read_csv(
+    file.path(.case_dir(), "nodes.csv"),
+    # geoid is a numeric-looking string; keep it as character so
+    # comparisons like `geoid == "1208692158"` work.
+    col_types = readr::cols(geoid = readr::col_character(),
+                            .default = readr::col_guess())
+  )
+}
+load_edges <- function() {
+  readr::read_csv(
+    file.path(.case_dir(), "edges.csv"),
+    show_col_types = FALSE
+  )
+}
+load_subdivisions <- function() {
+  sf::st_read(file.path(.case_dir(), "county_subdivisions.geojson"),
+              quiet = TRUE)
+}
+
+#' Compute normalized network statistics per time slice.
+#'
+#' Mirrors the workshop helper from 29C_databases.R: edge weight,
+#' edge count, node count, # linked nodes, density, % linked, edges
+#' per node, average edgeweight per node.
+slice_stats <- function(edges, n_total_nodes) {
+  edges |>
+    group_by(date_time) |>
+    summarize(
+      edgeweight     = sum(evacuation, na.rm = TRUE),
+      n_edges        = dplyr::n(),
+      n_nodes        = n_total_nodes,
+      n_nodes_linked = length(unique(c(from, to))),
+      .groups        = "drop"
+    ) |>
+    mutate(
+      density          = 2 * n_edges / (n_nodes * (n_nodes - 1)),
+      pc_nodes_linked  = n_nodes_linked / n_nodes,
+      edge_ratio       = n_edges / n_nodes,
+      avg_edgeweight   = edgeweight / n_nodes
+    )
+}
+```
+
+---
+
+## `code/11_sampling/functions.py`
+
+```python
+"""Helpers for the Sampling case study."""
+from __future__ import annotations
+
+from pathlib import Path
+import pandas as pd
+import geopandas as gpd
+
+
+def _case_dir() -> Path:
+    return Path(__file__).resolve().parent / "data"
+
+
+def load_nodes() -> pd.DataFrame:
+    # geoid is a numeric-looking string ("1208692158"); force string read
+    # so equality comparisons against literal "1208692158" succeed.
+    return pd.read_csv(_case_dir() / "nodes.csv", dtype={"geoid": "string"})
+
+
+def load_edges() -> pd.DataFrame:
+    # date_time is ISO-8601 in CSV; parse to Timestamps so groupby
+    # gives an ordered time series.
+    return pd.read_csv(_case_dir() / "edges.csv", parse_dates=["date_time"])
+
+
+def load_subdivisions() -> gpd.GeoDataFrame:
+    return gpd.read_file(_case_dir() / "county_subdivisions.geojson")
+
+
+def slice_stats(edges: pd.DataFrame, n_total_nodes: int) -> pd.DataFrame:
+    """Per-time-slice network statistics, mirrors the sts 29C workshop.
+
+    Columns: edgeweight, n_edges, n_nodes, n_nodes_linked, density,
+    pc_nodes_linked, edge_ratio, avg_edgeweight.
+    """
+    out = (
+        edges
+        .groupby("date_time", as_index=False)
+        .agg(
+            edgeweight=("evacuation", "sum"),
+            n_edges=("evacuation", "size"),
+            from_set=("from", lambda s: set(s)),
+            to_set=("to",   lambda s: set(s)),
+        )
+    )
+    out["n_nodes"] = n_total_nodes
+    out["n_nodes_linked"] = out.apply(
+        lambda r: len(r["from_set"] | r["to_set"]), axis=1)
+    out = out.drop(columns=["from_set", "to_set"])
+    out["density"] = 2 * out["n_edges"] / (out["n_nodes"] * (out["n_nodes"] - 1))
+    out["pc_nodes_linked"] = out["n_nodes_linked"] / out["n_nodes"]
+    out["edge_ratio"]      = out["n_edges"]       / out["n_nodes"]
+    out["avg_edgeweight"]  = out["edgeweight"]    / out["n_nodes"]
+    return out
 ```
 
 ---
