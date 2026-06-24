@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-24 21:06 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 21:25 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -1034,10 +1034,6 @@ SYSEN 5470 · Network Science · Interactive Lab · Skill: Identify
 A network is not a picture of stuff connected to stuff — it's a deliberate choice about what counts as a node, what counts as a tie, and what direction information flows. This playground lets you construct networks from prose, see them as node\-link diagrams, adjacency matrices, and edge tables simultaneously, and compute structural properties as you build. The tool is for verification and computation. The thinking happens on your sketchpad.
 
 
-📦 Need a network for your project case study?
-Browse the project datasets on GitHub →
-
-
 📚 Readings for this case study →
 
 
@@ -1248,9 +1244,33 @@ CTwo — connectors is the single\-supplier component, and via Supplier C it sha
 **Answer: C.** Connectors has only one supplier (Supplier C). Supplier C also provides displays and circuit boards. So the two\-step neighbors of connectors are {circuit boards, displays} — two components. The systems\-engineering interpretation: a disruption to Supplier C does not just take out connectors; it cascades to circuit boards and displays as well. This is called the *one\-mode projection* of a bipartite network — and it's why bipartite analysis is essential for supply\-chain risk: the apparent single\-supplier\-single\-component vulnerability is actually a multi\-component vulnerability when you account for shared suppliers. The bipartite stack layout makes this visible because it cleanly separates the two node types — in unipartite force\-directed view, suppliers and components mix together and the two\-hop structure is much harder to trace. **The layout is not just decoration — it's the analytic frame that makes the question answerable.**
 
 
-**Try this on your own data.** Open the Coding Playground, upload your network, and use the same tools.
+### ⌨️ Code It
+
+
+**Run the code for this case study yourself.** Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.
+
+
+→ Code Folder (GitHub)
 → R Playground
 → Python Playground
+
+
+If you chose this case study's methods for your project…
+
+### Project Seed Questions
+
+
+Pick one of these questions for your project report — or use them as starting points for your own.
+
+
+* **From data to graph.** Take a tabular dataset from your field that isn't obviously a graph — define what a node, edge, and weight are, justify each, then report N, E, density, and the degree distribution.
+* **Bipartite projection in your domain.** Find a real two\-mode structure (people↔projects, firms↔contracts, reviewers↔papers), build it, project it both ways, and report what each projection reveals.
+* **Operationalization bake\-off.** Define the same system two ways (directed vs. undirected, or two different edge rules) and show how the structure — and the answer — changes.
+
+
+Full project questions \& how\-to →
+Project Homework spec →
+See an example report →
 
 
 **SYSEN 5470 · Network Fundamentals · Build\-a\-Network Playground**
