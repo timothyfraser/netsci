@@ -24,6 +24,10 @@ USAGE:
     export CANVAS_COURSE_ID=123456
     python3 scripts/push_to_canvas.py --dry-run     # preview the plan
     python3 scripts/push_to_canvas.py               # actually publish
+    python3 scripts/push_to_canvas.py --assignments-only
+        # update assignment HTML only (safe: does not rebuild modules)
+    python3 scripts/push_to_canvas.py --assignments-only --only lc-build-a-network
+        # pilot a single assignment (--only repeatable)
 
 See HANDOFF.md for the exact endpoint reference and order of operations.
 ------------------------------------------------------------------------------
@@ -41,13 +45,34 @@ except ImportError:
     sys.exit("This script needs `requests`.  Run:  pip install requests")
 
 ROOT = Path(__file__).resolve().parent.parent
-PLAN = json.loads((ROOT / "canvas_plan.json").read_text())
+PLAN = json.loads((ROOT / "canvas_plan.json").read_text(encoding="utf-8"))
 
 sys.path.insert(0, str(ROOT / "scripts"))
 from canvas_env import get_canvas_env
 
 BASE, TOKEN, COURSE = get_canvas_env()
-DRY = "--dry-run" in sys.argv
+
+
+def parse_argv():
+    argv = sys.argv[1:]
+    only_keys = []
+    flags = set()
+    i = 0
+    while i < len(argv):
+        if argv[i] == "--only" and i + 1 < len(argv):
+            only_keys.append(argv[i + 1])
+            i += 2
+        elif argv[i].startswith("--"):
+            flags.add(argv[i])
+            i += 1
+        else:
+            i += 1
+    return flags, only_keys
+
+
+FLAGS, ONLY_KEYS = parse_argv()
+DRY = "--dry-run" in FLAGS
+ASSIGNMENTS_ONLY = "--assignments-only" in FLAGS
 
 if not DRY and not (BASE and TOKEN and COURSE):
     sys.exit("Set CANVAS_BASE_URL, CANVAS_API_TOKEN, CANVAS_COURSE_ID "
@@ -93,7 +118,7 @@ def get_all(path, **params):
 
 
 def read_html(rel):
-    return (ROOT / rel).read_text()
+    return (ROOT / rel).read_text(encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -178,6 +203,8 @@ def ensure_assignments(group_ids):
     existing = {a["name"]: a for a in get_all(f"/courses/{COURSE}/assignments")}
     key_to_id = {}
     for a in PLAN["assignments"]:
+        if ONLY_KEYS and a["key"] not in ONLY_KEYS:
+            continue
         gid = group_ids.get(a["group"])
         data = [
             ("assignment[name]", a["name"]),
@@ -260,15 +287,28 @@ def ensure_modules(assignment_ids):
 # ---------------------------------------------------------------------------
 def main():
     mode = "DRY-RUN (no changes)" if DRY else f"course {COURSE} @ {BASE}"
-    print(f"\n=== SYSEN 5470 → Canvas  [{mode}] ===\n")
-    set_course_settings()
-    group_ids = ensure_groups()
-    ensure_front_page()
+    scope = "assignments only" if ASSIGNMENTS_ONLY else "full publish"
+    only = f"  only={ONLY_KEYS}" if ONLY_KEYS else ""
+    print(f"\n=== SYSEN 5470 -> Canvas  [{mode}]  ({scope}{only}) ===\n")
+    if ASSIGNMENTS_ONLY:
+        print("  NOTE: --assignments-only skips modules/front page (custom "
+              "Panopto links preserved).\n")
+    if ASSIGNMENTS_ONLY:
+        existing = {g["name"]: g["id"]
+                    for g in get_all(f"/courses/{COURSE}/assignment_groups")}
+        group_ids = {g["key"]: existing[g["name"]]
+                     for g in PLAN["assignment_groups"]
+                     if g["name"] in existing}
+    else:
+        set_course_settings()
+        group_ids = ensure_groups()
+        ensure_front_page()
     assignment_ids = ensure_assignments(group_ids)
-    apply_group_rules(group_ids)
-    ensure_modules(assignment_ids)
-    print("\n✅ Done. Open the course in Canvas and verify the home page, the "
-          "Assignments index (grouped + weighted), and Modules.\n")
+    if not ASSIGNMENTS_ONLY:
+        apply_group_rules(group_ids)
+        ensure_modules(assignment_ids)
+    print("\nDone. Open the course in Canvas and verify assignment cards"
+          + (" and Modules." if not ASSIGNMENTS_ONLY else ".\n"))
 
 
 if __name__ == "__main__":
