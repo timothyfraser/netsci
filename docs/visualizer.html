@@ -490,7 +490,11 @@
               <option value="mean">Average</option>
             </select>
           </div>
-          <p class="agg-note">Collapses nodes that share a trait (e.g. <em>region</em>): every edge is re-pointed to its endpoints' groups and combined. Intra-group edges are dropped. Updates live.</p>
+          <div class="color-by-row" id="aggregate-time-row" style="display:none;">
+            <label for="aggregate-time">Time slice</label>
+            <select id="aggregate-time" class="viz-select"><option value="">Overall</option></select>
+          </div>
+          <p class="agg-note">Collapses nodes that share a trait (e.g. <em>region</em>): every edge is re-pointed to its endpoints' groups and combined. Intra-group edges are dropped. Updates live. With a time variable you can aggregate <em>overall</em> or a single time slice.</p>
         </div>
       </details>
 
@@ -537,15 +541,17 @@
         <div class="color-by-row">
           <label for="palette">Palette</label>
           <select id="palette" class="viz-select">
-            <option value="viridis" selected>Viridis</option>
+            <option value="neon" selected>Neon</option>
+            <option value="viridis">Viridis</option>
             <option value="plasma">Plasma</option>
             <option value="mako">Mako</option>
-            <option value="neon">Neon</option>
           </select>
         </div>
         <div id="group-legend" class="group-legend"></div>
+        <datalist id="viz-swatches"></datalist>
         <div class="toggle-row" data-toggle="labels">Node labels<div class="toggle on"></div></div>
         <div class="toggle-row" data-toggle="edges">Edge weight labels<div class="toggle"></div></div>
+        <div class="toggle-row" data-toggle="weights">Weight degree &amp; betweenness<div class="toggle"></div></div>
         <div class="toggle-row" data-toggle="isolates">Drop isolates<div class="toggle on"></div></div>
         <div class="toggle-row" data-toggle="drift">Live drift<div class="toggle"></div></div>
       </div>
@@ -635,6 +641,6 @@
 <script src="assets/network-bg.js" defer></script>
 <script src="assets/site.js" defer></script>
 <script src="assets/notebooklm-bubble.js" defer></script>
-<script src="assets/viz.js?v=20260624" defer></script>
+<script src="assets/viz.js?v=20260624b" defer></script>
 </body>
 </html>
