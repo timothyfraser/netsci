@@ -20,6 +20,7 @@
     baseGraph: null,  // the un-aggregated graph; `graph` may be an aggregated view of it
     aggregateBy: '',  // node-trait column to collapse on ('' = raw network)
     aggregateMode: 'sum',  // how to combine the edge weight: 'sum' | 'mean'
+    aggregateTime: '',  // '' = overall (all time); else a single time-slice value
     layout: 'force',  // force | radial | hierarchical
     showEdgeLabels: false,
     showNodeLabels: true,
@@ -37,14 +38,15 @@
     simulation: null,
     zoom: null,            // d3.zoom behavior
     zoomTransform: null,   // current pan/zoom transform (persists across renders)
-    palette: 'viridis',    // categorical color palette: viridis | plasma | mako | neon
+    palette: 'neon',       // categorical color palette: neon | viridis | plasma | mako
+    useWeights: false,     // weight degree/betweenness by edge weight when true
     metrics: {}       // per-node { degree, weighted, betweenness, component }
   };
 
-  // Improved neon set: distinct hues (no near-duplicate light green, no washed
-  // white); soft "neon-pastel" tints that read well on the dark background.
-  const NEON = ['#39FF14', '#5eead4', '#fbbf24', '#f472b6',
-                '#818cf8', '#fb923c', '#a78bfa', '#f87171'];
+  // Improved neon set: green primary, then a yellow/amber secondary (NOT the
+  // teal, which sits too close to the green); the teal still appears later.
+  const NEON = ['#39FF14', '#fbbf24', '#f472b6', '#818cf8',
+                '#fb923c', '#a78bfa', '#5eead4', '#f87171'];
   // Mako control points (seaborn) for a d3 basis interpolator (teal-forward).
   const MAKO_STOPS = ['#0B0405', '#3A2C59', '#395D9C', '#3497A9',
                       '#5CC8A7', '#A5DFB8', '#DEF5E5'];
@@ -141,13 +143,14 @@
       const A = ensureNode(a), B = ensureNode(b);
       let w = m.weight ? Number(row[m.weight]) : 1;
       if (!isFinite(w) || w <= 0) w = 1;
-      let t = m.time ? row[m.time] : null;
+      const tRaw = m.time ? row[m.time] : null;   // keep raw value (e.g. string periods) for time-slice aggregation
+      let t = tRaw;
       if (t !== null && t !== undefined && t !== '') {
         const tn = Number(t);
         t = isFinite(tn) ? tn : Date.parse(t);
         if (isFinite(t)) times.push(t);
       } else t = null;
-      links.push({ source: A.id, target: B.id, weight: w, time: t });
+      links.push({ source: A.id, target: B.id, weight: w, time: t, timeRaw: (tRaw === undefined ? null : tRaw) });
       A.deg++; B.deg++;
       A.weighted += w; B.weighted += w;
     });
@@ -199,12 +202,15 @@
       }
     });
 
-    // Brandes betweenness (unweighted, undirected) — bounded by N for performance
+    // Brandes betweenness (undirected) — bounded by N for performance. With
+    // state.useWeights, shortest paths use edge weights (Dijkstra, distance =
+    // 1/weight so stronger ties are "closer"); otherwise hop-count (BFS).
     const N = nodes.length;
     const ids = nodes.map((n) => n.id);
     const betw = {};
     ids.forEach((id) => { betw[id] = 0; });
-    if (N <= 600) {
+
+    if (N <= 600 && !state.useWeights) {
       ids.forEach((s) => {
         const stack = [], pred = {}, sigma = {}, dist = {};
         ids.forEach((id) => { pred[id] = []; sigma[id] = 0; dist[id] = -1; });
@@ -226,16 +232,56 @@
       });
       const norm = (N - 1) * (N - 2);
       if (norm > 0) ids.forEach((id) => { betw[id] = betw[id] / norm; });
+    } else if (N <= 600 && state.useWeights) {
+      // weighted adjacency (undirected; keep the strongest parallel edge)
+      const adjW = {}; ids.forEach((id) => { adjW[id] = new Map(); });
+      links.forEach((l) => {
+        const s = typeof l.source === 'object' ? l.source.id : l.source;
+        const t = typeof l.target === 'object' ? l.target.id : l.target;
+        const d = 1 / (l.weight > 0 ? l.weight : 1);
+        if (!adjW[s].has(t) || adjW[s].get(t) > d) adjW[s].set(t, d);
+        if (!adjW[t].has(s) || adjW[t].get(s) > d) adjW[t].set(s, d);
+      });
+      const EPS = 1e-9;
+      ids.forEach((s) => {
+        const dist = {}, sigma = {}, pred = {}, done = {};
+        ids.forEach((id) => { dist[id] = Infinity; sigma[id] = 0; pred[id] = []; });
+        dist[s] = 0; sigma[s] = 1;
+        const S = [];
+        for (let cnt = 0; cnt < N; cnt++) {
+          let u = null, best = Infinity;
+          for (const id of ids) { if (!done[id] && dist[id] < best) { best = dist[id]; u = id; } }
+          if (u === null || best === Infinity) break;
+          done[u] = true; S.push(u);
+          adjW[u].forEach((dw, w) => {
+            const nd = dist[u] + dw;
+            if (nd < dist[w] - EPS) { dist[w] = nd; sigma[w] = sigma[u]; pred[w] = [u]; }
+            else if (Math.abs(nd - dist[w]) < EPS) { sigma[w] += sigma[u]; pred[w].push(u); }
+          });
+        }
+        const delta = {}; ids.forEach((id) => { delta[id] = 0; });
+        while (S.length) {
+          const w = S.pop();
+          pred[w].forEach((v) => { delta[v] += (sigma[v] / sigma[w]) * (1 + delta[w]); });
+          if (w !== s) betw[w] += delta[w];
+        }
+      });
+      const norm = (N - 1) * (N - 2);
+      if (norm > 0) ids.forEach((id) => { betw[id] = betw[id] / norm; });
     }
 
     state.metrics = {};
     nodes.forEach((n) => {
       state.metrics[n.id] = {
-        degree: n.deg, weighted: n.weighted,
+        degree: state.useWeights ? n.weighted : n.deg, weighted: n.weighted,
         betweenness: betw[n.id] || 0,
         component: compOf[n.id]
       };
     });
+    // size references so node radius stays sane whether degree is a count or a
+    // (much larger) weighted sum
+    state.maxCount = nodes.reduce((m, n) => Math.max(m, n.deg), 0) || 1;
+    state.maxWeighted = nodes.reduce((m, n) => Math.max(m, n.weighted), 0) || 1;
   }
 
   // ── UI: column-mapper dropdowns ─────────────────────────────
@@ -322,6 +368,7 @@
     state.baseGraph = state.graph;
     setStatus(`Graph: ${state.graph.nodes.length} nodes · ${state.graph.links.length} edges.`, 'ok');
     populateAggregateOptions();
+    populateAggregateTimeOptions();
     populateGroupColumnOptions();
     state.aggregateBy = '';
     const aggSel = $('aggregate-by'); if (aggSel) aggSel.value = '';
@@ -332,7 +379,8 @@
   // Collapse the base graph by a node trait: every edge is re-pointed to the
   // trait group of its endpoints, and parallel edges are combined (sum/mean of
   // the weight). Intra-group edges (same trait on both ends) are dropped.
-  function aggregateGraph(base, trait, mode) {
+  function aggregateGraph(base, trait, mode, timeSlice) {
+    const slice = (timeSlice !== undefined && timeSlice !== null && timeSlice !== '');
     const groupOf = (n) => {
       const a = n.attrs ? n.attrs[trait] : undefined;
       return (a === undefined || a === null || a === '') ? '(none)' : String(a);
@@ -352,6 +400,7 @@
 
     const agg = new Map();   // "gsgt" -> { source, target, sum, count }
     base.links.forEach((l) => {
+      if (slice && String(l.timeRaw) !== String(timeSlice)) return;   // single time slice only
       const s = typeof l.source === 'object' ? l.source.id : l.source;
       const t = typeof l.target === 'object' ? l.target.id : l.target;
       const gs = gid[s], gt = gid[t];
@@ -380,7 +429,7 @@
   function rebuildView() {
     if (!state.baseGraph) return;
     if (state.aggregateBy) {
-      state.graph = aggregateGraph(state.baseGraph, state.aggregateBy, state.aggregateMode);
+      state.graph = aggregateGraph(state.baseGraph, state.aggregateBy, state.aggregateMode, state.aggregateTime);
       state.timeRange = null;
       state.timeFilter = null;
     } else {
@@ -409,8 +458,30 @@
 
     const n = state.graph.nodes.length, e = state.graph.links.length;
     if (state.aggregateBy) {
-      setStatus(`Aggregated by ${state.aggregateBy} (${state.aggregateMode}): ${n} groups · ${e} edges.`, 'ok');
+      const when = state.aggregateTime ? ` @ ${state.mapping.time}=${state.aggregateTime}` : '';
+      setStatus(`Aggregated by ${state.aggregateBy} (${state.aggregateMode})${when}: ${n} groups · ${e} edges.`, 'ok');
     }
+  }
+
+  // Fill the aggregate "Time slice" dropdown from the mapped time column's
+  // distinct values (Overall by default). Hidden when there's no time variable.
+  function populateAggregateTimeOptions() {
+    const sel = $('aggregate-time'); if (!sel) return;
+    const row = $('aggregate-time-row');
+    state.aggregateTime = '';
+    const tcol = state.mapping.time;
+    let vals = [];
+    if (tcol && state.baseGraph) {
+      vals = [...new Set(state.baseGraph.links.map((l) => l.timeRaw)
+        .filter((v) => v !== null && v !== undefined && v !== ''))];
+      vals.sort((a, b) => {
+        const na = Number(a), nb = Number(b);
+        return (isFinite(na) && isFinite(nb)) ? na - nb : String(a).localeCompare(String(b));
+      });
+    }
+    if (row) row.style.display = vals.length ? '' : 'none';
+    sel.innerHTML = `<option value="">Overall (all ${tcol || 'time'})</option>` +
+      vals.map((v) => `<option value="${String(v).replace(/"/g, '&quot;')}">${tcol} = ${v}</option>`).join('');
   }
 
   // Categorical-ish node columns only: skip the id/label and the high-cardinality
@@ -737,6 +808,16 @@
     )).sort();
     const cols = paletteColors(state.palette, groups.length);
     groups.forEach((g, i) => { state.groupPalette[g] = cols[i]; });
+    updateSwatches();
+  }
+
+  // Populate the <datalist> that the per-group color pickers suggest, so the
+  // swatch presets match the chosen palette (Chromium shows these in the picker)
+  // instead of the browser's default red/blue/green/black set.
+  function updateSwatches() {
+    const dl = $('viz-swatches'); if (!dl) return;
+    const swatches = paletteColors(state.palette, 12);
+    dl.innerHTML = [...new Set(swatches)].map((c) => `<option value="${c}">`).join('');
   }
 
   // Render the per-group legend with a color picker for each group value.
@@ -752,7 +833,7 @@
     box.innerHTML = groups.map((g) => {
       const color = state.groupColors[g] || state.groupPalette[g];
       const safe = String(g).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-      return `<div class="lg-row"><input type="color" value="${color}" data-group="${safe}" title="Recolor ${safe}"><span class="lg-name" title="${safe}">${safe}</span></div>`;
+      return `<div class="lg-row"><input type="color" list="viz-swatches" value="${color}" data-group="${safe}" title="Recolor ${safe}"><span class="lg-name" title="${safe}">${safe}</span></div>`;
     }).join('');
   }
 
@@ -782,7 +863,10 @@
   }
 
   function nodeRadius(n) {
-    const d = state.metrics[n.id]?.degree || 0;
+    let d = state.metrics[n.id]?.degree || 0;
+    // weighted degree is on a far larger scale than a count — map it back onto
+    // the count range so radii stay comparable.
+    if (state.useWeights && state.maxWeighted > 0) d = (d / state.maxWeighted) * (state.maxCount || 10);
     return (4 + Math.sqrt(d) * 2.2) * state.nodeScale;
   }
 
@@ -999,6 +1083,11 @@
           // the displayed node set changed — re-lay out, refit, and redraw
           if (state.graph) { unfix(); layout(); fitToView(); }
         }
+        if (key === 'weights') {
+          state.useWeights = on;
+          // degree & betweenness definitions changed — recompute and refresh
+          if (state.graph) { computeMetrics(); updateNodePanel(); }
+        }
         if (key === 'drift') {
           state.showDrift = on;
           if (state.simulation) {
@@ -1048,6 +1137,11 @@
     const aggMode = $('aggregate-mode');
     if (aggMode) aggMode.addEventListener('change', (e) => {
       state.aggregateMode = e.target.value;
+      if (state.baseGraph && state.aggregateBy) rebuildView();
+    });
+    const aggTime = $('aggregate-time');
+    if (aggTime) aggTime.addEventListener('change', (e) => {
+      state.aggregateTime = e.target.value;
       if (state.baseGraph && state.aggregateBy) rebuildView();
     });
 
@@ -1195,5 +1289,5 @@
   }
   document.addEventListener('DOMContentLoaded', init);
 
-  global.NetSciViz = { state, loadSampleGraph, loadGraph, loadProjectDataset };
+  global.NetSciViz = { state, loadSampleGraph, loadGraph, loadProjectDataset, paletteColors };
 })(window);
