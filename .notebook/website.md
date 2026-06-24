@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-24 03:42 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 04:18 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -3322,6 +3322,14 @@ Community (component)
 Uniform (neon green)
 
 
+Palette
+
+Viridis
+Plasma
+Mako
+Neon
+
+
 Node labels
 Edge weight labels
 Drop isolates
@@ -3337,6 +3345,7 @@ Live drift
 Your Network
 
 
+❄
 ＋
 －
 ⤢

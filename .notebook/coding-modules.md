@@ -1,6 +1,6 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-24 03:42 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 04:18 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
