@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-24 17:03 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 17:32 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -3255,6 +3255,8 @@ Satellite Supply Chain (276 nodes)
 Aircraft Supply Chain (300 nodes)
 UPS Ground Network (149 nodes)
 UPS Package Flow (149 nodes · 5,200 pkgs)
+NYC Real Estate · Capital (270 nodes)
+NYC Real Estate · Portfolio (190 nodes)
 
 
 Edgelist CSV required
@@ -3615,6 +3617,12 @@ Truck line\-haul: plant→plant lanes (packages, trucks, distance, transit).
 ![](playground-data/ups-package-flow-thumb.png)ups\-package\-flow
 149 nodes · 5,200 edges
 Package\-level parcels: one edge per package, with service \& on\-time.
+![](playground-data/nyc-realestate-capital-thumb.png)nyc\-realestate\-capital
+270 nodes · 5,044 edges
+NYC real estate capital: typed investors \& banks → properties, quarter by quarter.
+![](playground-data/nyc-realestate-portfolio-thumb.png)nyc\-realestate\-portfolio
+190 nodes · 1,155 edges
+NYC properties linked by shared equity financing (concentration risk).
 
 
 ### 📝 Code Editor
@@ -3649,6 +3657,8 @@ Satellite Supply Chain (276 nodes)
 Aircraft Supply Chain (300 nodes)
 UPS Ground Network (149 nodes)
 UPS Package Flow (5,200 packages)
+NYC Real Estate · Capital (270 nodes)
+NYC Real Estate · Portfolio (190 nodes)
 
 
 ⬆ Upload CSV
@@ -3813,6 +3823,12 @@ Truck line\-haul: plant→plant lanes (packages, trucks, distance, transit).
 ![](playground-data/ups-package-flow-thumb.png)ups\-package\-flow
 149 nodes · 5,200 edges
 Package\-level parcels: one edge per package, with service \& on\-time.
+![](playground-data/nyc-realestate-capital-thumb.png)nyc\-realestate\-capital
+270 nodes · 5,044 edges
+NYC real estate capital: typed investors \& banks → properties, quarter by quarter.
+![](playground-data/nyc-realestate-portfolio-thumb.png)nyc\-realestate\-portfolio
+190 nodes · 1,155 edges
+NYC properties linked by shared equity financing (concentration risk).
 
 
 ### 📝 Code Editor
@@ -3847,6 +3863,8 @@ Satellite Supply Chain (276 nodes)
 Aircraft Supply Chain (300 nodes)
 UPS Ground Network (149 nodes)
 UPS Package Flow (5,200 packages)
+NYC Real Estate · Capital (270 nodes)
+NYC Real Estate · Portfolio (190 nodes)
 
 
 ⬆ Upload CSV
@@ -4956,6 +4974,12 @@ Truck line\-haul: plant→plant lanes (packages, trucks, distance, transit).
 ![](playground-data/ups-package-flow-thumb.png)ups\-package\-flow
 149 nodes · 5,200 edges
 Package\-level parcels: one edge per package, with service \& on\-time.
+![](playground-data/nyc-realestate-capital-thumb.png)nyc\-realestate\-capital
+270 nodes · 5,044 edges
+NYC real estate capital: typed investors \& banks → properties, quarter by quarter.
+![](playground-data/nyc-realestate-portfolio-thumb.png)nyc\-realestate\-portfolio
+190 nodes · 1,155 edges
+NYC properties linked by shared equity financing (concentration risk).
 
 
 Pick a case study — and a project question
@@ -5291,6 +5315,8 @@ WASM virtual filesystem when you pick a sample from the loader dropdown.
 | `aircraft-supply-chain` | 300 | 624 | **Project dataset.** Directed multi-tier aircraft supply chain (material→component→system→integrator→program), weighted by `units_per_year`. |
 | `ups-ground-network` | 149 | 347 | **Project dataset.** Directed UPS-style truck line-haul; plant→plant lanes weighted by `packages`, with `trucks`, `distance_km`, `transit_hours`. |
 | `ups-package-flow` | 149 | 5,200 | **Project dataset.** Package-level companion; one directed edge per parcel weighted by `weight_kg`, with `service_level`, `distance_km`, `transit_hours`, `on_time`. |
+| `nyc-realestate-capital` | 270 | 5,044 | **Project dataset.** Directed, temporal NYC CRE capital flows; typed investors + banks → properties, one row per provider-property-quarter (`2024Q1`–`2026Q4`) with `invested_usd` vs `pledged_usd`. |
+| `nyc-realestate-portfolio` | 190 | 1,155 | **Project dataset.** Undirected companion projection; properties linked by shared equity financing, weighted by `co_investment_usd` (shares property ids with `nyc-realestate-capital`). |
 
 All `*-project` datasets above are mirrored from `data/projects/<name>/` by
 `data/projects/_sync_to_playground.py`.
