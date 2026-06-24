@@ -265,13 +265,7 @@
     <p>Boston's Bluebikes program connects neighborhoods — but does ridership flow freely across income lines, or do high-income neighborhoods mostly exchange riders with each other? Use permutation testing to find out whether the observed income pattern could arise by chance.</p>
   </section>
 
-  <div class="data-cta" style="margin: 0 0 28px; padding: 14px 18px; background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--green-bright); border-radius: var(--radius-lg); display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
-    <span style="font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; color: var(--green-mint);">📦 Need a network for your project case study?</span>
-    <a class="btn" href="https://github.com/timothyfraser/netsci/tree/main/data/projects" target="_blank" rel="noopener" style="margin-left:auto;">Browse the project datasets on GitHub →</a>
-  </div>
-
-
-  <section class="case-intro-video">
+  <section class="case-intro-video" id="video-overview" style="scroll-margin-top: 90px;">
     <div class="ratio">
       <iframe src="https://www.youtube-nocookie.com/embed/uYVxbYnOJoE"
               title="Case study intro video"
@@ -282,7 +276,7 @@
     </div>
   </section>
 
-  <section class="case-readings-link">
+  <section class="case-readings-link" id="readings" style="scroll-margin-top: 90px;">
     <a href="../readings.html#statistics">📚 Readings for this case study →</a>
   </section>
 
@@ -441,7 +435,7 @@
   </div>
 
   <!-- ── LEARNING CHECKS ── -->
-  <div class="sec-label" style="margin-top: 36px;">Learning Checks</div>
+  <div class="sec-label" id="learning-checks" style="margin-top: 36px; scroll-margin-top: 90px;">Learning Checks</div>
   <div class="lc-grid">
 
     <div class="lc-card">
@@ -494,11 +488,33 @@
 
   </div>
 
-  <div class="lab-cta-row">
-    <span class="cta-lede"><strong>Try this on your own data.</strong> Open the Coding Playground, upload your network, and use the same tools.</span>
-    <a href="../playground-r.html" class="btn primary">→ R Playground</a>
-    <a href="../playground-py.html" class="btn ghost">→ Python Playground</a>
-  </div>
+  <section id="code-it" style="scroll-margin-top: 90px; margin: 36px 0 24px; padding: 18px 22px; background: var(--card-bg); border: 1px solid var(--border); border-left: 3px solid var(--green-bright); border-radius: var(--radius-md);">
+    <h3 style="font-family: var(--font-display); font-size: 20px; color: var(--white); margin: 0 0 8px;">⌨️ Code It</h3>
+    <p style="font-family: var(--font-body); font-size: 15px; color: var(--green-mint); line-height: 1.6; margin: 0 0 14px;"><strong style="color: var(--white);">Run the code for this case study yourself.</strong> Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.</p>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <a href="https://github.com/timothyfraser/netsci/tree/main/code/07_permutation" target="_blank" rel="noopener" class="btn" style="background: var(--green-bright); color: var(--black); border-color: var(--green-bright);">→ Code Folder (GitHub)</a>
+      <a href="../playground-r.html" class="btn">→ R Playground</a>
+      <a href="../playground-py.html" class="btn">→ Python Playground</a>
+    </div>
+  </section>
+
+  <section id="project-seeds" style="scroll-margin-top: 90px; margin-top: 8px;">
+    <div class="sec-label">If you chose this case study's methods for your project…</div>
+    <div class="intro-block" style="margin-top: 14px;">
+      <h3 style="font-family: var(--font-display); font-size: 24px; color: var(--white); margin: 0 0 10px; letter-spacing: 0.01em;">Project Seed Questions</h3>
+      <p>Pick one of these questions for your project report — or use them as starting points for your own.</p>
+      <ul style="margin: 6px 0 0; padding-left: 18px; line-height: 1.6;">
+        <li><strong>Two nulls, two stories.</strong> Pick a categorical attribute. Compare unblocked and block-permutation nulls; report both p-values.</li>
+        <li><strong>What's the right block?</strong> Try two plausible blocking variables. Report which you prefer and why.</li>
+        <li><strong>Beyond assortativity.</strong> Replace assortativity with another network statistic. Show blocked/unblocked still applies.</li>
+      </ul>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;">
+        <a class="btn" href="https://github.com/timothyfraser/netsci/tree/main/code/07_permutation#your-project-case-study" target="_blank" rel="noopener">Full project questions & how-to →</a>
+        <a class="btn ghost" href="../assignments.html">Project Homework spec →</a>
+        <a class="btn ghost" href="../assignments/sample-report.pdf" target="_blank" rel="noopener">See an example report →</a>
+      </div>
+    </div>
+  </section>
 
     <p class="site-footer">
     <strong>SYSEN 5470 · Permutation Testing on Mobility Networks</strong><br>
@@ -510,6 +526,7 @@
 <script src="../assets/network-bg.js" defer></script>
 <script src="../assets/site.js" defer></script>
 <script src="../assets/notebooklm-bubble.js" defer></script>
+<script src="../assets/case-toc.js" defer></script>
 
 <script>
 // ============================================================

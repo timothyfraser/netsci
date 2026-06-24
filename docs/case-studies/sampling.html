@@ -352,13 +352,7 @@ input[type=range]::-moz-range-thumb {
     <p>You are an analyst studying evacuation flows during a Gulf hurricane. The full network has 40 parishes and hundreds of weighted flow edges — too big to wrangle on your laptop. Pick a sampling strategy, choose a sample size, and watch which features of the network survive. Some strategies preserve geographic coverage. Some preserve triangles. None preserve everything.</p>
   </section>
 
-  <div class="data-cta" style="margin: 0 0 28px; padding: 14px 18px; background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--green-bright); border-radius: var(--radius-lg); display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
-    <span style="font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; color: var(--green-mint);">📦 Need a network for your project case study?</span>
-    <a class="btn" href="https://github.com/timothyfraser/netsci/tree/main/data/projects" target="_blank" rel="noopener" style="margin-left:auto;">Browse the project datasets on GitHub →</a>
-  </div>
-
-
-  <section class="case-intro-video">
+  <section class="case-intro-video" id="video-overview" style="scroll-margin-top: 90px;">
     <div class="ratio">
       <iframe src="https://www.youtube-nocookie.com/embed/NlYxWmYNie8"
               title="Case study intro video"
@@ -369,7 +363,7 @@ input[type=range]::-moz-range-thumb {
     </div>
   </section>
 
-  <section class="case-readings-link">
+  <section class="case-readings-link" id="readings" style="scroll-margin-top: 90px;">
     <a href="../readings.html#big-data">📚 Readings for this case study →</a>
   </section>
 
@@ -381,7 +375,7 @@ input[type=range]::-moz-range-thumb {
     </div>
   </section>
 
-  <aside class="lab-sketchpad-prompt" id="sketchpad" style="scroll-margin-top: 90px;">
+  <aside class="lab-sketchpad-prompt">
     <strong class="label">✏️ Sketchpad — before you click anything</strong>
     Before you click Sample, predict on paper which property each strategy will preserve best. Will ego-centric sampling overestimate density, underestimate it, or leave it about right? Same question for edgewise. Write your three predictions. Then run the samplers and see which guess held.
   </aside>
@@ -469,18 +463,18 @@ input[type=range]::-moz-range-thumb {
     </div>
   </div>
 
-  <div class="sketchpad-block">
+  <div class="sketchpad-block" id="sketchpad" style="scroll-margin-top: 90px;">
     <h3>✏️ Sketchpad Moment — Before You Click</h3>
     <p>Open your sketchpad. Without running the visualization, draw a quick map: <strong>which 5 of these 40 parishes would you measure</strong> if you could only afford 5? Mark them. <strong>Then write down what you expect to lose</strong> — geographic blind spots, missing triangles, biased degree estimates. Now resample with each strategy at 12.5% (5 nodes worth) and see whether the strategies even produce the kind of network you expected.</p>
   </div>
 
-  <div class="intro-block">
+  <div class="intro-block" id="interactive-tutorial" style="scroll-margin-top: 90px;">
     <h3>🧭 Why this matters for an engineer</h3>
     <p>You will rarely be handed the full network you care about. Sensor budgets, API rate limits, IRB constraints, or sheer N² scaling will force you to sample. The decision is not <em>whether</em> to sample but <strong>which features you are willing to lose</strong>. A supply-chain analyst studying disruption cascades needs triangles preserved. A logistics planner needs geographic coverage. A surveyor estimating average ties per actor needs unbiased degree. Each strategy below is optimal for a different question — and disastrous for the others.</p>
     <p><strong>The four strategies in this lab</strong>: (1) <em>Random node</em> — pick nodes uniformly, keep only edges between sampled nodes. (2) <em>Ego-centric</em> — pick seed nodes, snowball one step out to all neighbors. (3) <em>Snowball-2</em> — extend that two hops. (4) <em>Random edge</em> — pick edges uniformly, keep their endpoints. Resample multiple times under each strategy to see how much sampling variability matters.</p>
   </div>
 
-  <h3 class="lc-section-header">📝 Learning Checks</h3>
+  <h3 class="lc-section-header" id="learning-checks" style="scroll-margin-top: 90px;">📝 Learning Checks</h3>
 
   <div class="lc-card">
     <div class="lc-header">
@@ -548,11 +542,33 @@ input[type=range]::-moz-range-thumb {
     </div>
   </div>
 
-  <div class="lab-cta-row">
-    <span class="cta-lede"><strong>Try this on your own data.</strong> Open the Coding Playground, upload your network, and use the same tools.</span>
-    <a href="../playground-r.html" class="btn primary">→ R Playground</a>
-    <a href="../playground-py.html" class="btn ghost">→ Python Playground</a>
-  </div>
+  <section id="code-it" style="scroll-margin-top: 90px; margin: 36px 0 24px; padding: 18px 22px; background: var(--card-bg); border: 1px solid var(--border); border-left: 3px solid var(--green-bright); border-radius: var(--radius-md);">
+    <h3 style="font-family: var(--font-display); font-size: 20px; color: var(--white); margin: 0 0 8px;">⌨️ Code It</h3>
+    <p style="font-family: var(--font-body); font-size: 15px; color: var(--green-mint); line-height: 1.6; margin: 0 0 14px;"><strong style="color: var(--white);">Run the code for this case study yourself.</strong> Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.</p>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <a href="https://github.com/timothyfraser/netsci/tree/main/code/08_sampling" target="_blank" rel="noopener" class="btn" style="background: var(--green-bright); color: var(--black); border-color: var(--green-bright);">→ Code Folder (GitHub)</a>
+      <a href="../playground-r.html" class="btn">→ R Playground</a>
+      <a href="../playground-py.html" class="btn">→ Python Playground</a>
+    </div>
+  </section>
+
+  <section id="project-seeds" style="scroll-margin-top: 90px; margin-top: 8px;">
+    <div class="sec-label">If you chose this case study's methods for your project…</div>
+    <div class="intro-block" style="margin-top: 14px;">
+      <h3 style="font-family: var(--font-display); font-size: 24px; color: var(--white); margin: 0 0 10px; letter-spacing: 0.01em;">Project Seed Questions</h3>
+      <p>Pick one of these questions for your project report — or use them as starting points for your own.</p>
+      <ul style="margin: 6px 0 0; padding-left: 18px; line-height: 1.6;">
+        <li><strong>Strategy showdown.</strong> Sample ego-centrically and edgewise to the same edge count. Report which metric each strategy preserves.</li>
+        <li><strong>Sample-size convergence.</strong> Vary sample size on one strategy. Find where density stabilizes within 5% of the population.</li>
+        <li><strong>Spatial / temporal targeting.</strong> Filter by region or window before sampling. Compare against an unfiltered same-size sample.</li>
+      </ul>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;">
+        <a class="btn" href="https://github.com/timothyfraser/netsci/tree/main/code/08_sampling#your-project-case-study" target="_blank" rel="noopener">Full project questions & how-to →</a>
+        <a class="btn ghost" href="../assignments.html">Project Homework spec →</a>
+        <a class="btn ghost" href="../assignments/sample-report.pdf" target="_blank" rel="noopener">See an example report →</a>
+      </div>
+    </div>
+  </section>
 
     <p class="site-footer">
     <strong>SYSEN 5470 · Big Network Data · Sampling Strategies Lab</strong><br>
@@ -1031,5 +1047,6 @@ window.addEventListener("resize", () => { drawNetwork(); });
 <script src="../assets/network-bg.js" defer></script>
 <script src="../assets/site.js" defer></script>
 <script src="../assets/notebooklm-bubble.js" defer></script>
+<script src="../assets/case-toc.js" defer></script>
 </body>
 </html>

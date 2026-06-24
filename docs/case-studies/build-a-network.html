@@ -458,14 +458,6 @@
     <a href="../readings.html#fundamentals">📚 Readings for this case study →</a>
   </section>
 
-  <div class="intro-block" id="interactive-tutorial" style="scroll-margin-top: 90px;">
-    <h3>🧭 How to use this playground</h3>
-    <p><strong>Three tools, exclusive — pick one at a time:</strong> 🖱 <strong>Select</strong> highlights a node and shows its details, and lets you drag it around when in manual layout. ✏️ <strong>Add Node</strong> drops a node anywhere you click on empty canvas. 🔗 <strong>Add Edge</strong> connects two nodes — click source, then target. 🗑 <strong>Delete</strong> removes the node or edge you click.</p>
-    <p><strong>Three representations, one network:</strong> the node-link diagram, the node and edge tables, and the adjacency matrix are all views of the same data. Edit anywhere and the others update. This is the lab's central concept: <em>a network is its edge list and its node list.</em> The picture is just one way to draw them.</p>
-    <p><strong>Layouts:</strong> <em>Manual</em> lets you drag nodes; <em>Force-directed</em> runs a physics simulation; <em>Circular</em> arranges nodes on a ring; <em>Bipartite / Tripartite / Quadripartite stacks</em> become available when you switch partition mode to k=2, 3, or 4 and assign types in the node table.</p>
-    <p><strong>Undo your way out of any mistake:</strong> ↶ Undo and ↷ Redo live in the toolbar, or use <code>Ctrl/Cmd+Z</code> and <code>Ctrl/Cmd+Shift+Z</code>. Up to 50 steps of history are kept.</p>
-  </div>
-
   <div class="sketchpad-block" id="sketchpad" style="scroll-margin-top: 90px;">
     <h3>✏️ Sketchpad Moment — do this before touching the tool</h3>
     <p><strong>Read this paragraph carefully:</strong></p>
@@ -474,6 +466,14 @@
     <p>First, as an <strong>undirected</strong> network where an edge means "these two parties communicate at all, in either direction." Then again, as a <strong>directed</strong>, possibly multi-edge network where each arrow represents one specific channel (call, email, text, radio broadcast, portal post).</p>
     <p>Then answer in writing under your drawings: <strong>Who would find the first network more useful, and who would find the second more useful?</strong> Name a specific role — not "decision-makers" or "managers," but the actual person whose job depends on this view. What is each role trying to figure out, and which version helps them figure it out?</p>
     <p style="color: var(--grey); font-size: 12.5px;">The bigger lesson: a network is a choice about what counts as a tie. The question you are asking determines which version is "right." There is no universally correct answer.</p>
+  </div>
+
+  <div class="intro-block" id="interactive-tutorial" style="scroll-margin-top: 90px;">
+    <h3>🧭 How to use this playground</h3>
+    <p><strong>Three tools, exclusive — pick one at a time:</strong> 🖱 <strong>Select</strong> highlights a node and shows its details, and lets you drag it around when in manual layout. ✏️ <strong>Add Node</strong> drops a node anywhere you click on empty canvas. 🔗 <strong>Add Edge</strong> connects two nodes — click source, then target. 🗑 <strong>Delete</strong> removes the node or edge you click.</p>
+    <p><strong>Three representations, one network:</strong> the node-link diagram, the node and edge tables, and the adjacency matrix are all views of the same data. Edit anywhere and the others update. This is the lab's central concept: <em>a network is its edge list and its node list.</em> The picture is just one way to draw them.</p>
+    <p><strong>Layouts:</strong> <em>Manual</em> lets you drag nodes; <em>Force-directed</em> runs a physics simulation; <em>Circular</em> arranges nodes on a ring; <em>Bipartite / Tripartite / Quadripartite stacks</em> become available when you switch partition mode to k=2, 3, or 4 and assign types in the node table.</p>
+    <p><strong>Undo your way out of any mistake:</strong> ↶ Undo and ↷ Redo live in the toolbar, or use <code>Ctrl/Cmd+Z</code> and <code>Ctrl/Cmd+Shift+Z</code>. Up to 50 steps of history are kept.</p>
   </div>
 
   <div class="toolbar">
