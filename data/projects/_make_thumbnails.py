@@ -46,6 +46,8 @@ ICONS = {
     "aircraft-supply-chain":   "🛩️",
     "ups-ground-network":      "🚛",
     "ups-package-flow":        "📦",
+    "nyc-realestate-capital":  "🏙️",
+    "nyc-realestate-portfolio": "🏢",
 }
 
 

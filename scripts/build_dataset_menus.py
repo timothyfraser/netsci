@@ -43,6 +43,8 @@ DATA = [
     ("aircraft-supply-chain", "Multi-tier airplane supply chain: materials → systems → programs."),
     ("ups-ground-network", "Truck line-haul: plant→plant lanes (packages, trucks, distance, transit)."),
     ("ups-package-flow", "Package-level parcels: one edge per package, with service & on-time."),
+    ("nyc-realestate-capital", "NYC real estate capital: typed investors & banks → properties, quarter by quarter."),
+    ("nyc-realestate-portfolio", "NYC properties linked by shared equity financing (concentration risk)."),
 ]
 
 GRID = ("display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));"

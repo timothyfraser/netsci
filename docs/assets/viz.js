@@ -537,6 +537,8 @@
     'aircraft-supply-chain':   { weight: 'units_per_year',                    group: 'kind' },
     'ups-ground-network':      { weight: 'packages',                         group: 'kind' },
     'ups-package-flow':        { weight: 'weight_kg',                        group: 'region' },
+    'nyc-realestate-capital':  { weight: 'invested_usd', time: 'quarter',   group: 'kind' },
+    'nyc-realestate-portfolio':{ weight: 'co_investment_usd',               group: 'borough' },
   };
 
   function parseCsvUrl(url, cb, err) {
