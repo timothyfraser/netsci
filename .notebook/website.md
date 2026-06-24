@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-24 19:22 UTC_
+_Auto-generated NotebookLM source · 2026-06-24 19:29 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -4917,7 +4917,25 @@ Item 4 · Project · the real work
 ↗ See an example report (PDF)
 
 
-Project case studies
+Final presentation
+
+🎤
+
+Item 5 · Final presentation
+### A one\-slide virtual poster
+
+
+Design a **single hyper\-visual slide** on your strongest project — one big annotated network, a few supporting charts, key stats, research question up top.
+
+
+* **Lightning talk · 3–5 minutes max.**
+* **Virtual poster session, July 10, 4:00–5:00 PM EST** — details forthcoming. Plan to attend!
+
+
+↗ See an example poster
+
+
+Project Homeworks
 
  The project is a big chunk of your grade. Over three weeks you apply a
  **different case\-study technique** each week to
@@ -5099,26 +5117,6 @@ Office hours \& meetings
 
 ☎️
 Meet the instructor for **three virtual office\-hour sessions** over the term — informal; bring a question, a stuck spot, or a project idea. Counts toward your activities grade; sign up via the course site.
-
-
-Final presentation
-
-🎤
-
-### A one\-slide virtual poster — your strongest project
-
-
-Take your **strongest of the three projects** and design a **single, hyper\-visual slide**: one big annotated network, a few supporting charts, key stats with uncertainty, and your research question as a bold header. Then talk us through it.
-
-
-* **Lightning talk · 3–5 minutes max** — one slide, one question, the headline result.
-* **Virtual poster session** on the **last day of class (Friday)** — a 1–1\.5 hour session, tentatively **4:00–5:30 PM EST**. Details forthcoming.
-* **Attend the session** to see your peers' work and ask questions.
-
-
-↗ See an example poster
-
-The example is built from the sample report — your own poster should report your own numbers.
 
 
 **SYSEN 5470 · Assignments**
