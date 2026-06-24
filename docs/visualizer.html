@@ -531,6 +531,10 @@
           </select>
         </div>
         <div class="color-by-row">
+          <label for="group-col">Group column</label>
+          <select id="group-col" class="viz-select"><option value="">(none — uniform)</option></select>
+        </div>
+        <div class="color-by-row">
           <label for="palette">Palette</label>
           <select id="palette" class="viz-select">
             <option value="viridis" selected>Viridis</option>
@@ -543,7 +547,7 @@
         <div class="toggle-row" data-toggle="labels">Node labels<div class="toggle on"></div></div>
         <div class="toggle-row" data-toggle="edges">Edge weight labels<div class="toggle"></div></div>
         <div class="toggle-row" data-toggle="isolates">Drop isolates<div class="toggle on"></div></div>
-        <div class="toggle-row" data-toggle="drift">Live drift<div class="toggle on"></div></div>
+        <div class="toggle-row" data-toggle="drift">Live drift<div class="toggle"></div></div>
       </div>
 
       <div class="viz-panel">
@@ -631,6 +635,6 @@
 <script src="assets/network-bg.js" defer></script>
 <script src="assets/site.js" defer></script>
 <script src="assets/notebooklm-bubble.js" defer></script>
-<script src="assets/viz.js" defer></script>
+<script src="assets/viz.js?v=20260624" defer></script>
 </body>
 </html>
