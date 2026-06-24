@@ -459,55 +459,55 @@ td.highlight { color: var(--white); font-weight: 500; }
     <div class="lc-card">
       <div class="lc-header">
         <span class="lc-number">LC 01</span>
-        <div class="lc-question">Union Terminal has the highest degree in this network — the most direct connections. Does it also have the highest betweenness centrality?</div>
+        <div class="lc-question">Union Terminal has the highest degree in this network — <span id="lc1-utdeg">—</span> direct connections, more than any other station. Is it also the station with the highest <em>betweenness</em> centrality?</div>
       </div>
       <div class="lc-options" id="lc1-options">
-        <div class="lc-option" onclick="selectOption(1, 'A')"><span class="option-letter">A</span> Yes — highest degree always means highest betweenness, since more connections mean more shortest paths go through you.</div>
-        <div class="lc-option" onclick="selectOption(1, 'B')"><span class="option-letter">B</span> Yes in this case — Union Terminal is both the biggest hub and the highest betweenness node, but that's not always true in other networks.</div>
-        <div class="lc-option" onclick="selectOption(1, 'C')"><span class="option-letter">C</span> No — Ironworks has higher betweenness than Union Terminal, despite having fewer direct connections, because it sits between two clusters that would otherwise be disconnected.</div>
+        <div class="lc-option" onclick="selectOption(1, 'A')"><span class="option-letter">A</span> No — betweenness and degree are unrelated, so the busiest hub is never the top betweenness station.</div>
+        <div class="lc-option" onclick="selectOption(1, 'B')"><span class="option-letter">B</span> Yes — it is at the top for betweenness too, but it is essentially tied with <span id="lc1-2nd">another central station</span>, which reaches that level with fewer direct connections. Degree and betweenness measure different things, even when the main hub scores high on both.</div>
+        <div class="lc-option" onclick="selectOption(1, 'C')"><span class="option-letter">C</span> No — a single low-degree bridge station carries most of the traffic and has the highest betweenness by far.</div>
       </div>
       <div class="lc-actions">
         <button class="btn btn-neutral" onclick="showHint(1)">💡 Hint</button>
         <button class="btn btn-neutral" onclick="showAnswer(1)">🔓 Reveal Answer</button>
       </div>
       <div class="lc-feedback feedback-hint" id="lc1-hint">
-        <strong>Hint:</strong> Look at the color-coding. Which node is teal (bridge color)? Now check: how many direct neighbors does it have vs. Union Terminal? Then try removing <em>each one</em> and watch what happens to the number of connected components.
+        <strong>Hint:</strong> The station table is sorted by betweenness. Look at the top one or two rows, then check their Degree column. Do the highest-betweenness stations also have the most direct connections?
       </div>
       <div class="lc-feedback feedback-answer" id="lc1-answer">
-        ✅ <strong>Answer: C.</strong> Ironworks sits on the narrow corridor connecting the downtown cluster to the northern suburbs. Even though Union Terminal has more direct connections (higher degree), Ironworks has higher betweenness because nearly every shortest path between downtown and the suburbs must pass through it. Degree counts neighbors; betweenness counts how many <em>other pairs</em> depend on you.
+        ✅ <strong>Answer: B.</strong> The two highest-betweenness stations are <span id="lc1-ans-1">—</span> and <span id="lc1-ans-2">—</span> (both ≈ <span id="lc1-ans-val">—</span>). <span id="lc1-ans-2b">—</span> reaches the top of the betweenness ranking with fewer direct connections than Union Terminal. Degree counts your neighbors; betweenness counts how many <em>other pairs</em>' shortest paths run through you — the two often agree on the busiest hub, but they are not the same measure.
       </div>
     </div>
 
     <div class="lc-card">
       <div class="lc-header">
         <span class="lc-number">LC 02</span>
-        <div class="lc-question">Try removing <strong style="color: var(--node-4)">Union Terminal</strong> from the network. Then restore it and remove <strong style="color: var(--node-3)">Ironworks</strong> instead. Which removal causes the number of <em>connected components</em> to increase?</div>
+        <div class="lc-question">The station table is sorted by betweenness. Find <strong style="color: var(--node-3)"><span id="lc2-hb">a high-betweenness station</span></strong> — it ranks #<span id="lc2-hb-rank">—</span> for betweenness (<span id="lc2-hb-val">—</span>). Remove it. Does the number of <em>connected components</em> increase?</div>
       </div>
       <div class="lc-options" id="lc2-options">
-        <div class="lc-option" onclick="selectOption(2, 'A')"><span class="option-letter">A</span> Removing Union Terminal breaks the network into more components, because it has the most connections.</div>
-        <div class="lc-option" onclick="selectOption(2, 'B')"><span class="option-letter">B</span> Removing Ironworks breaks the network into more components, because it's the only path connecting two otherwise separate clusters.</div>
-        <div class="lc-option" onclick="selectOption(2, 'C')"><span class="option-letter">C</span> Both removals break the network into the same number of components, since both are important nodes.</div>
+        <div class="lc-option" onclick="selectOption(2, 'A')"><span class="option-letter">A</span> Yes — a high-betweenness station is always a bridge, so removing it splits the network into more components.</div>
+        <div class="lc-option" onclick="selectOption(2, 'B')"><span class="option-letter">B</span> No — the network stays in one piece (still <span id="lc2-basecomp">—</span> component). High betweenness means heavy through-traffic, not necessarily a single point of failure.</div>
+        <div class="lc-option" onclick="selectOption(2, 'C')"><span class="option-letter">C</span> It only changes if you switch to a circular layout first.</div>
       </div>
       <div class="lc-actions">
         <button class="btn btn-neutral" onclick="showHint(2)">💡 Hint</button>
         <button class="btn btn-neutral" onclick="showAnswer(2)">🔓 Reveal Answer</button>
       </div>
       <div class="lc-feedback feedback-hint" id="lc2-hint">
-        <strong>Hint:</strong> Actually try it. Click Union Terminal → Remove → check Components. Then reset, click Ironworks → Remove → check again. Pay attention to whether 🧩 Components goes from 1 to 2 (or higher).
+        <strong>Hint:</strong> Click the station → Remove → read the 🧩 Components metric. Then reset and try a humbler, lower-betweenness station instead — does <em>it</em> split the network?
       </div>
       <div class="lc-feedback feedback-answer" id="lc2-answer">
-        ✅ <strong>Answer: B.</strong> Removing Ironworks disconnects the northern suburbs from the rest of the network — the Components metric jumps from 1 to 2. Removing Union Terminal increases average path length and raises the diameter significantly, but the network stays connected because the remaining stations can still reach each other via alternate routes. The core insight: <em>a high-betweenness bridge node can be structurally more critical than a high-degree hub.</em>
+        ✅ <strong>Answer: B.</strong> Removing <span id="lc2-ans-hb">—</span> leaves the network connected (<span id="lc2-ans-hbcomp">—</span> component) even though its betweenness is among the highest. Meanwhile <span id="lc2-ans-cut">—</span> — with much lower betweenness (<span id="lc2-ans-cutval">—</span>) — <em>is</em> a true cut point: removing it raises Components to <span id="lc2-ans-cutcomp">—</span>. The lesson: betweenness flags where traffic concentrates; whether a station is a single point of failure (an <em>articulation point</em>) is a separate structural question.
       </div>
     </div>
 
     <div class="lc-card">
       <div class="lc-header">
         <span class="lc-number">LC 03</span>
-        <div class="lc-question">After removing Ironworks (and the network splits into 2 components), what happens to the <em>average path length</em> metric?</div>
+        <div class="lc-question">Now remove <strong style="color: var(--node-4)"><span id="lc3-cut">a true cut point</span></strong> — one of the stations whose removal actually splits the network. What happens to the <em>average path length</em> metric?</div>
       </div>
       <div class="lc-options" id="lc3-options">
         <div class="lc-option" onclick="selectOption(3, 'A')"><span class="option-letter">A</span> Average path length increases by a small amount, since a few paths are now longer.</div>
-        <div class="lc-option" onclick="selectOption(3, 'B')"><span class="option-letter">B</span> Average path length becomes undefined / infinite, because some node pairs can no longer reach each other at all.</div>
+        <div class="lc-option" onclick="selectOption(3, 'B')"><span class="option-letter">B</span> Average path length becomes undefined / infinite, because some station pairs can no longer reach each other at all.</div>
         <div class="lc-option" onclick="selectOption(3, 'C')"><span class="option-letter">C</span> Average path length decreases, because the two smaller components are individually more compact than the full network.</div>
       </div>
       <div class="lc-actions">
@@ -515,10 +515,10 @@ td.highlight { color: var(--white); font-weight: 500; }
         <button class="btn btn-neutral" onclick="showAnswer(3)">🔓 Reveal Answer</button>
       </div>
       <div class="lc-feedback feedback-hint" id="lc3-hint">
-        <strong>Hint:</strong> Think about what "average path length" means: the average shortest path between <em>all pairs</em> of nodes. If two nodes are in disconnected components, what is the "distance" between them? How does that affect the average? Check the metric display.
+        <strong>Hint:</strong> Think about what "average path length" means: the average shortest path between <em>all pairs</em> of stations. If two stations are in disconnected components, what is the "distance" between them? Check the metric display.
       </div>
       <div class="lc-feedback feedback-answer" id="lc3-answer">
-        ✅ <strong>Answer: B.</strong> When the network disconnects, the shortest path between a node in Component 1 and a node in Component 2 is theoretically infinite (there is no path). The tool displays this as "∞ (disconnected)". This is why <em>network efficiency</em> (1 / average path length) collapses to zero when even one bridge node is removed — a common measure in infrastructure resilience analysis. In a supply chain or power grid, this means goods or power can no longer reach certain destinations at all.
+        ✅ <strong>Answer: B.</strong> <span id="lc3-ans-cut">—</span> is an articulation point: removing it breaks the network into <span id="lc3-ans-comp">—</span> components, so some station pairs can no longer reach each other at all. Average path length becomes undefined / infinite (the tool shows "∞ (disconnected)"), and network efficiency (1 / average path length) collapses to zero — the standard signature of a severed network in resilience analysis.
       </div>
     </div>
 
@@ -717,7 +717,9 @@ function computeBetweenness(activeIds, adj) {
   }
   const n = activeIds.length;
   if (n > 2) {
-    const norm = (n - 1) * (n - 2) / 2;
+    // Undirected Brandes double-counts each pair, so divide by (n-1)(n-2)
+    // (not /2) to get a properly normalized betweenness in [0, 1].
+    const norm = (n - 1) * (n - 2);
     activeIds.forEach(id => betw[id] = betw[id] / norm);
   }
   return betw;
@@ -935,7 +937,9 @@ function updateNodeInfoPanel() {
   const m = nodeMetrics[selectedNode] || {};
   const removed = removedNodes.has(selectedNode);
   const n = networkStats.activeCount;
-  const norm = (n - 1) * (n - 2) / 2;
+  // betweenness is normalized by (n-1)(n-2); multiply back to recover the
+  // raw shortest-path count shown below.
+  const norm = (n - 1) * (n - 2);
   const rawBetw = Math.round((m.betweenness || 0) * norm);
 
   const badgeClass = { hub: "badge-hub", bridge: "badge-bridge", normal: "badge-normal" }[node.type] || "badge-normal";
@@ -988,13 +992,15 @@ document.getElementById("btn-reset").onclick = () => {
 
 function toggleTable(id) { document.getElementById(id).classList.toggle("visible"); }
 
+// Correct answers are derived from the live network in wireLearningChecks()
+// so they can never drift out of sync with the data (defaults below are a fallback).
+let LC_CORRECT = { 1: "B", 2: "B", 3: "B" };
 function selectOption(lc, opt) {
   const opts = document.querySelectorAll(`#lc${lc}-options .lc-option`);
-  const correct = { 1: "C", 2: "B", 3: "B" };
   opts.forEach((el, i) => {
     el.classList.remove("correct", "incorrect");
     const letter = String.fromCharCode(65 + i);
-    if (letter === opt) el.classList.add(letter === correct[lc] ? "correct" : "incorrect");
+    if (letter === opt) el.classList.add(letter === LC_CORRECT[lc] ? "correct" : "incorrect");
   });
 }
 function showHint(lc) {
@@ -1005,11 +1011,75 @@ function showAnswer(lc) {
   const el = document.getElementById(`lc${lc}-answer`);
   el.style.display = el.style.display === "block" ? "none" : "block";
   const opts = document.querySelectorAll(`#lc${lc}-options .lc-option`);
-  const correct = { 1: "C", 2: "B", 3: "B" };
   opts.forEach((el, i) => {
     const letter = String.fromCharCode(65 + i);
-    if (letter === correct[lc]) el.classList.add("revealed-correct");
+    if (letter === LC_CORRECT[lc]) el.classList.add("revealed-correct");
   });
+}
+
+// Compute the Learning-Check facts directly from the network and inject them
+// into the question/answer/hint text, so the LCs always match what's rendered.
+function wireLearningChecks() {
+  const labelOf = id => (rawNodes.find(n => n.id === id) || {}).label || id;
+  const pct = v => (v * 100).toFixed(1) + "%";
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const compAfter = id => {
+    const { adj, activeIds } = buildAdjacency(rawNodes, rawEdges, new Set([id]));
+    return computeAllPairsBFS(activeIds, adj).components;
+  };
+
+  // Baseline metrics on the full network (no removals)
+  const { adj, activeIds } = buildAdjacency(rawNodes, rawEdges, new Set());
+  const baseComp = computeAllPairsBFS(activeIds, adj).components;
+  const betw = computeBetweenness(activeIds, adj);
+  const deg  = computeDegree(activeIds, adj);
+  const ids  = rawNodes.map(n => n.id);
+
+  const byBetw = [...ids].sort((a, b) => (betw[b] || 0) - (betw[a] || 0));
+  const byDeg  = [...ids].sort((a, b) => (deg[b]  || 0) - (deg[a]  || 0));
+  const topDeg = byDeg[0];
+  const bw1 = byBetw[0], bw2 = byBetw[1];
+  const artic = ids.filter(id => compAfter(id) > baseComp);
+  const articSet = new Set(artic);
+  const hiBetwNonCut = byBetw.find(id => !articSet.has(id)) || byBetw[byBetw.length - 1];
+  const lowBetwCut   = [...artic].sort((a, b) => (betw[a] || 0) - (betw[b] || 0))[0];
+  const topCut       = [...artic].sort((a, b) => (betw[b] || 0) - (betw[a] || 0))[0];
+  const hbRank = byBetw.indexOf(hiBetwNonCut) + 1;
+
+  // ---- LC 01: does the top-degree hub also top betweenness? ----
+  set("lc1-utdeg", deg[topDeg] || 0);
+  set("lc1-2nd", labelOf(bw2));
+  set("lc1-ans-1", labelOf(bw1));
+  set("lc1-ans-2", labelOf(bw2));
+  set("lc1-ans-2b", labelOf(bw2));
+  set("lc1-ans-val", pct(betw[bw1] || 0));
+  const eps = 1e-9;
+  // B if the highest-degree station is also (tied for) the highest betweenness; else C
+  LC_CORRECT[1] = (Math.abs((betw[topDeg] || 0) - (betw[bw1] || 0)) < eps) ? "B" : "C";
+
+  // ---- LC 02: high betweenness ≠ articulation point ----
+  set("lc2-hb", labelOf(hiBetwNonCut));
+  set("lc2-hb-rank", hbRank);
+  set("lc2-hb-val", pct(betw[hiBetwNonCut] || 0));
+  set("lc2-basecomp", baseComp);
+  set("lc2-ans-hb", labelOf(hiBetwNonCut));
+  set("lc2-ans-hbcomp", compAfter(hiBetwNonCut));
+  if (lowBetwCut) {
+    set("lc2-ans-cut", labelOf(lowBetwCut));
+    set("lc2-ans-cutval", pct(betw[lowBetwCut] || 0));
+    set("lc2-ans-cutcomp", compAfter(lowBetwCut));
+  }
+  // B if removing the high-betweenness non-cut node keeps the component count
+  LC_CORRECT[2] = (compAfter(hiBetwNonCut) <= baseComp) ? "B" : "A";
+
+  // ---- LC 03: removing a real cut point → infinite path length ----
+  if (topCut) {
+    set("lc3-cut", labelOf(topCut));
+    set("lc3-ans-cut", labelOf(topCut));
+    set("lc3-ans-comp", compAfter(topCut));
+    // B if removing the cut point actually disconnects the network
+    LC_CORRECT[3] = (compAfter(topCut) > baseComp) ? "B" : "A";
+  }
 }
 
 function buildEdgeTable() {
@@ -1033,7 +1103,7 @@ window.addEventListener("load", () => {
   baselineStats = { ...networkStats };
   recompute();
   baselineStats = { avgPathLength: networkStats.avgPathLength, diameter: networkStats.diameter, components: networkStats.components };
-  drawNetwork(); updateMetricsUI(); buildEdgeTable();
+  drawNetwork(); updateMetricsUI(); buildEdgeTable(); wireLearningChecks();
 });
 window.addEventListener("resize", () => drawNetwork());
 </script>
