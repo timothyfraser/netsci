@@ -1,0 +1,191 @@
+node_id,label,borough,neighborhood,property_type,building_class,year_built,sqft,stories,appraised_value,occupancy_rate,x,y
+P001,Astoria Mixed Use 1,Queens,Astoria,mixed_use,C,2025,48821,7,30370000,0.838,6.401,9.739
+P002,Williamsburg Industrial 2,Brooklyn,Williamsburg,industrial,A,1990,88849,5,47110000,0.99,6.516,7.631
+P003,Jamaica Multifamily 3,Queens,Jamaica,multifamily,A,1946,51553,1,20620000,0.926,8.606,7.513
+P004,Sunset Park Multifamily 4,Brooklyn,Sunset Park,multifamily,C,1995,140558,7,67910000,0.781,6.144,6.232
+P005,FiDi Office 5,Manhattan,FiDi,office,C,2001,131826,6,180560000,0.843,4.437,7.294
+P006,St. George Office 6,Staten Island,St. George,office,C,1961,153112,5,57710000,0.831,3.905,4.842
+P007,Long Island City Retail 7,Queens,Long Island City,retail,A,1951,44228,8,23270000,0.786,7.123,8.889
+P008,Astoria Retail 8,Queens,Astoria,retail,A,2025,114780,8,63850000,0.954,6.532,9.876
+P009,Hudson Yards Office 9,Manhattan,Hudson Yards,office,A,1989,113653,9,102180000,0.979,4.328,9.063
+P010,DUMBO Multifamily 10,Brooklyn,DUMBO,multifamily,A,1973,115386,11,87350000,0.99,6.069,7.563
+P011,Washington Hts Multifamily 11,Manhattan,Washington Hts,multifamily,C,1951,93955,1,46100000,0.892,5.167,12.382
+P012,Fordham Hotel 12,Bronx,Fordham,hotel,C,1983,60128,3,27110000,0.818,5.627,13.865
+P013,Brownsville Multifamily 13,Brooklyn,Brownsville,multifamily,B,1979,64445,5,21260000,0.643,7.911,6.324
+P014,Flushing Multifamily 14,Queens,Flushing,multifamily,B,1982,78884,6,42780000,0.99,8.712,9.812
+P015,Williamsburg Multifamily 15,Brooklyn,Williamsburg,multifamily,B,2001,258840,12,174910000,0.905,6.578,7.788
+P016,SoHo Retail 16,Manhattan,SoHo,retail,A,2025,117321,2,134750000,0.99,4.788,7.989
+P017,Bushwick Industrial 17,Brooklyn,Bushwick,industrial,C,2000,193225,7,62480000,0.866,6.979,8.156
+P018,FiDi Retail 18,Manhattan,FiDi,retail,A,1936,170822,14,139670000,0.97,4.329,7.294
+P019,Flushing Office 19,Queens,Flushing,office,B,2022,42158,5,32520000,0.811,8.592,9.642
+P020,Bed-Stuy Industrial 20,Brooklyn,Bed-Stuy,industrial,A,1960,102249,9,37600000,0.898,6.609,7.577
+P021,Long Island City Industrial 21,Queens,Long Island City,industrial,B,1968,73438,8,41800000,0.896,6.754,9.252
+P022,Washington Hts Office 22,Manhattan,Washington Hts,office,A,1974,264032,15,189670000,0.798,5.236,12.012
+P023,St. George Multifamily 23,Staten Island,St. George,multifamily,B,1959,37622,1,19940000,0.875,3.584,5.01
+P024,Jamaica Multifamily 24,Queens,Jamaica,multifamily,C,1996,98883,8,37280000,0.848,8.641,7.695
+P025,Astoria Office 25,Queens,Astoria,office,A,1991,88450,4,57990000,0.928,6.579,10.049
+P026,SoHo Retail 26,Manhattan,SoHo,retail,B,1958,67491,3,49440000,0.99,4.836,8.396
+P027,DUMBO Industrial 27,Brooklyn,DUMBO,industrial,B,2025,111461,2,51700000,0.852,5.84,7.636
+P028,Midtown Retail 28,Manhattan,Midtown,retail,A,1961,307547,17,212810000,0.983,4.67,9.367
+P029,Hudson Yards Office 29,Manhattan,Hudson Yards,office,A,1968,98032,6,105200000,0.913,4.365,9.238
+P030,Sunset Park Multifamily 30,Brooklyn,Sunset Park,multifamily,B,2008,40683,2,24700000,0.889,6.163,6.551
+P031,Long Island City Office 31,Queens,Long Island City,office,A,1993,110270,6,76060000,0.929,6.657,8.95
+P032,St. George Office 32,Staten Island,St. George,office,A,1951,29718,5,15640000,0.99,3.827,5.063
+P033,Harlem Retail 33,Manhattan,Harlem,retail,A,1986,75043,1,34280000,0.96,5.201,11.868
+P034,Washington Hts Multifamily 34,Manhattan,Washington Hts,multifamily,C,1982,168823,7,78210000,0.827,5.077,12.147
+P035,DUMBO Multifamily 35,Brooklyn,DUMBO,multifamily,B,2009,156724,10,128970000,0.883,5.944,7.868
+P036,SoHo Industrial 36,Manhattan,SoHo,industrial,B,1945,109119,4,85060000,0.99,4.53,7.666
+P037,Hudson Yards Mixed Use 37,Manhattan,Hudson Yards,mixed_use,A,2007,429427,23,423590000,0.776,4.318,8.985
+P038,DUMBO Office 38,Brooklyn,DUMBO,office,A,2009,137080,5,142750000,0.99,5.84,7.94
+P039,SoHo Office 39,Manhattan,SoHo,office,A,1985,260383,19,267120000,0.959,4.735,8.031
+P040,Brownsville Mixed Use 40,Brooklyn,Brownsville,mixed_use,B,1934,90959,1,30580000,0.933,7.458,6.296
+P041,Williamsburg Mixed Use 41,Brooklyn,Williamsburg,mixed_use,B,1985,122495,4,89090000,0.919,6.527,8.119
+P042,Flushing Mixed Use 42,Queens,Flushing,mixed_use,C,1992,122794,5,73110000,0.837,8.214,9.376
+P043,Sunset Park Multifamily 43,Brooklyn,Sunset Park,multifamily,B,1958,65848,1,34740000,0.856,6.262,6.333
+P044,Harlem Office 44,Manhattan,Harlem,office,A,1996,62413,4,28270000,0.847,5.038,11.434
+P045,Flushing Hotel 45,Queens,Flushing,hotel,C,2016,181333,7,133810000,0.627,8.347,9.407
+P046,Astoria Office 46,Queens,Astoria,office,B,1955,262668,11,192870000,0.99,6.645,10.228
+P047,Washington Hts Industrial 47,Manhattan,Washington Hts,industrial,A,1937,66705,6,20250000,0.792,5.043,11.981
+P048,Upper East Side Multifamily 48,Manhattan,Upper East Side,multifamily,A,2025,92155,7,68040000,0.978,5.481,9.797
+P049,Sunset Park Office 49,Brooklyn,Sunset Park,office,C,1987,50759,1,31430000,0.77,6.228,6.243
+P050,Hudson Yards Office 50,Manhattan,Hudson Yards,office,A,1985,264498,16,275840000,0.87,4.204,8.926
+P051,SoHo Retail 51,Manhattan,SoHo,retail,A,1934,76703,1,100450000,0.893,4.744,8.148
+P052,Midtown Mixed Use 52,Manhattan,Midtown,mixed_use,A,2012,74556,10,52550000,0.99,5.031,9.139
+P053,Astoria Office 53,Queens,Astoria,office,A,1941,131613,7,86340000,0.99,6.9,9.701
+P054,Brownsville Office 54,Brooklyn,Brownsville,office,C,1952,85110,1,42950000,0.786,7.597,6.438
+P055,Sunset Park Multifamily 55,Brooklyn,Sunset Park,multifamily,B,1936,81732,1,44290000,0.798,6.241,6.249
+P056,Astoria Multifamily 56,Queens,Astoria,multifamily,A,2007,50090,4,47070000,0.918,6.57,10.047
+P057,DUMBO Multifamily 57,Brooklyn,DUMBO,multifamily,B,1979,215747,11,151880000,0.868,6.142,7.97
+P058,Bushwick Retail 58,Brooklyn,Bushwick,retail,B,1991,73395,2,45880000,0.638,6.959,7.682
+P059,Hudson Yards Office 59,Manhattan,Hudson Yards,office,A,1991,81017,4,77020000,0.829,4.489,8.824
+P060,FiDi Office 60,Manhattan,FiDi,office,A,1990,166587,6,162360000,0.99,4.698,7.362
+P061,Brownsville Multifamily 61,Brooklyn,Brownsville,multifamily,C,1993,33198,5,9740000,0.809,7.189,6.331
+P062,DUMBO Retail 62,Brooklyn,DUMBO,retail,B,1999,239567,15,142800000,0.799,6.01,7.799
+P063,Bushwick Office 63,Brooklyn,Bushwick,office,A,1987,104304,1,76900000,0.701,7.28,8.314
+P064,Long Island City Retail 64,Queens,Long Island City,retail,B,1992,42027,1,38540000,0.947,6.439,9.102
+P065,Bed-Stuy Mixed Use 65,Brooklyn,Bed-Stuy,mixed_use,C,2025,53769,6,37400000,0.768,6.915,7.68
+P066,Bushwick Office 66,Brooklyn,Bushwick,office,A,2002,124702,7,84530000,0.685,7.0,7.87
+P067,Bushwick Retail 67,Brooklyn,Bushwick,retail,C,2018,215452,13,144700000,0.864,6.903,8.171
+P068,Upper East Side Multifamily 68,Manhattan,Upper East Side,multifamily,A,1993,64130,4,73390000,0.99,5.445,10.108
+P069,Midtown Multifamily 69,Manhattan,Midtown,multifamily,A,1993,75719,5,53110000,0.986,4.678,9.178
+P070,Williamsburg Retail 70,Brooklyn,Williamsburg,retail,A,2016,183801,11,106900000,0.79,6.468,8.232
+P071,SoHo Retail 71,Manhattan,SoHo,retail,A,1964,120799,5,103960000,0.913,4.846,8.109
+P072,Williamsburg Office 72,Brooklyn,Williamsburg,office,B,1979,126465,6,108890000,0.784,6.659,7.791
+P073,Flushing Multifamily 73,Queens,Flushing,multifamily,A,1985,36646,1,20670000,0.989,8.471,9.881
+P074,SoHo Office 74,Manhattan,SoHo,office,B,1977,106734,11,100840000,0.99,4.74,8.543
+P075,Midtown Multifamily 75,Manhattan,Midtown,multifamily,A,1994,312651,20,293310000,0.99,4.873,9.374
+P076,Upper East Side Mixed Use 76,Manhattan,Upper East Side,mixed_use,A,2018,96290,6,88020000,0.925,5.476,9.751
+P077,Upper East Side Mixed Use 77,Manhattan,Upper East Side,mixed_use,B,1957,75281,7,66450000,0.855,5.158,10.027
+P078,Brownsville Multifamily 78,Brooklyn,Brownsville,multifamily,B,1982,70877,1,28490000,0.825,7.247,6.598
+P079,Bushwick Multifamily 79,Brooklyn,Bushwick,multifamily,C,1982,86188,1,56670000,0.752,6.903,8.152
+P080,Astoria Multifamily 80,Queens,Astoria,multifamily,C,1920,77989,3,41080000,0.82,6.607,9.844
+P081,Brownsville Mixed Use 81,Brooklyn,Brownsville,mixed_use,B,1952,51740,3,14540000,0.857,7.573,6.886
+P082,Williamsburg Mixed Use 82,Brooklyn,Williamsburg,mixed_use,A,1984,303200,15,229800000,0.791,6.471,8.1
+P083,Flushing Office 83,Queens,Flushing,office,C,2014,152314,13,84840000,0.921,8.061,9.543
+P084,Hudson Yards Mixed Use 84,Manhattan,Hudson Yards,mixed_use,A,1981,135891,9,172990000,0.915,4.258,9.014
+P085,Midtown Office 85,Manhattan,Midtown,office,B,2025,162781,6,173860000,0.99,4.984,9.369
+P086,FiDi Office 86,Manhattan,FiDi,office,A,2018,140057,7,169840000,0.958,4.76,6.872
+P087,Long Island City Industrial 87,Queens,Long Island City,industrial,A,1944,17185,1,9160000,0.779,6.847,9.013
+P088,DUMBO Retail 88,Brooklyn,DUMBO,retail,A,2003,115270,6,86380000,0.811,5.994,7.454
+P089,Hudson Yards Multifamily 89,Manhattan,Hudson Yards,multifamily,A,2020,88336,6,72530000,0.921,4.411,8.82
+P090,DUMBO Industrial 90,Brooklyn,DUMBO,industrial,A,1981,200453,7,117090000,0.958,6.041,7.832
+P091,Hudson Yards Mixed Use 91,Manhattan,Hudson Yards,mixed_use,B,1959,175604,12,150860000,0.884,4.566,9.323
+P092,Sunset Park Industrial 92,Brooklyn,Sunset Park,industrial,C,1990,80590,7,28640000,0.863,6.089,6.069
+P093,DUMBO Multifamily 93,Brooklyn,DUMBO,multifamily,A,1992,158412,11,137680000,0.874,6.068,7.478
+P094,Washington Hts Office 94,Manhattan,Washington Hts,office,A,1936,64191,3,28750000,0.849,4.939,12.412
+P095,Upper East Side Retail 95,Manhattan,Upper East Side,retail,A,2005,144065,1,77540000,0.888,5.406,10.099
+P096,Bed-Stuy Multifamily 96,Brooklyn,Bed-Stuy,multifamily,B,1988,161751,9,95320000,0.807,6.978,7.5
+P097,Washington Hts Mixed Use 97,Manhattan,Washington Hts,mixed_use,B,1955,115693,4,64470000,0.854,4.845,12.203
+P098,FiDi Mixed Use 98,Manhattan,FiDi,mixed_use,B,2007,78134,12,67190000,0.94,4.452,7.665
+P099,FiDi Retail 99,Manhattan,FiDi,retail,A,1998,154753,7,121500000,0.99,4.904,7.284
+P100,St. George Office 100,Staten Island,St. George,office,C,1992,49021,1,26820000,0.828,3.959,4.713
+P101,South Bronx Office 101,Bronx,South Bronx,office,C,2008,79968,5,28000000,0.959,5.673,12.978
+P102,Sunset Park Multifamily 102,Brooklyn,Sunset Park,multifamily,A,1970,89966,4,33850000,0.916,5.993,6.202
+P103,Upper East Side Retail 103,Manhattan,Upper East Side,retail,C,1977,134616,9,104620000,0.99,5.575,10.324
+P104,St. George Multifamily 104,Staten Island,St. George,multifamily,C,1996,113896,2,45100000,0.917,3.857,5.235
+P105,Astoria Multifamily 105,Queens,Astoria,multifamily,B,1978,203556,12,119300000,0.886,6.804,9.835
+P106,Long Island City Multifamily 106,Queens,Long Island City,multifamily,A,2001,64970,3,39650000,0.872,6.551,9.419
+P107,DUMBO Office 107,Brooklyn,DUMBO,office,B,1938,102135,10,86300000,0.843,5.97,7.932
+P108,Upper East Side Office 108,Manhattan,Upper East Side,office,B,1992,125318,1,162590000,0.692,5.302,10.103
+P109,FiDi Office 109,Manhattan,FiDi,office,A,1985,159618,12,187730000,0.947,4.749,7.299
+P110,South Bronx Multifamily 110,Bronx,South Bronx,multifamily,C,1974,75456,1,16430000,0.673,5.635,12.854
+P111,DUMBO Industrial 111,Brooklyn,DUMBO,industrial,B,1970,70503,3,52590000,0.87,5.793,7.357
+P112,SoHo Multifamily 112,Manhattan,SoHo,multifamily,B,1994,78360,5,59520000,0.948,4.875,7.962
+P113,Upper East Side Retail 113,Manhattan,Upper East Side,retail,A,2011,82445,6,50620000,0.892,5.51,10.075
+P114,Bushwick Multifamily 114,Brooklyn,Bushwick,multifamily,A,1976,150204,5,117940000,0.99,6.933,8.367
+P115,Hudson Yards Office 115,Manhattan,Hudson Yards,office,A,1983,66087,2,64460000,0.867,4.172,8.842
+P116,Flushing Multifamily 116,Queens,Flushing,multifamily,A,2007,107877,1,60090000,0.797,8.152,9.274
+P117,Long Island City Retail 117,Queens,Long Island City,retail,B,2024,58590,6,49040000,0.936,6.438,9.194
+P118,Long Island City Multifamily 118,Queens,Long Island City,multifamily,B,2004,79831,1,50500000,0.783,6.616,9.159
+P119,Williamsburg Retail 119,Brooklyn,Williamsburg,retail,A,2005,109676,3,98200000,0.99,6.703,7.904
+P120,Bed-Stuy Multifamily 120,Brooklyn,Bed-Stuy,multifamily,C,1972,92410,8,48380000,0.704,7.073,7.457
+P121,Bushwick Retail 121,Brooklyn,Bushwick,retail,A,1967,63152,2,33030000,0.99,7.28,8.118
+P122,Brownsville Office 122,Brooklyn,Brownsville,office,B,1973,58012,5,20250000,0.885,7.707,6.877
+P123,FiDi Mixed Use 123,Manhattan,FiDi,mixed_use,A,2005,104456,11,93580000,0.869,4.765,7.361
+P124,Williamsburg Industrial 124,Brooklyn,Williamsburg,industrial,A,1937,36559,1,18440000,0.923,6.396,8.361
+P125,Midtown Retail 125,Manhattan,Midtown,retail,B,1985,141613,10,80550000,0.961,4.716,9.081
+P126,DUMBO Office 126,Brooklyn,DUMBO,office,A,1993,71205,6,39890000,0.973,5.955,7.253
+P127,Harlem Retail 127,Manhattan,Harlem,retail,B,1909,160243,7,62930000,0.934,5.273,11.502
+P128,Hudson Yards Mixed Use 128,Manhattan,Hudson Yards,mixed_use,A,2006,115673,5,130010000,0.856,4.296,8.719
+P129,FiDi Office 129,Manhattan,FiDi,office,A,2003,204379,6,195290000,0.99,4.507,7.558
+P130,Bushwick Multifamily 130,Brooklyn,Bushwick,multifamily,A,2025,111522,6,69600000,0.99,6.956,8.177
+P131,Hudson Yards Office 131,Manhattan,Hudson Yards,office,B,1969,98384,8,103680000,0.859,4.28,8.954
+P132,South Bronx Mixed Use 132,Bronx,South Bronx,mixed_use,C,1983,37423,1,14460000,0.778,5.626,12.854
+P133,Bushwick Multifamily 133,Brooklyn,Bushwick,multifamily,A,1938,143509,5,74310000,0.901,7.339,8.324
+P134,Harlem Retail 134,Manhattan,Harlem,retail,C,2003,40563,3,14760000,0.851,5.3,11.432
+P135,Bushwick Mixed Use 135,Brooklyn,Bushwick,mixed_use,B,2015,189625,5,104250000,0.847,7.117,8.325
+P136,Midtown Office 136,Manhattan,Midtown,office,B,1973,153921,10,202850000,0.881,4.663,9.535
+P137,Fordham Office 137,Bronx,Fordham,office,C,1991,69476,3,39140000,0.796,5.512,13.495
+P138,DUMBO Retail 138,Brooklyn,DUMBO,retail,B,2009,131131,14,105260000,0.869,5.718,7.927
+P139,Astoria Multifamily 139,Queens,Astoria,multifamily,A,2025,63191,3,46060000,0.879,6.562,9.97
+P140,FiDi Multifamily 140,Manhattan,FiDi,multifamily,A,1972,137951,10,138340000,0.99,4.651,7.233
+P141,DUMBO Office 141,Brooklyn,DUMBO,office,A,1998,50933,1,41690000,0.616,6.202,7.58
+P142,DUMBO Office 142,Brooklyn,DUMBO,office,B,2025,57564,8,53730000,0.99,5.945,7.593
+P143,Fordham Office 143,Bronx,Fordham,office,C,1974,98218,12,58250000,0.817,5.616,13.921
+P144,Bushwick Retail 144,Brooklyn,Bushwick,retail,A,1964,146896,8,84040000,0.962,6.868,7.855
+P145,DUMBO Office 145,Brooklyn,DUMBO,office,A,1995,47676,2,42140000,0.685,5.971,8.077
+P146,Upper East Side Mixed Use 146,Manhattan,Upper East Side,mixed_use,A,2025,101180,7,97350000,0.935,5.54,9.954
+P147,Harlem Multifamily 147,Manhattan,Harlem,multifamily,A,1990,43542,1,19920000,0.851,5.007,11.336
+P148,Downtown Bklyn Multifamily 148,Brooklyn,Downtown Bklyn,multifamily,B,1959,123179,5,68110000,0.835,6.439,7.259
+P149,Williamsburg Multifamily 149,Brooklyn,Williamsburg,multifamily,B,1935,138879,8,141830000,0.912,6.499,8.161
+P150,Midtown Multifamily 150,Manhattan,Midtown,multifamily,B,2002,56096,1,62400000,0.904,4.772,8.705
+P151,Flushing Mixed Use 151,Queens,Flushing,mixed_use,B,1973,84610,1,63490000,0.851,8.511,9.7
+P152,South Bronx Retail 152,Bronx,South Bronx,retail,A,1944,116627,1,31550000,0.89,5.533,13.173
+P153,Hudson Yards Mixed Use 153,Manhattan,Hudson Yards,mixed_use,A,2002,194845,5,225950000,0.908,4.155,9.099
+P154,Bushwick Office 154,Brooklyn,Bushwick,office,C,1964,41459,1,24750000,0.726,6.969,8.239
+P155,FiDi Industrial 155,Manhattan,FiDi,industrial,A,1985,117136,4,60140000,0.814,4.586,7.191
+P156,Brownsville Multifamily 156,Brooklyn,Brownsville,multifamily,B,1933,104491,6,35430000,0.853,7.338,6.373
+P157,Upper East Side Office 157,Manhattan,Upper East Side,office,A,1937,205744,13,242690000,0.909,5.273,10.079
+P158,Brownsville Industrial 158,Brooklyn,Brownsville,industrial,B,1999,22467,1,5110000,0.68,7.569,6.469
+P159,Long Island City Hotel 159,Queens,Long Island City,hotel,C,1997,133555,7,148690000,0.788,6.804,9.328
+P160,Astoria Office 160,Queens,Astoria,office,A,2021,82770,3,60340000,0.854,6.652,9.855
+P161,FiDi Office 161,Manhattan,FiDi,office,A,1978,131045,8,216350000,0.751,4.563,7.504
+P162,South Bronx Retail 162,Bronx,South Bronx,retail,C,2005,104498,11,41190000,0.581,5.768,13.094
+P163,SoHo Multifamily 163,Manhattan,SoHo,multifamily,A,2000,85187,1,78090000,0.99,4.975,8.201
+P164,Midtown Multifamily 164,Manhattan,Midtown,multifamily,B,2010,62345,1,50400000,0.99,5.01,9.179
+P165,Bushwick Retail 165,Brooklyn,Bushwick,retail,C,1965,83006,3,54970000,0.917,7.057,7.818
+P166,Washington Hts Industrial 166,Manhattan,Washington Hts,industrial,C,1999,34203,2,17220000,0.734,5.324,12.514
+P167,Flushing Office 167,Queens,Flushing,office,A,1984,103983,1,60740000,0.859,8.424,9.681
+P168,Astoria Industrial 168,Queens,Astoria,industrial,B,2011,43151,1,16220000,0.848,6.415,9.803
+P169,Harlem Multifamily 169,Manhattan,Harlem,multifamily,C,1998,62833,6,33590000,0.839,5.104,11.117
+P170,Fordham Mixed Use 170,Bronx,Fordham,mixed_use,B,1944,58341,1,22310000,0.99,5.637,13.397
+P171,Upper East Side Retail 171,Manhattan,Upper East Side,retail,A,1934,132020,8,146270000,0.879,5.584,10.07
+P172,Downtown Bklyn Industrial 172,Brooklyn,Downtown Bklyn,industrial,A,2005,33594,1,13400000,0.905,6.105,7.309
+P173,Upper East Side Office 173,Manhattan,Upper East Side,office,A,1958,207660,12,279510000,0.99,5.231,10.005
+P174,Fordham Industrial 174,Bronx,Fordham,industrial,C,1974,77556,3,20680000,0.684,5.765,13.354
+P175,Hudson Yards Office 175,Manhattan,Hudson Yards,office,A,1999,84975,1,110150000,0.983,4.421,8.861
+P176,Midtown Office 176,Manhattan,Midtown,office,A,1984,152193,6,133730000,0.873,4.898,9.398
+P177,Williamsburg Multifamily 177,Brooklyn,Williamsburg,multifamily,B,2025,254478,12,183710000,0.781,6.287,7.81
+P178,St. George Multifamily 178,Staten Island,St. George,multifamily,A,1948,77952,3,31880000,0.99,4.013,4.767
+P179,Jamaica Multifamily 179,Queens,Jamaica,multifamily,B,1985,137551,12,60690000,0.722,8.746,7.617
+P180,Long Island City Multifamily 180,Queens,Long Island City,multifamily,A,2007,65139,5,55550000,0.736,6.783,8.801
+P181,Jamaica Office 181,Queens,Jamaica,office,C,1970,90122,5,41520000,0.802,8.499,7.52
+P182,Jamaica Retail 182,Queens,Jamaica,retail,B,1970,98049,7,40230000,0.642,8.6,7.607
+P183,Downtown Bklyn Mixed Use 183,Brooklyn,Downtown Bklyn,mixed_use,A,1937,39481,1,28320000,0.909,6.32,7.368
+P184,Harlem Multifamily 184,Manhattan,Harlem,multifamily,C,1927,75931,2,48360000,0.918,5.321,11.555
+P185,Astoria Hotel 185,Queens,Astoria,hotel,B,1980,62438,5,46330000,0.764,6.704,9.916
+P186,Brownsville Retail 186,Brooklyn,Brownsville,retail,B,2013,63745,6,19220000,0.819,7.33,6.364
+P187,Washington Hts Office 187,Manhattan,Washington Hts,office,A,1950,83813,5,50810000,0.78,4.946,12.421
+P188,FiDi Office 188,Manhattan,FiDi,office,B,1991,89146,7,93490000,0.789,4.505,7.654
+P189,Long Island City Industrial 189,Queens,Long Island City,industrial,A,1993,123123,8,68010000,0.858,6.757,8.999
+P190,Upper East Side Industrial 190,Manhattan,Upper East Side,industrial,A,1967,67698,8,44750000,0.99,5.107,10.23
