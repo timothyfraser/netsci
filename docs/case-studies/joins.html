@@ -532,13 +532,7 @@
     <div class="synthetic-flag">⚠ Synthetic supply-chain data — illustrative, not from any real company</div>
   </section>
 
-  <div class="data-cta" style="margin: 0 0 28px; padding: 14px 18px; background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--green-bright); border-radius: var(--radius-lg); display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
-    <span style="font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; color: var(--green-mint);">📦 Need a network for your project case study?</span>
-    <a class="btn" href="https://github.com/timothyfraser/netsci/tree/main/data/projects" target="_blank" rel="noopener" style="margin-left:auto;">Browse the project datasets on GitHub →</a>
-  </div>
-
-
-  <section class="case-intro-video">
+  <section class="case-intro-video" id="video-overview" style="scroll-margin-top: 90px;">
     <div class="ratio">
       <iframe src="https://www.youtube-nocookie.com/embed/uGCnt2YV0lc"
               title="Case study intro video"
@@ -549,7 +543,7 @@
     </div>
   </section>
 
-  <section class="case-readings-link">
+  <section class="case-readings-link" id="readings" style="scroll-margin-top: 90px;">
     <a href="../readings.html#big-data">📚 Readings for this case study →</a>
   </section>
 
@@ -561,7 +555,7 @@
     </div>
   </section>
 
-  <aside class="lab-sketchpad-prompt" id="sketchpad" style="scroll-margin-top: 90px;">
+  <aside class="lab-sketchpad-prompt">
     <strong class="label">✏️ Sketchpad — before you click anything</strong>
     Before you touch the builder, sketch the join on paper. List the columns in <code>factories</code> and the columns in <code>shipments</code>. Draw arrows between the columns that have to match for the join. Where do you predict a forgotten rename would cause a silent collision? Mark it. Then build the pipeline and check whether your prediction held.
   </aside>
@@ -598,7 +592,7 @@
     <div class="builder-callout"><strong>Note the asymmetry:</strong> edges have <code>from_id</code> and <code>to_id</code>, but the node table calls the same field <code>node_id</code>. That mismatch is the first thing every real network join has to solve, in either language.</div>
   </div>
 
-  <div class="sketchpad-card">
+  <div class="sketchpad-card" id="sketchpad" style="scroll-margin-top: 90px;">
     <h3><span class="sketchpad-icon">✏️</span>Sketchpad Moment (do this before touching the builder)</h3>
     <p>On your physical sketchpad:</p>
     <ol>
@@ -610,7 +604,7 @@
     <p style="margin-top: 12px; font-size: 13.5px; font-family: var(--font-body); color: var(--grey);">Then come back here, pick your language, and verify your sketch with the builder. Sketches first, syntax second.</p>
   </div>
 
-  <div class="card">
+  <div class="card" id="interactive-tutorial" style="scroll-margin-top: 90px;">
     <h3>🛠 Code builder — <span class="h3-accent">drag chips into the pipeline; drag placed chips to reorder</span><span class="builder-lang-indicator lang-r" id="builder-lang-badge">R · dplyr</span></h3>
 
     <div class="builder-container">
@@ -664,7 +658,7 @@
     <textarea id="mermaid-source" style="display: none;"></textarea>
   </div>
 
-  <div class="lc-card">
+  <div class="lc-card" id="learning-checks" style="scroll-margin-top: 90px;">
     <div class="lc-header">
       <span class="lc-number">LC 01</span>
       <div class="lc-question">Build a pipeline that joins the <code>edges</code> table to the <code>nodes</code> table to get the <strong>origin factory's tier</strong> onto each shipment, then <strong>rename the joined columns</strong> with an <code>_origin</code> suffix so they're easy to reference. Then count how many shipment rows originate from <strong>Tier 3</strong> factories. (You'll find that without the rename step, your filter chips won't have a column to reference!)</div>
@@ -718,11 +712,33 @@
     <div class="lc-feedback feedback-answer" id="lc3-answer"></div>
   </div>
 
-  <div class="lab-cta-row">
-    <span class="cta-lede"><strong>Try this on your own data.</strong> Open the Coding Playground, upload your network, and use the same tools.</span>
-    <a href="../playground-r.html" class="btn primary">→ R Playground</a>
-    <a href="../playground-py.html" class="btn ghost">→ Python Playground</a>
-  </div>
+  <section id="code-it" style="scroll-margin-top: 90px; margin: 36px 0 24px; padding: 18px 22px; background: var(--card-bg); border: 1px solid var(--border); border-left: 3px solid var(--green-bright); border-radius: var(--radius-md);">
+    <h3 style="font-family: var(--font-display); font-size: 20px; color: var(--white); margin: 0 0 8px;">⌨️ Code It</h3>
+    <p style="font-family: var(--font-body); font-size: 15px; color: var(--green-mint); line-height: 1.6; margin: 0 0 14px;"><strong style="color: var(--white);">Run the code for this case study yourself.</strong> Answer the coding lab question(s) at the end and submit on Canvas together with your Learning Checks. Use your preferred software, or the R / Python playground.</p>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <a href="https://github.com/timothyfraser/netsci/tree/main/code/02_joins" target="_blank" rel="noopener" class="btn" style="background: var(--green-bright); color: var(--black); border-color: var(--green-bright);">→ Code Folder (GitHub)</a>
+      <a href="../playground-r.html" class="btn">→ R Playground</a>
+      <a href="../playground-py.html" class="btn">→ Python Playground</a>
+    </div>
+  </section>
+
+  <section id="project-seeds" style="scroll-margin-top: 90px; margin-top: 8px;">
+    <div class="sec-label">If you chose this case study's methods for your project…</div>
+    <div class="intro-block" style="margin-top: 14px;">
+      <h3 style="font-family: var(--font-display); font-size: 24px; color: var(--white); margin: 0 0 10px; letter-spacing: 0.01em;">Project Seed Questions</h3>
+      <p>Pick one of these questions for your project report — or use them as starting points for your own.</p>
+      <ul style="margin: 6px 0 0; padding-left: 18px; line-height: 1.6;">
+        <li><strong>Attribute homophily on edges.</strong> Double-node-join a categorical attribute. Report within-group vs cross-group edge weight as a heatmap.</li>
+        <li><strong>Aggregate-before-join vs join-before-aggregate.</strong> Run both orderings. Report wall-clock time and peak memory.</li>
+        <li><strong>Silent collision audit.</strong> Join two attributes from the same node table. Show the failure mode without renames, then the fix.</li>
+      </ul>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;">
+        <a class="btn" href="https://github.com/timothyfraser/netsci/tree/main/code/02_joins#your-project-case-study" target="_blank" rel="noopener">Full project questions & how-to →</a>
+        <a class="btn ghost" href="../assignments.html">Project Homework spec →</a>
+        <a class="btn ghost" href="../assignments/sample-report.pdf" target="_blank" rel="noopener">See an example report →</a>
+      </div>
+    </div>
+  </section>
 
     <p class="site-footer">
     <strong>SYSEN 5470 · Big Network Data · Joins Builder Lab</strong><br>
@@ -1656,5 +1672,6 @@ renderLCContent();
 <script src="../assets/network-bg.js" defer></script>
 <script src="../assets/site.js" defer></script>
 <script src="../assets/notebooklm-bubble.js" defer></script>
+<script src="../assets/case-toc.js" defer></script>
 </body>
 </html>
