@@ -33,6 +33,8 @@ WASM virtual filesystem when you pick a sample from the loader dropdown.
 | `aircraft-supply-chain` | 300 | 624 | **Project dataset.** Directed multi-tier aircraft supply chain (material→component→system→integrator→program), weighted by `units_per_year`. |
 | `ups-ground-network` | 149 | 347 | **Project dataset.** Directed UPS-style truck line-haul; plant→plant lanes weighted by `packages`, with `trucks`, `distance_km`, `transit_hours`. |
 | `ups-package-flow` | 149 | 5,200 | **Project dataset.** Package-level companion; one directed edge per parcel weighted by `weight_kg`, with `service_level`, `distance_km`, `transit_hours`, `on_time`. |
+| `nyc-realestate-capital` | 270 | 5,044 | **Project dataset.** Directed, temporal NYC CRE capital flows; typed investors + banks → properties, one row per provider-property-quarter (`2024Q1`–`2026Q4`) with `invested_usd` vs `pledged_usd`. |
+| `nyc-realestate-portfolio` | 190 | 1,155 | **Project dataset.** Undirected companion projection; properties linked by shared equity financing, weighted by `co_investment_usd` (shares property ids with `nyc-realestate-capital`). |
 
 All `*-project` datasets above are mirrored from `data/projects/<name>/` by
 `data/projects/_sync_to_playground.py`.
