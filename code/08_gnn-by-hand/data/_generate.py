@@ -9,7 +9,7 @@ Two networks are produced:
 Both are deterministic.
 
 Run:
-    python code/10_gnn-by-hand/data/_generate.py
+    python code/08_gnn-by-hand/data/_generate.py
 """
 from __future__ import annotations
 

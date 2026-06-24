@@ -12,7 +12,7 @@ Poisson edge weights. APL of the unweighted graph is ~5; weighted APL
 target.
 
 Run:
-    python code/09_counterfactual/data/_generate.py
+    python code/07_counterfactual/data/_generate.py
 """
 from __future__ import annotations
 

@@ -72,8 +72,8 @@ just a couple of matrix multiplies that the shared `functions.py` performs.
 ## How to run
 
 ```bash
-python code/11_gnn-xgboost/example.py    # full pipeline
-Rscript code/11_gnn-xgboost/example.R    # raw + lag variant
+python code/09_gnn-xgboost/example.py    # full pipeline
+Rscript code/09_gnn-xgboost/example.R    # raw + lag variant
 ```
 
 ## Learning check
