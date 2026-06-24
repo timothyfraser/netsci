@@ -2,7 +2,7 @@
   "meta": {
     "course_id": "87652",
     "base_url": "https://canvas.cornell.edu",
-    "last_pull": "2026-06-23T18:41:42Z",
+    "last_pull": "2026-06-24T20:02:45Z",
     "note": "Edit due_at (ISO 8601, e.g. 2026-06-29T13:00:00Z), points_possible, and group weight/drop_lowest here, then run: sync_contract.py --apply. Or edit on Canvas and run --pull. Set due_at to null to leave a date unset."
   },
   "assignment_groups": [
@@ -103,18 +103,18 @@
       ]
     },
     {
-      "key": "drawing-permutation",
-      "name": "Drawing — Network Statistics",
+      "key": "drawing-joins",
+      "name": "Drawing — Joins",
       "group": "drawings",
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 1,
       "due_at": "2026-07-02T13:00:00Z",
-      "canvas_id": 968701,
-      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968701",
+      "canvas_id": 968719,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968719",
       "overrides": [
         {
-          "canvas_override_id": 171686,
+          "canvas_override_id": 171695,
           "section_id": 139822,
           "section_name": "SYSEN-5940",
           "due_at": "2026-07-02T13:00:00Z"
@@ -122,18 +122,56 @@
       ]
     },
     {
-      "key": "lc-permutation",
-      "name": "Learning Checks — Network Statistics",
+      "key": "lc-joins",
+      "name": "Learning Checks — Joins",
       "group": "casestudies",
       "grading_type": "pass_fail",
       "points_possible": 1,
       "week": 1,
       "due_at": "2026-07-02T13:00:00Z",
-      "canvas_id": 968702,
-      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968702",
+      "canvas_id": 968720,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968720",
       "overrides": [
         {
-          "canvas_override_id": 171682,
+          "canvas_override_id": 171696,
+          "section_id": 139822,
+          "section_name": "SYSEN-5940",
+          "due_at": "2026-07-02T13:00:00Z"
+        }
+      ]
+    },
+    {
+      "key": "drawing-aggregation",
+      "name": "Drawing — Aggregation",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 1,
+      "due_at": "2026-07-02T13:00:00Z",
+      "canvas_id": 968711,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968711",
+      "overrides": [
+        {
+          "canvas_override_id": 171697,
+          "section_id": 139822,
+          "section_name": "SYSEN-5940",
+          "due_at": "2026-07-02T13:00:00Z"
+        }
+      ]
+    },
+    {
+      "key": "lc-aggregation",
+      "name": "Learning Checks — Aggregation",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 1,
+      "due_at": "2026-07-02T13:00:00Z",
+      "canvas_id": 968712,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968712",
+      "overrides": [
+        {
+          "canvas_override_id": 171698,
           "section_id": 139822,
           "section_name": "SYSEN-5940",
           "due_at": "2026-07-02T13:00:00Z"
@@ -203,6 +241,30 @@
       "overrides": []
     },
     {
+      "key": "drawing-permutation",
+      "name": "Drawing — Network Statistics",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968701,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968701",
+      "overrides": []
+    },
+    {
+      "key": "lc-permutation",
+      "name": "Learning Checks — Network Statistics",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 2,
+      "due_at": "2026-07-06T13:00:00Z",
+      "canvas_id": 968702,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968702",
+      "overrides": []
+    },
+    {
       "key": "drawing-counterfactual",
       "name": "Drawing — Routing",
       "group": "drawings",
@@ -224,54 +286,6 @@
       "due_at": "2026-07-06T13:00:00Z",
       "canvas_id": 968708,
       "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968708",
-      "overrides": []
-    },
-    {
-      "key": "drawing-dsm-clustering",
-      "name": "Drawing — DSM Clustering",
-      "group": "drawings",
-      "grading_type": "pass_fail",
-      "points_possible": 1,
-      "week": 2,
-      "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968709,
-      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968709",
-      "overrides": []
-    },
-    {
-      "key": "lc-dsm-clustering",
-      "name": "Learning Checks — DSM Clustering",
-      "group": "casestudies",
-      "grading_type": "pass_fail",
-      "points_possible": 1,
-      "week": 2,
-      "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968710,
-      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968710",
-      "overrides": []
-    },
-    {
-      "key": "drawing-aggregation",
-      "name": "Drawing — Aggregation",
-      "group": "drawings",
-      "grading_type": "pass_fail",
-      "points_possible": 1,
-      "week": 2,
-      "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968711,
-      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968711",
-      "overrides": []
-    },
-    {
-      "key": "lc-aggregation",
-      "name": "Learning Checks — Aggregation",
-      "group": "casestudies",
-      "grading_type": "pass_fail",
-      "points_possible": 1,
-      "week": 2,
-      "due_at": "2026-07-06T13:00:00Z",
-      "canvas_id": 968712,
-      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968712",
       "overrides": []
     },
     {
@@ -323,6 +337,30 @@
       "overrides": []
     },
     {
+      "key": "drawing-dsm-clustering",
+      "name": "Drawing — DSM Clustering",
+      "group": "drawings",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-11T03:59:00Z",
+      "canvas_id": 968709,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968709",
+      "overrides": []
+    },
+    {
+      "key": "lc-dsm-clustering",
+      "name": "Learning Checks — DSM Clustering",
+      "group": "casestudies",
+      "grading_type": "pass_fail",
+      "points_possible": 1,
+      "week": 3,
+      "due_at": "2026-07-11T03:59:00Z",
+      "canvas_id": 968710,
+      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968710",
+      "overrides": []
+    },
+    {
       "key": "drawing-sampling",
       "name": "Drawing — Sampling",
       "group": "drawings",
@@ -344,30 +382,6 @@
       "due_at": "2026-07-11T03:59:00Z",
       "canvas_id": 968718,
       "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968718",
-      "overrides": []
-    },
-    {
-      "key": "drawing-joins",
-      "name": "Drawing — Joins",
-      "group": "drawings",
-      "grading_type": "pass_fail",
-      "points_possible": 1,
-      "week": 3,
-      "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968719,
-      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968719",
-      "overrides": []
-    },
-    {
-      "key": "lc-joins",
-      "name": "Learning Checks — Joins",
-      "group": "casestudies",
-      "grading_type": "pass_fail",
-      "points_possible": 1,
-      "week": 3,
-      "due_at": "2026-07-11T03:59:00Z",
-      "canvas_id": 968720,
-      "html_url": "https://canvas.cornell.edu/courses/87652/assignments/968720",
       "overrides": []
     },
     {
@@ -677,7 +691,7 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "🎬 Week 1 Overview Video",
+          "title": "🎬 Watch - Week 1 Overview Video",
           "indent": 1,
           "url": "https://cornell.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=654d6ea3-1241-4ff7-9193-b4720125cd28"
         },
@@ -689,9 +703,21 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "🎬Watch - Project Homeworks",
+          "title": "🎬 Watch - Project Homeworks",
           "indent": 1,
           "url": "https://cornell.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=e0985f6b-44e6-4f9b-bfcc-b472012a94ce"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🎬 Watch - Have you tried our Classbot?",
+          "indent": 1,
+          "url": "https://cornell.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=94ab15c1-2d9e-4fb2-a21e-b47201347742"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🎬 Watch - Have you tried our Network Visualizer?",
+          "indent": 1,
+          "url": "https://cornell.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=e46c48ac-81b6-4f29-9c7c-b47201496508"
         },
         {
           "type": "ExternalUrl",
@@ -747,23 +773,43 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "📐 Network Statistics — Lab",
+          "title": "🔗 Joins — Lab",
           "indent": 1,
-          "url": "https://timothyfraser.com/netsci/case-studies/permutation.html"
+          "url": "https://timothyfraser.com/netsci/case-studies/joins.html"
         },
         {
           "type": "Assignment",
-          "title": "Drawing — Network Statistics",
+          "title": "Drawing — Joins",
           "indent": 2,
-          "content_id": 968701,
-          "ref": "drawing-permutation"
+          "content_id": 968719,
+          "ref": "drawing-joins"
         },
         {
           "type": "Assignment",
-          "title": "Learning Checks — Network Statistics",
+          "title": "Learning Checks — Joins",
           "indent": 2,
-          "content_id": 968702,
-          "ref": "lc-permutation"
+          "content_id": 968720,
+          "ref": "lc-joins"
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🗺️ Aggregation — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/aggregation.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — Aggregation",
+          "indent": 2,
+          "content_id": 968711,
+          "ref": "drawing-aggregation"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — Aggregation",
+          "indent": 2,
+          "content_id": 968712,
+          "ref": "lc-aggregation"
         },
         {
           "type": "ExternalUrl",
@@ -874,6 +920,26 @@
         },
         {
           "type": "ExternalUrl",
+          "title": "📐 Network Statistics — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/permutation.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — Network Statistics",
+          "indent": 2,
+          "content_id": 968701,
+          "ref": "drawing-permutation"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — Network Statistics",
+          "indent": 2,
+          "content_id": 968702,
+          "ref": "lc-permutation"
+        },
+        {
+          "type": "ExternalUrl",
           "title": "🚦 Routing — Lab",
           "indent": 1,
           "url": "https://timothyfraser.com/netsci/case-studies/counterfactual.html"
@@ -891,46 +957,6 @@
           "indent": 2,
           "content_id": 968708,
           "ref": "lc-counterfactual"
-        },
-        {
-          "type": "ExternalUrl",
-          "title": "🧩 DSM Clustering — Lab",
-          "indent": 1,
-          "url": "https://timothyfraser.com/netsci/case-studies/dsm-clustering.html"
-        },
-        {
-          "type": "Assignment",
-          "title": "Drawing — DSM Clustering",
-          "indent": 2,
-          "content_id": 968709,
-          "ref": "drawing-dsm-clustering"
-        },
-        {
-          "type": "Assignment",
-          "title": "Learning Checks — DSM Clustering",
-          "indent": 2,
-          "content_id": 968710,
-          "ref": "lc-dsm-clustering"
-        },
-        {
-          "type": "ExternalUrl",
-          "title": "🗺️ Aggregation — Lab",
-          "indent": 1,
-          "url": "https://timothyfraser.com/netsci/case-studies/aggregation.html"
-        },
-        {
-          "type": "Assignment",
-          "title": "Drawing — Aggregation",
-          "indent": 2,
-          "content_id": 968711,
-          "ref": "drawing-aggregation"
-        },
-        {
-          "type": "Assignment",
-          "title": "Learning Checks — Aggregation",
-          "indent": 2,
-          "content_id": 968712,
-          "ref": "lc-aggregation"
         },
         {
           "type": "Assignment",
@@ -1048,6 +1074,26 @@
         },
         {
           "type": "ExternalUrl",
+          "title": "🧩 DSM Clustering — Lab",
+          "indent": 1,
+          "url": "https://timothyfraser.com/netsci/case-studies/dsm-clustering.html"
+        },
+        {
+          "type": "Assignment",
+          "title": "Drawing — DSM Clustering",
+          "indent": 2,
+          "content_id": 968709,
+          "ref": "drawing-dsm-clustering"
+        },
+        {
+          "type": "Assignment",
+          "title": "Learning Checks — DSM Clustering",
+          "indent": 2,
+          "content_id": 968710,
+          "ref": "lc-dsm-clustering"
+        },
+        {
+          "type": "ExternalUrl",
           "title": "🗄️ Sampling — Lab",
           "indent": 1,
           "url": "https://timothyfraser.com/netsci/case-studies/sampling.html"
@@ -1065,26 +1111,6 @@
           "indent": 2,
           "content_id": 968718,
           "ref": "lc-sampling"
-        },
-        {
-          "type": "ExternalUrl",
-          "title": "🔗 Joins — Lab",
-          "indent": 1,
-          "url": "https://timothyfraser.com/netsci/case-studies/joins.html"
-        },
-        {
-          "type": "Assignment",
-          "title": "Drawing — Joins",
-          "indent": 2,
-          "content_id": 968719,
-          "ref": "drawing-joins"
-        },
-        {
-          "type": "Assignment",
-          "title": "Learning Checks — Joins",
-          "indent": 2,
-          "content_id": 968720,
-          "ref": "lc-joins"
         },
         {
           "type": "SubHeader",

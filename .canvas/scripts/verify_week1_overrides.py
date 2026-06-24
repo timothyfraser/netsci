@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify all 9 Week 1 assignments have SYSEN-5940 override."""
+"""Verify Week 1 assignments have SYSEN-5940 override (4/3/4 layout)."""
 
 import sys
 
@@ -13,12 +13,14 @@ HEAD = {"Authorization": f"Bearer {TOKEN}"}
 API = f"{BASE}/api/v1"
 
 NAMES = [
-    "Learning Checks — Build a Network",
     "Drawing — Build a Network",
-    "Learning Checks — Network Statistics",
-    "Drawing — Network Statistics",
-    "Learning Checks — Centrality",
+    "Learning Checks — Build a Network",
+    "Drawing — Joins",
+    "Learning Checks — Joins",
+    "Drawing — Aggregation",
+    "Learning Checks — Aggregation",
     "Drawing — Centrality",
+    "Learning Checks — Centrality",
     "Ed Discussion — Week 1",
     "Office Hours — Week 1",
     "Project Case Study — Submission 1",

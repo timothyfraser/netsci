@@ -84,26 +84,48 @@
       "html_file": "assignments/lc-build-a-network.html"
     },
     {
-      "key": "drawing-permutation",
-      "name": "Drawing — Network Statistics",
+      "key": "drawing-joins",
+      "name": "Drawing — Joins",
       "group": "drawings",
       "grading": "completion",
       "points": 1,
       "submission_types": [
         "online_text_entry"
       ],
-      "html_file": "assignments/drawing-permutation.html"
+      "html_file": "assignments/drawing-joins.html"
     },
     {
-      "key": "lc-permutation",
-      "name": "Learning Checks — Network Statistics",
+      "key": "lc-joins",
+      "name": "Learning Checks — Joins",
       "group": "casestudies",
       "grading": "completion",
       "points": 1,
       "submission_types": [
         "online_text_entry"
       ],
-      "html_file": "assignments/lc-permutation.html"
+      "html_file": "assignments/lc-joins.html"
+    },
+    {
+      "key": "drawing-aggregation",
+      "name": "Drawing — Aggregation",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 1,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "html_file": "assignments/drawing-aggregation.html"
+    },
+    {
+      "key": "lc-aggregation",
+      "name": "Learning Checks — Aggregation",
+      "group": "casestudies",
+      "grading": "completion",
+      "points": 1,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "html_file": "assignments/lc-aggregation.html"
     },
     {
       "key": "drawing-centrality",
@@ -150,6 +172,28 @@
       "html_file": "assignments/lc-supply-chain.html"
     },
     {
+      "key": "drawing-permutation",
+      "name": "Drawing — Network Statistics",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 1,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "html_file": "assignments/drawing-permutation.html"
+    },
+    {
+      "key": "lc-permutation",
+      "name": "Learning Checks — Network Statistics",
+      "group": "casestudies",
+      "grading": "completion",
+      "points": 1,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "html_file": "assignments/lc-permutation.html"
+    },
+    {
       "key": "drawing-counterfactual",
       "name": "Drawing — Routing",
       "group": "drawings",
@@ -170,50 +214,6 @@
         "online_text_entry"
       ],
       "html_file": "assignments/lc-counterfactual.html"
-    },
-    {
-      "key": "drawing-dsm-clustering",
-      "name": "Drawing — DSM Clustering",
-      "group": "drawings",
-      "grading": "completion",
-      "points": 1,
-      "submission_types": [
-        "online_text_entry"
-      ],
-      "html_file": "assignments/drawing-dsm-clustering.html"
-    },
-    {
-      "key": "lc-dsm-clustering",
-      "name": "Learning Checks — DSM Clustering",
-      "group": "casestudies",
-      "grading": "completion",
-      "points": 1,
-      "submission_types": [
-        "online_text_entry"
-      ],
-      "html_file": "assignments/lc-dsm-clustering.html"
-    },
-    {
-      "key": "drawing-aggregation",
-      "name": "Drawing — Aggregation",
-      "group": "drawings",
-      "grading": "completion",
-      "points": 1,
-      "submission_types": [
-        "online_text_entry"
-      ],
-      "html_file": "assignments/drawing-aggregation.html"
-    },
-    {
-      "key": "lc-aggregation",
-      "name": "Learning Checks — Aggregation",
-      "group": "casestudies",
-      "grading": "completion",
-      "points": 1,
-      "submission_types": [
-        "online_text_entry"
-      ],
-      "html_file": "assignments/lc-aggregation.html"
     },
     {
       "key": "drawing-gnn-by-hand",
@@ -260,6 +260,28 @@
       "html_file": "assignments/lc-gnn-xgboost.html"
     },
     {
+      "key": "drawing-dsm-clustering",
+      "name": "Drawing — DSM Clustering",
+      "group": "drawings",
+      "grading": "completion",
+      "points": 1,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "html_file": "assignments/drawing-dsm-clustering.html"
+    },
+    {
+      "key": "lc-dsm-clustering",
+      "name": "Learning Checks — DSM Clustering",
+      "group": "casestudies",
+      "grading": "completion",
+      "points": 1,
+      "submission_types": [
+        "online_text_entry"
+      ],
+      "html_file": "assignments/lc-dsm-clustering.html"
+    },
+    {
       "key": "drawing-sampling",
       "name": "Drawing — Sampling",
       "group": "drawings",
@@ -280,28 +302,6 @@
         "online_text_entry"
       ],
       "html_file": "assignments/lc-sampling.html"
-    },
-    {
-      "key": "drawing-joins",
-      "name": "Drawing — Joins",
-      "group": "drawings",
-      "grading": "completion",
-      "points": 1,
-      "submission_types": [
-        "online_text_entry"
-      ],
-      "html_file": "assignments/drawing-joins.html"
-    },
-    {
-      "key": "lc-joins",
-      "name": "Learning Checks — Joins",
-      "group": "casestudies",
-      "grading": "completion",
-      "points": 1,
-      "submission_types": [
-        "online_text_entry"
-      ],
-      "html_file": "assignments/lc-joins.html"
     },
     {
       "key": "ed-week-1",
@@ -578,18 +578,34 @@
         },
         {
           "type": "ExternalUrl",
-          "title": "📐 Network Statistics — Lab",
+          "title": "🔗 Joins — Lab",
           "indent": 1,
-          "path": "case-studies/permutation.html"
+          "path": "case-studies/joins.html"
         },
         {
           "type": "Assignment",
-          "ref": "drawing-permutation",
+          "ref": "drawing-joins",
           "indent": 2
         },
         {
           "type": "Assignment",
-          "ref": "lc-permutation",
+          "ref": "lc-joins",
+          "indent": 2
+        },
+        {
+          "type": "ExternalUrl",
+          "title": "🗺️ Aggregation — Lab",
+          "indent": 1,
+          "path": "case-studies/aggregation.html"
+        },
+        {
+          "type": "Assignment",
+          "ref": "drawing-aggregation",
+          "indent": 2
+        },
+        {
+          "type": "Assignment",
+          "ref": "lc-aggregation",
           "indent": 2
         },
         {
@@ -676,6 +692,22 @@
         },
         {
           "type": "ExternalUrl",
+          "title": "📐 Network Statistics — Lab",
+          "indent": 1,
+          "path": "case-studies/permutation.html"
+        },
+        {
+          "type": "Assignment",
+          "ref": "drawing-permutation",
+          "indent": 2
+        },
+        {
+          "type": "Assignment",
+          "ref": "lc-permutation",
+          "indent": 2
+        },
+        {
+          "type": "ExternalUrl",
           "title": "🚦 Routing — Lab",
           "indent": 1,
           "path": "case-studies/counterfactual.html"
@@ -688,38 +720,6 @@
         {
           "type": "Assignment",
           "ref": "lc-counterfactual",
-          "indent": 2
-        },
-        {
-          "type": "ExternalUrl",
-          "title": "🧩 DSM Clustering — Lab",
-          "indent": 1,
-          "path": "case-studies/dsm-clustering.html"
-        },
-        {
-          "type": "Assignment",
-          "ref": "drawing-dsm-clustering",
-          "indent": 2
-        },
-        {
-          "type": "Assignment",
-          "ref": "lc-dsm-clustering",
-          "indent": 2
-        },
-        {
-          "type": "ExternalUrl",
-          "title": "🗺️ Aggregation — Lab",
-          "indent": 1,
-          "path": "case-studies/aggregation.html"
-        },
-        {
-          "type": "Assignment",
-          "ref": "drawing-aggregation",
-          "indent": 2
-        },
-        {
-          "type": "Assignment",
-          "ref": "lc-aggregation",
           "indent": 2
         },
         {
@@ -811,6 +811,22 @@
         },
         {
           "type": "ExternalUrl",
+          "title": "🧩 DSM Clustering — Lab",
+          "indent": 1,
+          "path": "case-studies/dsm-clustering.html"
+        },
+        {
+          "type": "Assignment",
+          "ref": "drawing-dsm-clustering",
+          "indent": 2
+        },
+        {
+          "type": "Assignment",
+          "ref": "lc-dsm-clustering",
+          "indent": 2
+        },
+        {
+          "type": "ExternalUrl",
           "title": "🗄️ Sampling — Lab",
           "indent": 1,
           "path": "case-studies/sampling.html"
@@ -823,22 +839,6 @@
         {
           "type": "Assignment",
           "ref": "lc-sampling",
-          "indent": 2
-        },
-        {
-          "type": "ExternalUrl",
-          "title": "🔗 Joins — Lab",
-          "indent": 1,
-          "path": "case-studies/joins.html"
-        },
-        {
-          "type": "Assignment",
-          "ref": "drawing-joins",
-          "indent": 2
-        },
-        {
-          "type": "Assignment",
-          "ref": "lc-joins",
           "indent": 2
         },
         {

@@ -38,6 +38,11 @@ MODES (combine freely; they run in this order: pull, seed, apply, render)
   --render          Write HANDOFF_DUEDATES.md (links + proposed dates table).
   --dry-run         With --apply: print the PUTs, change nothing.
   --force           With --apply: skip the course-id safety guard.
+  --force-week-dates
+                    Overwrite due_at for drawing-/lc- assignments from manifest
+                    week buckets (use after 4/3/4 reorder).
+  --prune-overrides Remove section overrides for assignments no longer listed in
+                    manifest section_overrides (deletes on Canvas too).
 
 ENVIRONMENT (same as push_to_canvas.py; also reads ../.env if present)
   CANVAS_BASE_URL   e.g. https://canvas.cornell.edu   (no trailing /api)
@@ -95,8 +100,10 @@ DO_RENDER = "--render" in FLAGS
 IDS_ONLY = "--ids-only" in FLAGS
 DRY = "--dry-run" in FLAGS
 FORCE = "--force" in FLAGS
+FORCE_WEEK_DATES = "--force-week-dates" in FLAGS
+PRUNE_OVERRIDES = "--prune-overrides" in FLAGS
 
-if not (DO_PULL or DO_SEED or DO_APPLY or DO_RENDER):
+if not (DO_PULL or DO_SEED or DO_APPLY or DO_RENDER or FORCE_WEEK_DATES or PRUNE_OVERRIDES):
     sys.exit("Nothing to do. Pass at least one of --pull --seed --apply --render "
              "(see --help in the file header).")
 
@@ -104,7 +111,7 @@ API = f"{BASE}/api/v1"
 HEAD = {"Authorization": f"Bearer {TOKEN}"}
 
 # A network call is needed for pull/apply; render+seed are purely local.
-NEEDS_NET = DO_PULL or DO_APPLY
+NEEDS_NET = DO_PULL or DO_APPLY or PRUNE_OVERRIDES
 if NEEDS_NET and not (BASE and TOKEN and COURSE):
     sys.exit("Set CANVAS_BASE_URL, CANVAS_API_TOKEN, CANVAS_COURSE_ID for "
              "--pull/--apply.")
@@ -414,6 +421,48 @@ def seed_section_overrides(contract):
     return added
 
 
+def force_week_dates(contract):
+    """Set due_at on drawing/lc assignments from manifest week buckets."""
+    n = 0
+    for a in contract["assignments"]:
+        key = a["key"]
+        if not (key.startswith("drawing-") or key.startswith("lc-")):
+            continue
+        if key in DUE_OVERRIDES:
+            continue
+        due = due_for_week(a.get("week"))
+        if due and a.get("due_at") != due:
+            a["due_at"] = due
+            n += 1
+    print(f"• force-week-dates: updated {n} drawing/lc due date(s)")
+
+
+def prune_stale_overrides(contract):
+    """Drop manifest-listed section overrides no longer wanted; delete on Canvas."""
+    if not SECTION_OVERRIDE_NAME:
+        return
+    deleted = 0
+    for a in contract["assignments"]:
+        ovs = a.get("overrides") or []
+        keep = []
+        for ov in ovs:
+            if ov.get("section_name") != SECTION_OVERRIDE_NAME:
+                keep.append(ov)
+                continue
+            if a["key"] in SECTION_OVERRIDE_KEYS:
+                keep.append(ov)
+                continue
+            oid = ov.get("canvas_override_id")
+            aid = a.get("canvas_id")
+            if oid and aid:
+                print(f"  - prune override: {a['name']} ({SECTION_OVERRIDE_NAME})")
+                _req("DELETE",
+                     f"/courses/{COURSE}/assignments/{aid}/overrides/{oid}")
+                deleted += 1
+        a["overrides"] = keep
+    print(f"• prune-overrides: removed {deleted} stale override(s)")
+
+
 # ---------------------------------------------------------------------------
 # --apply : contract → Canvas
 # ---------------------------------------------------------------------------
@@ -592,13 +641,18 @@ def main():
         pull(contract)
     if DO_SEED:
         seed(contract)
+    if FORCE_WEEK_DATES:
+        force_week_dates(contract)
+    if PRUNE_OVERRIDES:
+        prune_stale_overrides(contract)
     if DO_APPLY:
         if DO_APPLY_OVERRIDES_ONLY:
             apply_overrides(contract)
         else:
             apply(contract)
     # Persist contract unless this was a pure dry-run apply (no other mutation).
-    if not (DRY and DO_APPLY and not (DO_PULL or DO_SEED)):
+    if not (DRY and DO_APPLY and not (DO_PULL or DO_SEED or FORCE_WEEK_DATES
+                                       or PRUNE_OVERRIDES)):
         save_contract(contract)
     if DO_RENDER:
         render(contract)
