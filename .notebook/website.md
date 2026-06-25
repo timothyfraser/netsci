@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-24 22:09 UTC_
+_Auto-generated NotebookLM source · 2026-06-25 00:37 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -5179,7 +5179,7 @@ Project Homeworks
 
 Pick a dataset
 
- 15 ready\-made networks (100–500\+ nodes) built for the project — supply chains, a
+ \>15 ready\-made networks (100–500\+ nodes) built for the project — supply chains, a
  satellite constellation, a city transit map, mutual aid in a crisis, and more. Open the
  **Visualizer** or either **Playground** and pick one from the
  **▾ Load sample** menu — the CSVs load straight into your session, no upload
@@ -5257,7 +5257,14 @@ NYC real estate capital: typed investors \& banks → properties, quarter by qua
 NYC properties linked by shared equity financing (concentration risk).
 
 
-Pick a case study — and a project question
+How it fits together
+Each of the 11 case studies feeds **one of three weekly project reports** (weeks 1–4, 5–7, 8–11\). All three reports analyze the **one dataset you choose**. Faint lines are every valid combination; the bright path is one example, cycling.
+
+
+—
+
+
+Pick a Case Study \& Question to Apply to Your Project
 
  Each case study's README has a *Your Project Case Study* section with
  3 suggested questions — starting points, not requirements.
