@@ -559,6 +559,15 @@ The most between-central node is Hub_17 (betweenness = 0.41) — it sits on
       <!-- /PROJECT-DATASETS -->
     </div>
 
+    <!-- PROJECT RAILWAY ANIMATION -->
+    <section id="project-railway" aria-label="How case studies, project reports, and datasets connect" style="margin: 32px 0 6px; padding: 16px 18px 12px; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-lg);">
+      <div style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green-mint); margin-bottom: 4px;">How it fits together</div>
+      <p style="font-family: var(--font-body); font-size: 13.5px; color: var(--grey); line-height: 1.5; margin: 0 0 10px; max-width: 780px;">Each of the 11 case studies feeds <strong style="color:var(--white)">one of three weekly project reports</strong> (weeks 1–4, 5–7, 8–11). All three reports analyze the <strong style="color:var(--white)">one dataset you choose</strong>. Faint lines are every valid combination; the bright path is one example, cycling.</p>
+      <div id="railway-svg-wrap" style="width:100%;"></div>
+      <div id="railway-caption" style="font-family: var(--font-mono); font-size: 12px; color: var(--green-bright); text-align:center; min-height: 18px; margin-top: 8px;">—</div>
+    </section>
+    <!-- /PROJECT RAILWAY ANIMATION -->
+
     <div class="sec-label" style="margin-top: 28px;">Pick a Case Study &amp; Question to Apply to Your Project</div>
     <p style="font-family: var(--font-body); font-size: 15px; color: var(--green-mint); line-height: 1.65; max-width: 760px; margin-bottom: 14px;">
       Each case study's README has a <em>Your Project Case Study</em> section with
@@ -784,6 +793,130 @@ The most between-central node is Hub_17 (betweenness = 0.41) — it sits on
     } else {
       openIfMatchesHash();
     }
+  })();
+</script>
+<script>
+  // Project railway: case studies → 3 weekly project reports → the one dataset
+  // you choose. Faint lines = all valid combos; bright path = a cycling example.
+  (function () {
+    var wrap = document.getElementById('railway-svg-wrap');
+    if (!wrap) return;
+    var NS = 'http://www.w3.org/2000/svg';
+
+    var CS = [
+      {n:'01', icon:'🔧', short:'Build',      full:'Build a Network'},
+      {n:'02', icon:'🔗', short:'Joins',      full:'Network Joins'},
+      {n:'03', icon:'🧮', short:'Aggregate',  full:'Aggregation'},
+      {n:'04', icon:'🎯', short:'Centrality', full:'Centrality & Criticality'},
+      {n:'05', icon:'📦', short:'Supply',     full:'Supply Chain Resilience'},
+      {n:'06', icon:'🎲', short:'Permute',    full:'Network Permutation'},
+      {n:'07', icon:'🧭', short:'Routing',    full:'Routing, Counterfactuals & Optimization'},
+      {n:'08', icon:'🧠', short:'GNN',        full:'GNN by Hand'},
+      {n:'09', icon:'🌲', short:'GNN+XGB',    full:'GNN + XGBoost'},
+      {n:'10', icon:'🧩', short:'DSM',        full:'DSM Clustering'},
+      {n:'11', icon:'🪣', short:'Sampling',   full:'Sampling Big Networks'}
+    ];
+    var REPORTS = [
+      {label:'Report 1', weeks:'Weeks 1–4',  members:[0,1,2,3]},
+      {label:'Report 2', weeks:'Weeks 5–7',  members:[4,5,6]},
+      {label:'Report 3', weeks:'Weeks 8–11', members:[7,8,9,10]}
+    ];
+    var DATASETS = ['aerospace-components','aircraft-supply-chain','airline-delays','amazon-last-mile','campus-contact','drone-components','financial-contagion','mutualaid-quake','nyc-realestate-capital','nyc-realestate-portfolio','opensource-deps','power-grid','reorg-comms','satellite-constellation','satellite-supply-chain','semiconductor-supply','trade-commodity','transit-multimodal','uber-manhattan','ups-ground-network','ups-package-flow'];
+
+    var VBW = 940, VBH = 250, caseY = 40, reportY = 134, dsY = 214;
+    var WHITE = '#ffffff', GREEN = '#39FF14', MINT = '#5eead4';
+    function xCase(i){ return 40 + i * (860 / (CS.length - 1)); }
+    function xDs(i){ return 28 + i * (884 / (DATASETS.length - 1)); }
+    function reportOf(ci){ for (var r=0;r<REPORTS.length;r++){ if (REPORTS[r].members.indexOf(ci) >= 0) return r; } return 0; }
+    function xReport(r){ var m=REPORTS[r].members, s=0, k; for (k=0;k<m.length;k++) s += xCase(m[k]); return s/m.length; }
+
+    var svg = document.createElementNS(NS,'svg');
+    svg.setAttribute('viewBox','0 0 '+VBW+' '+VBH);
+    svg.setAttribute('width','100%');
+    svg.setAttribute('role','img');
+    svg.setAttribute('aria-label','Animated diagram linking case studies to project reports to datasets');
+    svg.style.display = 'block';
+    svg.style.maxHeight = '260px';
+
+    function line(x1,y1,x2,y2,op,w){
+      var l = document.createElementNS(NS,'line');
+      l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+      l.setAttribute('stroke',WHITE); l.setAttribute('stroke-opacity',op);
+      l.setAttribute('stroke-width',w); l.setAttribute('stroke-linecap','round');
+      svg.appendChild(l); return l;
+    }
+    function circle(cx,cy,r,fill,stroke,sw){
+      var c = document.createElementNS(NS,'circle');
+      c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',r);
+      c.setAttribute('fill',fill); c.setAttribute('stroke',stroke); c.setAttribute('stroke-width',sw);
+      svg.appendChild(c); return c;
+    }
+    function text(x,y,str,size,fill,weight){
+      var t = document.createElementNS(NS,'text');
+      t.setAttribute('x',x); t.setAttribute('y',y); t.setAttribute('text-anchor','middle');
+      t.setAttribute('font-size',size); t.setAttribute('fill',fill);
+      t.setAttribute('font-family','DM Sans, system-ui, sans-serif');
+      if (weight) t.setAttribute('font-weight',weight);
+      t.textContent = str; svg.appendChild(t); return t;
+    }
+
+    // faint edges = all valid combinations
+    var i, r, d;
+    for (i=0;i<CS.length;i++){ r = reportOf(i); line(xCase(i),caseY,xReport(r),reportY,0.13,1); }
+    for (r=0;r<REPORTS.length;r++){ for (d=0;d<DATASETS.length;d++){ line(xReport(r),reportY,xDs(d),dsY,0.045,1); } }
+
+    // solid edges for the selected combo (reused each tick)
+    var selCaseEdge = line(0,0,0,0,0,2.6);
+    var selRepEdges = [ line(0,0,0,0,0,2), line(0,0,0,0,0,2), line(0,0,0,0,0,2) ];
+
+    // nodes
+    var caseNodes = [], caseLabels = [];
+    for (i=0;i<CS.length;i++){
+      var x = xCase(i);
+      caseNodes.push(circle(x,caseY,14,'rgba(57,255,20,0.14)',GREEN,1.5));
+      text(x,caseY+4.5,CS[i].icon,13,'#fff');
+      caseLabels.push(text(x,caseY+27,CS[i].short,8.6,'#9fe7b0'));
+    }
+    var repNodes = [];
+    for (r=0;r<REPORTS.length;r++){
+      var rx = xReport(r);
+      repNodes.push(circle(rx,reportY,13,'rgba(255,255,255,0.10)',WHITE,1.4));
+      text(rx,reportY+4,'R'+(r+1),10,'#fff','700');
+      text(rx,reportY+26,'Project '+REPORTS[r].label,9,'#cfe8d6','700');
+      text(rx,reportY+37,REPORTS[r].weeks,8,'#7fb893');
+    }
+    var dsNodes = [];
+    for (d=0;d<DATASETS.length;d++){ dsNodes.push(circle(xDs(d),dsY,5,'rgba(94,234,212,0.30)',MINT,1)); }
+    text(VBW/2, dsY+26, DATASETS.length + ' ready-made project datasets', 9, '#7fb893');
+
+    wrap.appendChild(svg);
+    var caption = document.getElementById('railway-caption');
+
+    function render(ci, di){
+      var rep = reportOf(ci), a;
+      for (a=0;a<caseNodes.length;a++){ caseNodes[a].setAttribute('fill','rgba(57,255,20,0.14)'); caseNodes[a].setAttribute('r',14); caseLabels[a].setAttribute('fill','#9fe7b0'); }
+      for (a=0;a<repNodes.length;a++){ repNodes[a].setAttribute('fill','rgba(255,255,255,0.10)'); repNodes[a].setAttribute('r',13); }
+      for (a=0;a<dsNodes.length;a++){ dsNodes[a].setAttribute('fill','rgba(94,234,212,0.30)'); dsNodes[a].setAttribute('r',5); }
+      caseNodes[ci].setAttribute('fill',GREEN); caseNodes[ci].setAttribute('r',16); caseLabels[ci].setAttribute('fill','#fff');
+      repNodes[rep].setAttribute('fill',WHITE); repNodes[rep].setAttribute('r',15);
+      dsNodes[di].setAttribute('fill',WHITE); dsNodes[di].setAttribute('r',8);
+      selCaseEdge.setAttribute('x1',xCase(ci)); selCaseEdge.setAttribute('y1',caseY);
+      selCaseEdge.setAttribute('x2',xReport(rep)); selCaseEdge.setAttribute('y2',reportY);
+      selCaseEdge.setAttribute('stroke-opacity',0.95);
+      for (a=0;a<REPORTS.length;a++){
+        selRepEdges[a].setAttribute('x1',xReport(a)); selRepEdges[a].setAttribute('y1',reportY);
+        selRepEdges[a].setAttribute('x2',xDs(di)); selRepEdges[a].setAttribute('y2',dsY);
+        selRepEdges[a].setAttribute('stroke-opacity', a === rep ? 0.92 : 0.5);
+      }
+      var nameEsc = CS[ci].full.replace(/&/g,'&amp;');
+      caption.innerHTML = '<span style="color:#fff">' + CS[ci].n + ' ' + nameEsc + '</span> &nbsp;→&nbsp; Project ' + REPORTS[rep].label + ' (' + REPORTS[rep].weeks + ') &nbsp;→&nbsp; <span style="color:' + MINT + '">' + DATASETS[di] + '</span>';
+    }
+
+    var t = 0;
+    function tick(){ render(t % CS.length, (t * 5) % DATASETS.length); t++; }
+    tick();
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduce) { setInterval(tick, 1100); }
   })();
 </script>
 </body>
