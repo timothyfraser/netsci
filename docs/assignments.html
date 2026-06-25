@@ -865,9 +865,10 @@ The most between-central node is Hub_17 (betweenness = 0.41) — it sits on
     for (i=0;i<CS.length;i++){ r = reportOf(i); line(xCase(i),caseY,xReport(r),reportY,0.13,1); }
     for (r=0;r<REPORTS.length;r++){ for (d=0;d<DATASETS.length;d++){ line(xReport(r),reportY,xDs(d),dsY,0.045,1); } }
 
-    // solid edges for the selected combo (reused each tick)
-    var selCaseEdge = line(0,0,0,0,0,2.6);
-    var selRepEdges = [ line(0,0,0,0,0,2), line(0,0,0,0,0,2), line(0,0,0,0,0,2) ];
+    // solid edges for the selected combo (reused each tick): one case→report
+    // edge per report (three separate pairs), plus report→dataset convergence.
+    var selCaseEdges = [ line(0,0,0,0,0,2.4), line(0,0,0,0,0,2.4), line(0,0,0,0,0,2.4) ];
+    var selRepEdges  = [ line(0,0,0,0,0,2), line(0,0,0,0,0,2), line(0,0,0,0,0,2) ];
 
     // nodes
     var caseNodes = [], caseLabels = [];
@@ -885,35 +886,65 @@ The most between-central node is Hub_17 (betweenness = 0.41) — it sits on
       text(rx,reportY+26,'Project '+REPORTS[r].label,9,'#cfe8d6','700');
       text(rx,reportY+37,REPORTS[r].weeks,8,'#7fb893');
     }
-    var dsNodes = [];
-    for (d=0;d<DATASETS.length;d++){ dsNodes.push(circle(xDs(d),dsY,5,'rgba(94,234,212,0.30)',MINT,1)); }
-    text(VBW/2, dsY+26, DATASETS.length + ' ready-made project datasets', 9, '#7fb893');
+    // datasets: each shown as its OWN thumbnail icon so it reads as a dataset
+    var DS_BASE = 24, DS_SEL = 34;
+    var dsImgs = [];
+    for (d=0;d<DATASETS.length;d++){
+      var im = document.createElementNS(NS,'image');
+      var ix = xDs(d), hb = DS_BASE/2;
+      im.setAttribute('x', ix-hb); im.setAttribute('y', dsY-hb);
+      im.setAttribute('width', DS_BASE); im.setAttribute('height', DS_BASE);
+      im.setAttribute('preserveAspectRatio','xMidYMid slice');
+      var href = 'playground-data/'+DATASETS[d]+'-thumb.png';
+      im.setAttributeNS('http://www.w3.org/1999/xlink','href',href);
+      im.setAttribute('href',href);
+      im.setAttribute('opacity','0.5');
+      svg.appendChild(im); dsImgs.push(im);
+    }
+    var dsSel = document.createElementNS(NS,'rect');
+    dsSel.setAttribute('rx',6); dsSel.setAttribute('fill','none');
+    dsSel.setAttribute('stroke',WHITE); dsSel.setAttribute('stroke-width',2);
+    dsSel.setAttribute('opacity',0); svg.appendChild(dsSel);
+    text(VBW/2, dsY+27, DATASETS.length + ' ready-made project datasets — pick one for all three reports', 9, '#7fb893');
 
     wrap.appendChild(svg);
     var caption = document.getElementById('railway-caption');
+    var esc = function(s){ return s.replace(/&/g,'&amp;'); };
 
-    function render(ci, di){
-      var rep = reportOf(ci), a;
+    function render(selArr, di){
+      var a, r;
       for (a=0;a<caseNodes.length;a++){ caseNodes[a].setAttribute('fill','rgba(57,255,20,0.14)'); caseNodes[a].setAttribute('r',14); caseLabels[a].setAttribute('fill','#9fe7b0'); }
-      for (a=0;a<repNodes.length;a++){ repNodes[a].setAttribute('fill','rgba(255,255,255,0.10)'); repNodes[a].setAttribute('r',13); }
-      for (a=0;a<dsNodes.length;a++){ dsNodes[a].setAttribute('fill','rgba(94,234,212,0.30)'); dsNodes[a].setAttribute('r',5); }
-      caseNodes[ci].setAttribute('fill',GREEN); caseNodes[ci].setAttribute('r',16); caseLabels[ci].setAttribute('fill','#fff');
-      repNodes[rep].setAttribute('fill',WHITE); repNodes[rep].setAttribute('r',15);
-      dsNodes[di].setAttribute('fill',WHITE); dsNodes[di].setAttribute('r',8);
-      selCaseEdge.setAttribute('x1',xCase(ci)); selCaseEdge.setAttribute('y1',caseY);
-      selCaseEdge.setAttribute('x2',xReport(rep)); selCaseEdge.setAttribute('y2',reportY);
-      selCaseEdge.setAttribute('stroke-opacity',0.95);
-      for (a=0;a<REPORTS.length;a++){
-        selRepEdges[a].setAttribute('x1',xReport(a)); selRepEdges[a].setAttribute('y1',reportY);
-        selRepEdges[a].setAttribute('x2',xDs(di)); selRepEdges[a].setAttribute('y2',dsY);
-        selRepEdges[a].setAttribute('stroke-opacity', a === rep ? 0.92 : 0.5);
+      for (a=0;a<dsImgs.length;a++){ var bx=xDs(a), hb2=DS_BASE/2; dsImgs[a].setAttribute('x',bx-hb2); dsImgs[a].setAttribute('y',dsY-hb2); dsImgs[a].setAttribute('width',DS_BASE); dsImgs[a].setAttribute('height',DS_BASE); dsImgs[a].setAttribute('opacity','0.5'); }
+      // all three reports are active at once — each carries one case study, and
+      // all three converge on the single chosen dataset
+      for (r=0;r<REPORTS.length;r++){
+        repNodes[r].setAttribute('fill',WHITE); repNodes[r].setAttribute('r',15);
+        var ci = selArr[r];
+        caseNodes[ci].setAttribute('fill',GREEN); caseNodes[ci].setAttribute('r',16); caseLabels[ci].setAttribute('fill','#fff');
+        selCaseEdges[r].setAttribute('x1',xCase(ci)); selCaseEdges[r].setAttribute('y1',caseY);
+        selCaseEdges[r].setAttribute('x2',xReport(r)); selCaseEdges[r].setAttribute('y2',reportY);
+        selCaseEdges[r].setAttribute('stroke-opacity',0.95);
+        selRepEdges[r].setAttribute('x1',xReport(r)); selRepEdges[r].setAttribute('y1',reportY);
+        selRepEdges[r].setAttribute('x2',xDs(di)); selRepEdges[r].setAttribute('y2',dsY);
+        selRepEdges[r].setAttribute('stroke-opacity',0.85);
       }
-      var nameEsc = CS[ci].full.replace(/&/g,'&amp;');
-      caption.innerHTML = '<span style="color:#fff">' + CS[ci].n + ' ' + nameEsc + '</span> &nbsp;→&nbsp; Project ' + REPORTS[rep].label + ' (' + REPORTS[rep].weeks + ') &nbsp;→&nbsp; <span style="color:' + MINT + '">' + DATASETS[di] + '</span>';
+      // selected dataset icon — enlarge + outline
+      var sb = DS_SEL/2;
+      dsImgs[di].setAttribute('x',xDs(di)-sb); dsImgs[di].setAttribute('y',dsY-sb);
+      dsImgs[di].setAttribute('width',DS_SEL); dsImgs[di].setAttribute('height',DS_SEL);
+      dsImgs[di].setAttribute('opacity','1');
+      dsSel.setAttribute('x',xDs(di)-sb-2); dsSel.setAttribute('y',dsY-sb-2);
+      dsSel.setAttribute('width',DS_SEL+4); dsSel.setAttribute('height',DS_SEL+4);
+      dsSel.setAttribute('opacity',1);
+      caption.innerHTML = '<span style="color:#fff">' + esc(CS[selArr[0]].full) + ' + ' + esc(CS[selArr[1]].full) + ' + ' + esc(CS[selArr[2]].full) + '</span> &nbsp;→&nbsp; <span style="color:' + MINT + '">' + DATASETS[di] + '</span>';
     }
 
     var t = 0;
-    function tick(){ render(t % CS.length, (t * 5) % DATASETS.length); t++; }
+    function tick(){
+      var selArr = [], rr;
+      for (rr=0;rr<REPORTS.length;rr++){ var m = REPORTS[rr].members; selArr.push(m[(t + rr) % m.length]); }
+      render(selArr, (t * 5) % DATASETS.length); t++;
+    }
     tick();
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!reduce) { setInterval(tick, 1100); }
