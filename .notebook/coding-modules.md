@@ -1,6 +1,6 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-27 14:38 UTC_
+_Auto-generated NotebookLM source · 2026-06-27 14:48 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
@@ -4962,6 +4962,10 @@ python  code/07_counterfactual/example.py
 > Monte Carlo replicates and seed=1, what is the LOW end of the 95%
 > CI on the change in weighted APL?** (4 decimal places, signed.)
 
+Because this is a Monte Carlo estimate, the R and Python tracks draw from
+their own random-number generators and may differ by a digit or two in the
+last decimal place. Submit the value your track prints.
+
 ## Your Project Case Study
 
 If you pick this case study, you'll propose an intervention on
@@ -5038,6 +5042,7 @@ Run:
 from __future__ import annotations
 
 from pathlib import Path
+import random
 import numpy as np
 import pandas as pd
 import igraph as ig
@@ -5047,6 +5052,9 @@ SEED = 42
 
 def main() -> None:
     rng = np.random.default_rng(SEED)
+    # Watts_Strogatz draws on igraph's own RNG (Python's `random` module),
+    # not numpy — seed it too or the topology is different on every run.
+    random.seed(SEED)
 
     n = 180
     g = ig.Graph.Watts_Strogatz(dim=1, size=n, nei=4, p=0.08)
