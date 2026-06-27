@@ -1,4 +1,4 @@
-# Case Study 06 — DSM Clustering
+# Case Study 10 — DSM Clustering
 
 > Interactive lab: [`docs/case-studies/dsm-clustering.html`](../../docs/case-studies/dsm-clustering.html)
 >
@@ -30,7 +30,7 @@ automatically. Specifically:
 ## Files in this folder
 
 ```
-06_dsm-clustering/
+10_dsm-clustering/
 ├── README.md
 ├── example.R
 ├── example.py

@@ -3596,7 +3596,7 @@ If you pick this case study, you'll define a resilience metric on
 
 - The sts course `26C_analytics.R` uses the same vocabulary for
   committee networks.
-- Case study 06 ([`06_dsm-clustering`](../06_dsm-clustering)) tackles
+- Case study 06 ([`10_dsm-clustering`](../10_dsm-clustering)) tackles
   the *modularity* side of the same coin: rather than finding
   critical nodes, finding critical *clusters*.
 
@@ -4208,7 +4208,7 @@ unblocked p < 0.001, block-permuted p ≈ 0.89.
 ## Files in this folder
 
 ```
-07_permutation/
+06_permutation/
 ├── README.md
 ├── example.R
 ├── example.py
@@ -4430,7 +4430,7 @@ library(here)
 # `assort_by()` wraps `igraph::assortativity_nominal()`; `permute_labels()`
 # shuffles a vertex attribute, optionally within blocks defined by
 # another attribute. Both live in functions.R.
-source(here::here("code", "07_permutation", "functions.R"))
+source(here::here("code", "06_permutation", "functions.R"))
 
 cat("\n🚀 Case Study 07 — Network Permutation Testing (R)\n")
 cat("   Same observed stat, two null models. Watch the p-value change.\n\n")
@@ -4524,7 +4524,7 @@ p <- ggplot(null_df, aes(x = value, fill = null)) +
 
 # Show interactively AND save a copy (Rscript otherwise hides it in Rplots.pdf).
 print(p)
-ggsave(here::here("code", "07_permutation", "two_null_distributions.png"),
+ggsave(here::here("code", "06_permutation", "two_null_distributions.png"),
        p, width = 7, height = 4.5, dpi = 120)
 cat("💾 Saved two_null_distributions.png\n")
 
@@ -4777,7 +4777,7 @@ library(dplyr)
 library(igraph)
 library(here)
 
-.case_dir <- function() here::here("code", "07_permutation", "data")
+.case_dir <- function() here::here("code", "06_permutation", "data")
 
 load_nodes <- function() readr::read_csv(file.path(.case_dir(), "nodes.csv"),
                                          show_col_types = FALSE)
@@ -4936,7 +4936,7 @@ edge between the two currently-farthest-apart stations.
 ## Files in this folder
 
 ```
-09_counterfactual/
+07_counterfactual/
 ├── README.md
 ├── example.R
 ├── example.py
@@ -5126,7 +5126,7 @@ library(here)
 # `weighted_apl()` computes the weighted average path length;
 # `mc_apls()` runs R Poisson-resampled APL computations, optionally
 # with an extra edge appended. Both live in functions.R.
-source(here::here("code", "09_counterfactual", "functions.R"))
+source(here::here("code", "07_counterfactual", "functions.R"))
 
 cat("\n🚀 Case Study 09 — Counterfactual Monte Carlo (R)\n")
 cat("   Add one edge to a bikeshare network. Does APL really improve?\n\n")
@@ -5251,9 +5251,9 @@ p2 <- ggplot(tibble(d = diffs), aes(x = d)) +
 # Rplots.pdf).
 print(p1)
 print(p2)
-ggsave(here::here("code", "09_counterfactual", "mc_distributions.png"),
+ggsave(here::here("code", "07_counterfactual", "mc_distributions.png"),
        p1, width = 6.5, height = 4.5, dpi = 120)
-ggsave(here::here("code", "09_counterfactual", "mc_difference_ci.png"),
+ggsave(here::here("code", "07_counterfactual", "mc_difference_ci.png"),
        p2, width = 6.5, height = 4.5, dpi = 120)
 cat("💾 Saved mc_distributions.png and mc_difference_ci.png\n")
 
@@ -5463,7 +5463,7 @@ library(dplyr)
 library(igraph)
 library(here)
 
-.case_dir <- function() here::here("code", "09_counterfactual", "data")
+.case_dir <- function() here::here("code", "07_counterfactual", "data")
 
 load_nodes <- function() readr::read_csv(file.path(.case_dir(), "nodes.csv"),
                                          show_col_types = FALSE)
@@ -5632,7 +5632,7 @@ tracks are fully runnable; pick whichever you're comfortable in.
 ## Files in this folder
 
 ```
-10_gnn-by-hand/
+08_gnn-by-hand/
 ├── README.md
 ├── example.R           # R track: drives functions.py's GCN via reticulate
 ├── example.py          # Python track
@@ -5706,7 +5706,7 @@ on a slice of *your* network and discuss what the embeddings encode.
 
 - Kipf & Welling (2017) "Semi-Supervised Classification with Graph
   Convolutional Networks" — the original GCN paper.
-- The next case study, [`11_gnn-xgboost`](../11_gnn-xgboost),
+- The next case study, [`09_gnn-xgboost`](../09_gnn-xgboost),
   combines GNN embeddings with classical gradient-boosted trees
   for actual prediction.
 
@@ -5855,7 +5855,7 @@ cat("✅ reticulate found Python — bridging to the numpy GCN code.\n")
 # functions.R gives us the R-native loaders (load_tiny / load_large) and
 # the `gcn` Python module handle (gcn$adjacency / gcn$normalize /
 # gcn$gcn_layer). Sourcing it triggers the one-time Python setup.
-source(here::here("code", "10_gnn-by-hand", "functions.R"))
+source(here::here("code", "08_gnn-by-hand", "functions.R"))
 
 cat("\n🚀 Case Study 10 — GNN by Hand (R via reticulate)\n")
 cat("   Two-layer GCN, no native R GNN lib. We drive numpy's functions.py from R.\n\n")
@@ -5990,7 +5990,7 @@ p <- ggplot(plot_df, aes(dim0, dim1, color = group, size = group)) +
        color = NULL, size = NULL) +
   theme_minimal()
 
-ggsave(here::here("code", "10_gnn-by-hand", "gnn_embeddings.png"),
+ggsave(here::here("code", "08_gnn-by-hand", "gnn_embeddings.png"),
        p, width = 7, height = 5, dpi = 120)
 cat("💾 Saved gnn_embeddings.png\n")
 
@@ -6230,7 +6230,7 @@ print("\n🎉 Done. Move on to the case study report when you're ready.")
 library(here)
 library(reticulate)
 
-.case_dir <- function() here::here("code", "10_gnn-by-hand", "data")
+.case_dir <- function() here::here("code", "08_gnn-by-hand", "data")
 
 #' Load the 6-node toy network as a list of two tibbles.
 load_tiny <- function() {
@@ -6270,7 +6270,7 @@ if (utils::packageVersion("reticulate") >= "1.41") {
 
 gcn <- reticulate::import_from_path(
   "functions",
-  path    = here::here("code", "10_gnn-by-hand"),
+  path    = here::here("code", "08_gnn-by-hand"),
   convert = TRUE  # numpy arrays come back as R matrices, automatically
 )
 ```
@@ -6417,7 +6417,7 @@ just a couple of matrix multiplies that the shared `functions.py` performs.
 ## Files in this folder
 
 ```
-11_gnn-xgboost/
+09_gnn-xgboost/
 ├── README.md
 ├── example.R              # XGBoost on raw + lag + GNN (embedding via reticulate)
 ├── example.py             # XGBoost on raw + lag + GNN embedding
@@ -6668,7 +6668,7 @@ library(here)
 
 # functions.R gives us the R-native loaders + add_lag_features(), and the
 # add_gnn_embeddings() wrapper that calls the Python embedding code.
-source(here::here("code", "11_gnn-xgboost", "functions.R"))
+source(here::here("code", "09_gnn-xgboost", "functions.R"))
 
 cat("\n🚀 Case Study 11 — GNN + XGBoost (R, full pipeline via reticulate)\n")
 cat("   Three feature sets stacked. Watch AUC climb as we add structure.\n\n")
@@ -6833,7 +6833,7 @@ p <- ggplot(gnn_fit$imp, aes(x = Gain, y = reorder(Feature, Gain))) +
        title = "Which features matter? (raw + lag + GNN model)") +
   theme_minimal()
 
-ggsave(here::here("code", "11_gnn-xgboost", "xgboost_importance.png"),
+ggsave(here::here("code", "09_gnn-xgboost", "xgboost_importance.png"),
        p, width = 7, height = 4.5, dpi = 120)
 cat("💾 Saved xgboost_importance.png\n")
 
@@ -7085,7 +7085,7 @@ library(zoo)
 library(here)
 library(reticulate)
 
-.case_dir <- function() here::here("code", "11_gnn-xgboost", "data")
+.case_dir <- function() here::here("code", "09_gnn-xgboost", "data")
 
 load_suppliers <- function() readr::read_csv(file.path(.case_dir(), "suppliers.csv"),
                                              show_col_types = FALSE)
@@ -7129,7 +7129,7 @@ if (utils::packageVersion("reticulate") >= "1.41") {
 
 .gnn_py <- reticulate::import_from_path(
   "functions",
-  path    = here::here("code", "11_gnn-xgboost"),
+  path    = here::here("code", "09_gnn-xgboost"),
   convert = TRUE
 )
 
@@ -7274,7 +7274,7 @@ automatically. Specifically:
 ## Files in this folder
 
 ```
-06_dsm-clustering/
+10_dsm-clustering/
 ├── README.md
 ├── example.R
 ├── example.py
@@ -7455,7 +7455,7 @@ library(here)
 # `cascade_bfs()` does a bounded BFS from a starting node along the
 # directed dependency edges. It's the cascade simulator we use at the
 # end of the script.
-source(here::here("code", "06_dsm-clustering", "functions.R"))
+source(here::here("code", "10_dsm-clustering", "functions.R"))
 
 cat("\n🚀 Case Study 06 — DSM Clustering (R)\n")
 cat("   200 components, 8 planted modules. Can community detection recover them?\n\n")
@@ -7557,7 +7557,7 @@ draw_dsm <- function() {
 draw_dsm()
 
 # ...and save a copy for terminal / Rscript users.
-png(here::here("code", "06_dsm-clustering", "dsm_reordering.png"),
+png(here::here("code", "10_dsm-clustering", "dsm_reordering.png"),
     width = 9, height = 5, units = "in", res = 120)
 draw_dsm()
 invisible(dev.off())
@@ -7787,7 +7787,7 @@ library(dplyr)
 library(igraph)
 library(here)
 
-.case_dir <- function() here::here("code", "06_dsm-clustering", "data")
+.case_dir <- function() here::here("code", "10_dsm-clustering", "data")
 
 load_nodes <- function() readr::read_csv(file.path(.case_dir(), "nodes.csv"),
                                          show_col_types = FALSE)
@@ -7908,7 +7908,7 @@ two-week crisis window.
 ## Files in this folder
 
 ```
-08_sampling/
+11_sampling/
 ├── README.md
 ├── example.R
 ├── example.py
@@ -8124,7 +8124,7 @@ library(here)
 # `slice_stats()` computes the per-time-slice network statistics
 # (edgeweight, share of nodes touched, etc.) for any edge subset.
 # That's the workhorse we'll reuse on every sample.
-source(here::here("code", "08_sampling", "functions.R"))
+source(here::here("code", "11_sampling", "functions.R"))
 
 cat("\n🚀 Case Study 08 — Sampling Big Networks (R)\n")
 cat("   Three sampling strategies vs population. Which one preserves the truth?\n\n")
@@ -8226,7 +8226,7 @@ p <- bind_rows(
 # against the population line. Show it AND save it (Rscript otherwise hides
 # it in Rplots.pdf, so the most important plot in the lab goes unseen).
 print(p)
-ggsave(here::here("code", "08_sampling", "sample_vs_population.png"),
+ggsave(here::here("code", "11_sampling", "sample_vs_population.png"),
        p, width = 7, height = 4.5, dpi = 120)
 cat("💾 Saved sample_vs_population.png\n")
 
@@ -8493,7 +8493,7 @@ library(dplyr)
 library(sf)
 library(here)
 
-.case_dir <- function() here::here("code", "08_sampling", "data")
+.case_dir <- function() here::here("code", "11_sampling", "data")
 
 load_nodes <- function() {
   readr::read_csv(
@@ -8701,12 +8701,12 @@ exploring; the code folder is for *doing the same thing on your own data*.
 | 03 | Aggregation              | Identify | [lab](../docs/case-studies/aggregation.html)                | [`03_aggregation`](03_aggregation/)          |
 | 04 | Centrality & Criticality | Measure  | [lab](../docs/case-studies/centrality.html)                 | [`04_centrality`](04_centrality/)            |
 | 05 | Supply Chain Resilience  | Measure  | [lab](../docs/case-studies/supply-chain.html)               | [`05_supply-chain`](05_supply-chain/)        |
-| 06 | DSM Clustering           | Measure  | [lab](../docs/case-studies/dsm-clustering.html)             | [`06_dsm-clustering`](06_dsm-clustering/)    |
-| 07 | Network Permutation      | Infer    | [lab](../docs/case-studies/permutation.html)                | [`07_permutation`](07_permutation/)          |
-| 08 | Sampling Big Networks    | Identify | [lab](../docs/case-studies/sampling.html)                   | [`08_sampling`](08_sampling/)                |
-| 09 | Counterfactual MC        | Predict  | [lab](../docs/case-studies/counterfactual.html)             | [`09_counterfactual`](09_counterfactual/)    |
-| 10 | GNN by Hand              | Predict  | [lab](../docs/case-studies/gnn-by-hand.html)                | [`10_gnn-by-hand`](10_gnn-by-hand/)          |
-| 11 | GNN + XGBoost            | Predict  | [lab](../docs/case-studies/gnn-xgboost.html)                | [`11_gnn-xgboost`](11_gnn-xgboost/)          |
+| 06 | DSM Clustering           | Measure  | [lab](../docs/case-studies/dsm-clustering.html)             | [`10_dsm-clustering`](10_dsm-clustering/)    |
+| 07 | Network Permutation      | Infer    | [lab](../docs/case-studies/permutation.html)                | [`06_permutation`](06_permutation/)          |
+| 08 | Sampling Big Networks    | Identify | [lab](../docs/case-studies/sampling.html)                   | [`11_sampling`](11_sampling/)                |
+| 09 | Counterfactual MC        | Predict  | [lab](../docs/case-studies/counterfactual.html)             | [`07_counterfactual`](07_counterfactual/)    |
+| 10 | GNN by Hand              | Predict  | [lab](../docs/case-studies/gnn-by-hand.html)                | [`08_gnn-by-hand`](08_gnn-by-hand/)          |
+| 11 | GNN + XGBoost            | Predict  | [lab](../docs/case-studies/gnn-xgboost.html)                | [`09_gnn-xgboost`](09_gnn-xgboost/)          |
 
 ## What you submit (the short version)
 

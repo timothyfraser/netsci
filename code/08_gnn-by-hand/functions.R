@@ -20,7 +20,7 @@
 library(here)
 library(reticulate)
 
-.case_dir <- function() here::here("code", "10_gnn-by-hand", "data")
+.case_dir <- function() here::here("code", "08_gnn-by-hand", "data")
 
 #' Load the 6-node toy network as a list of two tibbles.
 load_tiny <- function() {
@@ -60,6 +60,6 @@ if (utils::packageVersion("reticulate") >= "1.41") {
 
 gcn <- reticulate::import_from_path(
   "functions",
-  path    = here::here("code", "10_gnn-by-hand"),
+  path    = here::here("code", "08_gnn-by-hand"),
   convert = TRUE  # numpy arrays come back as R matrices, automatically
 )

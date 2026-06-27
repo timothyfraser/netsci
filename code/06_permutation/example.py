@@ -1,4 +1,4 @@
-"""Case Study 07 — Network Permutation Testing (Python track).
+"""Case Study 06 — Network Permutation Testing (Python track).
 
 The lab walked you through a key idea: when you compute a network
 statistic (homophily, assortativity, mean within-group edge weight),
@@ -49,7 +49,7 @@ from functions import (
     load_nodes, load_edges, build_graph, assort_by, permute_labels
 )
 
-print("\n🚀 Case Study 07 — Network Permutation Testing (Python)")
+print("\n🚀 Case Study 06 — Network Permutation Testing (Python)")
 print("   Same observed stat, two null models. Watch the p-value change.\n")
 
 ## 0.3 Load data #############################################################

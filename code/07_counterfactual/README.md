@@ -1,4 +1,4 @@
-# Case Study 09 — Counterfactual Monte Carlo
+# Case Study 07 — Counterfactual Monte Carlo
 
 > Interactive lab: [`docs/case-studies/counterfactual.html`](../../docs/case-studies/counterfactual.html)
 >
@@ -33,7 +33,7 @@ edge between the two currently-farthest-apart stations.
 ## Files in this folder
 
 ```
-09_counterfactual/
+07_counterfactual/
 ├── README.md
 ├── example.R
 ├── example.py

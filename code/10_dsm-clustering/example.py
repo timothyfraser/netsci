@@ -1,4 +1,4 @@
-"""Case Study 06 — DSM Clustering (Python track).
+"""Case Study 10 — DSM Clustering (Python track).
 
 A Design Structure Matrix (DSM) is just an adjacency matrix where row
 i to column j means "component i depends on j." Reordering rows and
@@ -36,7 +36,7 @@ import matplotlib.pyplot as plt
 # end of the script.
 from functions import load_nodes, load_edges, build_graph, cascade_bfs
 
-print("\n🚀 Case Study 06 — DSM Clustering (Python)")
+print("\n🚀 Case Study 10 — DSM Clustering (Python)")
 print("   200 components, 8 planted modules. Can community detection recover them?\n")
 
 ## 0.3 Load data #############################################################

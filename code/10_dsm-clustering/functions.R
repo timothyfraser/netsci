@@ -6,7 +6,7 @@ library(dplyr)
 library(igraph)
 library(here)
 
-.case_dir <- function() here::here("code", "06_dsm-clustering", "data")
+.case_dir <- function() here::here("code", "10_dsm-clustering", "data")
 
 load_nodes <- function() readr::read_csv(file.path(.case_dir(), "nodes.csv"),
                                          show_col_types = FALSE)

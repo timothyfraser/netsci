@@ -1,5 +1,5 @@
 #' @name example.R
-#' @title Case Study 09 — Counterfactual Monte Carlo
+#' @title Case Study 07 — Counterfactual Monte Carlo
 #' @author <your-name-here>
 #' @description
 #' You propose an intervention in a network (add a station, add an
@@ -41,9 +41,9 @@ library(here)
 # `weighted_apl()` computes the weighted average path length;
 # `mc_apls()` runs R Poisson-resampled APL computations, optionally
 # with an extra edge appended. Both live in functions.R.
-source(here::here("code", "09_counterfactual", "functions.R"))
+source(here::here("code", "07_counterfactual", "functions.R"))
 
-cat("\n🚀 Case Study 09 — Counterfactual Monte Carlo (R)\n")
+cat("\n🚀 Case Study 07 — Counterfactual Monte Carlo (R)\n")
 cat("   Add one edge to a bikeshare network. Does APL really improve?\n\n")
 
 ## 0.3 Load data #############################################################
@@ -166,9 +166,9 @@ p2 <- ggplot(tibble(d = diffs), aes(x = d)) +
 # Rplots.pdf).
 print(p1)
 print(p2)
-ggsave(here::here("code", "09_counterfactual", "mc_distributions.png"),
+ggsave(here::here("code", "07_counterfactual", "mc_distributions.png"),
        p1, width = 6.5, height = 4.5, dpi = 120)
-ggsave(here::here("code", "09_counterfactual", "mc_difference_ci.png"),
+ggsave(here::here("code", "07_counterfactual", "mc_difference_ci.png"),
        p2, width = 6.5, height = 4.5, dpi = 120)
 cat("💾 Saved mc_distributions.png and mc_difference_ci.png\n")
 

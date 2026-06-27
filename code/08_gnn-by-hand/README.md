@@ -1,4 +1,4 @@
-# Case Study 10 — GNN by Hand
+# Case Study 08 — GNN by Hand
 
 > Interactive lab: [`docs/case-studies/gnn-by-hand.html`](../../docs/case-studies/gnn-by-hand.html)
 >
@@ -42,7 +42,7 @@ tracks are fully runnable; pick whichever you're comfortable in.
 ## Files in this folder
 
 ```
-10_gnn-by-hand/
+08_gnn-by-hand/
 ├── README.md
 ├── example.R           # R track: drives functions.py's GCN via reticulate
 ├── example.py          # Python track
@@ -116,6 +116,6 @@ on a slice of *your* network and discuss what the embeddings encode.
 
 - Kipf & Welling (2017) "Semi-Supervised Classification with Graph
   Convolutional Networks" — the original GCN paper.
-- The next case study, [`11_gnn-xgboost`](../11_gnn-xgboost),
+- The next case study, [`09_gnn-xgboost`](../09_gnn-xgboost),
   combines GNN embeddings with classical gradient-boosted trees
   for actual prediction.

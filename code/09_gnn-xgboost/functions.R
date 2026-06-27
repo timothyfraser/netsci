@@ -19,7 +19,7 @@ library(zoo)
 library(here)
 library(reticulate)
 
-.case_dir <- function() here::here("code", "11_gnn-xgboost", "data")
+.case_dir <- function() here::here("code", "09_gnn-xgboost", "data")
 
 load_suppliers <- function() readr::read_csv(file.path(.case_dir(), "suppliers.csv"),
                                              show_col_types = FALSE)
@@ -63,7 +63,7 @@ if (utils::packageVersion("reticulate") >= "1.41") {
 
 .gnn_py <- reticulate::import_from_path(
   "functions",
-  path    = here::here("code", "11_gnn-xgboost"),
+  path    = here::here("code", "09_gnn-xgboost"),
   convert = TRUE
 )
 

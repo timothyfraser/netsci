@@ -1,4 +1,4 @@
-"""Generate the tiny + larger toy supply chain networks for case 10.
+"""Generate the tiny + larger toy supply chain networks for case 08.
 
 Two networks are produced:
   - tiny.{nodes,edges}.csv: 6-node hand-toy network mirroring the

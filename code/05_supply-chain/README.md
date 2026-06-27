@@ -90,6 +90,6 @@ If you pick this case study, you'll define a resilience metric on
 
 - The sts course `26C_analytics.R` uses the same vocabulary for
   committee networks.
-- Case study 06 ([`06_dsm-clustering`](../06_dsm-clustering)) tackles
+- Case study 06 ([`10_dsm-clustering`](../10_dsm-clustering)) tackles
   the *modularity* side of the same coin: rather than finding
   critical nodes, finding critical *clusters*.

@@ -1,4 +1,4 @@
-# Case Study 07 — Network Permutation Testing
+# Case Study 06 — Network Permutation Testing
 
 > Interactive lab: [`docs/case-studies/permutation.html`](../../docs/case-studies/permutation.html)
 >
@@ -34,7 +34,7 @@ unblocked p < 0.001, block-permuted p ≈ 0.89.
 ## Files in this folder
 
 ```
-07_permutation/
+06_permutation/
 ├── README.md
 ├── example.R
 ├── example.py

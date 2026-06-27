@@ -1,4 +1,4 @@
-"""Case Study 08 — Sampling Big Networks (Python track).
+"""Case Study 11 — Sampling Big Networks (Python track).
 
 You can't analyze every node in a million-node network on a laptop.
 So we sample. But sampling is not neutral — each strategy preserves
@@ -42,7 +42,7 @@ from functions import (
     load_nodes, load_edges, load_subdivisions, slice_stats,
 )
 
-print("\n🚀 Case Study 08 — Sampling Big Networks (Python)")
+print("\n🚀 Case Study 11 — Sampling Big Networks (Python)")
 print("   Three sampling strategies vs population. Which one preserves the truth?\n")
 
 ## 0.3 Load data #############################################################

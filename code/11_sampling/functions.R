@@ -5,7 +5,7 @@ library(dplyr)
 library(sf)
 library(here)
 
-.case_dir <- function() here::here("code", "08_sampling", "data")
+.case_dir <- function() here::here("code", "11_sampling", "data")
 
 load_nodes <- function() {
   readr::read_csv(

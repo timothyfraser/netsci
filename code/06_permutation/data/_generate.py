@@ -1,4 +1,4 @@
-"""Generate the synthetic data for case 07 (permutation testing).
+"""Generate the synthetic data for case 06 (permutation testing).
 
 We want a network where:
   - nodes have a categorical attribute (`demo` in {A, B})

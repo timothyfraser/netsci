@@ -1,4 +1,4 @@
-# Case Study 11 — GNN + XGBoost
+# Case Study 09 — GNN + XGBoost
 
 > Interactive lab: [`docs/case-studies/gnn-xgboost.html`](../../docs/case-studies/gnn-xgboost.html)
 >
@@ -56,7 +56,7 @@ just a couple of matrix multiplies that the shared `functions.py` performs.
 ## Files in this folder
 
 ```
-11_gnn-xgboost/
+09_gnn-xgboost/
 ├── README.md
 ├── example.R              # XGBoost on raw + lag + GNN (embedding via reticulate)
 ├── example.py             # XGBoost on raw + lag + GNN embedding
