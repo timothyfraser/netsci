@@ -1,5 +1,5 @@
 #' @name example.R
-#' @title Case Study 07 — Network Permutation Testing
+#' @title Case Study 06 — Network Permutation Testing
 #' @author <your-name-here>
 #' @description
 #' The lab walked you through a key idea: when you compute a network
@@ -47,9 +47,9 @@ library(here)
 # `assort_by()` wraps `igraph::assortativity_nominal()`; `permute_labels()`
 # shuffles a vertex attribute, optionally within blocks defined by
 # another attribute. Both live in functions.R.
-source(here::here("code", "07_permutation", "functions.R"))
+source(here::here("code", "06_permutation", "functions.R"))
 
-cat("\n🚀 Case Study 07 — Network Permutation Testing (R)\n")
+cat("\n🚀 Case Study 06 — Network Permutation Testing (R)\n")
 cat("   Same observed stat, two null models. Watch the p-value change.\n\n")
 
 ## 0.3 Load data #############################################################
@@ -141,7 +141,7 @@ p <- ggplot(null_df, aes(x = value, fill = null)) +
 
 # Show interactively AND save a copy (Rscript otherwise hides it in Rplots.pdf).
 print(p)
-ggsave(here::here("code", "07_permutation", "two_null_distributions.png"),
+ggsave(here::here("code", "06_permutation", "two_null_distributions.png"),
        p, width = 7, height = 4.5, dpi = 120)
 cat("💾 Saved two_null_distributions.png\n")
 

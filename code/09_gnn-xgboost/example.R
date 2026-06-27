@@ -1,5 +1,5 @@
 #' @name example.R
-#' @title Case Study 11 — GNN + XGBoost (R, full pipeline via reticulate)
+#' @title Case Study 09 — GNN + XGBoost (R, full pipeline via reticulate)
 #' @author <your-name-here>
 #' @description
 #' The case study lab showed that combining:
@@ -43,9 +43,9 @@ library(here)
 
 # functions.R gives us the R-native loaders + add_lag_features(), and the
 # add_gnn_embeddings() wrapper that calls the Python embedding code.
-source(here::here("code", "11_gnn-xgboost", "functions.R"))
+source(here::here("code", "09_gnn-xgboost", "functions.R"))
 
-cat("\n🚀 Case Study 11 — GNN + XGBoost (R, full pipeline via reticulate)\n")
+cat("\n🚀 Case Study 09 — GNN + XGBoost (R, full pipeline via reticulate)\n")
 cat("   Three feature sets stacked. Watch AUC climb as we add structure.\n\n")
 
 ## 0.3 Load data #############################################################
@@ -77,7 +77,7 @@ cat("✅ Added 4-week lag_rate feature.\n")
 # and A %*% A %*% lag (2-hop), per week. The result is two new columns.
 #
 # These embeddings are FIXED aggregations (just a matrix multiply), NOT a
-# trained GNN: no learned weights, no backprop. Same distinction as case 10
+# trained GNN: no learned weights, no backprop. Same distinction as case 08
 # -- you computed a forward pass, you didn't train one. The structural
 # signal is real; the "learning" is not. A torch GNN would learn what to
 # aggregate; here we hard-code "average your neighbors' lag_rate."
@@ -208,7 +208,7 @@ p <- ggplot(gnn_fit$imp, aes(x = Gain, y = reorder(Feature, Gain))) +
        title = "Which features matter? (raw + lag + GNN model)") +
   theme_minimal()
 
-ggsave(here::here("code", "11_gnn-xgboost", "xgboost_importance.png"),
+ggsave(here::here("code", "09_gnn-xgboost", "xgboost_importance.png"),
        p, width = 7, height = 4.5, dpi = 120)
 cat("💾 Saved xgboost_importance.png\n")
 

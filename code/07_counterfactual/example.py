@@ -1,4 +1,4 @@
-"""Case Study 09 — Counterfactual Monte Carlo (Python track).
+"""Case Study 07 — Counterfactual Monte Carlo (Python track).
 
 The lab walked you through this problem: you propose an intervention
 in a network (add a station, add an edge, boost an edge's volume)
@@ -43,7 +43,7 @@ from functions import (
     load_nodes, load_edges, build_graph, weighted_apl, mc_apls,
 )
 
-print("\n🚀 Case Study 09 — Counterfactual Monte Carlo (Python)")
+print("\n🚀 Case Study 07 — Counterfactual Monte Carlo (Python)")
 print("   Add one edge to a bikeshare network. Does APL really improve?\n")
 
 ## 0.3 Load data #############################################################

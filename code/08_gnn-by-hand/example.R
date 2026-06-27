@@ -1,5 +1,5 @@
 #' @name example.R
-#' @title Case Study 10 — GNN by Hand (R via reticulate)
+#' @title Case Study 08 — GNN by Hand (R via reticulate)
 #' @author <your-name-here>
 #' @description
 #' First, what are we even producing? An EMBEDDING. Where centrality
@@ -8,7 +8,7 @@
 #' structural neighborhood. Why not just use betweenness? Because a
 #' bundle of numbers carries far more about a node's surroundings than
 #' any one score, and it drops straight into a machine-learning model as
-#' features (exactly what case 11 does to predict disruptions).
+#' features (exactly what case 09 does to predict disruptions).
 #'
 #' The case study lab walked you through a hand-computed forward pass.
 #' Here we do it on the same 6-node toy network — but from R. R has no
@@ -63,9 +63,9 @@ cat("✅ reticulate found Python — bridging to the numpy GCN code.\n")
 # functions.R gives us the R-native loaders (load_tiny / load_large) and
 # the `gcn` Python module handle (gcn$adjacency / gcn$normalize /
 # gcn$gcn_layer). Sourcing it triggers the one-time Python setup.
-source(here::here("code", "10_gnn-by-hand", "functions.R"))
+source(here::here("code", "08_gnn-by-hand", "functions.R"))
 
-cat("\n🚀 Case Study 10 — GNN by Hand (R via reticulate)\n")
+cat("\n🚀 Case Study 08 — GNN by Hand (R via reticulate)\n")
 cat("   Two-layer GCN, no native R GNN lib. We drive numpy's functions.py from R.\n\n")
 
 ## 0.3 Load data #############################################################
@@ -156,7 +156,7 @@ print(round(H2, 4))
 # dimensions are not "voltage" or "risk" -- in a trained GNN they're
 # whatever the optimizer found useful; here they're fixed by W1/W2. What
 # matters is RELATIVE: nodes with similar neighborhoods get similar
-# vectors, so the embedding is useful as ML input (case 11) even though no
+# vectors, so the embedding is useful as ML input (case 09) even though no
 # single dimension has a human label.
 
 emb_node4 <- H2[5, ]
@@ -198,7 +198,7 @@ p <- ggplot(plot_df, aes(dim0, dim1, color = group, size = group)) +
        color = NULL, size = NULL) +
   theme_minimal()
 
-ggsave(here::here("code", "10_gnn-by-hand", "gnn_embeddings.png"),
+ggsave(here::here("code", "08_gnn-by-hand", "gnn_embeddings.png"),
        p, width = 7, height = 5, dpi = 120)
 cat("💾 Saved gnn_embeddings.png\n")
 

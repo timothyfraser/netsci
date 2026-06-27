@@ -1,5 +1,5 @@
 #' @name example.R
-#' @title Case Study 06 — DSM Clustering
+#' @title Case Study 10 — DSM Clustering
 #' @author <your-name-here>
 #' @description
 #' A Design Structure Matrix (DSM) is just an adjacency matrix where
@@ -36,9 +36,9 @@ library(here)
 # `cascade_bfs()` does a bounded BFS from a starting node along the
 # directed dependency edges. It's the cascade simulator we use at the
 # end of the script.
-source(here::here("code", "06_dsm-clustering", "functions.R"))
+source(here::here("code", "10_dsm-clustering", "functions.R"))
 
-cat("\n🚀 Case Study 06 — DSM Clustering (R)\n")
+cat("\n🚀 Case Study 10 — DSM Clustering (R)\n")
 cat("   200 components, 8 planted modules. Can community detection recover them?\n\n")
 
 ## 0.3 Load data #############################################################
@@ -138,7 +138,7 @@ draw_dsm <- function() {
 draw_dsm()
 
 # ...and save a copy for terminal / Rscript users.
-png(here::here("code", "06_dsm-clustering", "dsm_reordering.png"),
+png(here::here("code", "10_dsm-clustering", "dsm_reordering.png"),
     width = 9, height = 5, units = "in", res = 120)
 draw_dsm()
 invisible(dev.off())

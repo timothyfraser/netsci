@@ -1,4 +1,4 @@
-# Case Study 08 — Sampling Big Networks
+# Case Study 11 — Sampling Big Networks
 
 > Interactive lab: [`docs/case-studies/sampling.html`](../../docs/case-studies/sampling.html)
 >
@@ -35,7 +35,7 @@ two-week crisis window.
 ## Files in this folder
 
 ```
-08_sampling/
+11_sampling/
 ├── README.md
 ├── example.R
 ├── example.py

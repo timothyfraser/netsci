@@ -1,4 +1,4 @@
-"""Generate the slim Hurricane Dorian evacuation dataset for case 08.
+"""Generate the slim Hurricane Dorian evacuation dataset for case 11.
 
 We start from the full Gulf-states evacuation network at
 https://github.com/timothyfraser/sts (3week branch) and trim:

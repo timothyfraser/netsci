@@ -1,4 +1,4 @@
-"""Case Study 11 — GNN + XGBoost (Python track, full pipeline).
+"""Case Study 09 — GNN + XGBoost (Python track, full pipeline).
 
 The case study lab showed you that combining:
   - raw static features
@@ -44,7 +44,7 @@ from functions import (
     add_lag_features, build_adjacency, add_gnn_embeddings,
 )
 
-print("\n🚀 Case Study 11 — GNN + XGBoost (Python, full pipeline)")
+print("\n🚀 Case Study 09 — GNN + XGBoost (Python, full pipeline)")
 print("   Three feature sets stacked. Watch AUC climb as we add structure.\n")
 
 ## 0.3 Load data #############################################################
@@ -77,7 +77,7 @@ print(f"✅ Added 4-week lag_rate feature.")
 # possible "graph convolution" — no learned weights, no nonlinearity.
 #
 # So these are FIXED aggregations, NOT a trained GNN: no learned weights,
-# no backprop. Same distinction as case 10 -- you computed a forward pass,
+# no backprop. Same distinction as case 08 -- you computed a forward pass,
 # you didn't train one. A torch GNN would LEARN what to aggregate; here we
 # hard-code "average your neighbors' lag_rate." The structural signal is
 # real; the "learning" is not.
