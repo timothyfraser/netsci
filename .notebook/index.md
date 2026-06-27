@@ -1,6 +1,6 @@
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-27 13:52 UTC_
+_Auto-generated NotebookLM source · 2026-06-27 14:38 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -327,257 +327,257 @@ Structured index of every public page and code file in the course. Paste this in
 - **Use case:** Reusable Python helper functions referenced by example.py — students can crib these for assignments.
 - **Tags:** supply chain, tiers, suppliers, logistics, capacity, single-source risk, case study 05, skill: Model, Python, functions, helpers, utilities
 
-## Lab 06 — DSM & Clustering (interactive)
-
-- **URL:** https://timothyfraser.github.io/netsci/case-studies/dsm-clustering.html
-- **Topic:** Design Structure Matrix and community detection
-- **Use case:** Interactive in-browser lab for case study 6. Use when students need to find clusters/modules in a system — engineering subsystems, organizational teams, or any group structure hidden in a network.
-- **Tags:** DSM, design structure matrix, clustering, community detection, modularity, Louvain, subsystems, case study 06, skill: Model, interactive lab, browser
-
-## Code 06 — DSM & Clustering (README)
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_dsm-clustering/README.md
-- **Topic:** Design Structure Matrix and community detection
-- **Use case:** Conceptual writeup for case study 6: what the dataset is, what the script does, and what students should take away.
-- **Tags:** DSM, design structure matrix, clustering, community detection, modularity, Louvain, subsystems, case study 06, skill: Model, README, writeup, concepts
-
-## Code 06 — DSM & Clustering (R example)
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_dsm-clustering/example.R
-- **Topic:** Design Structure Matrix and community detection — R implementation
-- **Use case:** Runnable R script that works through case study 6 end-to-end with igraph and tidyverse. Pair with the R Playground or run locally.
-- **Tags:** DSM, design structure matrix, clustering, community detection, modularity, Louvain, subsystems, case study 06, skill: Model, R, igraph, tidyverse, example.R, runnable
-
-## Code 06 — DSM & Clustering (Python example)
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_dsm-clustering/example.py
-- **Topic:** Design Structure Matrix and community detection — Python implementation
-- **Use case:** Runnable Python script that mirrors example.R using networkx + pandas. Pair with the Python Playground or run locally.
-- **Tags:** DSM, design structure matrix, clustering, community detection, modularity, Louvain, subsystems, case study 06, skill: Model, Python, networkx, pandas, example.py, runnable
-
-## Code 06 — DSM & Clustering (R helper functions)
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_dsm-clustering/functions.R
-- **Topic:** Design Structure Matrix and community detection — R utilities
-- **Use case:** Reusable R helper functions referenced by example.R — students can crib these for assignments.
-- **Tags:** DSM, design structure matrix, clustering, community detection, modularity, Louvain, subsystems, case study 06, skill: Model, R, functions, helpers, utilities
-
-## Code 06 — DSM & Clustering (Python helper functions)
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_dsm-clustering/functions.py
-- **Topic:** Design Structure Matrix and community detection — Python utilities
-- **Use case:** Reusable Python helper functions referenced by example.py — students can crib these for assignments.
-- **Tags:** DSM, design structure matrix, clustering, community detection, modularity, Louvain, subsystems, case study 06, skill: Model, Python, functions, helpers, utilities
-
-## Lab 07 — Permutation Tests (interactive)
+## Lab 06 — Permutation Tests (interactive)
 
 - **URL:** https://timothyfraser.github.io/netsci/case-studies/permutation.html
 - **Topic:** Statistical inference for networks via permutation
-- **Use case:** Interactive in-browser lab for case study 7. Send students here when they ask whether an observed network pattern (a correlation, a degree assortativity, a clustering coefficient) is meaningful vs. random.
-- **Tags:** permutation test, statistical inference, null model, randomization, p-value, significance, case study 07, skill: Predict, interactive lab, browser
+- **Use case:** Interactive in-browser lab for case study 6. Send students here when they ask whether an observed network pattern (a correlation, a degree assortativity, a clustering coefficient) is meaningful vs. random.
+- **Tags:** permutation test, statistical inference, null model, randomization, p-value, significance, case study 06, skill: Predict, interactive lab, browser
 
-## Code 07 — Permutation Tests (README)
+## Code 06 — Permutation Tests (README)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_permutation/README.md
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_permutation/README.md
 - **Topic:** Statistical inference for networks via permutation
-- **Use case:** Conceptual writeup for case study 7: what the dataset is, what the script does, and what students should take away.
-- **Tags:** permutation test, statistical inference, null model, randomization, p-value, significance, case study 07, skill: Predict, README, writeup, concepts
+- **Use case:** Conceptual writeup for case study 6: what the dataset is, what the script does, and what students should take away.
+- **Tags:** permutation test, statistical inference, null model, randomization, p-value, significance, case study 06, skill: Predict, README, writeup, concepts
 
-## Code 07 — Permutation Tests (R example)
+## Code 06 — Permutation Tests (R example)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_permutation/example.R
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_permutation/example.R
 - **Topic:** Statistical inference for networks via permutation — R implementation
-- **Use case:** Runnable R script that works through case study 7 end-to-end with igraph and tidyverse. Pair with the R Playground or run locally.
-- **Tags:** permutation test, statistical inference, null model, randomization, p-value, significance, case study 07, skill: Predict, R, igraph, tidyverse, example.R, runnable
+- **Use case:** Runnable R script that works through case study 6 end-to-end with igraph and tidyverse. Pair with the R Playground or run locally.
+- **Tags:** permutation test, statistical inference, null model, randomization, p-value, significance, case study 06, skill: Predict, R, igraph, tidyverse, example.R, runnable
 
-## Code 07 — Permutation Tests (Python example)
+## Code 06 — Permutation Tests (Python example)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_permutation/example.py
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_permutation/example.py
 - **Topic:** Statistical inference for networks via permutation — Python implementation
 - **Use case:** Runnable Python script that mirrors example.R using networkx + pandas. Pair with the Python Playground or run locally.
-- **Tags:** permutation test, statistical inference, null model, randomization, p-value, significance, case study 07, skill: Predict, Python, networkx, pandas, example.py, runnable
+- **Tags:** permutation test, statistical inference, null model, randomization, p-value, significance, case study 06, skill: Predict, Python, networkx, pandas, example.py, runnable
 
-## Code 07 — Permutation Tests (R helper functions)
+## Code 06 — Permutation Tests (R helper functions)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_permutation/functions.R
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_permutation/functions.R
 - **Topic:** Statistical inference for networks via permutation — R utilities
 - **Use case:** Reusable R helper functions referenced by example.R — students can crib these for assignments.
-- **Tags:** permutation test, statistical inference, null model, randomization, p-value, significance, case study 07, skill: Predict, R, functions, helpers, utilities
+- **Tags:** permutation test, statistical inference, null model, randomization, p-value, significance, case study 06, skill: Predict, R, functions, helpers, utilities
 
-## Code 07 — Permutation Tests (Python helper functions)
+## Code 06 — Permutation Tests (Python helper functions)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_permutation/functions.py
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_permutation/functions.py
 - **Topic:** Statistical inference for networks via permutation — Python utilities
 - **Use case:** Reusable Python helper functions referenced by example.py — students can crib these for assignments.
-- **Tags:** permutation test, statistical inference, null model, randomization, p-value, significance, case study 07, skill: Predict, Python, functions, helpers, utilities
+- **Tags:** permutation test, statistical inference, null model, randomization, p-value, significance, case study 06, skill: Predict, Python, functions, helpers, utilities
 
-## Lab 08 — Network Sampling (interactive)
-
-- **URL:** https://timothyfraser.github.io/netsci/case-studies/sampling.html
-- **Topic:** Sampling and approximating large networks
-- **Use case:** Interactive in-browser lab for case study 8. Use when the full network is too big to load or query — snowball, random-walk, induced-subgraph sampling, and how to correct estimates for sampling bias.
-- **Tags:** sampling, snowball, random walk, induced subgraph, big networks, scaling, case study 08, skill: Predict, interactive lab, browser
-
-## Code 08 — Network Sampling (README)
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_sampling/README.md
-- **Topic:** Sampling and approximating large networks
-- **Use case:** Conceptual writeup for case study 8: what the dataset is, what the script does, and what students should take away.
-- **Tags:** sampling, snowball, random walk, induced subgraph, big networks, scaling, case study 08, skill: Predict, README, writeup, concepts
-
-## Code 08 — Network Sampling (R example)
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_sampling/example.R
-- **Topic:** Sampling and approximating large networks — R implementation
-- **Use case:** Runnable R script that works through case study 8 end-to-end with igraph and tidyverse. Pair with the R Playground or run locally.
-- **Tags:** sampling, snowball, random walk, induced subgraph, big networks, scaling, case study 08, skill: Predict, R, igraph, tidyverse, example.R, runnable
-
-## Code 08 — Network Sampling (Python example)
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_sampling/example.py
-- **Topic:** Sampling and approximating large networks — Python implementation
-- **Use case:** Runnable Python script that mirrors example.R using networkx + pandas. Pair with the Python Playground or run locally.
-- **Tags:** sampling, snowball, random walk, induced subgraph, big networks, scaling, case study 08, skill: Predict, Python, networkx, pandas, example.py, runnable
-
-## Code 08 — Network Sampling (R helper functions)
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_sampling/functions.R
-- **Topic:** Sampling and approximating large networks — R utilities
-- **Use case:** Reusable R helper functions referenced by example.R — students can crib these for assignments.
-- **Tags:** sampling, snowball, random walk, induced subgraph, big networks, scaling, case study 08, skill: Predict, R, functions, helpers, utilities
-
-## Code 08 — Network Sampling (Python helper functions)
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_sampling/functions.py
-- **Topic:** Sampling and approximating large networks — Python utilities
-- **Use case:** Reusable Python helper functions referenced by example.py — students can crib these for assignments.
-- **Tags:** sampling, snowball, random walk, induced subgraph, big networks, scaling, case study 08, skill: Predict, Python, functions, helpers, utilities
-
-## Lab 09 — Counterfactual Inference (interactive)
+## Lab 07 — Counterfactual Inference (interactive)
 
 - **URL:** https://timothyfraser.github.io/netsci/case-studies/counterfactual.html
 - **Topic:** What-if analysis on networks
-- **Use case:** Interactive in-browser lab for case study 9. Use when students need to reason about counterfactuals: 'what would happen if we removed this node / added this edge / rerouted this flow?'
-- **Tags:** counterfactual, what if, intervention, causal, decision, policy, case study 09, skill: Decide, interactive lab, browser
+- **Use case:** Interactive in-browser lab for case study 7. Use when students need to reason about counterfactuals: 'what would happen if we removed this node / added this edge / rerouted this flow?'
+- **Tags:** counterfactual, what if, intervention, causal, decision, policy, case study 07, skill: Decide, interactive lab, browser
 
-## Code 09 — Counterfactual Inference (README)
+## Code 07 — Counterfactual Inference (README)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_counterfactual/README.md
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_counterfactual/README.md
 - **Topic:** What-if analysis on networks
-- **Use case:** Conceptual writeup for case study 9: what the dataset is, what the script does, and what students should take away.
-- **Tags:** counterfactual, what if, intervention, causal, decision, policy, case study 09, skill: Decide, README, writeup, concepts
+- **Use case:** Conceptual writeup for case study 7: what the dataset is, what the script does, and what students should take away.
+- **Tags:** counterfactual, what if, intervention, causal, decision, policy, case study 07, skill: Decide, README, writeup, concepts
 
-## Code 09 — Counterfactual Inference (R example)
+## Code 07 — Counterfactual Inference (R example)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_counterfactual/example.R
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_counterfactual/example.R
 - **Topic:** What-if analysis on networks — R implementation
-- **Use case:** Runnable R script that works through case study 9 end-to-end with igraph and tidyverse. Pair with the R Playground or run locally.
-- **Tags:** counterfactual, what if, intervention, causal, decision, policy, case study 09, skill: Decide, R, igraph, tidyverse, example.R, runnable
+- **Use case:** Runnable R script that works through case study 7 end-to-end with igraph and tidyverse. Pair with the R Playground or run locally.
+- **Tags:** counterfactual, what if, intervention, causal, decision, policy, case study 07, skill: Decide, R, igraph, tidyverse, example.R, runnable
 
-## Code 09 — Counterfactual Inference (Python example)
+## Code 07 — Counterfactual Inference (Python example)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_counterfactual/example.py
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_counterfactual/example.py
 - **Topic:** What-if analysis on networks — Python implementation
 - **Use case:** Runnable Python script that mirrors example.R using networkx + pandas. Pair with the Python Playground or run locally.
-- **Tags:** counterfactual, what if, intervention, causal, decision, policy, case study 09, skill: Decide, Python, networkx, pandas, example.py, runnable
+- **Tags:** counterfactual, what if, intervention, causal, decision, policy, case study 07, skill: Decide, Python, networkx, pandas, example.py, runnable
 
-## Code 09 — Counterfactual Inference (R helper functions)
+## Code 07 — Counterfactual Inference (R helper functions)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_counterfactual/functions.R
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_counterfactual/functions.R
 - **Topic:** What-if analysis on networks — R utilities
 - **Use case:** Reusable R helper functions referenced by example.R — students can crib these for assignments.
-- **Tags:** counterfactual, what if, intervention, causal, decision, policy, case study 09, skill: Decide, R, functions, helpers, utilities
+- **Tags:** counterfactual, what if, intervention, causal, decision, policy, case study 07, skill: Decide, R, functions, helpers, utilities
 
-## Code 09 — Counterfactual Inference (Python helper functions)
+## Code 07 — Counterfactual Inference (Python helper functions)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_counterfactual/functions.py
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_counterfactual/functions.py
 - **Topic:** What-if analysis on networks — Python utilities
 - **Use case:** Reusable Python helper functions referenced by example.py — students can crib these for assignments.
-- **Tags:** counterfactual, what if, intervention, causal, decision, policy, case study 09, skill: Decide, Python, functions, helpers, utilities
+- **Tags:** counterfactual, what if, intervention, causal, decision, policy, case study 07, skill: Decide, Python, functions, helpers, utilities
 
-## Lab 10 — Graph Neural Networks by Hand (interactive)
+## Lab 08 — Graph Neural Networks by Hand (interactive)
 
 - **URL:** https://timothyfraser.github.io/netsci/case-studies/gnn-by-hand.html
 - **Topic:** Building a GNN from scratch with matrix algebra
-- **Use case:** Interactive in-browser lab for case study 10. Use to demystify GNNs — message passing, neighborhood aggregation, and a tiny worked example built without a deep-learning framework.
-- **Tags:** GNN, graph neural network, message passing, neighborhood aggregation, by hand, from scratch, case study 10, skill: Predict, interactive lab, browser
+- **Use case:** Interactive in-browser lab for case study 8. Use to demystify GNNs — message passing, neighborhood aggregation, and a tiny worked example built without a deep-learning framework.
+- **Tags:** GNN, graph neural network, message passing, neighborhood aggregation, by hand, from scratch, case study 08, skill: Predict, interactive lab, browser
 
-## Code 10 — Graph Neural Networks by Hand (README)
+## Code 08 — Graph Neural Networks by Hand (README)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_gnn-by-hand/README.md
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_gnn-by-hand/README.md
 - **Topic:** Building a GNN from scratch with matrix algebra
-- **Use case:** Conceptual writeup for case study 10: what the dataset is, what the script does, and what students should take away.
-- **Tags:** GNN, graph neural network, message passing, neighborhood aggregation, by hand, from scratch, case study 10, skill: Predict, README, writeup, concepts
+- **Use case:** Conceptual writeup for case study 8: what the dataset is, what the script does, and what students should take away.
+- **Tags:** GNN, graph neural network, message passing, neighborhood aggregation, by hand, from scratch, case study 08, skill: Predict, README, writeup, concepts
 
-## Code 10 — Graph Neural Networks by Hand (R example)
+## Code 08 — Graph Neural Networks by Hand (R example)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_gnn-by-hand/example.R
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_gnn-by-hand/example.R
 - **Topic:** Building a GNN from scratch with matrix algebra — R implementation
-- **Use case:** Runnable R script that works through case study 10 end-to-end with igraph and tidyverse. Pair with the R Playground or run locally.
-- **Tags:** GNN, graph neural network, message passing, neighborhood aggregation, by hand, from scratch, case study 10, skill: Predict, R, igraph, tidyverse, example.R, runnable
+- **Use case:** Runnable R script that works through case study 8 end-to-end with igraph and tidyverse. Pair with the R Playground or run locally.
+- **Tags:** GNN, graph neural network, message passing, neighborhood aggregation, by hand, from scratch, case study 08, skill: Predict, R, igraph, tidyverse, example.R, runnable
 
-## Code 10 — Graph Neural Networks by Hand (Python example)
+## Code 08 — Graph Neural Networks by Hand (Python example)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_gnn-by-hand/example.py
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_gnn-by-hand/example.py
 - **Topic:** Building a GNN from scratch with matrix algebra — Python implementation
 - **Use case:** Runnable Python script that mirrors example.R using networkx + pandas. Pair with the Python Playground or run locally.
-- **Tags:** GNN, graph neural network, message passing, neighborhood aggregation, by hand, from scratch, case study 10, skill: Predict, Python, networkx, pandas, example.py, runnable
+- **Tags:** GNN, graph neural network, message passing, neighborhood aggregation, by hand, from scratch, case study 08, skill: Predict, Python, networkx, pandas, example.py, runnable
 
-## Code 10 — Graph Neural Networks by Hand (R helper functions)
+## Code 08 — Graph Neural Networks by Hand (R helper functions)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_gnn-by-hand/functions.R
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_gnn-by-hand/functions.R
 - **Topic:** Building a GNN from scratch with matrix algebra — R utilities
 - **Use case:** Reusable R helper functions referenced by example.R — students can crib these for assignments.
-- **Tags:** GNN, graph neural network, message passing, neighborhood aggregation, by hand, from scratch, case study 10, skill: Predict, R, functions, helpers, utilities
+- **Tags:** GNN, graph neural network, message passing, neighborhood aggregation, by hand, from scratch, case study 08, skill: Predict, R, functions, helpers, utilities
 
-## Code 10 — Graph Neural Networks by Hand (Python helper functions)
+## Code 08 — Graph Neural Networks by Hand (Python helper functions)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_gnn-by-hand/functions.py
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_gnn-by-hand/functions.py
 - **Topic:** Building a GNN from scratch with matrix algebra — Python utilities
 - **Use case:** Reusable Python helper functions referenced by example.py — students can crib these for assignments.
-- **Tags:** GNN, graph neural network, message passing, neighborhood aggregation, by hand, from scratch, case study 10, skill: Predict, Python, functions, helpers, utilities
+- **Tags:** GNN, graph neural network, message passing, neighborhood aggregation, by hand, from scratch, case study 08, skill: Predict, Python, functions, helpers, utilities
 
-## Lab 11 — GNN + XGBoost for Prediction (interactive)
+## Lab 09 — GNN + XGBoost for Prediction (interactive)
 
 - **URL:** https://timothyfraser.github.io/netsci/case-studies/gnn-xgboost.html
 - **Topic:** Combining graph features with gradient boosting
-- **Use case:** Interactive in-browser lab for case study 11. Use for the capstone-style example of feeding GNN-derived embeddings into XGBoost to predict supplier failure or any node-level outcome.
-- **Tags:** GNN, XGBoost, gradient boosting, node prediction, embeddings, machine learning, supplier failure, case study 11, skill: Predict, interactive lab, browser
+- **Use case:** Interactive in-browser lab for case study 9. Use for the capstone-style example of feeding GNN-derived embeddings into XGBoost to predict supplier failure or any node-level outcome.
+- **Tags:** GNN, XGBoost, gradient boosting, node prediction, embeddings, machine learning, supplier failure, case study 09, skill: Predict, interactive lab, browser
 
-## Code 11 — GNN + XGBoost for Prediction (README)
+## Code 09 — GNN + XGBoost for Prediction (README)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_gnn-xgboost/README.md
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_gnn-xgboost/README.md
 - **Topic:** Combining graph features with gradient boosting
-- **Use case:** Conceptual writeup for case study 11: what the dataset is, what the script does, and what students should take away.
-- **Tags:** GNN, XGBoost, gradient boosting, node prediction, embeddings, machine learning, supplier failure, case study 11, skill: Predict, README, writeup, concepts
+- **Use case:** Conceptual writeup for case study 9: what the dataset is, what the script does, and what students should take away.
+- **Tags:** GNN, XGBoost, gradient boosting, node prediction, embeddings, machine learning, supplier failure, case study 09, skill: Predict, README, writeup, concepts
 
-## Code 11 — GNN + XGBoost for Prediction (R example)
+## Code 09 — GNN + XGBoost for Prediction (R example)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_gnn-xgboost/example.R
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_gnn-xgboost/example.R
 - **Topic:** Combining graph features with gradient boosting — R implementation
-- **Use case:** Runnable R script that works through case study 11 end-to-end with igraph and tidyverse. Pair with the R Playground or run locally.
-- **Tags:** GNN, XGBoost, gradient boosting, node prediction, embeddings, machine learning, supplier failure, case study 11, skill: Predict, R, igraph, tidyverse, example.R, runnable
+- **Use case:** Runnable R script that works through case study 9 end-to-end with igraph and tidyverse. Pair with the R Playground or run locally.
+- **Tags:** GNN, XGBoost, gradient boosting, node prediction, embeddings, machine learning, supplier failure, case study 09, skill: Predict, R, igraph, tidyverse, example.R, runnable
 
-## Code 11 — GNN + XGBoost for Prediction (Python example)
+## Code 09 — GNN + XGBoost for Prediction (Python example)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_gnn-xgboost/example.py
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_gnn-xgboost/example.py
 - **Topic:** Combining graph features with gradient boosting — Python implementation
 - **Use case:** Runnable Python script that mirrors example.R using networkx + pandas. Pair with the Python Playground or run locally.
-- **Tags:** GNN, XGBoost, gradient boosting, node prediction, embeddings, machine learning, supplier failure, case study 11, skill: Predict, Python, networkx, pandas, example.py, runnable
+- **Tags:** GNN, XGBoost, gradient boosting, node prediction, embeddings, machine learning, supplier failure, case study 09, skill: Predict, Python, networkx, pandas, example.py, runnable
 
-## Code 11 — GNN + XGBoost for Prediction (R helper functions)
+## Code 09 — GNN + XGBoost for Prediction (R helper functions)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_gnn-xgboost/functions.R
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_gnn-xgboost/functions.R
 - **Topic:** Combining graph features with gradient boosting — R utilities
 - **Use case:** Reusable R helper functions referenced by example.R — students can crib these for assignments.
-- **Tags:** GNN, XGBoost, gradient boosting, node prediction, embeddings, machine learning, supplier failure, case study 11, skill: Predict, R, functions, helpers, utilities
+- **Tags:** GNN, XGBoost, gradient boosting, node prediction, embeddings, machine learning, supplier failure, case study 09, skill: Predict, R, functions, helpers, utilities
 
-## Code 11 — GNN + XGBoost for Prediction (Python helper functions)
+## Code 09 — GNN + XGBoost for Prediction (Python helper functions)
 
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_gnn-xgboost/functions.py
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_gnn-xgboost/functions.py
 - **Topic:** Combining graph features with gradient boosting — Python utilities
 - **Use case:** Reusable Python helper functions referenced by example.py — students can crib these for assignments.
-- **Tags:** GNN, XGBoost, gradient boosting, node prediction, embeddings, machine learning, supplier failure, case study 11, skill: Predict, Python, functions, helpers, utilities
+- **Tags:** GNN, XGBoost, gradient boosting, node prediction, embeddings, machine learning, supplier failure, case study 09, skill: Predict, Python, functions, helpers, utilities
+
+## Lab 10 — DSM & Clustering (interactive)
+
+- **URL:** https://timothyfraser.github.io/netsci/case-studies/dsm-clustering.html
+- **Topic:** Design Structure Matrix and community detection
+- **Use case:** Interactive in-browser lab for case study 10. Use when students need to find clusters/modules in a system — engineering subsystems, organizational teams, or any group structure hidden in a network.
+- **Tags:** DSM, design structure matrix, clustering, community detection, modularity, Louvain, subsystems, case study 10, skill: Model, interactive lab, browser
+
+## Code 10 — DSM & Clustering (README)
+
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_dsm-clustering/README.md
+- **Topic:** Design Structure Matrix and community detection
+- **Use case:** Conceptual writeup for case study 10: what the dataset is, what the script does, and what students should take away.
+- **Tags:** DSM, design structure matrix, clustering, community detection, modularity, Louvain, subsystems, case study 10, skill: Model, README, writeup, concepts
+
+## Code 10 — DSM & Clustering (R example)
+
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_dsm-clustering/example.R
+- **Topic:** Design Structure Matrix and community detection — R implementation
+- **Use case:** Runnable R script that works through case study 10 end-to-end with igraph and tidyverse. Pair with the R Playground or run locally.
+- **Tags:** DSM, design structure matrix, clustering, community detection, modularity, Louvain, subsystems, case study 10, skill: Model, R, igraph, tidyverse, example.R, runnable
+
+## Code 10 — DSM & Clustering (Python example)
+
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_dsm-clustering/example.py
+- **Topic:** Design Structure Matrix and community detection — Python implementation
+- **Use case:** Runnable Python script that mirrors example.R using networkx + pandas. Pair with the Python Playground or run locally.
+- **Tags:** DSM, design structure matrix, clustering, community detection, modularity, Louvain, subsystems, case study 10, skill: Model, Python, networkx, pandas, example.py, runnable
+
+## Code 10 — DSM & Clustering (R helper functions)
+
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_dsm-clustering/functions.R
+- **Topic:** Design Structure Matrix and community detection — R utilities
+- **Use case:** Reusable R helper functions referenced by example.R — students can crib these for assignments.
+- **Tags:** DSM, design structure matrix, clustering, community detection, modularity, Louvain, subsystems, case study 10, skill: Model, R, functions, helpers, utilities
+
+## Code 10 — DSM & Clustering (Python helper functions)
+
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_dsm-clustering/functions.py
+- **Topic:** Design Structure Matrix and community detection — Python utilities
+- **Use case:** Reusable Python helper functions referenced by example.py — students can crib these for assignments.
+- **Tags:** DSM, design structure matrix, clustering, community detection, modularity, Louvain, subsystems, case study 10, skill: Model, Python, functions, helpers, utilities
+
+## Lab 11 — Network Sampling (interactive)
+
+- **URL:** https://timothyfraser.github.io/netsci/case-studies/sampling.html
+- **Topic:** Sampling and approximating large networks
+- **Use case:** Interactive in-browser lab for case study 11. Use when the full network is too big to load or query — snowball, random-walk, induced-subgraph sampling, and how to correct estimates for sampling bias.
+- **Tags:** sampling, snowball, random walk, induced subgraph, big networks, scaling, case study 11, skill: Predict, interactive lab, browser
+
+## Code 11 — Network Sampling (README)
+
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_sampling/README.md
+- **Topic:** Sampling and approximating large networks
+- **Use case:** Conceptual writeup for case study 11: what the dataset is, what the script does, and what students should take away.
+- **Tags:** sampling, snowball, random walk, induced subgraph, big networks, scaling, case study 11, skill: Predict, README, writeup, concepts
+
+## Code 11 — Network Sampling (R example)
+
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_sampling/example.R
+- **Topic:** Sampling and approximating large networks — R implementation
+- **Use case:** Runnable R script that works through case study 11 end-to-end with igraph and tidyverse. Pair with the R Playground or run locally.
+- **Tags:** sampling, snowball, random walk, induced subgraph, big networks, scaling, case study 11, skill: Predict, R, igraph, tidyverse, example.R, runnable
+
+## Code 11 — Network Sampling (Python example)
+
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_sampling/example.py
+- **Topic:** Sampling and approximating large networks — Python implementation
+- **Use case:** Runnable Python script that mirrors example.R using networkx + pandas. Pair with the Python Playground or run locally.
+- **Tags:** sampling, snowball, random walk, induced subgraph, big networks, scaling, case study 11, skill: Predict, Python, networkx, pandas, example.py, runnable
+
+## Code 11 — Network Sampling (R helper functions)
+
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_sampling/functions.R
+- **Topic:** Sampling and approximating large networks — R utilities
+- **Use case:** Reusable R helper functions referenced by example.R — students can crib these for assignments.
+- **Tags:** sampling, snowball, random walk, induced subgraph, big networks, scaling, case study 11, skill: Predict, R, functions, helpers, utilities
+
+## Code 11 — Network Sampling (Python helper functions)
+
+- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_sampling/functions.py
+- **Topic:** Sampling and approximating large networks — Python utilities
+- **Use case:** Reusable Python helper functions referenced by example.py — students can crib these for assignments.
+- **Tags:** sampling, snowball, random walk, induced subgraph, big networks, scaling, case study 11, skill: Predict, Python, functions, helpers, utilities
 
 ---
 
@@ -753,216 +753,6 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 ## Sketch ↔ LC Map · Instructor · SYSEN 5470
 
 - **URL:** https://timothyfraser.github.io/netsci/instructor/sketch-lc-map.html
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## Case Study 06 — Network Permutation Testing
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_permutation/README.md
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. Setup ###################################################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_permutation/example.R
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. Setup ###################################################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_permutation/example.py
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## functions.R
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_permutation/functions.R
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## functions.py
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/06_permutation/functions.py
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## Case Study 07 — Counterfactual Monte Carlo
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_counterfactual/README.md
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. Setup ###################################################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_counterfactual/example.R
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. Setup ###################################################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_counterfactual/example.py
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## functions.R
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_counterfactual/functions.R
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## functions.py
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/07_counterfactual/functions.py
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## Case Study 08 — GNN by Hand
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_gnn-by-hand/README.md
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. Setup ###################################################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_gnn-by-hand/example.R
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. Setup ###################################################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_gnn-by-hand/example.py
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. R-native data loaders ###################################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_gnn-by-hand/functions.R
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## functions.py
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/08_gnn-by-hand/functions.py
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## Case Study 09 — GNN + XGBoost
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_gnn-xgboost/README.md
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. Setup ###################################################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_gnn-xgboost/example.R
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. Setup ###################################################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_gnn-xgboost/example.py
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. R-native loaders and lag feature ########################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_gnn-xgboost/functions.R
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## functions.py
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/09_gnn-xgboost/functions.py
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## Case Study 10 — DSM Clustering
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_dsm-clustering/README.md
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. Setup ###################################################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_dsm-clustering/example.R
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. Setup ###################################################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_dsm-clustering/example.py
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## functions.R
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_dsm-clustering/functions.R
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## functions.py
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/10_dsm-clustering/functions.py
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## Case Study 11 — Sampling Big Networks
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_sampling/README.md
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. Setup ###################################################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_sampling/example.R
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## 0. Setup ###################################################################
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_sampling/example.py
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## functions.R
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_sampling/functions.R
-- **Topic:** _(uncurated — fill me in)_
-- **Use case:** _(uncurated — fill me in)_
-- **Tags:** _(none)_
-
-## functions.py
-
-- **URL:** https://github.com/timothyfraser/netsci/blob/main/code/11_sampling/functions.py
 - **Topic:** _(uncurated — fill me in)_
 - **Use case:** _(uncurated — fill me in)_
 - **Tags:** _(none)_

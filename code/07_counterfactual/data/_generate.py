@@ -17,6 +17,7 @@ Run:
 from __future__ import annotations
 
 from pathlib import Path
+import random
 import numpy as np
 import pandas as pd
 import igraph as ig
@@ -26,6 +27,9 @@ SEED = 42
 
 def main() -> None:
     rng = np.random.default_rng(SEED)
+    # Watts_Strogatz draws on igraph's own RNG (Python's `random` module),
+    # not numpy — seed it too or the topology is different on every run.
+    random.seed(SEED)
 
     n = 180
     g = ig.Graph.Watts_Strogatz(dim=1, size=n, nei=4, p=0.08)
