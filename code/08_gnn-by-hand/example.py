@@ -1,4 +1,4 @@
-"""Case Study 10 — GNN by Hand (Python track).
+"""Case Study 08 — GNN by Hand (Python track).
 
 First, what are we even producing? An EMBEDDING. Where centrality (case
 04) gave each node a single number, an embedding gives each node a
@@ -6,7 +6,7 @@ First, what are we even producing? An EMBEDDING. Where centrality (case
 structural neighborhood. Why bother instead of just using betweenness?
 Because a bundle of numbers carries far more about a node's surroundings
 than any one score, and it drops straight into a machine-learning model
-as features (that's exactly what case 11 does to predict disruptions).
+as features (that's exactly what case 09 does to predict disruptions).
 
 The case study lab walked you through a hand-computed forward pass.
 Here we do it in pure numpy on the same 6-node toy network. No
@@ -41,7 +41,7 @@ from functions import (
     load_tiny, load_large, adjacency, normalize, relu, gcn_layer,
 )
 
-print("\n🚀 Case Study 10 — GNN by Hand (Python)")
+print("\n🚀 Case Study 08 — GNN by Hand (Python)")
 print("   Two-layer GCN, no torch. Pure numpy on a 6-node + 200-node network.\n")
 
 ## 0.3 Load data #############################################################
@@ -130,7 +130,7 @@ print(H2.round(4))
 # dimensions are not "voltage" or "risk" -- in a trained GNN they're
 # whatever the optimizer found useful; here they're fixed by W1/W2. What
 # matters is RELATIVE: nodes with similar neighborhoods get similar
-# vectors, so the embedding is useful as ML input (case 11) even though no
+# vectors, so the embedding is useful as ML input (case 09) even though no
 # single dimension has a human label.
 
 print("Final embedding for node 4 (the bottleneck):")

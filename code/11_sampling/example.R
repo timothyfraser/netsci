@@ -1,5 +1,5 @@
 #' @name example.R
-#' @title Case Study 08 — Sampling Big Networks
+#' @title Case Study 11 — Sampling Big Networks
 #' @author <your-name-here>
 #' @description
 #' You can't analyze every node in a million-node network on a laptop.
@@ -38,9 +38,9 @@ library(here)
 # `slice_stats()` computes the per-time-slice network statistics
 # (edgeweight, share of nodes touched, etc.) for any edge subset.
 # That's the workhorse we'll reuse on every sample.
-source(here::here("code", "08_sampling", "functions.R"))
+source(here::here("code", "11_sampling", "functions.R"))
 
-cat("\n🚀 Case Study 08 — Sampling Big Networks (R)\n")
+cat("\n🚀 Case Study 11 — Sampling Big Networks (R)\n")
 cat("   Three sampling strategies vs population. Which one preserves the truth?\n\n")
 
 ## 0.3 Load data #############################################################
@@ -140,7 +140,7 @@ p <- bind_rows(
 # against the population line. Show it AND save it (Rscript otherwise hides
 # it in Rplots.pdf, so the most important plot in the lab goes unseen).
 print(p)
-ggsave(here::here("code", "08_sampling", "sample_vs_population.png"),
+ggsave(here::here("code", "11_sampling", "sample_vs_population.png"),
        p, width = 7, height = 4.5, dpi = 120)
 cat("💾 Saved sample_vs_population.png\n")
 

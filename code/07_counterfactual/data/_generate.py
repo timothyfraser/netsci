@@ -1,4 +1,4 @@
-"""Generate the synthetic bikeshare network for case 09.
+"""Generate the synthetic bikeshare network for case 07.
 
 We want:
   - ~180 stations

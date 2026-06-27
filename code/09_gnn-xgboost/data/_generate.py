@@ -1,4 +1,4 @@
-"""Generate the synthetic supplier-disruption panel for case 11.
+"""Generate the synthetic supplier-disruption panel for case 09.
 
 We build a directed supply network of N suppliers and simulate T
 weeks of binary disruption labels per supplier. Each supplier has:

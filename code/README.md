@@ -53,9 +53,9 @@ install.packages(c(
   "igraph", "tidygraph", "ggraph",
   # viz
   "ggplot2", "viridis", "patchwork", "scales",
-  # spatial (case 08 only)
+  # spatial (case 11 only)
   "sf",
-  # case 11 only
+  # case 09 only
   "xgboost", "zoo"
 ))
 ```
@@ -84,6 +84,23 @@ Run any script with:
 python code/NN_<name>/example.py
 ```
 
+## Trouble running the code?
+
+- **"Cannot find `edges.csv` / `nodes.csv`" or a missing-folder error.** Make
+  sure your clone is up to date — the case-study folders were renumbered, so an
+  older clone can point scripts at folders that have since moved. Pull the
+  latest first:
+
+  ```bash
+  git pull
+  ```
+
+- **`ModuleNotFoundError` (Python) / "there is no package called …" (R).** You
+  haven't installed the dependencies yet. Run `pip install -r
+  code/requirements.txt` (Python) or the `install.packages(...)` block above (R).
+  A few later case studies need extra packages (`seaborn`, `scikit-learn`,
+  `xgboost`, `geopandas`) — they're all in `requirements.txt`.
+
 ## The case studies
 
 Each row pairs an interactive lab with its code folder. The lab is for
@@ -96,12 +113,12 @@ exploring; the code folder is for *doing the same thing on your own data*.
 | 03 | Aggregation              | Identify | [lab](../docs/case-studies/aggregation.html)                | [`03_aggregation`](03_aggregation/)          |
 | 04 | Centrality & Criticality | Measure  | [lab](../docs/case-studies/centrality.html)                 | [`04_centrality`](04_centrality/)            |
 | 05 | Supply Chain Resilience  | Measure  | [lab](../docs/case-studies/supply-chain.html)               | [`05_supply-chain`](05_supply-chain/)        |
-| 06 | DSM Clustering           | Measure  | [lab](../docs/case-studies/dsm-clustering.html)             | [`06_dsm-clustering`](06_dsm-clustering/)    |
-| 07 | Network Permutation      | Infer    | [lab](../docs/case-studies/permutation.html)                | [`07_permutation`](07_permutation/)          |
-| 08 | Sampling Big Networks    | Identify | [lab](../docs/case-studies/sampling.html)                   | [`08_sampling`](08_sampling/)                |
-| 09 | Counterfactual MC        | Predict  | [lab](../docs/case-studies/counterfactual.html)             | [`09_counterfactual`](09_counterfactual/)    |
-| 10 | GNN by Hand              | Predict  | [lab](../docs/case-studies/gnn-by-hand.html)                | [`10_gnn-by-hand`](10_gnn-by-hand/)          |
-| 11 | GNN + XGBoost            | Predict  | [lab](../docs/case-studies/gnn-xgboost.html)                | [`11_gnn-xgboost`](11_gnn-xgboost/)          |
+| 06 | Network Permutation      | Infer    | [lab](../docs/case-studies/permutation.html)                | [`06_permutation`](06_permutation/)          |
+| 07 | Counterfactual MC        | Predict  | [lab](../docs/case-studies/counterfactual.html)             | [`07_counterfactual`](07_counterfactual/)    |
+| 08 | GNN by Hand              | Predict  | [lab](../docs/case-studies/gnn-by-hand.html)                | [`08_gnn-by-hand`](08_gnn-by-hand/)          |
+| 09 | GNN + XGBoost            | Predict  | [lab](../docs/case-studies/gnn-xgboost.html)                | [`09_gnn-xgboost`](09_gnn-xgboost/)          |
+| 10 | DSM Clustering           | Measure  | [lab](../docs/case-studies/dsm-clustering.html)             | [`10_dsm-clustering`](10_dsm-clustering/)    |
+| 11 | Sampling Big Networks    | Identify | [lab](../docs/case-studies/sampling.html)                   | [`11_sampling`](11_sampling/)                |
 
 ## What you submit (the short version)
 
@@ -131,11 +148,11 @@ everything else (loading, wrangling, XGBoost, plotting) natively in R. The
 pattern follows `dsai/07_rag/05_embed.R`: reticulate is a surgical bridge
 for the one Python-only capability, not a wholesale rewrite.
 
-- **GNN-by-hand (case 10)**: `example.R` drives the same numpy GCN
+- **GNN-by-hand (case 08)**: `example.R` drives the same numpy GCN
   functions (`functions.py`: `adjacency`, `normalize`, `gcn_layer`) via
   `reticulate`, so the forward pass — and the Learning Check — are
   **byte-identical** to `example.py`.
-- **GNN + XGBoost (case 11)**: R now runs the full pipeline. Only the GNN
+- **GNN + XGBoost (case 09)**: R now runs the full pipeline. Only the GNN
   embedding (the one step with no R library) is computed in numpy via
   `reticulate`; the lag feature, the train/test split, **XGBoost**, and the
   AUC scoring are all native R. The R Learning Check asks the same question

@@ -1,4 +1,4 @@
-"""Generate a synthetic engineered-system DSM for case 06.
+"""Generate a synthetic engineered-system DSM for case 10.
 
 A Design Structure Matrix (DSM) is just an adjacency matrix where
 component i depends on component j. We plant K dense modules so the
