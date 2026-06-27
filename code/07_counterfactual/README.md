@@ -59,6 +59,10 @@ python  code/07_counterfactual/example.py
 > Monte Carlo replicates and seed=1, what is the LOW end of the 95%
 > CI on the change in weighted APL?** (4 decimal places, signed.)
 
+Because this is a Monte Carlo estimate, the R and Python tracks draw from
+their own random-number generators and may differ by a digit or two in the
+last decimal place. Submit the value your track prints.
+
 ## Your Project Case Study
 
 If you pick this case study, you'll propose an intervention on

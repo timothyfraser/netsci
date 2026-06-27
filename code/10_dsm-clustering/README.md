@@ -53,7 +53,7 @@ python  code/10_dsm-clustering/example.py
 
 > **How many modules does Louvain find in this DSM, and what is the
 > modularity score (to 3 decimal places)?**  
-> Submit BOTH, separated by a comma. Example: `8, 0.612`.
+> Submit BOTH, separated by a comma. Example format: `5, 0.123`.
 
 ## Your Project Case Study
 
