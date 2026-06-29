@@ -1,0 +1,61 @@
+{
+  "starting_score": 100,
+  "target_fine_report_score": 85,
+  "requirements": [
+    {
+      "id": "project_script",
+      "label": "Project script (project.R or project.py) runs end-to-end on submitted data",
+      "max_deduction": 4,
+      "category": "hygiene",
+      "assess_from": "canvas_body_or_github_only"
+    },
+    {
+      "id": "min_nodes",
+      "label": "Project network has at least 100 nodes",
+      "max_deduction": 8,
+      "category": "content"
+    },
+    {
+      "id": "min_pages",
+      "label": "Project report fills at least 5 pages",
+      "max_deduction": 10,
+      "category": "content"
+    },
+    {
+      "id": "question",
+      "label": "Report includes the question in one sentence",
+      "max_deduction": 5,
+      "category": "content"
+    },
+    {
+      "id": "operationalization",
+      "label": "Report includes how the network was operationalized (node, edge, weight, source)",
+      "max_deduction": 8,
+      "category": "content"
+    },
+    {
+      "id": "results_prose",
+      "label": "Report states results as numbers in prose, not just figures",
+      "max_deduction": 10,
+      "category": "content"
+    },
+    {
+      "id": "limitations",
+      "label": "Report has a \"what this tells me, and what it doesn't\" close",
+      "max_deduction": 6,
+      "category": "content"
+    },
+    {
+      "id": "github_link",
+      "label": "GitHub repo URL ready to paste; project folder is pushed",
+      "max_deduction": 5,
+      "category": "hygiene"
+    },
+    {
+      "id": "ai_prose",
+      "label": "No AI-written prose in the report — wording is mine",
+      "max_deduction": 12,
+      "category": "policy"
+    }
+  ]
+}

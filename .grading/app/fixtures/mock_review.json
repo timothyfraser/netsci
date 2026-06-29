@@ -1,0 +1,62 @@
+{
+  "requirements": [
+    {
+      "id": "question",
+      "status": "met",
+      "evidence": "Clear one-sentence question stated upfront.",
+      "location": "Question section",
+      "proposed_deduction": 0,
+      "search_hint": "question sentence clear"
+    },
+    {
+      "id": "operationalization",
+      "status": "met",
+      "evidence": "Nodes, edges, and weights defined with data source.",
+      "location": "Network section",
+      "proposed_deduction": 0,
+      "search_hint": "network clearly defined"
+    },
+    {
+      "id": "results_prose",
+      "status": "partial",
+      "evidence": "Results section references figures without numeric summaries in prose.",
+      "location": "Results, paragraph 2",
+      "proposed_deduction": 8,
+      "search_hint": "numbers prose missing"
+    },
+    {
+      "id": "github_link",
+      "status": "missing",
+      "evidence": "No GitHub URL found in submission text.",
+      "location": "Canvas submission body",
+      "proposed_deduction": 4,
+      "search_hint": "github link missing"
+    },
+    {
+      "id": "project_script",
+      "status": "not_assessable",
+      "evidence": "Cannot verify project.R/py runs from report alone.",
+      "location": "N/A",
+      "proposed_deduction": 0,
+      "search_hint": "script not verified"
+    }
+  ],
+  "top_issues": [
+    {
+      "rank": 1,
+      "title": "Results are figure-only",
+      "description": "No betweenness or degree values stated in prose.",
+      "location": "Results section",
+      "search_hint": "figure only results"
+    },
+    {
+      "rank": 2,
+      "title": "Missing GitHub link",
+      "description": "Canvas box does not include a repo URL.",
+      "location": "Canvas submission",
+      "search_hint": "github link missing"
+    }
+  ],
+  "classbot_summary": "Solid operationalization; push on numeric results in prose and paste the GitHub link in Canvas.",
+  "confidence": "medium"
+}
