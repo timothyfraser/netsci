@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-27 14:48 UTC_
+_Auto-generated NotebookLM source · 2026-06-29 21:01 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -5413,12 +5413,12 @@ Weekend block**Run the four labs.** Plan \~5 hours. Open the Build\-a\-Network l
 
 Sun Jun 28day 7
 
-Weekend blockWrite your four Learning Check answers and the one\-page reflection. Photograph your sketches. **Stage the Monday submission.**
+Weekend blockWrite your four Learning Check answers. Photograph your sketches. **Stage the Monday submission.**
 
 
 Mon Jun 299 AM
 
-Due 9 AM**Week 1 submission.** Four sketch photos · four LC answers · one reflection. See Assignments for the exact spec.
+Due 9 AM**Week 1 submission.** Four sketch photos · four LC answers. See Assignments for the exact spec.
 
 
 Week 02
@@ -5461,12 +5461,12 @@ Weekend block**Run the three labs.** Plan \~4 hours. Open Supply Chain, then Net
 
 Sun Jul 05day 14
 
-Weekend blockWrite LC answers, reflection, and (if you picked one of these for the project) your *first project case study* — code \+ 5\-page report.
+Weekend blockWrite LC answers and (if you picked one of these for the project) your *first project case study* — code \+ 5\-page report.
 
 
 Mon Jul 069 AM
 
-Due 9 AM**Week 2 submission.** Three sketch photos · three LC answers · one reflection · *(if applicable)* your first project case study.
+Due 9 AM**Week 2 submission.** Three sketch photos · three LC answers · *(if applicable)* your first project case study.
 
 
 Week 03
@@ -5504,7 +5504,7 @@ Final\-week blockLast labs (GNN by Hand, GNN \+ XGBoost, Clustering, Sampling). 
 
 Mon Jul 139 AM
 
-Final due 9 AM**Week 3 \+ final project submission.** Remaining sketches and LCs · two reflections (this week and a course\-level retrospective) · your *two remaining project case studies* with reports. Grades close out the week after.
+Final due 9 AM**Week 3 \+ final project submission.** Remaining sketches and LCs · your *two remaining project case studies* with reports. Grades close out the week after.
 
 
 **Extensions for SYSEN 5940 in\-person students:** if you're juggling 5940 in the same week, email Tim before the Monday deadline and we'll work out a revised due date. The async structure makes this easy; just communicate early.
