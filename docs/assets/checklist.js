@@ -11,7 +11,7 @@
     'Code LC answer recorded — example.R or example.py ran end-to-end',
     'Project script (project.R or project.py) runs end-to-end on submitted data',
     'Project network has at least 100 nodes',
-    'Project report fills at least 2 pages',
+    'Project report fills at least 5 pages',
     'Report includes the question in one sentence',
     'Report includes how the network was operationalized (node, edge, weight, source)',
     'Report states results as numbers in prose, not just figures',
