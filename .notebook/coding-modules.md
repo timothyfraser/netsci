@@ -1,10 +1,10 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-29 21:01 UTC_
+_Auto-generated NotebookLM source · 2026-06-29 21:35 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
-**158 files included.**
+**168 files included.**
 
 ---
 
@@ -444,6 +444,1450 @@ python3 scripts/push_to_canvas.py             # publish (idempotent — safe to 
 `manifest.json` is the single source of truth. Edit it, re-run
 `scripts/generate_html.py`, then `scripts/push_to_canvas.py`. Don't hand-edit
 files in `assignments/`, `pages/`, or `build/` — they're regenerated.
+
+---
+
+## `.grading/README.md`
+
+# Classbot Grading Dashboard
+
+Local instructor tool for SYSEN 5470 project case study reports. **Classbot** runs a Cornell AI Gateway first pass; you review, toggle deductions, and publish to Canvas.
+
+## Setup
+
+1. Ensure keys are in [`.canvas/.env`](../.canvas/.env) (see [`.env.example`](.env.example)).
+2. Install and run:
+
+```powershell
+cd .grading
+python -m venv .venv
+.\.venv\Scripts\pip install -r requirements.txt
+.\run.ps1
+```
+
+3. Open http://127.0.0.1:8765
+
+## Data safety
+
+- `data/grades.csv` and `cache/` are **gitignored** — never commit student work.
+- App source under `app/` and `config/` may be committed on the `instructor` branch only.
+- **`main` never receives `.grading/`** — the `publish-student-subset` workflow whitelists only student paths (`data`, `code`, etc.).
+- Before committing: `python scripts/verify_commit_safe.py`
+- Uses Chat Completions API only (prompts/completions not stored by gateway).
+
+## Workflow
+
+1. **Sync from Canvas** — downloads submissions once into `cache/submissions/`.
+2. **Run Classbot** — structured JSON review via LiteLLM (Haiku default).
+3. Toggle proposed deductions, add instructor comment.
+4. **Publish to Canvas** — grade + delineated Instructor / Classbot comment.
+
+Set `MOCK_LLM=1` for offline UI tests without API calls.
+
+## E2E testing (Canvas + Playwright)
+
+```powershell
+cd .grading
+# Real gateway + Canvas (uses .canvas/.env)
+.\.venv\Scripts\python scripts\e2e_canvas_test.py
+.\.venv\Scripts\python scripts\e2e_playwright_mcp.py
+```
+
+**Canvas Test Student:** The Student View account (`Test Student`, user id 212069) exists but cannot receive submissions via the instructor API (403). Sync skips unsubmitted rows. E2E uses a real submitted project-1 row (cached PDF + text) after `sync project-1`.
+
+Probe Canvas state: `python scripts/canvas_probe.py`
+
+---
+
+## `.grading/app/canvas_client.py`
+
+```python
+"""Canvas submission sync, cache, and grade publish."""
+
+from __future__ import annotations
+
+import time
+from pathlib import Path
+from typing import Any
+
+import requests
+
+from env import GRADING_ROOT, get_canvas_env
+from extract_text import extract_submission_text
+from rubric import get_assignment
+
+CACHE_ROOT = GRADING_ROOT / "cache" / "submissions"
+SESSION = requests.Session()
+
+
+def _headers() -> dict[str, str]:
+    _, token, _ = get_canvas_env()
+    return {"Authorization": f"Bearer {token}"}
+
+
+def _api(path: str, params: dict[str, Any] | None = None) -> Any:
+    base, token, _ = get_canvas_env()
+    if not token:
+        raise RuntimeError("CANVAS_API_KEY not set in .canvas/.env")
+    url = f"{base}/api/v1{path}"
+    resp = SESSION.get(url, headers=_headers(), params=params or {}, timeout=120)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def _api_paginated(path: str, params: dict[str, Any] | None = None) -> list[Any]:
+    base, token, _ = get_canvas_env()
+    if not token:
+        raise RuntimeError("CANVAS_API_KEY not set in .canvas/.env")
+    url = f"{base}/api/v1{path}"
+    out: list[Any] = []
+    while url:
+        resp = SESSION.get(url, headers=_headers(), params=params, timeout=120)
+        resp.raise_for_status()
+        data = resp.json()
+        if isinstance(data, list):
+            out.extend(data)
+        else:
+            out.append(data)
+            break
+        link = resp.headers.get("Link", "")
+        url = ""
+        params = None
+        for part in link.split(","):
+            if 'rel="next"' in part:
+                url = part[part.find("<") + 1 : part.find(">")]
+                break
+        time.sleep(0.05)
+    return out
+
+
+def _put_submission(course: str, assignment_id: int, user_id: int, payload: dict[str, Any]) -> dict[str, Any]:
+    base, token, _ = get_canvas_env()
+    url = f"{base}/api/v1/courses/{course}/assignments/{assignment_id}/submissions/{user_id}"
+    resp = SESSION.put(url, headers=_headers(), json=payload, timeout=120)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def _put_submission_form(
+    course: str, assignment_id: int, user_id: int, form: dict[str, Any]
+) -> dict[str, Any]:
+    """Canvas reliably accepts comment + grade as x-www-form-urlencoded bracket keys."""
+    base, token, _ = get_canvas_env()
+    url = f"{base}/api/v1/courses/{course}/assignments/{assignment_id}/submissions/{user_id}"
+    resp = SESSION.put(url, headers=_headers(), data=form, timeout=120)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def _netid_from_user(user: dict[str, Any]) -> str:
+    for key in ("sis_user_id", "login_id", "short_name"):
+        val = user.get(key)
+        if val and isinstance(val, str):
+            return val.split("@")[0]
+    email = user.get("email") or ""
+    if email:
+        return email.split("@")[0]
+    return str(user.get("id", ""))
+
+
+def _attachment_filename(att: dict[str, Any]) -> str:
+    return (att.get("filename") or "report.pdf").replace("+", " ")
+
+
+def _pick_report_attachment(attachments: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Choose the best report-like attachment (PDF or Word preferred)."""
+    if not attachments:
+        return None
+
+    report_hints = ("report", "case study", "case_study", "project", "centrality", "sysen", "paper")
+
+    def score(att: dict[str, Any]) -> int:
+        filename = (att.get("filename") or "").lower().replace("+", " ")
+        ctype = (att.get("content-type") or "").lower()
+        points = 0
+        if filename.endswith(".pdf") or "pdf" in ctype:
+            points += 20
+        elif filename.endswith(".docx") or "wordprocessingml" in ctype:
+            points += 18
+        elif filename.endswith(".doc") or "msword" in ctype:
+            points += 16
+        elif filename.endswith((".txt", ".md")):
+            points += 8
+        else:
+            return -1
+        for hint in report_hints:
+            if hint in filename:
+                points += 6
+        return points
+
+    ranked = sorted(attachments, key=score, reverse=True)
+    best = ranked[0]
+    return best if score(best) >= 0 else None
+
+
+def _fetch_submission_detail(course: str, assignment_id: int, user_id: int) -> dict[str, Any]:
+    return _api(
+        f"/courses/{course}/assignments/{assignment_id}/submissions/{user_id}",
+        {"include[]": ["submission_history"]},
+    )
+
+
+def _download_file(url: str, dest: Path) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    resp = SESSION.get(url, headers=_headers(), timeout=180, stream=True)
+    resp.raise_for_status()
+    with dest.open("wb") as f:
+        for chunk in resp.iter_content(chunk_size=65536):
+            if chunk:
+                f.write(chunk)
+
+
+def _submission_key(assignment_key: str, user_id: int, attempt: int) -> str:
+    return f"{assignment_key}_{user_id}_a{attempt}"
+
+
+def sync_assignment(assignment_key: str, *, force: bool = False) -> list[dict[str, str]]:
+    assignment = get_assignment(assignment_key)
+    if not assignment:
+        raise ValueError(f"Unknown assignment_key: {assignment_key}")
+    _, _, course = get_canvas_env()
+    if not course:
+        raise RuntimeError("CANVAS_COURSE_ID not set in .canvas/.env")
+
+    aid = assignment["canvas_assignment_id"]
+    subs = _api_paginated(
+        f"/courses/{course}/assignments/{aid}/submissions",
+        {
+            "include[]": ["user", "submission_history"],
+            "per_page": 100,
+        },
+    )
+
+    from csv_store import get_row, upsert_row
+
+    rows: list[dict[str, str]] = []
+    for sub in subs:
+        if sub.get("workflow_state") in ("unsubmitted", "deleted"):
+            continue
+        user = sub.get("user") or {}
+        user_id = int(sub.get("user_id") or user.get("id") or 0)
+        if not user_id:
+            continue
+
+        # List endpoint often omits attachments; fetch full submission when needed.
+        if not sub.get("attachments") and not sub.get("body") and sub.get("submitted_at"):
+            sub = _fetch_submission_detail(course, aid, user_id)
+
+        attempt = int(sub.get("attempt") or 1)
+        key = _submission_key(assignment_key, user_id, attempt)
+        cache_dir = CACHE_ROOT / assignment_key / str(user_id)
+        cache_dir.mkdir(parents=True, exist_ok=True)
+
+        report_path = ""
+        text_path = cache_dir / "report.txt"
+        body_html = sub.get("body") or ""
+
+        if body_html and (force or not (cache_dir / "submission_body.html").is_file()):
+            (cache_dir / "submission_body.html").write_text(body_html, encoding="utf-8")
+
+        attachments = sub.get("attachments") or []
+        att = _pick_report_attachment(attachments)
+        if att:
+            filename = _attachment_filename(att)
+            local_report = cache_dir / filename
+            legacy_report = cache_dir / (att.get("filename") or filename)
+            if not local_report.is_file() and legacy_report.is_file():
+                local_report = legacy_report
+            if force or not local_report.is_file():
+                file_url = att.get("url") or ""
+                if file_url:
+                    _download_file(file_url, local_report)
+            if local_report.is_file():
+                report_path = str(local_report)
+
+        for att in attachments:
+            fname = _attachment_filename(att)
+            local = cache_dir / fname
+            legacy = cache_dir / (att.get("filename") or fname)
+            if not local.is_file() and legacy.is_file():
+                local = legacy
+            if not local.is_file() and att.get("url"):
+                _download_file(att["url"], local)
+
+        extracted = extract_submission_text(
+            Path(report_path) if report_path else None,
+            body_html,
+        )
+        if extracted and (force or not text_path.is_file()):
+            text_path.write_text(extracted, encoding="utf-8")
+
+        name = user.get("sortable_name") or user.get("name") or ""
+        existing = get_row(key)
+        payload: dict[str, Any] = {
+            "submission_key": key,
+            "student_name": name,
+            "student_netid": _netid_from_user(user),
+            "canvas_user_id": str(user_id),
+            "canvas_submission_id": str(sub.get("id", "")),
+            "assignment_key": assignment_key,
+            "assignment_name": assignment["name"],
+            "canvas_assignment_id": str(aid),
+            "submitted_at": sub.get("submitted_at") or "",
+            "attempt_number": str(attempt),
+            "late": "true" if sub.get("late") else "false",
+            "workflow_state": sub.get("workflow_state") or "",
+            "cached_dir": str(cache_dir),
+            "cached_report_path": report_path,
+            "cached_text_path": str(text_path) if text_path.is_file() else "",
+        }
+        if not existing:
+            payload["llm_status"] = "pending"
+            payload["status"] = "synced"
+        row = upsert_row(payload)
+        rows.append(row)
+    return rows
+
+
+def publish_grade(
+    row: dict[str, str],
+    grade: str,
+    comment: str,
+) -> dict[str, Any]:
+    _, _, course = get_canvas_env()
+    aid = int(row["canvas_assignment_id"])
+    uid = int(row["canvas_user_id"])
+    attempt = int(row.get("attempt_number") or 1)
+
+    form: dict[str, Any] = {"submission[posted_grade]": grade}
+    comment = (comment or "").strip()
+    if comment:
+        form["comment[text_comment]"] = comment
+        form["comment[attempt]"] = attempt
+
+    result = _put_submission_form(course, aid, uid, form)
+    comments = result.get("submission_comments") or []
+    if comment and not comments:
+        raise RuntimeError(
+            "Canvas accepted grade but returned no submission_comments — comment may not have posted"
+        )
+    return result
+```
+
+---
+
+## `.grading/app/csv_store.py`
+
+```python
+"""Atomic CSV persistence for grade metadata."""
+
+from __future__ import annotations
+
+import csv
+import json
+from pathlib import Path
+from typing import Any
+
+from env import GRADING_ROOT
+
+DATA_DIR = GRADING_ROOT / "data"
+CSV_PATH = DATA_DIR / "grades.csv"
+
+FIELDNAMES = [
+    "submission_key",
+    "student_name",
+    "student_netid",
+    "canvas_user_id",
+    "canvas_submission_id",
+    "assignment_key",
+    "assignment_name",
+    "canvas_assignment_id",
+    "submitted_at",
+    "attempt_number",
+    "late",
+    "workflow_state",
+    "cached_dir",
+    "cached_report_path",
+    "cached_text_path",
+    "llm_review_path",
+    "llm_model",
+    "llm_run_at",
+    "llm_status",
+    "proposed_score",
+    "final_grade",
+    "accepted_deductions_json",
+    "status",
+    "instructor_comment",
+    "classbot_comment",
+    "published_at",
+    "published_grade",
+    "publish_error",
+]
+
+
+def _empty_row() -> dict[str, str]:
+    return {k: "" for k in FIELDNAMES}
+
+
+def ensure_csv() -> Path:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if not CSV_PATH.is_file():
+        with CSV_PATH.open("w", encoding="utf-8", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
+            writer.writeheader()
+    return CSV_PATH
+
+
+def read_rows() -> list[dict[str, str]]:
+    ensure_csv()
+    with CSV_PATH.open("r", encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def write_rows(rows: list[dict[str, str]]) -> None:
+    ensure_csv()
+    tmp = CSV_PATH.with_suffix(".csv.tmp")
+    with tmp.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=FIELDNAMES, extrasaction="ignore")
+        writer.writeheader()
+        for row in rows:
+            out = _empty_row()
+            out.update({k: str(row.get(k, "") or "") for k in FIELDNAMES})
+            writer.writerow(out)
+    tmp.replace(CSV_PATH)
+
+
+def get_row(submission_key: str) -> dict[str, str] | None:
+    for row in read_rows():
+        if row.get("submission_key") == submission_key:
+            return row
+    return None
+
+
+def upsert_row(row: dict[str, Any]) -> dict[str, str]:
+    rows = read_rows()
+    key = str(row["submission_key"])
+    updated = _empty_row()
+    existing = get_row(key)
+    if existing:
+        updated.update(existing)
+    updated.update({k: str(row.get(k, updated.get(k, "")) or "") for k in FIELDNAMES})
+    updated["submission_key"] = key
+    found = False
+    for i, r in enumerate(rows):
+        if r.get("submission_key") == key:
+            rows[i] = updated
+            found = True
+            break
+    if not found:
+        rows.append(updated)
+    write_rows(rows)
+    return updated
+
+
+def patch_row(submission_key: str, updates: dict[str, Any]) -> dict[str, str]:
+    existing = get_row(submission_key)
+    if not existing:
+        raise KeyError(f"Unknown submission_key: {submission_key}")
+    existing.update({k: str(v) if v is not None else "" for k, v in updates.items()})
+    return upsert_row(existing)
+
+
+def parse_deductions_json(raw: str) -> list[dict[str, Any]]:
+    if not raw:
+        return []
+    try:
+        data = json.loads(raw)
+        return data if isinstance(data, list) else []
+    except json.JSONDecodeError:
+        return []
+```
+
+---
+
+## `.grading/app/env.py`
+
+```python
+"""Load credentials from .canvas/.env for Canvas and Cornell AI Gateway."""
+
+import os
+from pathlib import Path
+
+GRADING_ROOT = Path(__file__).resolve().parent.parent
+CANVAS_ROOT = GRADING_ROOT.parent / ".canvas"
+DEFAULT_CANVAS_BASE = "https://canvas.cornell.edu"
+DEFAULT_LITELLM_BASE = "https://api.ai.it.cornell.edu"
+
+
+def load_dotenv(path: Path) -> None:
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, val = line.partition("=")
+        key, val = key.strip(), val.strip().strip("'\"")
+        if key and key not in os.environ:
+            os.environ[key] = val
+
+
+def load_env() -> None:
+    load_dotenv(CANVAS_ROOT / ".env")
+    load_dotenv(GRADING_ROOT / ".env")
+
+
+def get_canvas_env() -> tuple[str, str, str]:
+    load_env()
+    base = os.environ.get("CANVAS_BASE_URL", DEFAULT_CANVAS_BASE).rstrip("/")
+    token = os.environ.get("CANVAS_API_TOKEN") or os.environ.get("CANVAS_API_KEY", "")
+    course = os.environ.get("CANVAS_COURSE_ID", "")
+    return base, token, course
+
+
+def get_litellm_env() -> tuple[str, str]:
+    load_env()
+    base = (
+        os.environ.get("LITELLM_BASE_URL")
+        or os.environ.get("OPENAI_BASE_URL")
+        or DEFAULT_LITELLM_BASE
+    ).rstrip("/")
+    key = (
+        os.environ.get("LITELLM_API_KEY")
+        or os.environ.get("OPENAI_API_KEY")
+        or ""
+    )
+    return base, key
+
+
+def mock_llm_enabled() -> bool:
+    load_env()
+    return os.environ.get("MOCK_LLM", "").strip().lower() in ("1", "true", "yes")
+```
+
+---
+
+## `.grading/app/extract_text.py`
+
+```python
+"""Extract plain text from PDFs, Word docs, and Canvas submission bodies."""
+
+from __future__ import annotations
+
+import html
+import re
+import zipfile
+from pathlib import Path
+from xml.etree import ElementTree
+
+_DOCX_NS = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+_W_NS = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+
+
+def html_to_text(raw: str) -> str:
+    if not raw:
+        return ""
+    text = re.sub(r"<br\s*/?>", "\n", raw, flags=re.I)
+    text = re.sub(r"</p>", "\n\n", text, flags=re.I)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = html.unescape(text)
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
+
+
+def extract_pdf_text(path: Path) -> str:
+    try:
+        from pypdf import PdfReader
+    except ImportError as exc:
+        raise RuntimeError("pypdf is required for PDF extraction") from exc
+    reader = PdfReader(str(path))
+    parts: list[str] = []
+    for page in reader.pages:
+        parts.append(page.extract_text() or "")
+    return "\n\n".join(parts).strip()
+
+
+def extract_docx_text(path: Path) -> str:
+    with zipfile.ZipFile(path) as zf:
+        xml = zf.read("word/document.xml")
+    root = ElementTree.fromstring(xml)
+    paras: list[str] = []
+    for para in root.iter(f"{_W_NS}p"):
+        texts = [node.text for node in para.iter(f"{_W_NS}t") if node.text]
+        if texts:
+            paras.append("".join(texts))
+    return "\n\n".join(paras).strip()
+
+
+def extract_file_text(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix == ".pdf":
+        return extract_pdf_text(path)
+    if suffix == ".docx":
+        return extract_docx_text(path)
+    if suffix in (".txt", ".md"):
+        return path.read_text(encoding="utf-8", errors="replace")
+    return ""
+
+
+def extract_submission_text(report_path: Path | None, body_html: str = "") -> str:
+    chunks: list[str] = []
+    if body_html:
+        chunks.append(html_to_text(body_html))
+    if report_path and report_path.is_file():
+        chunks.append(extract_file_text(report_path))
+    return "\n\n---\n\n".join(c for c in chunks if c).strip()
+```
+
+---
+
+## `.grading/app/gateway_client.py`
+
+```python
+"""Thin OpenAI SDK wrapper for Cornell AI Gateway."""
+
+from __future__ import annotations
+
+from openai import OpenAI
+
+from env import get_litellm_env
+
+
+def get_client() -> OpenAI:
+    base, key = get_litellm_env()
+    if not key:
+        raise RuntimeError("LITELLM_API_KEY not set in .canvas/.env")
+    return OpenAI(base_url=f"{base}/v1", api_key=key)
+```
+
+---
+
+## `.grading/app/litellm_client.py`
+
+```python
+"""Classbot LLM review with structured JSON output."""
+
+from __future__ import annotations
+
+import base64
+import json
+import re
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field, field_validator
+
+from env import GRADING_ROOT, mock_llm_enabled
+from gateway_client import get_client
+from prompts import build_classbot_comment_from_review, build_system_prompt, build_user_prompt
+from rubric import compute_score, load_rubric, max_deduction_map
+
+LLM_CACHE = GRADING_ROOT / "cache" / "llm"
+FIXTURE_PATH = GRADING_ROOT / "app" / "fixtures" / "mock_review.json"
+
+DEFAULT_MODEL = "claude-haiku-4-5"
+SONNET_MODEL = "claude-sonnet-4-6"
+PDF_MODEL = "google.gemini-2.5-pro"
+
+
+class RequirementReview(BaseModel):
+    id: str
+    status: Literal["met", "partial", "missing", "not_assessable"]
+    evidence: str = ""
+    location: str = ""
+    proposed_deduction: int = 0
+    search_hint: str = ""
+
+    @field_validator("search_hint")
+    @classmethod
+    def three_words(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            return ""
+        words = v.split()
+        if len(words) != 3:
+            raise ValueError(f"search_hint must be exactly 3 words, got {len(words)}")
+        return " ".join(words)
+
+
+class TopIssue(BaseModel):
+    rank: int
+    title: str
+    description: str = ""
+    location: str = ""
+    search_hint: str = ""
+
+    @field_validator("search_hint")
+    @classmethod
+    def three_words(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            return ""
+        words = v.split()
+        if len(words) != 3:
+            raise ValueError(f"search_hint must be exactly 3 words, got {len(words)}")
+        return " ".join(words)
+
+
+class ClassbotReview(BaseModel):
+    requirements: list[RequirementReview]
+    top_issues: list[TopIssue] = Field(min_length=0, max_length=5)
+    classbot_summary: str = ""
+    confidence: Literal["low", "medium", "high"] = "medium"
+
+
+def _extract_json(text: str) -> dict[str, Any]:
+    text = text.strip()
+    fence = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
+    if fence:
+        text = fence.group(1).strip()
+    return json.loads(text)
+
+
+def _mock_review() -> dict[str, Any]:
+    if FIXTURE_PATH.is_file():
+        return json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
+    return {
+        "requirements": [
+            {
+                "id": "results_prose",
+                "status": "partial",
+                "evidence": "Results section references figures without numeric summaries.",
+                "location": "Results, paragraph 2",
+                "proposed_deduction": 8,
+                "search_hint": "numbers prose missing",
+            },
+            {
+                "id": "question",
+                "status": "met",
+                "evidence": "Clear one-sentence question in opening.",
+                "location": "Question section",
+                "proposed_deduction": 0,
+                "search_hint": "question sentence clear",
+            },
+        ],
+        "top_issues": [
+            {
+                "rank": 1,
+                "title": "Results are figure-only",
+                "description": "No centrality values stated in prose.",
+                "location": "Results section",
+                "search_hint": "figure only results",
+            }
+        ],
+        "classbot_summary": "Solid network operationalization; push on numeric results in prose.",
+        "confidence": "medium",
+    }
+
+
+def _validate_review(data: dict[str, Any]) -> ClassbotReview:
+    return ClassbotReview.model_validate(data)
+
+
+def _chat_text(model: str, system: str, user: str) -> str:
+    client = get_client()
+    resp = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        response_format={"type": "json_object"},
+        temperature=0.2,
+    )
+    return resp.choices[0].message.content or "{}"
+
+
+def _chat_pdf(model: str, system: str, user: str, pdf_path: Path) -> str:
+    client = get_client()
+    b64 = base64.standard_b64encode(pdf_path.read_bytes()).decode("ascii")
+    resp = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": user},
+                    {
+                        "type": "file",
+                        "file": {
+                            "filename": pdf_path.name,
+                            "file_data": f"data:application/pdf;base64,{b64}",
+                        },
+                    },
+                ],
+            },
+        ],
+        temperature=0.2,
+    )
+    return resp.choices[0].message.content or "{}"
+
+
+def review_submission(
+    report_text: str,
+    metadata: dict[str, Any],
+    *,
+    model: str = DEFAULT_MODEL,
+    mode: Literal["text", "pdf"] = "text",
+    pdf_path: Path | None = None,
+) -> dict[str, Any]:
+    if mock_llm_enabled():
+        review = _validate_review(_mock_review())
+        return review.model_dump()
+
+    system = build_system_prompt()
+    user = build_user_prompt(report_text, metadata)
+    raw = ""
+    last_err: Exception | None = None
+    for attempt in range(2):
+        try:
+            if mode == "pdf" and pdf_path and pdf_path.is_file():
+                raw = _chat_pdf(model or PDF_MODEL, system, user, pdf_path)
+            else:
+                raw = _chat_text(model, system, user)
+            data = _extract_json(raw)
+            review = _validate_review(data)
+            return review.model_dump()
+        except Exception as exc:
+            last_err = exc
+            user = user + "\n\nYour previous JSON was invalid. Return ONLY valid JSON with exact schema and 3-word search_hints."
+    raise RuntimeError(f"Classbot review failed: {last_err}") from last_err
+
+
+def proposed_deductions_from_review(review: dict[str, Any]) -> list[dict[str, Any]]:
+    caps = max_deduction_map()
+    out: list[dict[str, Any]] = []
+    for req in review.get("requirements", []):
+        rid = req.get("id", "")
+        prop = int(req.get("proposed_deduction", 0) or 0)
+        cap = caps.get(rid, prop)
+        accepted = req.get("status") in ("partial", "missing") and prop > 0
+        out.append(
+            {
+                "id": rid,
+                "accepted": accepted,
+                "deduction": min(prop, cap),
+                "proposed_deduction": min(prop, cap),
+                "status": req.get("status"),
+                "evidence": req.get("evidence", ""),
+                "location": req.get("location", ""),
+                "search_hint": req.get("search_hint", ""),
+            }
+        )
+    return out
+
+
+def save_review(submission_key: str, review: dict[str, Any]) -> Path:
+    LLM_CACHE.mkdir(parents=True, exist_ok=True)
+    path = LLM_CACHE / f"{submission_key}.json"
+    path.write_text(json.dumps(review, indent=2), encoding="utf-8")
+    return path
+
+
+def load_review(path: Path) -> dict[str, Any] | None:
+    if not path.is_file():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def run_classbot_for_row(
+    row: dict[str, str],
+    *,
+    model: str = DEFAULT_MODEL,
+    mode: Literal["text", "pdf"] = "text",
+) -> dict[str, Any]:
+    text_path = Path(row.get("cached_text_path", ""))
+    report_text = text_path.read_text(encoding="utf-8") if text_path.is_file() else ""
+    pdf_path = Path(row.get("cached_report_path", "")) if row.get("cached_report_path") else None
+    metadata = {
+        "student_name": row.get("student_name"),
+        "assignment": row.get("assignment_name"),
+        "submitted_at": row.get("submitted_at"),
+        "attempt": row.get("attempt_number"),
+    }
+    review = review_submission(
+        report_text,
+        metadata,
+        model=model,
+        mode=mode,
+        pdf_path=pdf_path if pdf_path and pdf_path.suffix.lower() == ".pdf" else None,
+    )
+    key = row["submission_key"]
+    llm_path = save_review(key, review)
+    deductions = proposed_deductions_from_review(review)
+    score = compute_score(deductions)
+    classbot_comment = build_classbot_comment_from_review(review)
+    now = datetime.now(timezone.utc).isoformat()
+    return {
+        "llm_review_path": str(llm_path),
+        "llm_model": model,
+        "llm_run_at": now,
+        "llm_status": "done",
+        "proposed_score": str(score),
+        "final_grade": str(score),
+        "accepted_deductions_json": json.dumps(deductions),
+        "classbot_comment": classbot_comment,
+        "status": "synced",
+        "review": review,
+    }
+```
+
+---
+
+## `.grading/app/prompts.py`
+
+```python
+"""Classbot system prompt and comment composer."""
+
+from __future__ import annotations
+
+import html
+import json
+import re
+from typing import Any
+
+from rubric import load_rubric
+
+GLOSSARY_DISCIPLINE = """
+Use SYSEN 5470 network-science vocabulary precisely:
+- Name the question each metric answers (never say "most central" without the measure).
+- Do not treat community detection output as ground truth.
+- Prefer configuration-model nulls over Erdős–Rényi when discussing significance.
+- Distinguish node embeddings from predictions.
+- Sampling strategy must match the inference claim.
+"""
+
+DISCLOSURE_HTML = (
+    "<em>Processed through Cornell's AI API Gateway (CIT AI Program), approved for "
+    "moderate-risk/FERPA educational data. Chat Completions API: prompts and "
+    "completions are not stored by the gateway or model providers.</em>"
+)
+
+
+def build_system_prompt() -> str:
+    rubric = load_rubric()
+    target = rubric.get("target_fine_report_score", 85)
+    req_lines = "\n".join(
+        f"- {r['id']}: {r['label']} (max deduction {r['max_deduction']})"
+        for r in rubric["requirements"]
+    )
+    return f"""You are Classbot, a grading assistant for SYSEN 5470 project case study reports.
+Review the student submission against each requirement. Return ONLY valid JSON matching the schema.
+
+Requirements to assess (self-grade checklist — use these ids exactly):
+{req_lines}
+
+Scoring anchor: a fine-but-not-great report that meets most requirements with minor gaps
+should land around {target}/100 total (~{100 - target} points in accepted deductions).
+Reserve scores below 75 for multiple missing core elements. Scores above 92 need clear excellence.
+
+Status values: "met", "partial", "missing", "not_assessable"
+Use "not_assessable" for project_script when the report/Canvas text does not let you verify code runs.
+For each requirement include: id, status, evidence, location, proposed_deduction (0 if met), search_hint (EXACTLY three words).
+Include top_issues: 2-5 highest-value problems with rank, title, description, location, search_hint (EXACTLY three words).
+Include classbot_summary: 2-4 sentences for the instructor.
+Include confidence: "low", "medium", or "high".
+
+{GLOSSARY_DISCIPLINE}
+
+Be specific about WHERE in the report each issue appears. Proposed deductions must not exceed each requirement's max.
+"""
+
+
+def build_user_prompt(
+    report_text: str,
+    metadata: dict[str, Any],
+) -> str:
+    meta = json.dumps(metadata, indent=2)
+    return f"""Submission metadata:
+{meta}
+
+Report text (may include Canvas submission body + extracted PDF):
+---
+{report_text[:120000]}
+---
+"""
+
+
+def _text_to_html(text: str) -> str:
+    text = text.strip()
+    if not text:
+        return ""
+    escaped = html.escape(text)
+    return "<p>" + escaped.replace("\n\n", "</p><p>").replace("\n", "<br>") + "</p>"
+
+
+def _status_emoji(status: str) -> str:
+    return {
+        "met": "✅",
+        "partial": "⚠️",
+        "missing": "❌",
+        "not_assessable": "➖",
+    }.get(status, "❓")
+
+
+def build_classbot_comment_html(review: dict[str, Any]) -> str:
+    parts: list[str] = []
+    parts.append("<p><strong>🤖 Classbot first-pass review</strong></p>")
+
+    summary = (review.get("classbot_summary") or "").strip()
+    if summary:
+        parts.append(f"<p><strong>📋 Summary</strong><br>{html.escape(summary)}</p>")
+
+    issues = review.get("top_issues") or []
+    if issues:
+        parts.append("<p><strong>🔍 Top issues</strong></p><ul>")
+        for issue in sorted(issues, key=lambda x: x.get("rank", 99)):
+            rank = issue.get("rank", "?")
+            title = html.escape(issue.get("title", "Issue"))
+            desc = html.escape(issue.get("description", issue.get("desc", "")))
+            loc = html.escape(issue.get("location", ""))
+            hint = html.escape(issue.get("search_hint", ""))
+            parts.append(
+                f"<li><strong>#{rank} {title}</strong> — {desc}"
+                f"<br><small>📍 {loc} · 🔎 {hint}</small></li>"
+            )
+        parts.append("</ul>")
+
+    reqs = review.get("requirements") or []
+    gaps = [r for r in reqs if r.get("status") in ("partial", "missing")]
+    if gaps:
+        parts.append("<p><strong>📝 Checklist gaps</strong></p><ul>")
+        for r in gaps:
+            emoji = _status_emoji(r.get("status", ""))
+            label = html.escape(r.get("id", ""))
+            evidence = html.escape(r.get("evidence", ""))
+            ded = r.get("proposed_deduction", 0)
+            parts.append(
+                f"<li>{emoji} <strong>{label}</strong>: {evidence}"
+                f" <em>(−{ded} pts)</em></li>"
+            )
+        parts.append("</ul>")
+
+    met = [r for r in reqs if r.get("status") == "met"]
+    if met:
+        met_ids = ", ".join(html.escape(r.get("id", "")) for r in met)
+        parts.append(f"<p><strong>✅ Met</strong> {met_ids}</p>")
+
+    na = [r for r in reqs if r.get("status") == "not_assessable"]
+    if na:
+        na_ids = ", ".join(html.escape(r.get("id", "")) for r in na)
+        parts.append(f"<p><strong>➖ Not assessable from report</strong> {na_ids}</p>")
+
+    confidence = review.get("confidence", "medium")
+    conf_emoji = {"high": "💪", "medium": "👍", "low": "🤔"}.get(confidence, "👍")
+    parts.append(
+        f"<p><small>{conf_emoji} Classbot confidence: {html.escape(confidence)}</small></p>"
+    )
+    return "\n".join(parts)
+
+
+def build_classbot_comment_from_review(review: dict[str, Any]) -> str:
+    """Return HTML comment block for Canvas."""
+    return build_classbot_comment_html(review)
+
+
+def compose_canvas_comment(instructor_comment: str, classbot_comment: str) -> str:
+    parts: list[str] = []
+    instructor = (instructor_comment or "").strip()
+    classbot = (classbot_comment or "").strip()
+
+    if instructor:
+        parts.append("<p><strong>✏️ Instructor comments</strong></p>")
+        parts.append(_text_to_html(instructor))
+
+    parts.append("<hr>")
+    parts.append("<p><strong>🎓 SYSEN 5470 project feedback</strong></p>")
+    parts.append(f"<p>{DISCLOSURE_HTML}</p>")
+
+    if classbot:
+        if classbot.lstrip().startswith("<"):
+            parts.append(classbot)
+        else:
+            parts.append(_text_to_html(classbot))
+    else:
+        parts.append("<p><em>🤖 No Classbot block for this submission.</em></p>")
+
+    return "\n".join(parts)
+
+
+def compose_canvas_comment_plain_preview(instructor_comment: str, classbot_comment: str) -> str:
+    """Plain-text fallback for modal preview."""
+    plain = re.sub(r"<[^>]+>", "", compose_canvas_comment(instructor_comment, classbot_comment))
+    plain = html.unescape(plain)
+    return re.sub(r"\n{3,}", "\n\n", plain).strip()
+```
+
+---
+
+## `.grading/app/rubric.py`
+
+```python
+"""Load rubric and compute scores from accepted deductions."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+from env import GRADING_ROOT
+
+RUBRIC_PATH = GRADING_ROOT / "config" / "rubric.json"
+ASSIGNMENTS_PATH = GRADING_ROOT / "config" / "assignments.json"
+
+
+def load_rubric() -> dict[str, Any]:
+    return json.loads(RUBRIC_PATH.read_text(encoding="utf-8"))
+
+
+def load_assignments() -> list[dict[str, Any]]:
+    data = json.loads(ASSIGNMENTS_PATH.read_text(encoding="utf-8"))
+    return data["assignments"]
+
+
+def get_assignment(key: str) -> dict[str, Any] | None:
+    for a in load_assignments():
+        if a["key"] == key:
+            return a
+    return None
+
+
+def max_deduction_map() -> dict[str, int]:
+    rubric = load_rubric()
+    return {r["id"]: int(r["max_deduction"]) for r in rubric["requirements"]}
+
+
+def compute_score(
+    accepted_deductions: list[dict[str, Any]],
+    starting_score: int | None = None,
+) -> int:
+    rubric = load_rubric()
+    start = starting_score if starting_score is not None else int(rubric["starting_score"])
+    caps = max_deduction_map()
+    total = 0
+    for item in accepted_deductions:
+        if not item.get("accepted"):
+            continue
+        req_id = item.get("id", "")
+        amount = int(item.get("deduction", item.get("proposed_deduction", 0)) or 0)
+        cap = caps.get(req_id, amount)
+        total += min(max(amount, 0), cap)
+    return max(0, min(start, start - total))
+```
+
+---
+
+## `.grading/app/server.py`
+
+```python
+"""Classbot grading dashboard — FastAPI server."""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+from typing import Any
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
+
+APP_DIR = Path(__file__).resolve().parent
+if str(APP_DIR) not in sys.path:
+    sys.path.insert(0, str(APP_DIR))
+
+from canvas_client import publish_grade, sync_assignment
+from csv_store import get_row, parse_deductions_json, patch_row, read_rows, upsert_row
+from env import GRADING_ROOT, mock_llm_enabled
+from litellm_client import (
+    DEFAULT_MODEL,
+    load_review,
+    run_classbot_for_row,
+)
+from prompts import compose_canvas_comment, compose_canvas_comment_plain_preview
+from rubric import compute_score, load_assignments, load_rubric
+
+STATIC_DIR = APP_DIR / "static"
+app = FastAPI(title="Classbot Grading Dashboard")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:8765", "http://localhost:8765"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class PatchRowBody(BaseModel):
+    accepted_deductions_json: str | None = None
+    final_grade: str | None = None
+    instructor_comment: str | None = None
+    classbot_comment: str | None = None
+    status: str | None = None
+
+
+class SyncBody(BaseModel):
+    assignment_key: str
+    force: bool = False
+
+
+class ClassbotBody(BaseModel):
+    model: str = DEFAULT_MODEL
+    mode: str = "text"
+
+
+class BatchClassbotBody(BaseModel):
+    submission_keys: list[str] = Field(default_factory=list)
+    model: str = DEFAULT_MODEL
+    mode: str = "text"
+
+
+class PublishBody(BaseModel):
+    final_grade: str | None = None
+
+
+@app.get("/api/config")
+def api_config() -> dict[str, Any]:
+    return {
+        "rubric": load_rubric(),
+        "assignments": load_assignments(),
+        "mock_llm": mock_llm_enabled(),
+    }
+
+
+@app.get("/api/rows")
+def api_rows(
+    assignment_key: str | None = None,
+    status: str | None = None,
+    late: str | None = None,
+    has_report: bool | None = None,
+) -> list[dict[str, str]]:
+    rows = read_rows()
+    if assignment_key:
+        rows = [r for r in rows if r.get("assignment_key") == assignment_key]
+    if status:
+        rows = [r for r in rows if r.get("status") == status]
+    if late is not None:
+        rows = [r for r in rows if r.get("late") == late]
+    if has_report is True:
+        rows = [r for r in rows if r.get("cached_text_path")]
+    elif has_report is False:
+        rows = [r for r in rows if not r.get("cached_text_path")]
+    return rows
+
+
+@app.get("/api/rows/{submission_key}")
+def api_row_detail(submission_key: str) -> dict[str, Any]:
+    row = get_row(submission_key)
+    if not row:
+        raise HTTPException(404, "Row not found")
+    review = None
+    llm_path = row.get("llm_review_path", "")
+    if llm_path:
+        review = load_review(Path(llm_path))
+    deductions = parse_deductions_json(row.get("accepted_deductions_json", ""))
+    return {"row": row, "review": review, "deductions": deductions}
+
+
+@app.patch("/api/rows/{submission_key}")
+def api_patch_row(submission_key: str, body: PatchRowBody) -> dict[str, str]:
+    row = get_row(submission_key)
+    if not row:
+        raise HTTPException(404, "Row not found")
+    updates: dict[str, Any] = {}
+    if body.accepted_deductions_json is not None:
+        deductions = parse_deductions_json(body.accepted_deductions_json)
+        score = compute_score(deductions)
+        updates["accepted_deductions_json"] = json.dumps(deductions)
+        updates["final_grade"] = str(score)
+        updates["proposed_score"] = str(score)
+    if body.final_grade is not None:
+        updates["final_grade"] = body.final_grade
+    if body.instructor_comment is not None:
+        updates["instructor_comment"] = body.instructor_comment
+    if body.classbot_comment is not None:
+        updates["classbot_comment"] = body.classbot_comment
+    if body.status is not None:
+        updates["status"] = body.status
+    elif body.accepted_deductions_json is not None or body.instructor_comment is not None:
+        updates["status"] = "reviewed"
+    return patch_row(submission_key, updates)
+
+
+@app.post("/api/sync")
+def api_sync(body: SyncBody) -> dict[str, Any]:
+    rows = sync_assignment(body.assignment_key, force=body.force)
+    return {"count": len(rows), "rows": rows}
+
+
+@app.post("/api/sync-all")
+def api_sync_all(body: SyncBody | None = None) -> dict[str, Any]:
+    from rubric import load_assignments
+
+    force = body.force if body else False
+    rows: list[dict[str, str]] = []
+    for assignment in load_assignments():
+        rows.extend(sync_assignment(assignment["key"], force=force))
+    return {"count": len(rows), "rows": rows}
+
+
+@app.post("/api/classbot/{submission_key}")
+def api_classbot(submission_key: str, body: ClassbotBody) -> dict[str, Any]:
+    row = get_row(submission_key)
+    if not row:
+        raise HTTPException(404, "Row not found")
+    try:
+        result = run_classbot_for_row(row, model=body.model, mode=body.mode)  # type: ignore[arg-type]
+    except Exception as exc:
+        patch_row(submission_key, {"llm_status": "error", "publish_error": str(exc)})
+        raise HTTPException(502, str(exc)) from exc
+    review = result.pop("review", None)
+    updated = patch_row(submission_key, result)
+    return {"row": updated, "review": review}
+
+
+@app.post("/api/classbot/batch")
+def api_classbot_batch(body: BatchClassbotBody) -> dict[str, Any]:
+    results = []
+    errors = []
+    for key in body.submission_keys:
+        row = get_row(key)
+        if not row:
+            errors.append({"key": key, "error": "not found"})
+            continue
+        try:
+            result = run_classbot_for_row(row, model=body.model, mode=body.mode)  # type: ignore[arg-type]
+            result.pop("review", None)
+            patch_row(key, result)
+            results.append(key)
+        except Exception as exc:
+            patch_row(key, {"llm_status": "error", "publish_error": str(exc)})
+            errors.append({"key": key, "error": str(exc)})
+    return {"ok": results, "errors": errors}
+
+
+@app.get("/api/report-text/{submission_key}")
+def api_report_text(submission_key: str) -> dict[str, str]:
+    row = get_row(submission_key)
+    if not row:
+        raise HTTPException(404, "Row not found")
+    path = Path(row.get("cached_text_path", ""))
+    if not path.is_file():
+        return {"text": ""}
+    return {"text": path.read_text(encoding="utf-8", errors="replace")}
+
+
+class ComposePreviewBody(BaseModel):
+    instructor_comment: str = ""
+    classbot_comment: str = ""
+
+
+@app.post("/api/compose-preview")
+def api_compose_preview(body: ComposePreviewBody) -> dict[str, str]:
+    html_comment = compose_canvas_comment(body.instructor_comment, body.classbot_comment)
+    return {
+        "html": html_comment,
+        "plain": compose_canvas_comment_plain_preview(body.instructor_comment, body.classbot_comment),
+    }
+
+
+@app.post("/api/publish/{submission_key}")
+def api_publish(submission_key: str, body: PublishBody) -> dict[str, Any]:
+    row = get_row(submission_key)
+    if not row:
+        raise HTTPException(404, "Row not found")
+    grade = body.final_grade or row.get("final_grade") or row.get("proposed_score") or "0"
+    comment = compose_canvas_comment(
+        row.get("instructor_comment", ""),
+        row.get("classbot_comment", ""),
+    )
+    try:
+        publish_grade(row, grade, comment)
+        from datetime import datetime, timezone
+
+        updated = patch_row(
+            submission_key,
+            {
+                "published_at": datetime.now(timezone.utc).isoformat(),
+                "published_grade": grade,
+                "publish_error": "",
+                "status": "published",
+                "final_grade": grade,
+            },
+        )
+        return {"row": updated, "comment_preview": comment}
+    except Exception as exc:
+        patch_row(submission_key, {"publish_error": str(exc)})
+        raise HTTPException(502, str(exc)) from exc
+
+
+@app.post("/api/seed-demo")
+def api_seed_demo() -> dict[str, Any]:
+    """Seed one demo row for Playwright / offline testing."""
+    cache_dir = GRADING_ROOT / "cache" / "submissions" / "project-1" / "99999"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    text_path = cache_dir / "report.txt"
+    sample = """# Question
+Which distribution hubs have the highest betweenness in the UPS ground network?
+
+# Network
+Nodes are plants and hubs; edges are truck lanes weighted by weekly package volume.
+
+# Procedure
+I computed degree and betweenness centrality in igraph.
+
+# Results
+The highest betweenness node had score 0.142. See Figure 1.
+
+# What this tells me, and what it doesn't
+Hub X is a chokepoint; this does not prove causal disruption impact.
+"""
+    text_path.write_text(sample, encoding="utf-8")
+    row = upsert_row(
+        {
+            "submission_key": "project-1_99999_a1",
+            "student_name": "Demo, Student",
+            "student_netid": "sd999",
+            "canvas_user_id": "99999",
+            "canvas_submission_id": "0",
+            "assignment_key": "project-1",
+            "assignment_name": "Project Case Study — Submission 1",
+            "canvas_assignment_id": "968727",
+            "submitted_at": "2026-06-29T12:00:00Z",
+            "attempt_number": "1",
+            "late": "false",
+            "workflow_state": "submitted",
+            "cached_dir": str(cache_dir),
+            "cached_report_path": "",
+            "cached_text_path": str(text_path),
+            "llm_status": "pending",
+            "status": "synced",
+        }
+    )
+    return {"row": row}
+
+
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+@app.get("/")
+def index() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+def main() -> None:
+    import uvicorn
+
+    uvicorn.run(app, host="127.0.0.1", port=8765, log_level="info")
+
+
+if __name__ == "__main__":
+    main()
+```
 
 ---
 
