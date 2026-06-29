@@ -43,3 +43,16 @@ logs/
 .claude/worktrees/
 .harness-env-ready
 .harness-env.lock
+
+# Classbot grading dashboard — student data never committed
+.grading/data/
+.grading/cache/
+.grading/.env
+.grading/.venv/
+!.grading/README.md
+!.grading/.env.example
+!.grading/requirements.txt
+!.grading/run.ps1
+!.grading/config/
+!.grading/app/
+!.grading/scripts/
