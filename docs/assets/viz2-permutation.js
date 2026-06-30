@@ -292,14 +292,16 @@
       const checked = ui.blockSet.has(tok) ? ' checked' : '';
       blockRows.push(
         `<label class="viz2-block-opt"><input type="checkbox" data-tok="${esc(tok)}"${checked}>` +
-        `<span>Node attribute: ${esc(c)}</span></label>`);
+        `<span>${esc(c)}</span></label>`);
     });
     edgeCats.forEach((c) => {
       const tok = 'edge:' + c;
       const checked = ui.blockSet.has(tok) ? ' checked' : '';
+      // Suffix only edge cols (since they shuffle weights, not labels) so the
+      // user can tell apart a column name that happens to live on both sides.
       blockRows.push(
         `<label class="viz2-block-opt"><input type="checkbox" data-tok="${esc(tok)}"${checked}>` +
-        `<span>Edge attribute: ${esc(c)} <em>(shuffles edge weights within blocks)</em></span></label>`);
+        `<span>${esc(c)} <em>(edge weights)</em></span></label>`);
     });
     if (!blockRows.length) {
       blockRows.push('<div class="viz2-block-empty">No categorical attributes available for blocking.</div>');
@@ -316,7 +318,7 @@
     // so users see WHICH attribute is being tested instead of abstract phrasing.
     const attrShow = esc(ui.testAttr || 'attribute');
     const statOpts = [
-      `<option value="similarity"${ui.stat === 'similarity' ? ' selected' : ''}>Similarity Index over ${attrShow} (course default)</option>`,
+      `<option value="similarity"${ui.stat === 'similarity' ? ' selected' : ''}>Similarity Index over ${attrShow}</option>`,
       `<option value="assort"${ui.stat === 'assort' ? ' selected' : ''}>Newman assortativity over ${attrShow}</option>`,
       `<option value="apl"${ui.stat   === 'apl'    ? ' selected' : ''}>Avg shortest path length (graph-level)</option>`,
       `<option value="diam"${ui.stat  === 'diam'   ? ' selected' : ''}>Network diameter (graph-level)</option>`
@@ -391,7 +393,7 @@
       <div id="viz2-perm-progress" class="formula-note" style="display:none;"></div>
       <div class="viz2-dist-wrap" style="position:relative;">
         <svg class="dist" id="viz2-perm-dist"></svg>
-        <button type="button" id="viz2-perm-png" class="viz2-dist-png" title="Download chart as PNG" aria-label="Download chart">⤓</button>
+        <button type="button" id="viz2-perm-png" class="viz2-dist-png" title="Download chart as PNG" aria-label="Download chart">💾</button>
       </div>
       <div id="viz2-perm-summary" class="formula-note" style="font-size:11px;">
         ${lastResult ? formatSummary(lastResult) : 'Pick controls and run to compute a null distribution and one-sided p-value.'}
@@ -765,12 +767,18 @@
       running = false;
     }
 
-    // p-value: one-sided, no continuity correction.
+    // One-sided p-value with AUTO-DIRECTION: report the smaller tail. The
+    // course default `mean(null >= observed)` (right-tail) is wrong when the
+    // observed sits LEFT of the null — it would report ~0.95 when the real
+    // answer is ~0.05. Compute the right-tail fraction first, then flip if
+    // the observed is on the left side of the distribution.
     const finite = samples.filter((v) => isFinite(v));
     const obsForP = isFinite(observed) ? observed : 0;
-    const pval = finite.length
-      ? finite.filter((v) => v >= obsForP).length / finite.length
-      : NaN;
+    let pval = NaN;
+    if (finite.length) {
+      const pRight = finite.filter((v) => v >= obsForP).length / finite.length;
+      pval = pRight > 0.5 ? (1 - pRight) : pRight;
+    }
 
     lastResult = {
       observed, samples, pval,
