@@ -357,7 +357,7 @@
       <div id="viz2-mc-chart-wrap" style="position:relative; margin-top:4px;">
         <button id="viz2-mc-png" class="viz-zoom-btn"
                 style="position:absolute; top:4px; right:4px; width:24px; height:24px; font-size:13px; z-index:2;"
-                title="Download chart as PNG" aria-label="Download chart as PNG">⤓</button>
+                title="Download chart as PNG" aria-label="Download chart as PNG">💾</button>
         <svg class="dist" id="viz2-mc-svg-dist"></svg>
         <svg class="dist" id="viz2-mc-svg-diff" style="display:none;"></svg>
       </div>
