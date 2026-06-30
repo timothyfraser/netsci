@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-30 18:11 UTC_
+_Auto-generated NotebookLM source · 2026-06-30 21:06 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -5525,7 +5525,7 @@ Skip to content
 
 **⚠ EXPERIMENTAL · INTERNAL PREVIEW** ·
  This is `visualizer2.html`, an unreleased working draft of new analytics features
- (node removal, group coverage, Monte Carlo, permutation tests, scenario editing).
+ (node removal, group coverage, counterfactuals, permutation tests, scenario editing).
  It is intentionally unlinked from the site navigation and from `visualizer.html`.
  Do not share this URL with students until the features here are signed off and merged into the main visualizer.
 
@@ -5536,10 +5536,23 @@ SYSEN 5470 · Tools · Experimental
 # Network *Visualizer v2*
 
 
-Same data, more analytics. Load a project dataset, then remove nodes, run Monte Carlo and permutation tests, edit what\-if scenarios, and inspect coverage and assortativity — all without leaving the page.
+Same data, more analytics. Load a project dataset, then remove nodes, run counterfactuals and permutation tests, edit what\-if scenarios, and inspect coverage and group composition — all without leaving the page.
 
 
-### 📥 Data
+🎓 Tutorial walkthrough
+
+
+📖 What's new in v2
+
+* **Click a node**, then hit *Remove from network*. Removed nodes stay pinned where they were so before/after comparisons match. Restore individually or all at once.
+* **Group Coverage** reports the % of each group reachable from a reference group of your choice — live as you remove nodes, slide the time filter, or tighten the max\-hops cap.
+* **Counterfactuals** re\-draws edge weights from `Poisson(λ = observed)` and reports a 95% CI on a metric you pick. **Permutation Test** shuffles a node attribute and reports a p\-value.
+* **Scenarios**: ＋N adds a node by clicking the stage; ＋E adds an edge by clicking two nodes. Save bundles in your browser.
+* **Browse Nodes** gives you a searchable / sortable table of every node — handy when the graph is too dense to click into.
+* **Formulas** live inside the Network Stats card on the right — press ▸ to expand the definitions when you need them.
+
+
+📥 Data
 
 
 Load project dataset autoloads — no upload
@@ -5581,7 +5594,7 @@ Drop a CSV, or load the sample graph to start.
 ▶ Sample
 
 
-### 🗂 Column Mapping
+🗂 Column Mapping
 
 
 Upload an edgelist to map columns.
@@ -5606,7 +5619,7 @@ Overall
 Collapses nodes that share a trait (e.g. *region*): every edge is re\-pointed to its endpoints' groups and combined.
 
 
-### ⚙ Layout
+⚙ Layout
 
 
 Force
@@ -5615,19 +5628,7 @@ Circle
 Hier.
 
 
-### 🎚 Tunables
-
-
-Node size scale1\.0x
-
-
-Edge weight threshold0\.0
-
-
-Time filter (≤)—
-
-
-### 👁 Display
+👁 Display
 
 
 Color nodes by
@@ -5656,21 +5657,16 @@ Drop isolates
 Live drift
 
 
-### ✏ Scenarios v2
+🎚 Tunables
 
 
-Loading scenario editor…
+Node size scale1\.0x
 
 
-### 📤 Export
+Edge weight threshold0\.0
 
 
-⤓ Export PNG
-
-
-📐 Formulas \& Definitions v2
-
-Formulas load when a network is loaded.
+Time filter (≤)—
 
 
 Your Network · V2
@@ -5683,6 +5679,8 @@ Your Network · V2
 －
 ⤢
 
+⤓
+
 
 0Active Nodes
 0Edges shown
@@ -5694,68 +5692,68 @@ Your Network · V2
  Upload an edgelist or hit ▶ Sample to start.
 
 
-### 🧨 Disruption Stats v2
-
-
+🧨 Disruption Stats v2
 Load a network to see disruption stats.
 
 
-### 🎲 Monte Carlo v2
+🛡 Group Coverage v2
+Pick a group column to see coverage.
 
 
-Load a network to enable Monte Carlo.
+🎲 Counterfactuals v2
+Load a network to enable counterfactuals.
 
 
-### 🔀 Permutation Test v2
-
-
+🔀 Permutation Test v2
 Load a network with a group column to enable permutation tests.
 
 
-### 🧲 Assortativity (Newman r) v2
+Cards
+＋ Expand all
+− Collapse all
 
 
-Pick a group column to see assortativity.
-
-
-### 📖 What's new in v2
-
-
-* **Click a node**, then hit *Remove from network*. Removed nodes stay pinned where they were so before/after comparisons match. Restore individually or all at once.
-* **Group Coverage** reports the % of each group reachable from a reference group of your choice — live as you remove nodes or slide the time filter.
-* **Monte Carlo** re\-draws edge weights from `Poisson(λ = observed)` and reports a 95% CI on a metric you pick. **Permutation Test** shuffles a node attribute and reports a p\-value.
-* **Scenarios**: ＋N adds a node by clicking the stage; ＋E adds an edge by clicking two nodes. Save bundles in your browser.
-* **Formulas** panel in the left column spells out exactly what degree and betweenness mean here.
-
-
-### 📈 Network Stats v2
-
-
-Load a network to see stats.
-
-
-### 🏷 Selected Node
+🏷 Selected Node
 
 
 Click any node to inspect.
 
 
-### 📊 Top Degree (count)
+✏ Scenarios v2
+Loading scenario editor…
+
+
+📈 Network Stats v2
+
+
+Load a network to see stats.
+
+
+📐 Formulas \& Definitions
+
+Formulas load when a network is loaded.
+
+
+📐 Group Composition v2
+
+Loading group composition…
+
+
+📊 Top Degree (count)
 
 
 Load a network to see rankings.
 
 
-### 🔗 Top Betweenness (normalized 0–1\)
+🔗 Top Betweenness (normalized 0–1\)
 
 
 Computed when graph loads (≤600 nodes).
 
 
-### 🛡 Group Coverage v2
+🔎 Browse Nodes v2
 
-
-Pick a group column to see coverage.
+Loading node browser…
 
 
 **SYSEN 5470 · Network Visualizer v2 · Experimental**
