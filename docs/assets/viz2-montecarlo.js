@@ -202,33 +202,37 @@
       chosenMetric = 'apl_weighted';
     }
 
+    // Tech-note tooltip — what we previously inlined as a wall of text.
+    const methodTip = 'Monte Carlo: each replicate Poisson-resamples every edge weight from Poisson(λ = observed) and recomputes the metric. 95% CI = quantiles [0.025, 0.975]. Mirrors code/07_counterfactual/example.R.';
+
     host.innerHTML = `
+      <div class="formula-note" style="margin:0 0 8px;">
+        <strong style="color:var(--green-bright);">Monte Carlo simulation</strong>
+        <span class="viz2-info-icon" title="${esc(methodTip)}" aria-label="Method details">ⓘ</span>
+        — re-runs the metric on weight-perturbed networks to bracket its uncertainty.
+      </div>
       <div class="color-by-row" style="margin-bottom:8px;">
         <label for="viz2-mc-metric">Metric</label>
         <select id="viz2-mc-metric" class="viz-select">${opts}</select>
       </div>
       <div class="color-by-row" style="margin-bottom:4px;">
         <label for="viz2-mc-reps"># replicates</label>
-        <input type="number" id="viz2-mc-reps" class="viz-select"
-               min="20" max="2000" step="10" value="${replicates}"
-               style="width:90px;">
+        <select id="viz2-mc-reps" class="viz-select">
+          ${[100, 500, 1000].map((r) => `<option value="${r}"${r === replicates ? ' selected' : ''}>${r}</option>`).join('')}
+        </select>
       </div>
-      <div class="warn">100 is fine for a quick check; ≥500 ideally 1000 for a publishable CI.</div>
+      <div class="warn">100 = quick check · 500 = solid · 1000 = publishable CI.</div>
       <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
-        <button id="viz2-mc-run" class="viz-btn">🎲 Run Monte Carlo</button>
+        <button id="viz2-mc-run" class="viz-btn">🎲 Run</button>
         <div id="viz2-mc-status" class="formula-note" style="margin:0;flex:1;"></div>
       </div>
       <svg class="dist" id="viz2-mc-svg"></svg>
-      <div id="viz2-mc-summary" class="formula-note" style="margin-top:4px;"></div>
-      <div class="formula-note" style="margin-top:2px;">
-        Poisson(λ = observed weight) per edge, ${replicates} replicates,
-        95% CI = quantiles [0.025, 0.975]. Matches code/07_counterfactual.
-      </div>`;
+      <div id="viz2-mc-summary" class="formula-note" style="margin-top:4px;"></div>`;
 
     $('viz2-mc-metric').addEventListener('change', (e) => { chosenMetric = e.target.value; });
     $('viz2-mc-reps').addEventListener('change', (e) => {
-      const v = Math.max(20, Math.min(2000, Math.round(+e.target.value || 100)));
-      replicates = v; e.target.value = v;
+      const v = parseInt(e.target.value, 10);
+      if (v === 100 || v === 500 || v === 1000) replicates = v;
     });
     $('viz2-mc-run').addEventListener('click', run);
   }

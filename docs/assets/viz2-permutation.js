@@ -270,9 +270,8 @@
       ? `<div class="formula-note" style="margin:-4px 0 0;">Edge-attribute blocking permutes <em>edge weights</em> — the test attribute is irrelevant in this mode.</div>`
       : '';
 
-    const warnReps = ui.reps < 500
-      ? `<div class="warn">100 is fine for a quick look; ≥500 (ideally 1000) for a defensible p-value.</div>`
-      : '';
+    const warnReps = `<div class="warn">100 = quick look · 500 = solid · 1000 = defensible p-value.</div>`;
+    const pvalTip = 'p-value is one-sided: #{null_i ≥ observed} / R. No continuity correction — matches mean(null >= observed) in code/06_permutation/example.R.';
 
     body.innerHTML = `
       <div class="color-by-row">
@@ -285,13 +284,16 @@
         <select id="viz2-perm-block" class="viz-select">${blockOpts.join('')}</select>
       </div>
       <div class="color-by-row">
-        <label for="viz2-perm-stat">Test statistic</label>
+        <label for="viz2-perm-stat">Test statistic
+          <span class="viz2-info-icon" title="${esc(pvalTip)}" aria-label="p-value details">ⓘ</span>
+        </label>
         <select id="viz2-perm-stat" class="viz-select">${statOpts.join('')}</select>
       </div>
       <div class="color-by-row">
         <label for="viz2-perm-reps"># replicates</label>
-        <input id="viz2-perm-reps" type="number" min="20" max="2000" step="10" value="${ui.reps}"
-               class="viz-select" style="font-family: var(--font-mono);">
+        <select id="viz2-perm-reps" class="viz-select">
+          ${[100, 500, 1000].map((r) => `<option value="${r}"${r === ui.reps ? ' selected' : ''}>${r}</option>`).join('')}
+        </select>
         ${warnReps}
       </div>
       <div class="btn-row" style="margin-top: 4px;">
@@ -303,9 +305,6 @@
       <svg class="dist" id="viz2-perm-dist"></svg>
       <div id="viz2-perm-summary" class="formula-note" style="font-size:11px;">
         ${lastResult ? formatSummary(lastResult) : 'Pick controls and run to compute a null distribution and one-sided p-value.'}
-      </div>
-      <div class="formula-note">
-        p-value is one-sided: <code>#{null<sub>i</sub> ≥ observed} / R</code> (no continuity correction; matches <code>mean(null &gt;= observed)</code> in <code>code/06_permutation/example.R</code>).
       </div>`;
 
     // Wire controls
@@ -316,18 +315,9 @@
     const statSel = $('viz2-perm-stat');
     if (statSel) statSel.addEventListener('change', (e) => { ui.stat = e.target.value || 'similarity'; render(); });
     const repsInp = $('viz2-perm-reps');
-    if (repsInp) repsInp.addEventListener('input', (e) => {
-      let v = parseInt(e.target.value, 10);
-      if (!isFinite(v)) v = 100;
-      v = Math.max(20, Math.min(2000, v));
-      ui.reps = v;
-      const w = body.querySelector('.warn');
-      if (v < 500 && !w) {
-        // light re-render to add/remove the warning without losing focus
-        render(); requestAnimationFrame(() => { const r = $('viz2-perm-reps'); if (r) r.focus(); });
-      } else if (v >= 500 && w) {
-        w.remove();
-      }
+    if (repsInp) repsInp.addEventListener('change', (e) => {
+      const v = parseInt(e.target.value, 10);
+      if (v === 100 || v === 500 || v === 1000) ui.reps = v;
     });
     const runBtn = $('viz2-perm-run');
     if (runBtn) runBtn.addEventListener('click', () => { runPermutation().catch((err) => {

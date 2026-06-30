@@ -775,6 +775,9 @@
     if (!state.graph) return [];
     return state.graph.nodes.filter((n) => {
       if (state.removedNodes.has(n.id)) return false;
+      // Scenario nodes are user-placed — keep them visible even before they
+      // have edges, otherwise hitting +N produces no visible feedback.
+      if (n.isScenario) return true;
       if (state.dropIsolates && (state.metrics[n.id]?.degree || 0) === 0) return false;
       return true;
     });
@@ -785,6 +788,7 @@
     if (!state.graph) return [];
     return state.graph.nodes.filter((n) => {
       if (state.removedNodes.has(n.id)) return true;
+      if (n.isScenario) return true;   // always render scenario nodes (see above)
       if (state.dropIsolates && (state.metrics[n.id]?.degree || 0) === 0) return false;
       return true;
     });
@@ -871,6 +875,15 @@
     const maxW = d3.max(state.graph.links, (l) => l.weight) || 1;
     const vlinks = visibleLinks();
 
+    // id → node map for endpoint resolution. d3.forceLink converts link
+    // source/target from strings to node refs the first time the simulation
+    // ticks; new scenario links added after the sim has stopped never get
+    // converted, so render must look them up explicitly.
+    const nodeById = Object.create(null);
+    state.graph.nodes.forEach((n) => { nodeById[n.id] = n; });
+    const endpointX = (e) => (typeof e === 'object' ? (e.x ?? 0) : (nodeById[e]?.x ?? 0));
+    const endpointY = (e) => (typeof e === 'object' ? (e.y ?? 0) : (nodeById[e]?.y ?? 0));
+
     const root = svg.append('g').attr('class', 'viewport');
     if (state.zoomTransform) root.attr('transform', state.zoomTransform);
 
@@ -881,15 +894,19 @@
       .attr('stroke-dasharray', (l) => l.isScenario ? '4,3' : null)
       .attr('stroke-width', (l) => (0.6 + (l.weight / maxW) * 3.5) * (dens < 1 ? 0.7 : 1))
       .attr('stroke-opacity', (l) => (0.35 + 0.55 * (l.weight / maxW)) * dens)
-      .attr('x1', (l) => (l.source.x ?? 0))
-      .attr('y1', (l) => (l.source.y ?? 0))
-      .attr('x2', (l) => (l.target.x ?? 0))
-      .attr('y2', (l) => (l.target.y ?? 0));
+      // Resolve endpoints by id: scenario links pushed after the force sim has
+      // stopped still hold string ids (the sim never converted them to node
+      // refs), so l.source.x would be undefined → 0 and the line would draw
+      // from (0,0). Look up the node object explicitly in that case.
+      .attr('x1', (l) => endpointX(l.source))
+      .attr('y1', (l) => endpointY(l.source))
+      .attr('x2', (l) => endpointX(l.target))
+      .attr('y2', (l) => endpointY(l.target));
 
     if (state.showEdgeLabels) {
       root.append('g').selectAll('text').data(vlinks).enter().append('text')
-        .attr('x', (l) => ((l.source.x ?? 0) + (l.target.x ?? 0)) / 2)
-        .attr('y', (l) => ((l.source.y ?? 0) + (l.target.y ?? 0)) / 2)
+        .attr('x', (l) => (endpointX(l.source) + endpointX(l.target)) / 2)
+        .attr('y', (l) => (endpointY(l.source) + endpointY(l.target)) / 2)
         .attr('text-anchor', 'middle')
         .attr('font-family', 'Space Mono, monospace')
         .attr('font-size', '9px')

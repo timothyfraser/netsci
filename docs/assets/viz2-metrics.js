@@ -30,20 +30,23 @@
     return { deg, w, betw };
   }
 
-  function statRow(label, arr, decimals, unit) {
+  // Build one <tr> row of stat cells: min / mean / median / max
+  function statRowHtml(label, arr, decimals) {
     if (!arr || !arr.length) {
-      return `<div class="metric-row"><span class="ml">${label}</span><span class="mv">—</span></div>`;
+      return `<tr><td>${label}</td><td colspan="4" class="num">—</td></tr>`;
     }
     const min = Math.min.apply(null, arr);
     const max = Math.max.apply(null, arr);
     const mean = arr.reduce((s, x) => s + x, 0) / arr.length;
     const med = NV.utils.quantile(arr, 0.5);
-    const u = unit ? `<span class="unit">${unit}</span>` : '';
     return `
-      <div class="metric-row">
-        <span class="ml">${label}</span>
-        <span class="mv">${fmtNum(min, decimals)} / ${fmtNum(mean, decimals)} / ${fmtNum(med, decimals)} / ${fmtNum(max, decimals)}${u}</span>
-      </div>`;
+      <tr>
+        <td>${label}</td>
+        <td class="num">${fmtNum(min, decimals)}</td>
+        <td class="num">${fmtNum(mean, decimals)}</td>
+        <td class="num">${fmtNum(med, decimals)}</td>
+        <td class="num">${fmtNum(max, decimals)}</td>
+      </tr>`;
   }
 
   function renderNetworkStats() {
@@ -64,30 +67,37 @@
     const maxB = arrs && arrs.betw.length ? Math.max.apply(null, arrs.betw) : 0;
     const rawSPmax = Math.round(maxB * norm);
 
+    // Header line: a one-row summary (active nodes, components, max σ_st(v))
+    // followed by a compact table of distribution stats.
     host.innerHTML = `
-      <div class="metric-row">
-        <span class="ml">Active / total nodes</span>
-        <span class="mv">${fmtInt(active)} / ${fmtInt(total)}</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div>
+          <div style="font-family:var(--font-display);font-size:18px;color:var(--green-bright);line-height:1;">${fmtInt(active)}<span style="font-size:12px;color:var(--grey-dim);"> / ${fmtInt(total)}</span></div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--grey);letter-spacing:0.12em;text-transform:uppercase;margin-top:3px;">Active / total</div>
+        </div>
+        <div>
+          <div style="font-family:var(--font-display);font-size:18px;color:var(--green-bright);line-height:1;">${fmtInt(comps)}</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--grey);letter-spacing:0.12em;text-transform:uppercase;margin-top:3px;">Components</div>
+        </div>
+        <div>
+          <div style="font-family:var(--font-display);font-size:18px;color:var(--green-bright);line-height:1;">${fmtInt(rawSPmax)}</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--grey);letter-spacing:0.12em;text-transform:uppercase;margin-top:3px;">Max σ<sub>st</sub>(v)</div>
+        </div>
       </div>
-      <div class="metric-row">
-        <span class="ml">Active components</span>
-        <span class="mv">${fmtInt(comps)}</span>
-      </div>
-      <div class="metric-row" style="border-bottom:none;padding-bottom:0;">
-        <span class="ml" style="color:var(--green-bright);font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.12em;text-transform:uppercase;">min / mean / median / max</span>
-        <span class="mv"></span>
-      </div>
-      ${statRow('Degree', arrs && arrs.deg, 1, '· count')}
-      ${statRow('Weighted degree', arrs && arrs.w, 1, '· Σw')}
-      ${statRow('Betweenness', arrs && arrs.betw, 4, '· norm 0–1')}
-      <div class="metric-row">
-        <span class="ml"># Shortest paths through (max)</span>
-        <span class="mv">${fmtInt(rawSPmax)}<span class="unit">· σ_st(v)</span></span>
-      </div>
+      <table class="group-table" style="margin-top:4px;">
+        <thead><tr>
+          <th>Distribution</th><th class="gv" style="text-align:right;">Min</th><th class="gv" style="text-align:right;">Mean</th><th class="gv" style="text-align:right;">Median</th><th class="gv" style="text-align:right;">Max</th>
+        </tr></thead>
+        <tbody style="font-family:var(--font-mono);">
+          ${statRowHtml('Degree <span class="unit">· count</span>', arrs && arrs.deg, 1)}
+          ${statRowHtml('Weighted degree <span class="unit">· Σw</span>', arrs && arrs.w, 1)}
+          ${statRowHtml('Betweenness <span class="unit">· norm 0–1</span>', arrs && arrs.betw, 4)}
+        </tbody>
+      </table>
       <div class="formula-note" style="margin-top:8px;">
-        Distributions are over the <strong>${fmtInt(active)}</strong> active node(s);
-        removed nodes are excluded. Toggle <em>Weight degree &amp; betweenness</em>
-        to switch the selected-node "Degree" line between ${wUnit}.
+        Over the <strong>${fmtInt(active)}</strong> active node(s); removed nodes excluded.
+        Toggle <em>Weight degree &amp; betweenness</em> to switch the selected-node
+        Degree row between ${wUnit}.
       </div>`;
   }
 

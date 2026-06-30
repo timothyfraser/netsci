@@ -17,6 +17,7 @@
 
   // Remember the user's reference-group pick across re-renders.
   let refChoice = '';   // '' = giant component, else a group value
+  let maxHops = 0;      // 0 = unlimited (any-path reachability); >0 = within K BFS hops
 
   // ── Active node ids (Set), excluding removed ────────────────
   function activeIdSet() {
@@ -71,13 +72,20 @@
       });
     } else {
       // Reference group given → BFS from every ref member, union the reached.
+      // When maxHops > 0, only nodes within that BFS distance count as reached
+      // — makes the metric discriminating even on fully-connected graphs where
+      // unrestricted reachability is trivially 100% from any ref.
       const refIds = groups[refGroup] || [];
       const adj = NV.utils.buildAdj(s.graph, activeIds);
       reached = new Set();
       refIds.forEach((rid) => {
         reached.add(rid);
         const dist = NV.utils.bfs(adj, rid);
-        for (const id in dist) if (dist[id] !== Infinity) reached.add(id);
+        for (const id in dist) {
+          if (dist[id] === Infinity) continue;
+          if (maxHops > 0 && dist[id] > maxHops) continue;
+          reached.add(id);
+        }
       });
     }
 
@@ -118,12 +126,25 @@
     }
 
     const col = s.mapping.nodeGroup;
+    const hopsTxt = maxHops > 0 ? ` within ≤${maxHops} hop${maxHops === 1 ? '' : 's'}` : '';
     const refLabel = refChoice === ''
       ? `giant component of <code>${esc(col)}</code>`
-      : `reached from group <code>${esc(refChoice)}</code>`;
+      : `reached${hopsTxt} from group <code>${esc(refChoice)}</code>`;
     const denomNote = refChoice === ''
       ? 'Coverage = share of each group that lives in the largest connected component (after removals).'
-      : `Coverage = share of each group reachable (any path) from at least one <em>${esc(refChoice)}</em> node in the active subgraph.`;
+      : `Coverage = share of each group reachable${hopsTxt} from at least one <em>${esc(refChoice)}</em> node in the active subgraph.`;
+
+    // Flag the "all 100%" case so students aren't confused that the reference
+    // dropdown "isn't doing anything" on a fully-connected graph.
+    const allFull = refChoice !== '' && maxHops === 0
+      && rows.length > 0 && rows.every((r) => r.frac >= 0.9999);
+    const allFullHint = allFull
+      ? `<div class="formula-note" style="margin:4px 0 6px;color:#fbbf24;">
+           Every group is 100% reachable because this network has a single
+           connected component. Try setting <strong>Max hops</strong> below to
+           a small number (e.g. 2) to see how distance from <em>${esc(refChoice)}</em>
+           varies across groups.
+         </div>` : '';
 
     host.innerHTML = `
       <div class="color-by-row" style="margin-bottom:8px;">
@@ -133,7 +154,14 @@
           ${groupOpts.map((g) => `<option value="${esc(g)}"${g === refChoice ? ' selected' : ''}>${esc(g)}</option>`).join('')}
         </select>
       </div>
+      <div class="color-by-row" style="margin-bottom:8px;">
+        <label for="viz2-cov-hops">Max hops <span class="opt">(0 = any path)</span></label>
+        <select id="viz2-cov-hops" class="viz-select"${refChoice === '' ? ' disabled' : ''}>
+          ${[0, 1, 2, 3, 4, 5, 6, 8, 10].map((h) => `<option value="${h}"${h === maxHops ? ' selected' : ''}>${h === 0 ? 'Any path' : '≤ ' + h + ' hops'}</option>`).join('')}
+        </select>
+      </div>
       <div class="formula-note" style="margin:4px 0 6px;">${denomNote}</div>
+      ${allFullHint}
       <table class="group-table">
         <thead><tr>
           <th>Group</th><th>Members</th><th>Reached</th><th style="text-align:right;">Coverage</th>
@@ -155,6 +183,11 @@
     const sel = $('viz2-cov-ref');
     if (sel) sel.addEventListener('change', (e) => {
       refChoice = e.target.value || '';
+      renderCoverage();
+    });
+    const hopsSel = $('viz2-cov-hops');
+    if (hopsSel) hopsSel.addEventListener('change', (e) => {
+      maxHops = Number(e.target.value) || 0;
       renderCoverage();
     });
   }
