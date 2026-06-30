@@ -34,7 +34,7 @@
   const ui = {
     testAttr:  null,   // node col being permuted ('__group__' === active group col proxy)
     blockMode: '',     // '' | 'node:<col>' | 'edge:<col>'
-    stat:      'assort',
+    stat:      'similarity',
     reps:      100
   };
   let running = false;
@@ -79,8 +79,18 @@
   }
 
   // ── Test statistics ─────────────────────────────────────────
-  // assortativity → uses the SAME live attribute we just permuted.
-  // APL/diameter  → graph-level, BFS-distance based; matches viz2-removal.
+  // similarity → COURSE statistic from docs/case-studies/permutation.html
+  //              (NOT Newman r — that wasn't taught). 0 = uniform mixing,
+  //              1 = all weight on a single group-pair cell.
+  // assort     → kept as an alternative for power-user comparison.
+  // APL/diam   → graph-level distance metrics; less interesting under label
+  //              permutation but offered for parity with the MC card.
+  function statSimilarity(attr) {
+    const s = NV.state;
+    const ids = activeIdSet();
+    const { index } = NV.utils.similarityIndex(s.graph, attr, ids);
+    return isFinite(index) ? index : NaN;
+  }
   function statAssort(attr) {
     const s = NV.state;
     const ids = activeIdSet();
@@ -110,9 +120,10 @@
     return which === 'diam' ? maxD : (total / pairs);
   }
   function evalStat(statKey, attr) {
-    if (statKey === 'assort') return statAssort(attr);
-    if (statKey === 'apl')    return statAplDiam('apl');
-    if (statKey === 'diam')   return statAplDiam('diam');
+    if (statKey === 'similarity') return statSimilarity(attr);
+    if (statKey === 'assort')     return statAssort(attr);
+    if (statKey === 'apl')        return statAplDiam('apl');
+    if (statKey === 'diam')       return statAplDiam('diam');
     return NaN;
   }
 
@@ -240,8 +251,10 @@
 
     const isEdgeBlock = ui.blockMode.startsWith('edge:');
 
-    // Test-statistic dropdown — assortativity uses the test attr; APL/diam are graph-level.
+    // Test-statistic dropdown — similarity index (course default) uses the test attr;
+    // APL/diam are graph-level. Newman assortativity is kept as an alternative.
     const statOpts = [
+      `<option value="similarity"${ui.stat === 'similarity' ? ' selected' : ''}>Similarity Index over test attribute (course default)</option>`,
       `<option value="assort"${ui.stat === 'assort' ? ' selected' : ''}>Newman assortativity over test attribute</option>`,
       `<option value="apl"${ui.stat   === 'apl'    ? ' selected' : ''}>Avg shortest path length (graph-level)</option>`,
       `<option value="diam"${ui.stat  === 'diam'   ? ' selected' : ''}>Network diameter (graph-level)</option>`
@@ -257,9 +270,8 @@
       ? `<div class="formula-note" style="margin:-4px 0 0;">Edge-attribute blocking permutes <em>edge weights</em> — the test attribute is irrelevant in this mode.</div>`
       : '';
 
-    const warnReps = ui.reps < 500
-      ? `<div class="warn">100 is fine for a quick look; ≥500 (ideally 1000) for a defensible p-value.</div>`
-      : '';
+    const warnReps = `<div class="warn">100 = quick look · 500 = solid · 1000 = defensible p-value.</div>`;
+    const pvalTip = 'p-value is one-sided: #{null_i ≥ observed} / R. No continuity correction — matches mean(null >= observed) in code/06_permutation/example.R.';
 
     body.innerHTML = `
       <div class="color-by-row">
@@ -272,13 +284,16 @@
         <select id="viz2-perm-block" class="viz-select">${blockOpts.join('')}</select>
       </div>
       <div class="color-by-row">
-        <label for="viz2-perm-stat">Test statistic</label>
+        <label for="viz2-perm-stat">Test statistic
+          <span class="viz2-info-icon" title="${esc(pvalTip)}" aria-label="p-value details">ⓘ</span>
+        </label>
         <select id="viz2-perm-stat" class="viz-select">${statOpts.join('')}</select>
       </div>
       <div class="color-by-row">
         <label for="viz2-perm-reps"># replicates</label>
-        <input id="viz2-perm-reps" type="number" min="20" max="2000" step="10" value="${ui.reps}"
-               class="viz-select" style="font-family: var(--font-mono);">
+        <select id="viz2-perm-reps" class="viz-select">
+          ${[100, 500, 1000].map((r) => `<option value="${r}"${r === ui.reps ? ' selected' : ''}>${r}</option>`).join('')}
+        </select>
         ${warnReps}
       </div>
       <div class="btn-row" style="margin-top: 4px;">
@@ -290,9 +305,6 @@
       <svg class="dist" id="viz2-perm-dist"></svg>
       <div id="viz2-perm-summary" class="formula-note" style="font-size:11px;">
         ${lastResult ? formatSummary(lastResult) : 'Pick controls and run to compute a null distribution and one-sided p-value.'}
-      </div>
-      <div class="formula-note">
-        p-value is one-sided: <code>#{null<sub>i</sub> ≥ observed} / R</code> (no continuity correction; matches <code>mean(null &gt;= observed)</code> in <code>code/06_permutation/example.R</code>).
       </div>`;
 
     // Wire controls
@@ -301,20 +313,11 @@
     const blockSel = $('viz2-perm-block');
     if (blockSel) blockSel.addEventListener('change', (e) => { ui.blockMode = e.target.value || ''; render(); });
     const statSel = $('viz2-perm-stat');
-    if (statSel) statSel.addEventListener('change', (e) => { ui.stat = e.target.value || 'assort'; render(); });
+    if (statSel) statSel.addEventListener('change', (e) => { ui.stat = e.target.value || 'similarity'; render(); });
     const repsInp = $('viz2-perm-reps');
-    if (repsInp) repsInp.addEventListener('input', (e) => {
-      let v = parseInt(e.target.value, 10);
-      if (!isFinite(v)) v = 100;
-      v = Math.max(20, Math.min(2000, v));
-      ui.reps = v;
-      const w = body.querySelector('.warn');
-      if (v < 500 && !w) {
-        // light re-render to add/remove the warning without losing focus
-        render(); requestAnimationFrame(() => { const r = $('viz2-perm-reps'); if (r) r.focus(); });
-      } else if (v >= 500 && w) {
-        w.remove();
-      }
+    if (repsInp) repsInp.addEventListener('change', (e) => {
+      const v = parseInt(e.target.value, 10);
+      if (v === 100 || v === 500 || v === 1000) ui.reps = v;
     });
     const runBtn = $('viz2-perm-run');
     if (runBtn) runBtn.addEventListener('click', () => { runPermutation().catch((err) => {
@@ -334,7 +337,8 @@
     const obsTxt = fmt(res.observed);
     const muTxt  = fmt(mean);
     const pTxt   = res.pval < 0.001 ? '< 0.001' : res.pval.toFixed(3);
-    const statLbl = res.stat === 'assort' ? `assortativity by ${esc(res.attr)}`
+    const statLbl = res.stat === 'similarity' ? `Similarity Index by ${esc(res.attr)}`
+                  : res.stat === 'assort' ? `assortativity by ${esc(res.attr)}`
                   : res.stat === 'apl'    ? 'avg shortest path length'
                   :                         'network diameter';
     const blockLbl = !res.blockMode ? 'unblocked'
@@ -429,11 +433,12 @@
     // node-block / unblocked modes — kept inside try/finally to ensure untag).
     if (isEdgeBlock) tagLinksWithBlockVal(blockCol);
 
-    // For the assortativity stat we ask utils.nominalAssortativity to read
-    // either the named attr or '__group__'. If the test attr IS the active
-    // group column, mirror n.group as we permute so live colors don't drift.
+    // For the attribute-based stats (similarity / assort) we ask the utils
+    // function to read either the named attr or '__group__'. If the test attr
+    // IS the active group column, mirror n.group as we permute so live colors
+    // don't drift between renders.
     const attrIsGroupCol = (attr === s.mapping.nodeGroup);
-    const statAttrKey = (statK === 'assort')
+    const statAttrKey = (statK === 'similarity' || statK === 'assort')
       ? (attrIsGroupCol ? '__group__' : attr)
       : null;
 
