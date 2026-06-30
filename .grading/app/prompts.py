@@ -19,9 +19,7 @@ Use SYSEN 5470 network-science vocabulary precisely:
 """
 
 DISCLOSURE_HTML = (
-    "<em>Processed through Cornell's AI API Gateway (CIT AI Program), approved for "
-    "moderate-risk/FERPA educational data. Chat Completions API: prompts and "
-    "completions are not stored by the gateway or model providers.</em>"
+    "<em>Processed using Cornell's AI Gateway; No student data retained.</em>"
 )
 
 
@@ -46,7 +44,9 @@ Status values: "met", "partial", "missing", "not_assessable"
 Use "not_assessable" for project_script when the report/Canvas text does not let you verify code runs.
 For each requirement include: id, status, evidence, location, proposed_deduction (0 if met), search_hint (EXACTLY three words).
 Include top_issues: 2-5 highest-value problems with rank, title, description, location, search_hint (EXACTLY three words).
-Include classbot_summary: 2-4 sentences for the instructor.
+Include classbot_summary: 2-4 sentences for the instructor (not shown verbatim to the student).
+In classbot_summary, refer to the student by first name only (see student_first_name in metadata).
+Never use last name alone or ALL CAPS — e.g. "Ryan's report…" not "ASSENHEIMER submitted…".
 Include confidence: "low", "medium", or "high".
 
 {GLOSSARY_DISCIPLINE}
@@ -159,7 +159,6 @@ def compose_canvas_comment(instructor_comment: str, classbot_comment: str) -> st
 
     parts.append("<hr>")
     parts.append("<p><strong>🎓 SYSEN 5470 project feedback</strong></p>")
-    parts.append(f"<p>{DISCLOSURE_HTML}</p>")
 
     if classbot:
         if classbot.lstrip().startswith("<"):
@@ -169,6 +168,7 @@ def compose_canvas_comment(instructor_comment: str, classbot_comment: str) -> st
     else:
         parts.append("<p><em>🤖 No Classbot block for this submission.</em></p>")
 
+    parts.append(f"<p>{DISCLOSURE_HTML}</p>")
     return "\n".join(parts)
 
 

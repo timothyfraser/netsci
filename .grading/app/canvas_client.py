@@ -10,7 +10,7 @@ import requests
 
 from env import GRADING_ROOT, get_canvas_env
 from extract_text import extract_submission_text
-from rubric import get_assignment
+from rubric import assignment_type, get_assignment
 
 CACHE_ROOT = GRADING_ROOT / "cache" / "submissions"
 SESSION = requests.Session()
@@ -215,7 +215,7 @@ def sync_assignment(assignment_key: str, *, force: bool = False) -> list[dict[st
             Path(report_path) if report_path else None,
             body_html,
         )
-        if extracted and (force or not text_path.is_file()):
+        if extracted and (force or not text_path.is_file() or body_html):
             text_path.write_text(extracted, encoding="utf-8")
 
         name = user.get("sortable_name") or user.get("name") or ""
@@ -228,6 +228,7 @@ def sync_assignment(assignment_key: str, *, force: bool = False) -> list[dict[st
             "canvas_submission_id": str(sub.get("id", "")),
             "assignment_key": assignment_key,
             "assignment_name": assignment["name"],
+            "assignment_type": assignment.get("type", assignment_type(assignment_key)),
             "canvas_assignment_id": str(aid),
             "submitted_at": sub.get("submitted_at") or "",
             "attempt_number": str(attempt),

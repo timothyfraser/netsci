@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from env import GRADING_ROOT, mock_llm_enabled
 from gateway_client import get_client
+from name_utils import display_name, first_name
 from prompts import build_classbot_comment_from_review, build_system_prompt, build_user_prompt
 from rubric import compute_score, load_rubric, max_deduction_map
 
@@ -236,6 +237,8 @@ def run_classbot_for_row(
     pdf_path = Path(row.get("cached_report_path", "")) if row.get("cached_report_path") else None
     metadata = {
         "student_name": row.get("student_name"),
+        "student_display_name": display_name(row.get("student_name", "")),
+        "student_first_name": first_name(row.get("student_name", "")),
         "assignment": row.get("assignment_name"),
         "submitted_at": row.get("submitted_at"),
         "attempt": row.get("attempt_number"),

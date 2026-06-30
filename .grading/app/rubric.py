@@ -18,7 +18,24 @@ def load_rubric() -> dict[str, Any]:
 
 def load_assignments() -> list[dict[str, Any]]:
     data = json.loads(ASSIGNMENTS_PATH.read_text(encoding="utf-8"))
-    return data["assignments"]
+    return data.get("assignments", data if isinstance(data, list) else [])
+
+
+def load_assignment_types() -> dict[str, Any]:
+    data = json.loads(ASSIGNMENTS_PATH.read_text(encoding="utf-8"))
+    return data.get("assignment_types", {})
+
+
+def assignment_type(key: str) -> str:
+    a = get_assignment(key)
+    return (a or {}).get("type", "project_case_study")
+
+
+def points_possible(key: str) -> int:
+    a = get_assignment(key)
+    if not a:
+        return 100
+    return int(a.get("points_possible", 100))
 
 
 def get_assignment(key: str) -> dict[str, Any] | None:

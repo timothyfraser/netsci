@@ -1,19 +1,151 @@
 {
+  "assignment_types": {
+    "project_case_study": {
+      "label": "Project case study report",
+      "points_max": 100,
+      "rubric": "rubric.json"
+    },
+    "learning_checks": {
+      "label": "Learning checks (completion)",
+      "points_max": 1
+    },
+    "poster": {
+      "label": "Final poster presentation",
+      "points_max": 100,
+      "status": "planned"
+    }
+  },
   "assignments": [
     {
       "key": "project-1",
-      "name": "Project Case Study — Submission 1",
-      "canvas_assignment_id": 968727
+      "type": "project_case_study",
+      "name": "Project Case Study \u2014 Submission 1",
+      "canvas_assignment_id": 968727,
+      "points_possible": 100
     },
     {
       "key": "project-2",
-      "name": "Project Case Study — Submission 2",
-      "canvas_assignment_id": 968728
+      "type": "project_case_study",
+      "name": "Project Case Study \u2014 Submission 2",
+      "canvas_assignment_id": 968728,
+      "points_possible": 100
     },
     {
       "key": "project-3",
-      "name": "Project Case Study — Submission 3 (final)",
-      "canvas_assignment_id": 968729
+      "type": "project_case_study",
+      "name": "Project Case Study \u2014 Submission 3 (final)",
+      "canvas_assignment_id": 968729,
+      "points_possible": 100
+    },
+    {
+      "key": "lc-build-a-network",
+      "type": "learning_checks",
+      "name": "Learning Checks \u2014 Build a Network",
+      "canvas_assignment_id": 968700,
+      "points_possible": 1,
+      "case_study_key": "build-a-network",
+      "lab_path": "docs/case-studies/build-a-network.html",
+      "code_path": "code/01_build-a-network"
+    },
+    {
+      "key": "lc-joins",
+      "type": "learning_checks",
+      "name": "Learning Checks \u2014 Joins",
+      "canvas_assignment_id": 968720,
+      "points_possible": 1,
+      "case_study_key": "joins",
+      "lab_path": "docs/case-studies/joins.html",
+      "code_path": "code/02_joins"
+    },
+    {
+      "key": "lc-aggregation",
+      "type": "learning_checks",
+      "name": "Learning Checks \u2014 Aggregation",
+      "canvas_assignment_id": 968712,
+      "points_possible": 1,
+      "case_study_key": "aggregation",
+      "lab_path": "docs/case-studies/aggregation.html",
+      "code_path": "code/03_aggregation"
+    },
+    {
+      "key": "lc-centrality",
+      "type": "learning_checks",
+      "name": "Learning Checks \u2014 Centrality",
+      "canvas_assignment_id": 968704,
+      "points_possible": 1,
+      "case_study_key": "centrality",
+      "lab_path": "docs/case-studies/centrality.html",
+      "code_path": "code/04_centrality"
+    },
+    {
+      "key": "lc-supply-chain",
+      "type": "learning_checks",
+      "name": "Learning Checks \u2014 Supply Chain",
+      "canvas_assignment_id": 968706,
+      "points_possible": 1,
+      "case_study_key": "supply-chain",
+      "lab_path": "docs/case-studies/supply-chain.html",
+      "code_path": "code/05_supply-chain"
+    },
+    {
+      "key": "lc-permutation",
+      "type": "learning_checks",
+      "name": "Learning Checks \u2014 Network Statistics",
+      "canvas_assignment_id": 968702,
+      "points_possible": 1,
+      "case_study_key": "permutation",
+      "lab_path": "docs/case-studies/permutation.html",
+      "code_path": "code/06_permutation"
+    },
+    {
+      "key": "lc-counterfactual",
+      "type": "learning_checks",
+      "name": "Learning Checks \u2014 Routing",
+      "canvas_assignment_id": 968708,
+      "points_possible": 1,
+      "case_study_key": "counterfactual",
+      "lab_path": "docs/case-studies/counterfactual.html",
+      "code_path": "code/07_counterfactual"
+    },
+    {
+      "key": "lc-gnn-by-hand",
+      "type": "learning_checks",
+      "name": "Learning Checks \u2014 GNN by Hand",
+      "canvas_assignment_id": 968714,
+      "points_possible": 1,
+      "case_study_key": "gnn-by-hand",
+      "lab_path": "docs/case-studies/gnn-by-hand.html",
+      "code_path": "code/08_gnn-by-hand"
+    },
+    {
+      "key": "lc-gnn-xgboost",
+      "type": "learning_checks",
+      "name": "Learning Checks \u2014 GNN + XGBoost",
+      "canvas_assignment_id": 968716,
+      "points_possible": 1,
+      "case_study_key": "gnn-xgboost",
+      "lab_path": "docs/case-studies/gnn-xgboost.html",
+      "code_path": "code/09_gnn-xgboost"
+    },
+    {
+      "key": "lc-dsm-clustering",
+      "type": "learning_checks",
+      "name": "Learning Checks \u2014 DSM Clustering",
+      "canvas_assignment_id": 968710,
+      "points_possible": 1,
+      "case_study_key": "dsm-clustering",
+      "lab_path": "docs/case-studies/dsm-clustering.html",
+      "code_path": "code/10_dsm-clustering"
+    },
+    {
+      "key": "lc-sampling",
+      "type": "learning_checks",
+      "name": "Learning Checks \u2014 Sampling",
+      "canvas_assignment_id": 968718,
+      "points_possible": 1,
+      "case_study_key": "sampling",
+      "lab_path": "docs/case-studies/sampling.html",
+      "code_path": "code/11_sampling"
     }
   ]
 }

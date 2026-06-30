@@ -49,7 +49,7 @@ def main() -> None:
         page.click("#btn-publish")
         page.wait_for_selector("#modal-preview")
         modal = page.locator("#modal-preview").inner_text()
-        assert "AI API Gateway" in modal
+        assert "Cornell's AI Gateway" in modal
         page.click("#modal-cancel")
         browser.close()
 

@@ -1,0 +1,38 @@
+{
+  "checks": [
+    {
+      "id": "lc01",
+      "label": "LC 01",
+      "student_answer": "B",
+      "correct_answer": "B",
+      "verdict": "correct",
+      "feedback": "👍 Matrix view vs node-link — correct."
+    },
+    {
+      "id": "lc02",
+      "label": "LC 02",
+      "student_answer": "B",
+      "correct_answer": "B",
+      "verdict": "correct",
+      "feedback": "👍 Layout choice — correct."
+    },
+    {
+      "id": "lc03",
+      "label": "LC 03",
+      "student_answer": "C",
+      "correct_answer": "C",
+      "verdict": "correct",
+      "feedback": "👍 Bipartite projection — correct."
+    }
+  ],
+  "code_answer": {
+    "student_value": "3",
+    "expected_summary": "Supplier S017 degree in projection graph",
+    "verdict": "correct",
+    "feedback": "👍 Matches example.py output."
+  },
+  "format_ok": true,
+  "proposed_grade": "1",
+  "classbot_summary": "All LC letters and code answer look good — mark complete.",
+  "confidence": "high"
+}

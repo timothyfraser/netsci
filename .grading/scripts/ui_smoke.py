@@ -41,7 +41,7 @@ def main() -> None:
     assert "Classbot" in (title or ""), "unexpected page title"
     assert row["row"]["status"] == "reviewed", "row should be reviewed after save"
     assert issue_count >= 1, "issue search should show github issue"
-    assert "AI API Gateway" in modal, "publish modal missing disclosure"
+    assert "Cornell's AI Gateway" in modal, "publish modal missing disclosure"
     assert not errors, f"browser errors: {errors}"
     print("ui_smoke OK", {"grade_before": grade_before, "final_grade": row["row"]["final_grade"]})
 

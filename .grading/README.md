@@ -24,7 +24,36 @@ python -m venv .venv
 - Before committing: `python scripts/verify_commit_safe.py`
 - Uses Chat Completions API only (prompts/completions not stored by gateway).
 
-## Workflow
+## Assignment types
+
+The dashboard supports multiple assignment **types** (see `config/assignments.json`):
+
+| Type | Examples | Grading |
+|------|----------|---------|
+| `project_case_study` | project-1, project-2, project-3 | Rubric / 100 pts |
+| `learning_checks` | lc-build-a-network, lc-joins, … | Completion / 1 pt |
+| `poster` | (planned) | TBD |
+
+Regenerate assignment list from Canvas contract:
+
+```powershell
+python scripts/build_assignments_config.py
+```
+
+Learning-check Classbot pulls MC answer keys from `docs/case-studies/*.html` and code answers from locally executed teaching scripts when available.
+
+**Regenerate code answer keys** (after changing `code/NN_*/example.R` or `example.py`):
+
+```powershell
+cd .grading
+python scripts/build_lc_code_keys.py
+```
+
+Writes `.grading/cache/lc_code_keys.json` (gitignored). Classbot prefers `code_check.expected_value` from that file over inferring from the code excerpt alone.
+
+```powershell
+python scripts/lc_test_student_draft.py --demo   # local Test Student demo row
+```
 
 1. **Sync from Canvas** — downloads submissions once into `cache/submissions/`.
 2. **Run Classbot** — structured JSON review via LiteLLM (Haiku default).

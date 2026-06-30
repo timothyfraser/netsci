@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import csv
 import json
+import threading
 from pathlib import Path
 from typing import Any
+
+_WRITE_LOCK = threading.Lock()
 
 from env import GRADING_ROOT
 
@@ -13,6 +16,7 @@ DATA_DIR = GRADING_ROOT / "data"
 CSV_PATH = DATA_DIR / "grades.csv"
 
 FIELDNAMES = [
+    "assignment_type",
     "submission_key",
     "student_name",
     "student_netid",
@@ -84,6 +88,11 @@ def get_row(submission_key: str) -> dict[str, str] | None:
 
 
 def upsert_row(row: dict[str, Any]) -> dict[str, str]:
+    with _WRITE_LOCK:
+        return _upsert_row_unlocked(row)
+
+
+def _upsert_row_unlocked(row: dict[str, Any]) -> dict[str, str]:
     rows = read_rows()
     key = str(row["submission_key"])
     updated = _empty_row()

@@ -5,11 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>Classbot Grading · SYSEN 5470</title>
-  <link rel="stylesheet" href="/static/style.css?v=20260629b">
+  <link rel="stylesheet" href="/static/style.css?v=20260630d">
 </head>
 <body>
   <header class="topbar">
     <div class="brand">SYSEN 5470 · Classbot Grading</div>
+    <div id="global-status" class="global-status hidden" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <span id="global-status-text">Working…</span>
+    </div>
     <div class="top-actions">
       <select id="filter-assignment">
         <option value="">All assignments</option>
@@ -38,7 +42,11 @@
     <aside class="queue-panel">
       <div class="panel-head">
         <h2>Queue</h2>
-        <button id="btn-batch-classbot" class="btn small">Run Classbot (pending)</button>
+        <button id="btn-batch-classbot" class="btn small" type="button">Run Classbot (pending)</button>
+      </div>
+      <div id="batch-status" class="batch-status hidden" aria-live="polite" role="status">
+        <span class="spinner" aria-hidden="true"></span>
+        <span id="batch-status-text">Classbot running…</span>
       </div>
       <div id="queue-list" class="queue-list"></div>
     </aside>
@@ -59,6 +67,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=20260630d"></script>
 </body>
 </html>
