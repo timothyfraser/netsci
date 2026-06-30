@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-30 16:43 UTC_
+_Auto-generated NotebookLM source · 2026-06-30 18:11 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -5513,6 +5513,254 @@ Final due 9 AM**Week 3 \+ final project submission.** Remaining sketches and LCs
 **SYSEN 5470 · Calendar**
 
  Cornell Engineering · Summer 2026 · tmf77@cornell.edu
+
+---
+
+# Network Visualizer v2 (Experimental) · SYSEN 5470
+
+_Source: docs/visualizer2.html_
+
+Skip to content
+
+
+**⚠ EXPERIMENTAL · INTERNAL PREVIEW** ·
+ This is `visualizer2.html`, an unreleased working draft of new analytics features
+ (node removal, group coverage, Monte Carlo, permutation tests, scenario editing).
+ It is intentionally unlinked from the site navigation and from `visualizer.html`.
+ Do not share this URL with students until the features here are signed off and merged into the main visualizer.
+
+
+SYSEN 5470 · Tools · Experimental
+
+
+# Network *Visualizer v2*
+
+
+Same data, more analytics. Load a project dataset, then remove nodes, run Monte Carlo and permutation tests, edit what\-if scenarios, and inspect coverage and assortativity — all without leaving the page.
+
+
+### 📥 Data
+
+
+Load project dataset autoloads — no upload
+
+▾ Load sample…
+
+Amazon Last\-Mile (313 nodes)
+Uber Manhattan (370 nodes)
+Semiconductor Supply (368 nodes)
+Aerospace Components (300 nodes)
+Mutual Aid · Quake (250 nodes)
+Financial Contagion (220 nodes)
+Airline Delays (200 nodes)
+Power Grid (300 nodes)
+Campus Contact (300 nodes)
+Open\-Source Deps (400 nodes)
+Trade · Commodity (140 nodes)
+Reorg Comms (250 nodes)
+Satellite Constellation (298 nodes)
+Drone Components (183 nodes)
+Transit · Multimodal (152 nodes)
+Satellite Supply Chain (276 nodes)
+Aircraft Supply Chain (300 nodes)
+UPS Ground Network (149 nodes)
+UPS Package Flow (149 nodes · 5,200 pkgs)
+NYC Real Estate · Capital (270 nodes)
+NYC Real Estate · Portfolio (190 nodes)
+
+
+Edgelist CSV required
+
+
+Nodelist CSV optional
+
+
+Drop a CSV, or load the sample graph to start.
+
+⟳ Load
+▶ Sample
+
+
+### 🗂 Column Mapping
+
+
+Upload an edgelist to map columns.
+
+
+🧪 Aggregate experimental
+
+
+Aggregate by node trait
+None (raw network)
+
+
+Combine edge weight by
+
+Sum
+Average
+
+
+Time slice
+Overall
+
+Collapses nodes that share a trait (e.g. *region*): every edge is re\-pointed to its endpoints' groups and combined.
+
+
+### ⚙ Layout
+
+
+Force
+Radial
+Circle
+Hier.
+
+
+### 🎚 Tunables
+
+
+Node size scale1\.0x
+
+
+Edge weight threshold0\.0
+
+
+Time filter (≤)—
+
+
+### 👁 Display
+
+
+Color nodes by
+
+Group (node attribute)
+Community (component)
+Uniform (neon green)
+
+
+Group column
+(none — uniform)
+
+
+Palette
+
+Neon
+Viridis
+Plasma
+Mako
+
+
+Node labels
+Edge weight labels
+Weight degree \& betweenness
+Drop isolates
+Live drift
+
+
+### ✏ Scenarios v2
+
+
+Loading scenario editor…
+
+
+### 📤 Export
+
+
+⤓ Export PNG
+
+
+📐 Formulas \& Definitions v2
+
+Formulas load when a network is loaded.
+
+
+Your Network · V2
+
+
+＋N
+＋E
+❄
+＋
+－
+⤢
+
+
+0Active Nodes
+0Edges shown
+0Components
+—Density
+
+
+**No network loaded**
+ Upload an edgelist or hit ▶ Sample to start.
+
+
+### 🧨 Disruption Stats v2
+
+
+Load a network to see disruption stats.
+
+
+### 🎲 Monte Carlo v2
+
+
+Load a network to enable Monte Carlo.
+
+
+### 🔀 Permutation Test v2
+
+
+Load a network with a group column to enable permutation tests.
+
+
+### 🧲 Assortativity (Newman r) v2
+
+
+Pick a group column to see assortativity.
+
+
+### 📖 What's new in v2
+
+
+* **Click a node**, then hit *Remove from network*. Removed nodes stay pinned where they were so before/after comparisons match. Restore individually or all at once.
+* **Group Coverage** reports the % of each group reachable from a reference group of your choice — live as you remove nodes or slide the time filter.
+* **Monte Carlo** re\-draws edge weights from `Poisson(λ = observed)` and reports a 95% CI on a metric you pick. **Permutation Test** shuffles a node attribute and reports a p\-value.
+* **Scenarios**: ＋N adds a node by clicking the stage; ＋E adds an edge by clicking two nodes. Save bundles in your browser.
+* **Formulas** panel in the left column spells out exactly what degree and betweenness mean here.
+
+
+### 📈 Network Stats v2
+
+
+Load a network to see stats.
+
+
+### 🏷 Selected Node
+
+
+Click any node to inspect.
+
+
+### 📊 Top Degree (count)
+
+
+Load a network to see rankings.
+
+
+### 🔗 Top Betweenness (normalized 0–1\)
+
+
+Computed when graph loads (≤600 nodes).
+
+
+### 🛡 Group Coverage v2
+
+
+Pick a group column to see coverage.
+
+
+**SYSEN 5470 · Network Visualizer v2 · Experimental**
+
+ Cornell Engineering · Summer 2026 · Internal preview — not for student release.
 
 ---
 
