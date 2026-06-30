@@ -2,7 +2,7 @@
 
 > Network Science and Applications for Systems Engineering · Cornell Engineering
 >
-> Single-file bundle generated 2026-06-29 from the course repo (`timothyfraser/netsci`). Upload **this one file** to NotebookLM instead of the three section files separately — it contains all of them.
+> Single-file bundle generated 2026-06-30 from the course repo (`timothyfraser/netsci`). Upload **this one file** to NotebookLM instead of the three section files separately — it contains all of them.
 
 ## Contents
 1. [Resource Index](#resource-index) — A map of every course resource — labs, code folders, datasets, help pages.
@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-06-29 21:35 UTC_
+_Auto-generated NotebookLM source · 2026-06-30 16:43 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -784,7 +784,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-29 21:35 UTC_
+_Auto-generated NotebookLM source · 2026-06-30 16:43 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -6414,11 +6414,11 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-06-29 21:35 UTC_
+_Auto-generated NotebookLM source · 2026-06-30 16:43 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
-**168 files included.**
+**173 files included.**
 
 ---
 
@@ -6889,7 +6889,36 @@ python -m venv .venv
 - Before committing: `python scripts/verify_commit_safe.py`
 - Uses Chat Completions API only (prompts/completions not stored by gateway).
 
-## Workflow
+## Assignment types
+
+The dashboard supports multiple assignment **types** (see `config/assignments.json`):
+
+| Type | Examples | Grading |
+|------|----------|---------|
+| `project_case_study` | project-1, project-2, project-3 | Rubric / 100 pts |
+| `learning_checks` | lc-build-a-network, lc-joins, … | Completion / 1 pt |
+| `poster` | (planned) | TBD |
+
+Regenerate assignment list from Canvas contract:
+
+```powershell
+python scripts/build_assignments_config.py
+```
+
+Learning-check Classbot pulls MC answer keys from `docs/case-studies/*.html` and code answers from locally executed teaching scripts when available.
+
+**Regenerate code answer keys** (after changing `code/NN_*/example.R` or `example.py`):
+
+```powershell
+cd .grading
+python scripts/build_lc_code_keys.py
+```
+
+Writes `.grading/cache/lc_code_keys.json` (gitignored). Classbot prefers `code_check.expected_value` from that file over inferring from the code excerpt alone.
+
+```powershell
+python scripts/lc_test_student_draft.py --demo   # local Test Student demo row
+```
 
 1. **Sync from Canvas** — downloads submissions once into `cache/submissions/`.
 2. **Run Classbot** — structured JSON review via LiteLLM (Haiku default).
@@ -6928,7 +6957,7 @@ import requests
 
 from env import GRADING_ROOT, get_canvas_env
 from extract_text import extract_submission_text
-from rubric import get_assignment
+from rubric import assignment_type, get_assignment
 
 CACHE_ROOT = GRADING_ROOT / "cache" / "submissions"
 SESSION = requests.Session()
@@ -7133,7 +7162,7 @@ def sync_assignment(assignment_key: str, *, force: bool = False) -> list[dict[st
             Path(report_path) if report_path else None,
             body_html,
         )
-        if extracted and (force or not text_path.is_file()):
+        if extracted and (force or not text_path.is_file() or body_html):
             text_path.write_text(extracted, encoding="utf-8")
 
         name = user.get("sortable_name") or user.get("name") or ""
@@ -7146,6 +7175,7 @@ def sync_assignment(assignment_key: str, *, force: bool = False) -> list[dict[st
             "canvas_submission_id": str(sub.get("id", "")),
             "assignment_key": assignment_key,
             "assignment_name": assignment["name"],
+            "assignment_type": assignment.get("type", assignment_type(assignment_key)),
             "canvas_assignment_id": str(aid),
             "submitted_at": sub.get("submitted_at") or "",
             "attempt_number": str(attempt),
@@ -7199,8 +7229,11 @@ from __future__ import annotations
 
 import csv
 import json
+import threading
 from pathlib import Path
 from typing import Any
+
+_WRITE_LOCK = threading.Lock()
 
 from env import GRADING_ROOT
 
@@ -7208,6 +7241,7 @@ DATA_DIR = GRADING_ROOT / "data"
 CSV_PATH = DATA_DIR / "grades.csv"
 
 FIELDNAMES = [
+    "assignment_type",
     "submission_key",
     "student_name",
     "student_netid",
@@ -7279,6 +7313,11 @@ def get_row(submission_key: str) -> dict[str, str] | None:
 
 
 def upsert_row(row: dict[str, Any]) -> dict[str, str]:
+    with _WRITE_LOCK:
+        return _upsert_row_unlocked(row)
+
+
+def _upsert_row_unlocked(row: dict[str, Any]) -> dict[str, str]:
     rows = read_rows()
     key = str(row["submission_key"])
     updated = _empty_row()
@@ -7475,6 +7514,468 @@ def get_client() -> OpenAI:
 
 ---
 
+## `.grading/app/lc_client.py`
+
+```python
+"""Classbot review for learning-check (completion) assignments."""
+
+from __future__ import annotations
+
+import json
+import re
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
+
+from env import GRADING_ROOT, mock_llm_enabled
+from gateway_client import get_client
+from lc_prompts import build_lc_comment_html, build_lc_system_prompt, build_lc_user_prompt
+from lc_sources import load_lc_reference
+from name_utils import display_name, first_name
+from litellm_client import DEFAULT_MODEL, _extract_json, save_review
+from rubric import get_assignment
+
+LC_FIXTURE = GRADING_ROOT / "app" / "fixtures" / "mock_lc_review.json"
+
+
+class LcCheck(BaseModel):
+    id: str
+    label: str = ""
+    student_answer: str = ""
+    correct_answer: str = ""
+    verdict: Literal["correct", "incorrect", "missing", "unclear"]
+    feedback: str = ""
+
+
+class LcCodeAnswer(BaseModel):
+    student_value: str = ""
+    expected_summary: str = ""
+    verdict: Literal["correct", "incorrect", "missing", "unclear"]
+    feedback: str = ""
+
+
+class LcReview(BaseModel):
+    checks: list[LcCheck] = Field(default_factory=list)
+    code_answer: LcCodeAnswer
+    format_ok: bool = True
+    proposed_grade: Literal["0", "1"]
+    classbot_summary: str = ""
+    confidence: Literal["low", "medium", "high"] = "medium"
+
+
+def _mock_lc_review() -> dict[str, Any]:
+    if LC_FIXTURE.is_file():
+        return json.loads(LC_FIXTURE.read_text(encoding="utf-8"))
+    return {
+        "checks": [
+            {
+                "id": "lc01",
+                "label": "LC 01",
+                "student_answer": "B",
+                "correct_answer": "B",
+                "verdict": "correct",
+                "feedback": "👍 Matrix vs node-link — nailed it.",
+            },
+            {
+                "id": "lc02",
+                "label": "LC 02",
+                "student_answer": "B",
+                "correct_answer": "B",
+                "verdict": "correct",
+                "feedback": "👍 Circular layout shows shortcuts.",
+            },
+            {
+                "id": "lc03",
+                "label": "LC 03",
+                "student_answer": "C",
+                "correct_answer": "C",
+                "verdict": "correct",
+                "feedback": "👍 Bipartite projection reasoning.",
+            },
+        ],
+        "code_answer": {
+            "student_value": "3",
+            "expected_summary": "Degree of S017 in supplier projection",
+            "verdict": "correct",
+            "feedback": "👍 Matches code output.",
+        },
+        "format_ok": True,
+        "proposed_grade": "1",
+        "classbot_summary": "All three LCs and code line look good — completion ✅",
+        "confidence": "high",
+    }
+
+
+def review_lc_submission(
+    submission_text: str,
+    assignment: dict[str, Any],
+    metadata: dict[str, Any],
+    *,
+    model: str = DEFAULT_MODEL,
+) -> dict[str, Any]:
+    reference = load_lc_reference(assignment)
+    if mock_llm_enabled():
+        return LcReview.model_validate(_mock_lc_review()).model_dump()
+
+    system = build_lc_system_prompt()
+    user = build_lc_user_prompt(submission_text, reference, metadata)
+    client = get_client()
+    last_err: Exception | None = None
+    for _ in range(2):
+        try:
+            resp = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.2,
+            )
+            raw = resp.choices[0].message.content or "{}"
+            data = _extract_json(raw)
+            return LcReview.model_validate(data).model_dump()
+        except Exception as exc:
+            last_err = exc
+            user += "\n\nReturn ONLY valid JSON matching the schema."
+    raise RuntimeError(f"LC Classbot failed: {last_err}") from last_err
+
+
+def run_lc_classbot_for_row(
+    row: dict[str, str],
+    *,
+    model: str = DEFAULT_MODEL,
+) -> dict[str, Any]:
+    assignment = get_assignment(row.get("assignment_key", ""))
+    if not assignment:
+        raise ValueError(f"Unknown assignment: {row.get('assignment_key')}")
+    text_path = Path(row.get("cached_text_path", ""))
+    submission_text = text_path.read_text(encoding="utf-8") if text_path.is_file() else ""
+    metadata = {
+        "student_name": row.get("student_name"),
+        "student_display_name": display_name(row.get("student_name", "")),
+        "student_first_name": first_name(row.get("student_name", "")),
+        "assignment": row.get("assignment_name"),
+        "assignment_key": row.get("assignment_key"),
+        "submitted_at": row.get("submitted_at"),
+    }
+    review = review_lc_submission(submission_text, assignment, metadata, model=model)
+    key = row["submission_key"]
+    llm_path = save_review(key, review)
+    grade = review.get("proposed_grade", "1")
+    classbot_comment = build_lc_comment_html(review)
+    now = datetime.now(timezone.utc).isoformat()
+    return {
+        "llm_review_path": str(llm_path),
+        "llm_model": model,
+        "llm_run_at": now,
+        "llm_status": "done",
+        "proposed_score": grade,
+        "final_grade": grade,
+        "accepted_deductions_json": "[]",
+        "classbot_comment": classbot_comment,
+        "status": "synced",
+        "review": review,
+    }
+```
+
+---
+
+## `.grading/app/lc_prompts.py`
+
+```python
+"""Prompts and HTML comments for learning-check (completion) grading."""
+
+from __future__ import annotations
+
+import html
+import json
+from typing import Any
+
+from prompts import DISCLOSURE_HTML, GLOSSARY_DISCIPLINE
+
+
+def build_lc_system_prompt() -> str:
+    return f"""You are Classbot, grading SYSEN 5470 Learning Check submissions (completion, 1 point).
+Students paste in Canvas text entry: LC1/LC2/LC3 letter choices plus the numeric answer printed by running the lab code.
+
+Return ONLY valid JSON:
+{{
+  "checks": [
+    {{
+      "id": "lc01",
+      "label": "LC 01",
+      "student_answer": "B",
+      "correct_answer": "B",
+      "verdict": "correct" | "incorrect" | "missing" | "unclear",
+      "feedback": "short emoji-friendly note for instructor"
+    }}
+  ],
+  "code_answer": {{
+    "student_value": "what they submitted",
+    "expected_summary": "what the code should print (from reference)",
+    "verdict": "correct" | "incorrect" | "missing" | "unclear",
+    "feedback": "short note"
+  }},
+  "format_ok": true,
+  "proposed_grade": "1" or "0",
+  "classbot_summary": "2-3 sentences for instructor (use student_first_name from metadata — never last name alone)",
+  "confidence": "low" | "medium" | "high"
+}}
+
+Grading policy (completion):
+- Default proposed_grade "1" if they attempted all parts and most answers are correct or close.
+- Use "0" only when multiple LC letters are wrong, code answer is clearly wrong/missing, or submission is empty/gibberish.
+- For a single wrong LC letter, still grade "1" but explain the mistake briefly in feedback.
+- Use emojis in feedback fields (👍 ✅ ⚠️ ❌ 💡 📎).
+- Be generous on formatting (LC1 vs LC 01 vs lc1: B).
+- In classbot_summary, use the student's first name only (never last name alone or shouting).
+- For code_answer: when reference.code_check.expected_value is present (answer_source local_execution),
+  treat it as the authoritative expected answer; compare student_value against it (allow minor formatting).
+
+{GLOSSARY_DISCIPLINE}
+"""
+
+
+def build_lc_user_prompt(
+    submission_text: str,
+    reference: dict[str, Any],
+    metadata: dict[str, Any],
+) -> str:
+    return f"""Assignment metadata:
+{json.dumps(metadata, indent=2)}
+
+Authoritative answer key (from course website + code folder):
+{json.dumps(reference, indent=2)}
+
+Student Canvas text submission:
+---
+{submission_text[:8000]}
+---
+"""
+
+
+def _verdict_emoji(verdict: str) -> str:
+    return {
+        "correct": "✅",
+        "incorrect": "❌",
+        "missing": "📭",
+        "unclear": "❓",
+    }.get(verdict, "•")
+
+
+def build_lc_comment_html(review: dict[str, Any]) -> str:
+    parts: list[str] = [
+        "<p><strong>📝 Learning Check review</strong></p>",
+    ]
+    summary = (review.get("classbot_summary") or "").strip()
+    if summary:
+        parts.append(f"<p>{html.escape(summary)}</p>")
+
+    checks = review.get("checks") or []
+    if checks:
+        parts.append("<p><strong>🔍 Multiple choice</strong></p><ul>")
+        for chk in checks:
+            emoji = _verdict_emoji(chk.get("verdict", ""))
+            label = html.escape(chk.get("label", chk.get("id", "LC")))
+            student = html.escape(str(chk.get("student_answer", "—")))
+            correct = html.escape(str(chk.get("correct_answer", "—")))
+            fb = html.escape(chk.get("feedback", ""))
+            parts.append(
+                f"<li>{emoji} <strong>{label}</strong>: submitted <em>{student}</em> "
+                f"(key <em>{correct}</em>) — {fb}</li>"
+            )
+        parts.append("</ul>")
+
+    code = review.get("code_answer") or {}
+    if code:
+        emoji = _verdict_emoji(code.get("verdict", ""))
+        parts.append("<p><strong>⌨️ I ran the code</strong></p>")
+        parts.append(
+            f"<p>{emoji} Student: <em>{html.escape(str(code.get('student_value', '—')))}</em> — "
+            f"{html.escape(code.get('feedback', ''))}</p>"
+        )
+
+    conf = review.get("confidence", "medium")
+    parts.append(f"<p><small>🤖 Classbot confidence: {html.escape(conf)}</small></p>")
+    return "\n".join(parts)
+
+
+def compose_lc_canvas_comment(instructor_comment: str, classbot_comment: str) -> str:
+    from prompts import _text_to_html
+
+    parts: list[str] = []
+    instructor = (instructor_comment or "").strip()
+    classbot = (classbot_comment or "").strip()
+
+    if instructor:
+        parts.append("<p><strong>✏️ Instructor comments</strong></p>")
+        parts.append(_text_to_html(instructor))
+
+    parts.append("<hr>")
+    parts.append("<p><strong>📚 Learning Check feedback</strong></p>")
+    if classbot.lstrip().startswith("<"):
+        parts.append(classbot)
+    else:
+        parts.append(_text_to_html(classbot))
+    parts.append(f"<p>{DISCLOSURE_HTML}</p>")
+    return "\n".join(parts)
+```
+
+---
+
+## `.grading/app/lc_sources.py`
+
+```python
+"""Load authoritative LC answer keys from course website + teaching code."""
+
+from __future__ import annotations
+
+import json
+import re
+from pathlib import Path
+from typing import Any
+
+from env import GRADING_ROOT
+
+REPO_ROOT = GRADING_ROOT.parent
+LC_CODE_KEYS_PATH = GRADING_ROOT / "cache" / "lc_code_keys.json"
+
+
+def _lab_html_path(assignment: dict[str, Any]) -> Path:
+    rel = assignment.get("lab_path") or ""
+    return REPO_ROOT / rel.replace("/", "\\") if rel else Path()
+
+
+def _code_dir(assignment: dict[str, Any]) -> Path:
+    rel = assignment.get("code_path") or ""
+    return REPO_ROOT / rel.replace("/", "\\") if rel else Path()
+
+
+def parse_lc_cards(html: str) -> list[dict[str, str]]:
+    """Extract LC number, question snippet, and correct letter from lab HTML."""
+    cards: list[dict[str, str]] = []
+    for block in re.split(r'<div class="lc-card">', html)[1:]:
+        num_m = re.search(r'<span class="lc-number">(LC\s*\d+)</span>', block)
+        q_m = re.search(
+            r'<div class="lc-question"[^>]*>(.*?)</div>',
+            block,
+            re.DOTALL,
+        )
+        ans_m = re.search(
+            r'class="lc-feedback feedback-answer"[^>]*>.*?<strong>Answer:\s*([A-D])',
+            block,
+            re.DOTALL | re.IGNORECASE,
+        )
+        if not num_m or not ans_m:
+            continue
+        question = re.sub(r"<[^>]+>", " ", q_m.group(1) if q_m else "").strip()
+        question = re.sub(r"\s+", " ", question)[:400]
+        cards.append(
+            {
+                "id": num_m.group(1).replace(" ", "").lower(),
+                "label": num_m.group(1).strip(),
+                "question": question,
+                "correct_letter": ans_m.group(1).upper(),
+            }
+        )
+    return cards
+
+
+def parse_code_learning_check(code_dir: Path) -> dict[str, str]:
+    """Read the 'I ran the code' question + context from example.py / example.R."""
+    for name in ("example.py", "example.R"):
+        path = code_dir / name
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        q_block = re.search(
+            r"#\s*QUESTION:\s*(.+?)(?:\n#|\nprint|\ncat\s)",
+            text,
+            re.DOTALL,
+        )
+        question = ""
+        if q_block:
+            question = re.sub(r"^#\s?", "", q_block.group(1), flags=re.MULTILINE).strip()
+            question = re.sub(r"\s+", " ", question)
+        snippet = text[-2500:] if len(text) > 2500 else text
+        return {
+            "source_file": name,
+            "question": question,
+            "code_excerpt": snippet,
+        }
+    return {"source_file": "", "question": "", "code_excerpt": ""}
+
+
+def load_lc_code_keys() -> dict[str, Any]:
+    """Locally executed code answers (gitignored cache). Instructor branch only."""
+    if not LC_CODE_KEYS_PATH.is_file():
+        return {}
+    try:
+        data = json.loads(LC_CODE_KEYS_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    keys = data.get("keys")
+    return keys if isinstance(keys, dict) else {}
+
+
+def _merge_local_code_key(
+    assignment: dict[str, Any],
+    code_ref: dict[str, str],
+    local_keys: dict[str, Any],
+) -> dict[str, str]:
+    akey = assignment.get("key", "")
+    local = local_keys.get(akey)
+    if not isinstance(local, dict):
+        code_ref["answer_source"] = "code_excerpt_only"
+        return code_ref
+    expected = str(local.get("expected_value", "")).strip()
+    if expected:
+        code_ref["expected_value"] = expected
+        code_ref["answer_source"] = "local_execution"
+        if local.get("question"):
+            code_ref["question"] = str(local["question"])
+        if local.get("source_file"):
+            code_ref["source_file"] = str(local["source_file"])
+        if local.get("generated_at"):
+            code_ref["keys_generated_at"] = str(local["generated_at"])
+    else:
+        code_ref["answer_source"] = "code_excerpt_only"
+    return code_ref
+
+
+def load_lc_reference(assignment: dict[str, Any]) -> dict[str, Any]:
+    lab = _lab_html_path(assignment)
+    code = _code_dir(assignment)
+    html = lab.read_text(encoding="utf-8", errors="replace") if lab.is_file() else ""
+    cards = parse_lc_cards(html)
+    code_ref = parse_code_learning_check(code)
+    local_keys = load_lc_code_keys()
+    code_ref = _merge_local_code_key(assignment, code_ref, local_keys)
+    meta: dict[str, Any] = {}
+    if LC_CODE_KEYS_PATH.is_file():
+        try:
+            meta["code_keys_file"] = str(LC_CODE_KEYS_PATH)
+            blob = json.loads(LC_CODE_KEYS_PATH.read_text(encoding="utf-8"))
+            meta["code_keys_generated_at"] = blob.get("generated_at", "")
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {
+        "case_study_key": assignment.get("case_study_key", ""),
+        "lab_path": str(lab) if lab.is_file() else "",
+        "code_path": str(code) if code.is_dir() else "",
+        "learning_checks": cards,
+        "code_check": code_ref,
+        "website_url": f"https://timothyfraser.com/netsci/{assignment.get('lab_path', '').replace('docs/', '')}",
+        "github_code_url": f"https://github.com/timothyfraser/netsci/tree/main/{assignment.get('code_path', '')}",
+        **meta,
+    }
+```
+
+---
+
 ## `.grading/app/litellm_client.py`
 
 ```python
@@ -7493,6 +7994,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from env import GRADING_ROOT, mock_llm_enabled
 from gateway_client import get_client
+from name_utils import display_name, first_name
 from prompts import build_classbot_comment_from_review, build_system_prompt, build_user_prompt
 from rubric import compute_score, load_rubric, max_deduction_map
 
@@ -7716,6 +8218,8 @@ def run_classbot_for_row(
     pdf_path = Path(row.get("cached_report_path", "")) if row.get("cached_report_path") else None
     metadata = {
         "student_name": row.get("student_name"),
+        "student_display_name": display_name(row.get("student_name", "")),
+        "student_first_name": first_name(row.get("student_name", "")),
         "assignment": row.get("assignment_name"),
         "submitted_at": row.get("submitted_at"),
         "attempt": row.get("attempt_number"),
@@ -7749,6 +8253,43 @@ def run_classbot_for_row(
 
 ---
 
+## `.grading/app/name_utils.py`
+
+```python
+"""Format Canvas sortable names (Last, First) for display and prompts."""
+
+from __future__ import annotations
+
+
+def parse_sortable_name(raw: str) -> tuple[str, str]:
+    """Return (first_name, last_name) from 'Last, First' or plain 'First Last'."""
+    raw = (raw or "").strip()
+    if not raw:
+        return "", ""
+    if "," in raw:
+        last, first = raw.split(",", 1)
+        return first.strip(), last.strip()
+    parts = raw.split()
+    if len(parts) == 1:
+        return parts[0], ""
+    return parts[0], " ".join(parts[1:])
+
+
+def first_name(raw: str) -> str:
+    first, _ = parse_sortable_name(raw)
+    return first or raw.strip()
+
+
+def display_name(raw: str) -> str:
+    """'Smith, Jane' -> 'Jane Smith'; fallback to raw."""
+    first, last = parse_sortable_name(raw)
+    if first and last:
+        return f"{first} {last}"
+    return raw.strip() or "Unknown"
+```
+
+---
+
 ## `.grading/app/prompts.py`
 
 ```python
@@ -7773,9 +8314,7 @@ Use SYSEN 5470 network-science vocabulary precisely:
 """
 
 DISCLOSURE_HTML = (
-    "<em>Processed through Cornell's AI API Gateway (CIT AI Program), approved for "
-    "moderate-risk/FERPA educational data. Chat Completions API: prompts and "
-    "completions are not stored by the gateway or model providers.</em>"
+    "<em>Processed using Cornell's AI Gateway; No student data retained.</em>"
 )
 
 
@@ -7800,7 +8339,9 @@ Status values: "met", "partial", "missing", "not_assessable"
 Use "not_assessable" for project_script when the report/Canvas text does not let you verify code runs.
 For each requirement include: id, status, evidence, location, proposed_deduction (0 if met), search_hint (EXACTLY three words).
 Include top_issues: 2-5 highest-value problems with rank, title, description, location, search_hint (EXACTLY three words).
-Include classbot_summary: 2-4 sentences for the instructor.
+Include classbot_summary: 2-4 sentences for the instructor (not shown verbatim to the student).
+In classbot_summary, refer to the student by first name only (see student_first_name in metadata).
+Never use last name alone or ALL CAPS — e.g. "Ryan's report…" not "ASSENHEIMER submitted…".
 Include confidence: "low", "medium", or "high".
 
 {GLOSSARY_DISCIPLINE}
@@ -7913,7 +8454,6 @@ def compose_canvas_comment(instructor_comment: str, classbot_comment: str) -> st
 
     parts.append("<hr>")
     parts.append("<p><strong>🎓 SYSEN 5470 project feedback</strong></p>")
-    parts.append(f"<p>{DISCLOSURE_HTML}</p>")
 
     if classbot:
         if classbot.lstrip().startswith("<"):
@@ -7923,6 +8463,7 @@ def compose_canvas_comment(instructor_comment: str, classbot_comment: str) -> st
     else:
         parts.append("<p><em>🤖 No Classbot block for this submission.</em></p>")
 
+    parts.append(f"<p>{DISCLOSURE_HTML}</p>")
     return "\n".join(parts)
 
 
@@ -7931,6 +8472,36 @@ def compose_canvas_comment_plain_preview(instructor_comment: str, classbot_comme
     plain = re.sub(r"<[^>]+>", "", compose_canvas_comment(instructor_comment, classbot_comment))
     plain = html.unescape(plain)
     return re.sub(r"\n{3,}", "\n\n", plain).strip()
+```
+
+---
+
+## `.grading/app/review_runner.py`
+
+```python
+"""Dispatch Classbot review by assignment type."""
+
+from __future__ import annotations
+
+from typing import Any, Literal
+
+from lc_client import run_lc_classbot_for_row
+from litellm_client import DEFAULT_MODEL, run_classbot_for_row
+from rubric import assignment_type
+
+
+def run_classbot_for_row_typed(
+    row: dict[str, str],
+    *,
+    model: str = DEFAULT_MODEL,
+    mode: Literal["text", "pdf"] = "text",
+) -> dict[str, Any]:
+    atype = assignment_type(row.get("assignment_key", ""))
+    if atype == "learning_checks":
+        return run_lc_classbot_for_row(row, model=model)
+    if atype == "project_case_study":
+        return run_classbot_for_row(row, model=model, mode=mode)
+    raise ValueError(f"Unsupported assignment type for Classbot: {atype}")
 ```
 
 ---
@@ -7958,7 +8529,24 @@ def load_rubric() -> dict[str, Any]:
 
 def load_assignments() -> list[dict[str, Any]]:
     data = json.loads(ASSIGNMENTS_PATH.read_text(encoding="utf-8"))
-    return data["assignments"]
+    return data.get("assignments", data if isinstance(data, list) else [])
+
+
+def load_assignment_types() -> dict[str, Any]:
+    data = json.loads(ASSIGNMENTS_PATH.read_text(encoding="utf-8"))
+    return data.get("assignment_types", {})
+
+
+def assignment_type(key: str) -> str:
+    a = get_assignment(key)
+    return (a or {}).get("type", "project_case_study")
+
+
+def points_possible(key: str) -> int:
+    a = get_assignment(key)
+    if not a:
+        return 100
+    return int(a.get("points_possible", 100))
 
 
 def get_assignment(key: str) -> dict[str, Any] | None:
@@ -8001,13 +8589,15 @@ def compute_score(
 from __future__ import annotations
 
 import json
+import os
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -8021,10 +8611,12 @@ from env import GRADING_ROOT, mock_llm_enabled
 from litellm_client import (
     DEFAULT_MODEL,
     load_review,
-    run_classbot_for_row,
 )
+from name_utils import display_name, first_name
 from prompts import compose_canvas_comment, compose_canvas_comment_plain_preview
-from rubric import compute_score, load_assignments, load_rubric
+from lc_prompts import compose_lc_canvas_comment
+from review_runner import run_classbot_for_row_typed
+from rubric import assignment_type, compute_score, load_assignments, load_assignment_types, load_rubric, points_possible
 
 STATIC_DIR = APP_DIR / "static"
 app = FastAPI(title="Classbot Grading Dashboard")
@@ -8034,6 +8626,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def disable_static_cache(request: Request, call_next) -> Response:
+    response = await call_next(request)
+    path = request.url.path
+    if path == "/" or path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    return response
 
 
 class PatchRowBody(BaseModel):
@@ -8056,12 +8657,53 @@ class ClassbotBody(BaseModel):
 
 class BatchClassbotBody(BaseModel):
     submission_keys: list[str] = Field(default_factory=list)
+    assignment_key: str | None = None
     model: str = DEFAULT_MODEL
     mode: str = "text"
+    max_workers: int = Field(default=0, ge=0, le=20)
+
+
+BATCH_WORKERS_DEFAULT = int(os.getenv("CLASSBOT_BATCH_WORKERS", "5"))
+
+
+def _row_has_text(row: dict[str, str]) -> bool:
+    path = row.get("cached_text_path", "")
+    return bool(path) and Path(path).is_file()
+
+
+def _row_needs_classbot(row: dict[str, str]) -> bool:
+    if not _row_has_text(row):
+        return False
+    if row.get("llm_status") == "pending":
+        return True
+    if not row.get("llm_review_path"):
+        return True
+    if row.get("llm_status") == "error":
+        return True
+    return False
+
+
+def pending_classbot_keys(assignment_key: str | None = None) -> list[str]:
+    rows = read_rows()
+    keys: list[str] = []
+    for row in rows:
+        if assignment_key and row.get("assignment_key") != assignment_key:
+            continue
+        if _row_needs_classbot(row):
+            keys.append(row["submission_key"])
+    return keys
 
 
 class PublishBody(BaseModel):
     final_grade: str | None = None
+
+
+def _enrich_row(row: dict[str, str]) -> dict[str, str]:
+    out = dict(row)
+    raw = row.get("student_name", "")
+    out["student_display_name"] = display_name(raw)
+    out["student_first_name"] = first_name(raw)
+    return out
 
 
 @app.get("/api/config")
@@ -8069,8 +8711,17 @@ def api_config() -> dict[str, Any]:
     return {
         "rubric": load_rubric(),
         "assignments": load_assignments(),
+        "assignment_types": load_assignment_types(),
         "mock_llm": mock_llm_enabled(),
     }
+
+
+def _compose_comment_for_row(row: dict[str, str]) -> str:
+    instructor = row.get("instructor_comment", "")
+    classbot = row.get("classbot_comment", "")
+    if assignment_type(row.get("assignment_key", "")) == "learning_checks":
+        return compose_lc_canvas_comment(instructor, classbot)
+    return compose_canvas_comment(instructor, classbot)
 
 
 @app.get("/api/rows")
@@ -8091,7 +8742,7 @@ def api_rows(
         rows = [r for r in rows if r.get("cached_text_path")]
     elif has_report is False:
         rows = [r for r in rows if not r.get("cached_text_path")]
-    return rows
+    return [_enrich_row(r) for r in rows]
 
 
 @app.get("/api/rows/{submission_key}")
@@ -8104,7 +8755,14 @@ def api_row_detail(submission_key: str) -> dict[str, Any]:
     if llm_path:
         review = load_review(Path(llm_path))
     deductions = parse_deductions_json(row.get("accepted_deductions_json", ""))
-    return {"row": row, "review": review, "deductions": deductions}
+    atype = assignment_type(row.get("assignment_key", ""))
+    return {
+        "row": _enrich_row(row),
+        "review": review,
+        "deductions": deductions,
+        "assignment_type": atype,
+        "points_max": points_possible(row.get("assignment_key", "")),
+    }
 
 
 @app.patch("/api/rows/{submission_key}")
@@ -8135,7 +8793,7 @@ def api_patch_row(submission_key: str, body: PatchRowBody) -> dict[str, str]:
 @app.post("/api/sync")
 def api_sync(body: SyncBody) -> dict[str, Any]:
     rows = sync_assignment(body.assignment_key, force=body.force)
-    return {"count": len(rows), "rows": rows}
+    return {"count": len(rows), "rows": [_enrich_row(r) for r in rows]}
 
 
 @app.post("/api/sync-all")
@@ -8146,7 +8804,7 @@ def api_sync_all(body: SyncBody | None = None) -> dict[str, Any]:
     rows: list[dict[str, str]] = []
     for assignment in load_assignments():
         rows.extend(sync_assignment(assignment["key"], force=force))
-    return {"count": len(rows), "rows": rows}
+    return {"count": len(rows), "rows": [_enrich_row(r) for r in rows]}
 
 
 @app.post("/api/classbot/{submission_key}")
@@ -8155,7 +8813,7 @@ def api_classbot(submission_key: str, body: ClassbotBody) -> dict[str, Any]:
     if not row:
         raise HTTPException(404, "Row not found")
     try:
-        result = run_classbot_for_row(row, model=body.model, mode=body.mode)  # type: ignore[arg-type]
+        result = run_classbot_for_row_typed(row, model=body.model, mode=body.mode)  # type: ignore[arg-type]
     except Exception as exc:
         patch_row(submission_key, {"llm_status": "error", "publish_error": str(exc)})
         raise HTTPException(502, str(exc)) from exc
@@ -8164,24 +8822,64 @@ def api_classbot(submission_key: str, body: ClassbotBody) -> dict[str, Any]:
     return {"row": updated, "review": review}
 
 
+def _run_classbot_one(key: str, *, model: str, mode: str) -> tuple[str, str | None]:
+    row = get_row(key)
+    if not row:
+        return key, "not found"
+    if not _row_has_text(row):
+        return key, "no submission text"
+    try:
+        result = run_classbot_for_row_typed(row, model=model, mode=mode)  # type: ignore[arg-type]
+        result.pop("review", None)
+        patch_row(key, result)
+        return key, None
+    except Exception as exc:
+        patch_row(key, {"llm_status": "error", "publish_error": str(exc)})
+        return key, str(exc)
+
+
+@app.get("/api/classbot/pending")
+def api_classbot_pending(assignment_key: str) -> dict[str, Any]:
+    keys = pending_classbot_keys(assignment_key)
+    return {"assignment_key": assignment_key, "count": len(keys), "submission_keys": keys}
+
+
 @app.post("/api/classbot/batch")
 def api_classbot_batch(body: BatchClassbotBody) -> dict[str, Any]:
-    results = []
-    errors = []
-    for key in body.submission_keys:
-        row = get_row(key)
-        if not row:
-            errors.append({"key": key, "error": "not found"})
-            continue
-        try:
-            result = run_classbot_for_row(row, model=body.model, mode=body.mode)  # type: ignore[arg-type]
-            result.pop("review", None)
-            patch_row(key, result)
-            results.append(key)
-        except Exception as exc:
-            patch_row(key, {"llm_status": "error", "publish_error": str(exc)})
-            errors.append({"key": key, "error": str(exc)})
-    return {"ok": results, "errors": errors}
+    if body.assignment_key:
+        keys = pending_classbot_keys(body.assignment_key)
+    else:
+        keys = list(body.submission_keys)
+    if not keys:
+        return {"ok": [], "errors": [], "total": 0}
+
+    workers = body.max_workers or BATCH_WORKERS_DEFAULT
+    workers = min(workers, len(keys), 20)
+
+    results: list[str] = []
+    errors: list[dict[str, str]] = []
+
+    if workers <= 1:
+        for key in keys:
+            k, err = _run_classbot_one(key, model=body.model, mode=body.mode)
+            if err:
+                errors.append({"key": k, "error": err})
+            else:
+                results.append(k)
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = {
+                pool.submit(_run_classbot_one, key, model=body.model, mode=body.mode): key
+                for key in keys
+            }
+            for fut in as_completed(futures):
+                k, err = fut.result()
+                if err:
+                    errors.append({"key": k, "error": err})
+                else:
+                    results.append(k)
+
+    return {"ok": results, "errors": errors, "total": len(keys), "workers": workers}
 
 
 @app.get("/api/report-text/{submission_key}")
@@ -8198,11 +8896,15 @@ def api_report_text(submission_key: str) -> dict[str, str]:
 class ComposePreviewBody(BaseModel):
     instructor_comment: str = ""
     classbot_comment: str = ""
+    assignment_key: str = ""
 
 
 @app.post("/api/compose-preview")
 def api_compose_preview(body: ComposePreviewBody) -> dict[str, str]:
-    html_comment = compose_canvas_comment(body.instructor_comment, body.classbot_comment)
+    if body.assignment_key and assignment_type(body.assignment_key) == "learning_checks":
+        html_comment = compose_lc_canvas_comment(body.instructor_comment, body.classbot_comment)
+    else:
+        html_comment = compose_canvas_comment(body.instructor_comment, body.classbot_comment)
     return {
         "html": html_comment,
         "plain": compose_canvas_comment_plain_preview(body.instructor_comment, body.classbot_comment),
@@ -8215,10 +8917,7 @@ def api_publish(submission_key: str, body: PublishBody) -> dict[str, Any]:
     if not row:
         raise HTTPException(404, "Row not found")
     grade = body.final_grade or row.get("final_grade") or row.get("proposed_score") or "0"
-    comment = compose_canvas_comment(
-        row.get("instructor_comment", ""),
-        row.get("classbot_comment", ""),
-    )
+    comment = _compose_comment_for_row(row)
     try:
         publish_grade(row, grade, comment)
         from datetime import datetime, timezone
