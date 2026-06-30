@@ -225,7 +225,7 @@
     const btnSave = document.createElement('button');
     btnSave.className = 'viz-btn viz-btn-ghost';
     btnSave.type = 'button';
-    btnSave.innerHTML = '💾 Save scenario as…';
+    btnSave.innerHTML = '💾 SAVE';
     btnSave.addEventListener('click', onSaveScenario);
     if (nN === 0 && nE === 0) {
       btnSave.disabled = true;
@@ -237,7 +237,7 @@
     const btnClear = document.createElement('button');
     btnClear.className = 'viz-btn viz-btn-danger';
     btnClear.type = 'button';
-    btnClear.innerHTML = '🗑 Clear all scenario items';
+    btnClear.innerHTML = '🗑 CLEAR';
     btnClear.addEventListener('click', onClearScenario);
     if (nN === 0 && nE === 0) {
       btnClear.disabled = true;
@@ -255,7 +255,7 @@
       const sel = document.createElement('select');
       sel.className = 'viz-select';
       sel.style.flex = '1';
-      sel.innerHTML = '<option value="">📂 Load saved scenario…</option>' +
+      sel.innerHTML = '<option value="">📂 LOAD…</option>' +
         saved.map((s, i) =>
           '<option value="' + i + '">' + esc(s.name) +
           ' (n+' + (s.nodes ? s.nodes.length : 0) +

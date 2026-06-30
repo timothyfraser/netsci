@@ -568,6 +568,11 @@
   function loadProjectDataset(key) {
     if (!key) return;
     setStatus('Loading ' + key + '…');
+    // Wipe scenarios from any previous dataset — they reference ids that
+    // either don't exist in the new graph or accidentally collide. The
+    // bug was that buildGraph would still fold them in, blocking the
+    // switch silently.
+    state.scenarioNodes = []; state.scenarioLinks = [];
     const base = 'playground-data/';
     const cfg = DATASET_MAPPINGS[key] || {};
     parseCsvUrl(base + key + '-edges.csv', (edata, ecols) => {
@@ -1233,10 +1238,32 @@
   }
   function loadSampleGraph() {
     const edgeCsv = generateSampleGraph();
+    // Build a nodelist with TWO grouping columns (tier + region) so the
+    // sample graph can demo coverage / permutation / group composition
+    // immediately. Derive tier from the id prefix; assign a region randomly
+    // so the cross-tabulation has cells in every combination.
+    const regions = ['North', 'South', 'East', 'West'];
+    const ids = new Set();
+    edgeCsv.forEach((e) => { ids.add(e.from); ids.add(e.to); });
+    const tierOf = (id) => {
+      if (id.startsWith('Supplier_')) return 'supplier';
+      if (id.startsWith('Hub'))       return 'hub';
+      if (id.startsWith('DC_'))       return 'dc';
+      if (id.startsWith('Retailer_')) return 'retailer';
+      return 'other';
+    };
+    const nodeCsv = [...ids].map((id) => ({
+      node_id: id, label: id, tier: tierOf(id), region: pick(regions)
+    }));
     state.edgeCsv = edgeCsv;
     state.edgeCols = ['from', 'to', 'weight', 'time'];
-    state.nodeCsv = null; state.nodeCols = [];
-    state.mapping = { from: 'from', to: 'to', weight: 'weight', time: 'time', nodeId: null, nodeLabel: null, nodeGroup: null };
+    state.nodeCsv = nodeCsv;
+    state.nodeCols = ['node_id', 'label', 'tier', 'region'];
+    state.mapping = { from: 'from', to: 'to', weight: 'weight', time: 'time',
+                      nodeId: 'node_id', nodeLabel: 'label', nodeGroup: 'tier' };
+    // Wipe scenarios — they were keyed to the OLD dataset's node ids and
+    // would either silently miss or, worse, half-apply against the new graph.
+    state.scenarioNodes = []; state.scenarioLinks = [];
     renderMappers();
     loadGraph();
   }

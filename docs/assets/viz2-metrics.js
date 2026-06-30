@@ -143,7 +143,7 @@
       </div>
 
       <div class="formula-block">
-        <strong># Shortest paths through node v (raw σ<sub>st</sub>(v))</strong><br>
+        <strong>Number of shortest paths through node v (raw σ<sub>st</sub>(v))</strong><br>
         <code>σ<sub>st</sub>(v) = B(v) × (N−1)(N−2)</code> &nbsp;(rounded)<br>
         Recovered from the normalized B(v). This is the absolute count students
         usually picture when they hear "betweenness," and it scales with the
