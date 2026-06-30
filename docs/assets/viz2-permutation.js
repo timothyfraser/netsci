@@ -34,7 +34,7 @@
   const ui = {
     testAttr:  null,   // node col being permuted ('__group__' === active group col proxy)
     blockMode: '',     // '' | 'node:<col>' | 'edge:<col>'
-    stat:      'assort',
+    stat:      'similarity',
     reps:      100
   };
   let running = false;
@@ -79,8 +79,18 @@
   }
 
   // ── Test statistics ─────────────────────────────────────────
-  // assortativity → uses the SAME live attribute we just permuted.
-  // APL/diameter  → graph-level, BFS-distance based; matches viz2-removal.
+  // similarity → COURSE statistic from docs/case-studies/permutation.html
+  //              (NOT Newman r — that wasn't taught). 0 = uniform mixing,
+  //              1 = all weight on a single group-pair cell.
+  // assort     → kept as an alternative for power-user comparison.
+  // APL/diam   → graph-level distance metrics; less interesting under label
+  //              permutation but offered for parity with the MC card.
+  function statSimilarity(attr) {
+    const s = NV.state;
+    const ids = activeIdSet();
+    const { index } = NV.utils.similarityIndex(s.graph, attr, ids);
+    return isFinite(index) ? index : NaN;
+  }
   function statAssort(attr) {
     const s = NV.state;
     const ids = activeIdSet();
@@ -110,9 +120,10 @@
     return which === 'diam' ? maxD : (total / pairs);
   }
   function evalStat(statKey, attr) {
-    if (statKey === 'assort') return statAssort(attr);
-    if (statKey === 'apl')    return statAplDiam('apl');
-    if (statKey === 'diam')   return statAplDiam('diam');
+    if (statKey === 'similarity') return statSimilarity(attr);
+    if (statKey === 'assort')     return statAssort(attr);
+    if (statKey === 'apl')        return statAplDiam('apl');
+    if (statKey === 'diam')       return statAplDiam('diam');
     return NaN;
   }
 
@@ -240,8 +251,10 @@
 
     const isEdgeBlock = ui.blockMode.startsWith('edge:');
 
-    // Test-statistic dropdown — assortativity uses the test attr; APL/diam are graph-level.
+    // Test-statistic dropdown — similarity index (course default) uses the test attr;
+    // APL/diam are graph-level. Newman assortativity is kept as an alternative.
     const statOpts = [
+      `<option value="similarity"${ui.stat === 'similarity' ? ' selected' : ''}>Similarity Index over test attribute (course default)</option>`,
       `<option value="assort"${ui.stat === 'assort' ? ' selected' : ''}>Newman assortativity over test attribute</option>`,
       `<option value="apl"${ui.stat   === 'apl'    ? ' selected' : ''}>Avg shortest path length (graph-level)</option>`,
       `<option value="diam"${ui.stat  === 'diam'   ? ' selected' : ''}>Network diameter (graph-level)</option>`
@@ -301,7 +314,7 @@
     const blockSel = $('viz2-perm-block');
     if (blockSel) blockSel.addEventListener('change', (e) => { ui.blockMode = e.target.value || ''; render(); });
     const statSel = $('viz2-perm-stat');
-    if (statSel) statSel.addEventListener('change', (e) => { ui.stat = e.target.value || 'assort'; render(); });
+    if (statSel) statSel.addEventListener('change', (e) => { ui.stat = e.target.value || 'similarity'; render(); });
     const repsInp = $('viz2-perm-reps');
     if (repsInp) repsInp.addEventListener('input', (e) => {
       let v = parseInt(e.target.value, 10);
@@ -334,7 +347,8 @@
     const obsTxt = fmt(res.observed);
     const muTxt  = fmt(mean);
     const pTxt   = res.pval < 0.001 ? '< 0.001' : res.pval.toFixed(3);
-    const statLbl = res.stat === 'assort' ? `assortativity by ${esc(res.attr)}`
+    const statLbl = res.stat === 'similarity' ? `Similarity Index by ${esc(res.attr)}`
+                  : res.stat === 'assort' ? `assortativity by ${esc(res.attr)}`
                   : res.stat === 'apl'    ? 'avg shortest path length'
                   :                         'network diameter';
     const blockLbl = !res.blockMode ? 'unblocked'
@@ -429,11 +443,12 @@
     // node-block / unblocked modes — kept inside try/finally to ensure untag).
     if (isEdgeBlock) tagLinksWithBlockVal(blockCol);
 
-    // For the assortativity stat we ask utils.nominalAssortativity to read
-    // either the named attr or '__group__'. If the test attr IS the active
-    // group column, mirror n.group as we permute so live colors don't drift.
+    // For the attribute-based stats (similarity / assort) we ask the utils
+    // function to read either the named attr or '__group__'. If the test attr
+    // IS the active group column, mirror n.group as we permute so live colors
+    // don't drift between renders.
     const attrIsGroupCol = (attr === s.mapping.nodeGroup);
-    const statAttrKey = (statK === 'assort')
+    const statAttrKey = (statK === 'similarity' || statK === 'assort')
       ? (attrIsGroupCol ? '__group__' : attr)
       : null;
 

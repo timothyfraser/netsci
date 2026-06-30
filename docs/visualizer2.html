@@ -459,6 +459,39 @@
   color: var(--grey); letter-spacing: 0.06em;
 }
 
+/* Scenario panel content is JS-injected outside an .agg-body wrapper —
+   give it the same inset padding so it doesn't sit flush against the edge. */
+#viz2-scenarios-panel > .viz2-scen-body,
+#viz2-scenarios-panel > .node-empty { padding: 0 18px 18px; }
+
+/* Collapsible analysis cards — share .agg-panel summary styling but keep
+   the card chrome (border/radius/padding) for visual continuity. */
+.analysis-card.agg-panel { padding: 0; }
+.analysis-card.agg-panel > summary { padding: 18px; }
+.analysis-card.agg-panel .agg-body { padding: 0 18px 18px; }
+.analysis-card.agg-panel > summary {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--green-bright);
+  display: flex; align-items: center; gap: 10px;
+}
+
+/* Collapse-all / Expand-all bar */
+.collapse-bar {
+  display: flex; gap: 8px; align-items: center; justify-content: flex-end;
+  margin: -4px 0 12px;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.1em; color: var(--grey);
+}
+.collapse-bar button {
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: transparent; color: var(--grey);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 5px 9px; cursor: pointer; transition: all 0.15s;
+}
+.collapse-bar button:hover { color: var(--green-bright); border-color: var(--green-bright); }
+
 /* Formulas explainer */
 .formula-block {
   font-family: 'Latin Modern Math', Georgia, serif;
@@ -524,8 +557,9 @@
     <!-- ── LEFT COLUMN: data + controls ── -->
     <div>
 
-      <div class="viz-panel">
-        <h3>📥 Data</h3>
+      <details open class="viz-panel agg-panel" data-card="data">
+        <summary>📥 Data</summary>
+        <div class="agg-body">
         <div class="file-row">
           <label>Load project dataset <span class="opt">autoloads — no upload</span></label>
           <select id="sample-select" class="viz-select">
@@ -568,14 +602,17 @@
           <button class="viz-btn viz-btn-primary" id="btn-load">⟳ Load</button>
           <button class="viz-btn viz-btn-neutral" id="btn-sample">▶ Sample</button>
         </div>
-      </div>
+        </div>
+      </details>
 
-      <div class="viz-panel">
-        <h3>🗂 Column Mapping</h3>
+      <details class="viz-panel agg-panel" data-card="mapping">
+        <summary>🗂 Column Mapping</summary>
+        <div class="agg-body">
         <div id="mapper-fields">
           <div style="color: var(--grey); font-size: 12px;">Upload an edgelist to map columns.</div>
         </div>
-      </div>
+        </div>
+      </details>
 
       <details class="viz-panel agg-panel">
         <summary>🧪 Aggregate <span class="agg-tag">experimental</span></summary>
@@ -599,18 +636,21 @@
         </div>
       </details>
 
-      <div class="viz-panel">
-        <h3>⚙ Layout</h3>
+      <details class="viz-panel agg-panel" data-card="layout">
+        <summary>⚙ Layout</summary>
+        <div class="agg-body">
         <div class="seg-row">
           <button class="seg-btn seg-layout active" data-layout="force">Force</button>
           <button class="seg-btn seg-layout"        data-layout="radial">Radial</button>
           <button class="seg-btn seg-layout"        data-layout="circle">Circle</button>
           <button class="seg-btn seg-layout"        data-layout="hierarchical">Hier.</button>
         </div>
-      </div>
+        </div>
+      </details>
 
-      <div class="viz-panel">
-        <h3>🎚 Tunables</h3>
+      <details class="viz-panel agg-panel" data-card="tunables">
+        <summary>🎚 Tunables</summary>
+        <div class="agg-body">
         <div class="slider-row">
           <div class="lbl"><span>Node size scale</span><span class="v" id="node-scale-val">1.0x</span></div>
           <input type="range" min="50" max="200" value="100" id="node-scale">
@@ -623,10 +663,12 @@
           <div class="lbl"><span>Time filter (≤)</span><span class="v" id="time-slider-val">—</span></div>
           <input type="range" id="time-slider">
         </div>
-      </div>
+        </div>
+      </details>
 
-      <div class="viz-panel">
-        <h3>👁 Display</h3>
+      <details open class="viz-panel agg-panel" data-card="display">
+        <summary>👁 Display</summary>
+        <div class="agg-body">
         <div class="color-by-row">
           <label for="color-by">Color nodes by</label>
           <select id="color-by" class="viz-select">
@@ -655,20 +697,23 @@
         <div class="toggle-row" data-toggle="weights">Weight degree &amp; betweenness<div class="toggle"></div></div>
         <div class="toggle-row" data-toggle="isolates">Drop isolates<div class="toggle on"></div></div>
         <div class="toggle-row" data-toggle="drift">Live drift<div class="toggle"></div></div>
-      </div>
+        </div>
+      </details>
 
       <!-- ── v2: Scenarios (D1) — mounted by viz2-scenarios.js ── -->
-      <div class="viz-panel" id="viz2-scenarios-panel">
-        <h3>✏ Scenarios <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></h3>
+      <details class="viz-panel agg-panel" data-card="scenarios" id="viz2-scenarios-panel">
+        <summary>✏ Scenarios <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
         <div class="node-empty">Loading scenario editor…</div>
-      </div>
+      </details>
 
-      <div class="viz-panel">
-        <h3>📤 Export</h3>
+      <details class="viz-panel agg-panel" data-card="export">
+        <summary>📤 Export</summary>
+        <div class="agg-body">
         <div class="btn-row">
           <button class="viz-btn viz-btn-ghost" id="btn-png">⤓ Export PNG</button>
         </div>
-      </div>
+        </div>
+      </details>
 
       <!-- ── v2: Formulas (Feature A) — mounted by viz2-metrics.js ── -->
       <details class="viz-panel agg-panel" id="viz2-formulas-panel">
@@ -712,30 +757,31 @@
         </div>
       </div>
 
-      <!-- ── v2: Analysis cards row (B disruption, D2 Monte Carlo, E Permutation) ── -->
+      <!-- ── v2: Analysis cards row (B disruption, D2 Monte Carlo, E Permutation, Similarity) ── -->
       <div class="analysis-row">
-        <div class="analysis-card" id="viz2-disruption-card">
-          <h3>🧨 Disruption Stats <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></h3>
-          <div class="card-body"><div class="node-empty">Load a network to see disruption stats.</div></div>
-        </div>
-        <div class="analysis-card" id="viz2-montecarlo-card">
-          <h3>🎲 Monte Carlo <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></h3>
-          <div class="card-body"><div class="node-empty">Load a network to enable Monte Carlo.</div></div>
-        </div>
+        <details open class="analysis-card agg-panel" data-card="disruption" id="viz2-disruption-card">
+          <summary>🧨 Disruption Stats <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
+          <div class="agg-body"><div class="card-body"><div class="node-empty">Load a network to see disruption stats.</div></div></div>
+        </details>
+        <details class="analysis-card agg-panel" data-card="montecarlo" id="viz2-montecarlo-card">
+          <summary>🎲 Monte Carlo <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
+          <div class="agg-body"><div class="card-body"><div class="node-empty">Load a network to enable Monte Carlo.</div></div></div>
+        </details>
       </div>
       <div class="analysis-row">
-        <div class="analysis-card" id="viz2-permutation-card">
-          <h3>🔀 Permutation Test <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></h3>
-          <div class="card-body"><div class="node-empty">Load a network with a group column to enable permutation tests.</div></div>
-        </div>
-        <div class="analysis-card" id="viz2-assortativity-card">
-          <h3>🧲 Assortativity (Newman r) <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></h3>
-          <div class="card-body"><div class="node-empty">Pick a group column to see assortativity.</div></div>
-        </div>
+        <details class="analysis-card agg-panel" data-card="permutation" id="viz2-permutation-card">
+          <summary>🔀 Permutation Test <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
+          <div class="agg-body"><div class="card-body"><div class="node-empty">Load a network with a group column to enable permutation tests.</div></div></div>
+        </details>
+        <details class="analysis-card agg-panel" data-card="similarity" id="viz2-assortativity-card">
+          <summary>📐 Similarity Index <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
+          <div class="agg-body"><div class="card-body"><div class="node-empty">Pick a group column to see the similarity index.</div></div></div>
+        </details>
       </div>
 
-      <div class="viz-panel" style="margin-top: 14px;">
-        <h3>📖 What's new in v2</h3>
+      <details class="viz-panel agg-panel" data-card="whatsnew" style="margin-top: 14px;">
+        <summary>📖 What's new in v2</summary>
+        <div class="agg-body">
         <ul style="color: var(--green-mint); font-size: 13px; line-height: 1.7; padding-left: 18px;">
           <li><strong>Click a node</strong>, then hit <em>Remove from network</em>. Removed nodes stay pinned where they were so before/after comparisons match. Restore individually or all at once.</li>
           <li><strong>Group Coverage</strong> reports the % of each group reachable from a reference group of your choice — live as you remove nodes or slide the time filter.</li>
@@ -743,49 +789,69 @@
           <li><strong>Scenarios</strong>: ＋N adds a node by clicking the stage; ＋E adds an edge by clicking two nodes. Save bundles in your browser.</li>
           <li><strong>Formulas</strong> panel in the left column spells out exactly what degree and betweenness mean here.</li>
         </ul>
-      </div>
+        </div>
+      </details>
     </div>
 
-    <!-- ── RIGHT: node inspector + rankings + v2 stats ── -->
+    <!-- ── RIGHT: node inspector first (closest to graph), then v2 stats ── -->
     <div>
-      <!-- ── v2: Network Stats (Feature A — distribution mins/maxes) ── -->
-      <div class="viz-panel" id="viz2-network-stats-panel">
-        <h3>📈 Network Stats <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></h3>
-        <div id="viz2-network-stats-body">
-          <div class="node-empty">Load a network to see stats.</div>
-        </div>
+      <div class="collapse-bar">
+        <span>Cards</span>
+        <button type="button" id="viz2-expand-all" title="Expand every card">＋ Expand all</button>
+        <button type="button" id="viz2-collapse-all" title="Collapse every card">− Collapse all</button>
       </div>
 
-      <div class="viz-panel">
-        <h3>🏷 Selected Node</h3>
+      <!-- v2: Selected Node is now FIRST in the right column so the Remove
+           button (in #viz2-selected-actions, below the card body) sits right
+           next to the graph stage instead of buried beneath stats panels. -->
+      <details open class="viz-panel agg-panel" data-card="selected">
+        <summary>🏷 Selected Node</summary>
+        <div class="agg-body">
         <div id="node-card-wrap">
           <div class="node-empty">Click any node to inspect.</div>
         </div>
         <!-- v2: removal controls (mounted by viz2-removal.js) -->
         <div id="viz2-selected-actions"></div>
-      </div>
+        </div>
+      </details>
 
-      <div class="viz-panel">
-        <h3>📊 Top Degree <span style="color:var(--grey-dim);font-size:9px;letter-spacing:0.1em;text-transform:none;">(count)</span></h3>
+      <!-- ── v2: Network Stats (Feature A — distribution mins/maxes) ── -->
+      <details class="viz-panel agg-panel" data-card="network-stats" id="viz2-network-stats-panel">
+        <summary>📈 Network Stats <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
+        <div class="agg-body">
+        <div id="viz2-network-stats-body">
+          <div class="node-empty">Load a network to see stats.</div>
+        </div>
+        </div>
+      </details>
+
+      <details class="viz-panel agg-panel" data-card="top-degree">
+        <summary>📊 Top Degree <span style="color:var(--grey-dim);font-size:9px;letter-spacing:0.1em;text-transform:none;">(count)</span></summary>
+        <div class="agg-body">
         <div id="top-degree-list">
           <div class="node-empty">Load a network to see rankings.</div>
         </div>
-      </div>
+        </div>
+      </details>
 
-      <div class="viz-panel">
-        <h3>🔗 Top Betweenness <span style="color:var(--grey-dim);font-size:9px;letter-spacing:0.1em;text-transform:none;">(normalized 0–1)</span></h3>
+      <details class="viz-panel agg-panel" data-card="top-betw">
+        <summary>🔗 Top Betweenness <span style="color:var(--grey-dim);font-size:9px;letter-spacing:0.1em;text-transform:none;">(normalized 0–1)</span></summary>
+        <div class="agg-body">
         <div id="top-betw-list">
           <div class="node-empty">Computed when graph loads (≤600 nodes).</div>
         </div>
-      </div>
+        </div>
+      </details>
 
       <!-- ── v2: Group Coverage (Feature C) ── -->
-      <div class="viz-panel" id="viz2-coverage-panel">
-        <h3>🛡 Group Coverage <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></h3>
+      <details class="viz-panel agg-panel" data-card="coverage" id="viz2-coverage-panel">
+        <summary>🛡 Group Coverage <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
+        <div class="agg-body">
         <div id="viz2-coverage-body">
           <div class="node-empty">Pick a group column to see coverage.</div>
         </div>
-      </div>
+        </div>
+      </details>
     </div>
 
   </div>
@@ -800,12 +866,49 @@
 <script src="assets/network-bg.js" defer></script>
 <script src="assets/site.js" defer></script>
 <!-- v2 core engine, then feature modules (defer preserves order) -->
-<script src="assets/viz2-core.js?v=20260630a" defer></script>
-<script src="assets/viz2-metrics.js?v=20260630a" defer></script>
-<script src="assets/viz2-removal.js?v=20260630a" defer></script>
-<script src="assets/viz2-coverage.js?v=20260630a" defer></script>
-<script src="assets/viz2-scenarios.js?v=20260630a" defer></script>
-<script src="assets/viz2-montecarlo.js?v=20260630a" defer></script>
-<script src="assets/viz2-permutation.js?v=20260630a" defer></script>
+<script src="assets/viz2-core.js?v=20260630b" defer></script>
+<script src="assets/viz2-metrics.js?v=20260630b" defer></script>
+<script src="assets/viz2-removal.js?v=20260630b" defer></script>
+<script src="assets/viz2-coverage.js?v=20260630b" defer></script>
+<script src="assets/viz2-scenarios.js?v=20260630b" defer></script>
+<script src="assets/viz2-montecarlo.js?v=20260630b" defer></script>
+<script src="assets/viz2-permutation.js?v=20260630b" defer></script>
+<script>
+// v2 card state persistence — restores each <details data-card="..."> from
+// localStorage and writes back on toggle. Wraps in try/catch since Safari
+// private mode and quota-exceeded both throw.
+(function () {
+  const KEY = 'viz2-cards-state-v1';
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
+    catch (_) { return {}; }
+  }
+  function save(state) {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) {}
+  }
+  const state = load();
+  document.querySelectorAll('details[data-card]').forEach((d) => {
+    const k = d.dataset.card;
+    if (Object.prototype.hasOwnProperty.call(state, k)) d.open = !!state[k];
+    d.addEventListener('toggle', () => {
+      const s = load();
+      s[k] = d.open;
+      save(s);
+    });
+  });
+  // Expand-all / Collapse-all bulk controls
+  const expandBtn   = document.getElementById('viz2-expand-all');
+  const collapseBtn = document.getElementById('viz2-collapse-all');
+  function setAll(open) {
+    const s = load();
+    document.querySelectorAll('details[data-card]').forEach((d) => {
+      d.open = open; s[d.dataset.card] = open;
+    });
+    save(s);
+  }
+  if (expandBtn)   expandBtn.addEventListener('click', () => setAll(true));
+  if (collapseBtn) collapseBtn.addEventListener('click', () => setAll(false));
+})();
+</script>
 </body>
 </html>

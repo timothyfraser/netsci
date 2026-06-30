@@ -159,28 +159,34 @@
     });
   }
 
-  // ── Assortativity gauge render ──────────────────────────────
+  // ── Similarity Index gauge render ───────────────────────────
+  // Uses the COURSE'S formula from docs/case-studies/permutation.html (not
+  // Newman's r — that wasn't taught). Generalized to K groups in viz2-core
+  // utils.similarityIndex. Range: 0 = perfectly heterogeneous (uniform
+  // mixing), 1 = all edge weight on a single group-pair cell.
   function renderAssort() {
     const card = $('viz2-assortativity-card'); if (!card) return;
     const host = card.querySelector('.card-body'); if (!host) return;
     const s = NV.state;
     if (!s.graph || !s.mapping.nodeGroup) {
-      host.innerHTML = '<div class="node-empty">Pick a group column to see assortativity.</div>';
+      host.innerHTML = '<div class="node-empty">Pick a group column to see the similarity index.</div>';
       return;
     }
     const col = s.mapping.nodeGroup;
-    const { r, M } = NV.utils.nominalAssortativity(s.graph, '__group__', activeIdSet());
+    const { index, K, total } = NV.utils.similarityIndex(s.graph, '__group__', activeIdSet());
 
     let val, lbl;
-    if (!isFinite(r)) {
-      val = 'r = NaN';
-      lbl = M === 0 ? 'No edges with two-sided group attrs in the active subgraph.'
-                    : 'Undefined — every edge is within one group (Σa_i² = 1).';
+    if (!isFinite(index)) {
+      val = 'index = NaN';
+      lbl = total === 0
+        ? 'No edges with two-sided group attrs in the active subgraph.'
+        : 'Need at least 2 distinct groups to compute.';
     } else {
-      val = 'r = ' + (r >= 0 ? '+' : '') + r.toFixed(2);
-      if      (r >  0.2) lbl = 'Same-group ties cluster';
-      else if (r < -0.2) lbl = 'Cross-group ties dominate';
-      else                lbl = 'Mixing roughly at random';
+      val = 'index = ' + index.toFixed(3);
+      if      (index < 0.10) lbl = 'Mixing is close to uniform across groups';
+      else if (index < 0.30) lbl = 'Some group concentration, but mostly mixed';
+      else if (index < 0.60) lbl = 'Clear within-group concentration';
+      else                    lbl = 'Heavily concentrated within a few group pairs';
     }
 
     host.innerHTML = `
@@ -189,9 +195,11 @@
         <div class="gauge-lbl">${esc(lbl)}</div>
       </div>
       <div class="formula-note">
-        Newman nominal assortativity over <code>${esc(col)}</code>; range −1 (segregated) … +1 (perfectly assortative).
-        NaN if the active subgraph has no edges with two-sided group attrs.
-        Counted ${M.toLocaleString()} qualifying edge(s).
+        Course Similarity Index over <code>${esc(col)}</code> (${K} groups). Range
+        <strong>0</strong> = perfectly heterogeneous (every cell at <code>1/K²</code>),
+        <strong>1</strong> = all edge weight on a single group-pair cell.
+        Formula: <code>(K²/(2(K²−1))) · Σ_{i,j} |p_ij − 1/K²|</code>.
+        Counted ${total.toLocaleString()} unit(s) of edge weight.
       </div>`;
   }
 

@@ -1377,6 +1377,55 @@
       // ^ a was double-counted on the diagonal above; correct by halving on square
       const r = (sumEii - sumAi2) / Math.max(1e-12, 1 - sumAi2);
       return { r, M };
+    },
+    // Course "Similarity Index" (docs/case-studies/permutation.html:582),
+    // generalized from binary (high/low) to K groups:
+    //   index = (K² / (2(K²-1))) · Σ_{i,j} |p_ij - 1/K²|
+    // where p_ij = fraction of total edge weight on ordered cell (i→j).
+    //   0 = perfectly heterogeneous (uniform mixing)
+    //   1 = all weight in a single cell (fully concentrated)
+    // Drops the 2/3 → 1 scaling factor at K=2 (matches the lab exactly).
+    // Pass attr === '__group__' to use the live n.group; otherwise n.attrs[attr].
+    similarityIndex(graph, attr, activeIdsSet) {
+      const attrOf = (n) => attr === '__group__' ? n.group : (n.attrs ? n.attrs[attr] : undefined);
+      const groupOf = Object.create(null);
+      const groupSet = new Set();
+      graph.nodes.forEach((n) => {
+        if (activeIdsSet && !activeIdsSet.has(n.id)) return;
+        const v = attrOf(n);
+        if (v !== undefined && v !== null && v !== '') {
+          const s = String(v);
+          groupOf[n.id] = s;
+          groupSet.add(s);
+        }
+      });
+      const groups = Array.from(groupSet);
+      const K = groups.length;
+      if (K < 2) return { index: NaN, K, total: 0 };
+
+      const cells = new Map();   // 'a||b' → summed weight (ordered)
+      let total = 0;
+      graph.links.forEach((l) => {
+        const s = typeof l.source === 'object' ? l.source.id : l.source;
+        const t = typeof l.target === 'object' ? l.target.id : l.target;
+        if (activeIdsSet && (!activeIdsSet.has(s) || !activeIdsSet.has(t))) return;
+        const a = groupOf[s], b = groupOf[t];
+        if (a === undefined || b === undefined) return;
+        const w = (l.weight && l.weight > 0) ? l.weight : 1;
+        const key = a + '||' + b;
+        cells.set(key, (cells.get(key) || 0) + w);
+        total += w;
+      });
+      if (total === 0) return { index: NaN, K, total: 0 };
+
+      const uniform = 1 / (K * K);
+      let absDev = 0;
+      for (const x of groups) for (const y of groups) {
+        const w = cells.get(x + '||' + y) || 0;
+        absDev += Math.abs((w / total) - uniform);
+      }
+      const norm = (K * K) / Math.max(1e-12, 2 * (K * K - 1));
+      return { index: norm * absDev, K, total };
     }
   };
 
