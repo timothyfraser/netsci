@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-30 21:06 UTC_
+_Auto-generated NotebookLM source · 2026-06-30 22:08 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -5544,12 +5544,53 @@ Same data, more analytics. Load a project dataset, then remove nodes, run counte
 
 📖 What's new in v2
 
-* **Click a node**, then hit *Remove from network*. Removed nodes stay pinned where they were so before/after comparisons match. Restore individually or all at once.
-* **Group Coverage** reports the % of each group reachable from a reference group of your choice — live as you remove nodes, slide the time filter, or tighten the max\-hops cap.
-* **Counterfactuals** re\-draws edge weights from `Poisson(λ = observed)` and reports a 95% CI on a metric you pick. **Permutation Test** shuffles a node attribute and reports a p\-value.
-* **Scenarios**: ＋N adds a node by clicking the stage; ＋E adds an edge by clicking two nodes. Save bundles in your browser.
-* **Browse Nodes** gives you a searchable / sortable table of every node — handy when the graph is too dense to click into.
-* **Formulas** live inside the Network Stats card on the right — press ▸ to expand the definitions when you need them.
+
+🧨
+
+Remove \& Restore Nodes
+Click a node, hit *Remove from network*. Coordinates stay pinned so before/after comparisons match. Restore one or all.
+
+
+🛡
+
+Group Coverage
+% of each group reachable from a reference group — live as you remove nodes, slide the time filter, or cap max hops.
+
+
+🎲
+
+Counterfactuals
+Compare baseline vs treated networks under Poisson edge\-weight resampling. Difference distribution with 95% CI.
+
+
+🔀
+
+Permutation Test
+Shuffle a node attribute (optionally within blocks) and get a one\-sided p\-value vs the observed statistic.
+
+
+✏
+
+Scenarios
+＋N adds a node by clicking the stage; ＋E adds an edge by clicking two nodes. Save what\-if bundles in your browser.
+
+
+🔎
+
+Browse Nodes
+Searchable, sortable table of every node — and Zoom to Node from the Selected card when the graph is too dense to click into.
+
+
+📐
+
+Group Composition
+Switch the grouping variable for the whole network, see a per\-group bar chart, and the course Similarity Index.
+
+
+🎓
+
+Tutorial Walkthrough
+A guided tour of every card — click the green button up top any time you want to re\-orient.
 
 
 📥 Data
@@ -5600,7 +5641,7 @@ Drop a CSV, or load the sample graph to start.
 Upload an edgelist to map columns.
 
 
-🧪 Aggregate experimental
+🧪 Aggregate
 
 
 Aggregate by node trait
@@ -5650,14 +5691,10 @@ Plasma
 Mako
 
 
-Node labels
-Edge weight labels
-Weight degree \& betweenness
-Drop isolates
-Live drift
+Time filter (≤)—
 
 
-🎚 Tunables
+⚙ Settings
 
 
 Node size scale1\.0x
@@ -5666,20 +5703,23 @@ Node size scale1\.0x
 Edge weight threshold0\.0
 
 
-Time filter (≤)—
+Node labels
+Edge weight labels
+Weight degree \& betweenness
+Drop isolates
+Live drift
 
 
 Your Network · V2
 
 
+💾
 ＋N
 ＋E
 ❄
 ＋
 －
 ⤢
-
-⤓
 
 
 0Active Nodes
@@ -5692,20 +5732,24 @@ Your Network · V2
  Upload an edgelist or hit ▶ Sample to start.
 
 
-🧨 Disruption Stats v2
+🧨 Disruption Stats
 Load a network to see disruption stats.
 
 
-🛡 Group Coverage v2
+🛡 Group Coverage
 Pick a group column to see coverage.
 
 
-🎲 Counterfactuals v2
+🎲 Counterfactuals
 Load a network to enable counterfactuals.
 
 
-🔀 Permutation Test v2
+🔀 Permutation Test
 Load a network with a group column to enable permutation tests.
+
+
+📐 Group Composition
+Loading group composition…
 
 
 Cards
@@ -5719,11 +5763,11 @@ Cards
 Click any node to inspect.
 
 
-✏ Scenarios v2
+✏ Scenarios
 Loading scenario editor…
 
 
-📈 Network Stats v2
+📈 Network Stats
 
 
 Load a network to see stats.
@@ -5732,11 +5776,6 @@ Load a network to see stats.
 📐 Formulas \& Definitions
 
 Formulas load when a network is loaded.
-
-
-📐 Group Composition v2
-
-Loading group composition…
 
 
 📊 Top Degree (count)
@@ -5751,7 +5790,7 @@ Load a network to see rankings.
 Computed when graph loads (≤600 nodes).
 
 
-🔎 Browse Nodes v2
+🔎 Browse Nodes
 
 Loading node browser…
 
