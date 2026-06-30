@@ -530,6 +530,47 @@ select.viz-select {
   color: var(--green-mint); width: 100%; box-sizing: border-box;
 }
 
+/* Browse Nodes: cap the table at a sensible height and scroll past it. */
+.viz2-node-table-wrap {
+  max-height: 380px; overflow-y: auto; margin-top: 6px;
+  border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+}
+.viz2-node-table-wrap thead th {
+  position: sticky; top: 0;
+  background: rgba(5, 10, 5, 0.96); z-index: 1;
+}
+
+/* What's New icon-grid (3-up on desktop, 1-up on narrow viewports). */
+.viz2-whatsnew-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+@media (max-width: 900px) { .viz2-whatsnew-grid { grid-template-columns: 1fr; } }
+.viz2-whatsnew-card {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px;
+  background: rgba(5, 46, 22, 0.32);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+}
+.viz2-whatsnew-card .vn-icon {
+  font-size: 22px; line-height: 1; flex: none;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(57, 255, 20, 0.10);
+  border: 1px solid var(--green-bright);
+  border-radius: 6px;
+}
+.viz2-whatsnew-card .vn-title {
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--green-bright); margin-bottom: 4px;
+}
+.viz2-whatsnew-card .vn-desc {
+  font-family: var(--font-body); font-size: 12.5px;
+  color: var(--green-mint); line-height: 1.45;
+}
+
 /* Collapsible analysis cards — share .agg-panel summary styling but keep
    the card chrome (border/radius/padding) for visual continuity. */
 .analysis-card.agg-panel { padding: 0; }
@@ -621,18 +662,69 @@ select.viz-select {
     </div>
   </section>
 
-  <!-- v2: What's New surfaced just under the hero so first-time viewers see it. -->
+  <!-- What's New surfaced just under the hero. Icon-grid of profile boxes
+       (3 columns on desktop, single column on narrow viewports). -->
   <details open class="viz-panel agg-panel" data-card="whatsnew">
     <summary>📖 What's new in v2</summary>
     <div class="agg-body">
-      <ul style="color: var(--green-mint); font-size: 13px; line-height: 1.7; padding-left: 18px; margin: 0;">
-        <li><strong>Click a node</strong>, then hit <em>Remove from network</em>. Removed nodes stay pinned where they were so before/after comparisons match. Restore individually or all at once.</li>
-        <li><strong>Group Coverage</strong> reports the % of each group reachable from a reference group of your choice — live as you remove nodes, slide the time filter, or tighten the max-hops cap.</li>
-        <li><strong>Counterfactuals</strong> re-draws edge weights from <code>Poisson(λ = observed)</code> and reports a 95% CI on a metric you pick. <strong>Permutation Test</strong> shuffles a node attribute and reports a p-value.</li>
-        <li><strong>Scenarios</strong>: ＋N adds a node by clicking the stage; ＋E adds an edge by clicking two nodes. Save bundles in your browser.</li>
-        <li><strong>Browse Nodes</strong> gives you a searchable / sortable table of every node — handy when the graph is too dense to click into.</li>
-        <li><strong>Formulas</strong> live inside the Network Stats card on the right — press ▸ to expand the definitions when you need them.</li>
-      </ul>
+      <div class="viz2-whatsnew-grid">
+        <div class="viz2-whatsnew-card">
+          <div class="vn-icon">🧨</div>
+          <div class="vn-body">
+            <div class="vn-title">Remove &amp; Restore Nodes</div>
+            <div class="vn-desc">Click a node, hit <em>Remove from network</em>. Coordinates stay pinned so before/after comparisons match. Restore one or all.</div>
+          </div>
+        </div>
+        <div class="viz2-whatsnew-card">
+          <div class="vn-icon">🛡</div>
+          <div class="vn-body">
+            <div class="vn-title">Group Coverage</div>
+            <div class="vn-desc">% of each group reachable from a reference group — live as you remove nodes, slide the time filter, or cap max hops.</div>
+          </div>
+        </div>
+        <div class="viz2-whatsnew-card">
+          <div class="vn-icon">🎲</div>
+          <div class="vn-body">
+            <div class="vn-title">Counterfactuals</div>
+            <div class="vn-desc">Compare baseline vs treated networks under Poisson edge-weight resampling. Difference distribution with 95% CI.</div>
+          </div>
+        </div>
+        <div class="viz2-whatsnew-card">
+          <div class="vn-icon">🔀</div>
+          <div class="vn-body">
+            <div class="vn-title">Permutation Test</div>
+            <div class="vn-desc">Shuffle a node attribute (optionally within blocks) and get a one-sided p-value vs the observed statistic.</div>
+          </div>
+        </div>
+        <div class="viz2-whatsnew-card">
+          <div class="vn-icon">✏</div>
+          <div class="vn-body">
+            <div class="vn-title">Scenarios</div>
+            <div class="vn-desc">＋N adds a node by clicking the stage; ＋E adds an edge by clicking two nodes. Save what-if bundles in your browser.</div>
+          </div>
+        </div>
+        <div class="viz2-whatsnew-card">
+          <div class="vn-icon">🔎</div>
+          <div class="vn-body">
+            <div class="vn-title">Browse Nodes</div>
+            <div class="vn-desc">Searchable, sortable table of every node — and Zoom to Node from the Selected card when the graph is too dense to click into.</div>
+          </div>
+        </div>
+        <div class="viz2-whatsnew-card">
+          <div class="vn-icon">📐</div>
+          <div class="vn-body">
+            <div class="vn-title">Group Composition</div>
+            <div class="vn-desc">Switch the grouping variable for the whole network, see a per-group bar chart, and the course Similarity Index.</div>
+          </div>
+        </div>
+        <div class="viz2-whatsnew-card">
+          <div class="vn-icon">🎓</div>
+          <div class="vn-body">
+            <div class="vn-title">Tutorial Walkthrough</div>
+            <div class="vn-desc">A guided tour of every card — click the green button up top any time you want to re-orient.</div>
+          </div>
+        </div>
+      </div>
     </div>
   </details>
 
@@ -699,7 +791,7 @@ select.viz-select {
       </details>
 
       <details class="viz-panel agg-panel">
-        <summary>🧪 Aggregate <span class="agg-tag">experimental</span></summary>
+        <summary>🧪 Aggregate</summary>
         <div class="agg-body">
           <div class="color-by-row">
             <label for="aggregate-by">Aggregate by node trait</label>
@@ -758,16 +850,16 @@ select.viz-select {
         </div>
         <div id="group-legend" class="group-legend"></div>
         <datalist id="viz-swatches"></datalist>
-        <div class="toggle-row" data-toggle="labels">Node labels<div class="toggle on"></div></div>
-        <div class="toggle-row" data-toggle="edges">Edge weight labels<div class="toggle"></div></div>
-        <div class="toggle-row" data-toggle="weights">Weight degree &amp; betweenness<div class="toggle"></div></div>
-        <div class="toggle-row" data-toggle="isolates">Drop isolates<div class="toggle on"></div></div>
-        <div class="toggle-row" data-toggle="drift">Live drift<div class="toggle"></div></div>
+        <!-- Time Filter lives in Display (it's a view concern, not a tunable). -->
+        <div id="time-slider-wrap" class="slider-row" style="margin-top:8px;">
+          <div class="lbl"><span>Time filter (≤)</span><span class="v" id="time-slider-val">—</span></div>
+          <input type="range" id="time-slider">
+        </div>
         </div>
       </details>
 
-      <details class="viz-panel agg-panel" data-card="tunables">
-        <summary>🎚 Tunables</summary>
+      <details class="viz-panel agg-panel" data-card="settings">
+        <summary>⚙ Settings</summary>
         <div class="agg-body">
         <div class="slider-row">
           <div class="lbl"><span>Node size scale</span><span class="v" id="node-scale-val">1.0x</span></div>
@@ -777,10 +869,12 @@ select.viz-select {
           <div class="lbl"><span>Edge weight threshold</span><span class="v" id="thresh-val">0.0</span></div>
           <input type="range" min="0" max="100" value="0" id="edge-thresh">
         </div>
-        <div id="time-slider-wrap" class="slider-row">
-          <div class="lbl"><span>Time filter (≤)</span><span class="v" id="time-slider-val">—</span></div>
-          <input type="range" id="time-slider">
-        </div>
+        <!-- Toggles relocated from Display (less visual-thematic, more behavioral). -->
+        <div class="toggle-row" data-toggle="labels">Node labels<div class="toggle on"></div></div>
+        <div class="toggle-row" data-toggle="edges">Edge weight labels<div class="toggle"></div></div>
+        <div class="toggle-row" data-toggle="weights">Weight degree &amp; betweenness<div class="toggle"></div></div>
+        <div class="toggle-row" data-toggle="isolates">Drop isolates<div class="toggle on"></div></div>
+        <div class="toggle-row" data-toggle="drift">Live drift<div class="toggle"></div></div>
         </div>
       </details>
 
@@ -796,15 +890,15 @@ select.viz-select {
               <div class="stage-title">Your Network <span style="color:#fbbf24;letter-spacing:0.18em;">· V2</span></div>
             </div>
             <div class="stage-actions">
-              <!-- v2: scenario-tool buttons (handled by viz2-scenarios.js) -->
+              <!-- Download PNG sits left of the scenario buttons so the
+                   download intent reads ahead of any of the "add to graph" tools. -->
+              <button class="viz-zoom-btn" id="btn-png" title="Download network as PNG image" aria-label="Download network as PNG">💾</button>
               <button class="viz-zoom-btn" id="btn-add-node" title="Click stage to add a scenario node" aria-label="Add node">＋N</button>
               <button class="viz-zoom-btn" id="btn-add-edge" title="Click two nodes to add a scenario edge" aria-label="Add edge">＋E</button>
               <button class="viz-zoom-btn" id="btn-freeze" title="Freeze layout" aria-label="Freeze or re-run layout">❄</button>
               <button class="viz-zoom-btn" id="btn-zoom-in" title="Zoom in" aria-label="Zoom in">＋</button>
               <button class="viz-zoom-btn" id="btn-zoom-out" title="Zoom out" aria-label="Zoom out">－</button>
               <button class="viz-zoom-btn" id="btn-fit" title="Fit network to view" aria-label="Fit to view">⤢</button>
-              <!-- v2: Export PNG moved onto the stage toolbar so it's one click from the graph. -->
-              <button class="viz-zoom-btn" id="btn-png" title="Export current view as PNG" aria-label="Export PNG">⤓</button>
             </div>
           </div>
           <div class="stats-overlay">
@@ -823,26 +917,30 @@ select.viz-select {
       <!-- v2: Disruption + Group Coverage in row 1 (both are about live network damage). -->
       <div class="analysis-row">
         <details open class="analysis-card agg-panel" data-card="disruption" id="viz2-disruption-card">
-          <summary>🧨 Disruption Stats <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
+          <summary>🧨 Disruption Stats</summary>
           <div class="agg-body"><div class="card-body"><div class="node-empty">Load a network to see disruption stats.</div></div></div>
         </details>
         <details class="analysis-card agg-panel" data-card="coverage" id="viz2-coverage-panel">
-          <summary>🛡 Group Coverage <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
+          <summary>🛡 Group Coverage</summary>
           <div class="agg-body"><div id="viz2-coverage-body"><div class="node-empty">Pick a group column to see coverage.</div></div></div>
         </details>
       </div>
 
-      <!-- v2: Counterfactuals + Permutation Test in row 2 (both are inference). -->
-      <div class="analysis-row">
-        <details class="analysis-card agg-panel" data-card="counterfactuals" id="viz2-montecarlo-card">
-          <summary>🎲 Counterfactuals <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
-          <div class="agg-body"><div class="card-body"><div class="node-empty">Load a network to enable counterfactuals.</div></div></div>
-        </details>
-        <details class="analysis-card agg-panel" data-card="permutation" id="viz2-permutation-card">
-          <summary>🔀 Permutation Test <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
-          <div class="agg-body"><div class="card-body"><div class="node-empty">Load a network with a group column to enable permutation tests.</div></div></div>
-        </details>
-      </div>
+      <!-- Counterfactuals / Permutation / Group Composition each get their
+           OWN full-width row — collapsed by default. Their internal charts
+           and multi-select widgets need the room. -->
+      <details class="analysis-card agg-panel" data-card="counterfactuals" id="viz2-montecarlo-card" style="margin-top:16px;">
+        <summary>🎲 Counterfactuals</summary>
+        <div class="agg-body"><div class="card-body"><div class="node-empty">Load a network to enable counterfactuals.</div></div></div>
+      </details>
+      <details class="analysis-card agg-panel" data-card="permutation" id="viz2-permutation-card" style="margin-top:16px;">
+        <summary>🔀 Permutation Test</summary>
+        <div class="agg-body"><div class="card-body"><div class="node-empty">Load a network with a group column to enable permutation tests.</div></div></div>
+      </details>
+      <details class="analysis-card agg-panel" data-card="group-composition" id="viz2-group-composition-card" style="margin-top:16px;">
+        <summary>📐 Group Composition</summary>
+        <div class="agg-body" id="viz2-group-composition-body"><div class="node-empty">Loading group composition…</div></div>
+      </details>
     </div>
 
     <!-- ── RIGHT: node inspector first (closest to graph), then v2 stats ── -->
@@ -868,14 +966,14 @@ select.viz-select {
       <!-- v2: Scenarios moved from the left column so it sits under Selected Node
            (paired with the +N / +E buttons on the graph toolbar). -->
       <details class="viz-panel agg-panel" data-card="scenarios" id="viz2-scenarios-panel">
-        <summary>✏ Scenarios <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
+        <summary>✏ Scenarios</summary>
         <div class="node-empty">Loading scenario editor…</div>
       </details>
 
       <!-- v2: Network Stats with Formulas nested as a default-collapsed sub-card
            so a student wondering "what's betweenness?" can press ▸ in place. -->
       <details class="viz-panel agg-panel" data-card="network-stats" id="viz2-network-stats-panel">
-        <summary>📈 Network Stats <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
+        <summary>📈 Network Stats</summary>
         <div class="agg-body">
           <div id="viz2-network-stats-body">
             <div class="node-empty">Load a network to see stats.</div>
@@ -889,16 +987,8 @@ select.viz-select {
         </div>
       </details>
 
-      <!-- v2: Group Composition (NEW — replaces standalone Similarity Index card).
-           Mounted by viz2-grouping.js: dropdown to switch the active grouping
-           variable for the WHOLE network, plus a per-group bar chart of edge
-           weight share and a small Similarity Index footer. -->
-      <details class="viz-panel agg-panel" data-card="group-composition" id="viz2-group-composition-card">
-        <summary>📐 Group Composition <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
-        <div class="agg-body" id="viz2-group-composition-body">
-          <div class="node-empty">Loading group composition…</div>
-        </div>
-      </details>
+      <!-- Group Composition moved into the center column as a full-width
+           analysis card (its bar charts needed the room). -->
 
       <details class="viz-panel agg-panel" data-card="top-degree">
         <summary>📊 Top Degree <span style="color:var(--grey-dim);font-size:9px;letter-spacing:0.1em;text-transform:none;">(count)</span></summary>
@@ -921,7 +1011,7 @@ select.viz-select {
       <!-- v2: Browse Nodes (NEW). Mounted by viz2-nodebrowser.js: search input
            + sortable table of nodes; clicking a row selects that node on the graph. -->
       <details class="viz-panel agg-panel" data-card="node-browser" id="viz2-node-browser-panel">
-        <summary>🔎 Browse Nodes <span class="agg-tag" style="color:#fbbf24;border-color:#fbbf24;">v2</span></summary>
+        <summary>🔎 Browse Nodes</summary>
         <div class="agg-body" id="viz2-node-browser-body">
           <div class="node-empty">Loading node browser…</div>
         </div>
@@ -943,16 +1033,16 @@ select.viz-select {
      Driver.js loaded from cdnjs (same CDN as d3/papaparse → allow-listed). -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/driver.js/1.3.1/driver.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/driver.js/1.3.1/driver.js.iife.js" defer></script>
-<script src="assets/viz2-core.js?v=20260630c" defer></script>
-<script src="assets/viz2-metrics.js?v=20260630c" defer></script>
-<script src="assets/viz2-removal.js?v=20260630c" defer></script>
-<script src="assets/viz2-coverage.js?v=20260630c" defer></script>
-<script src="assets/viz2-scenarios.js?v=20260630c" defer></script>
-<script src="assets/viz2-montecarlo.js?v=20260630c" defer></script>
-<script src="assets/viz2-permutation.js?v=20260630c" defer></script>
-<script src="assets/viz2-grouping.js?v=20260630c" defer></script>
-<script src="assets/viz2-nodebrowser.js?v=20260630c" defer></script>
-<script src="assets/viz2-tutorial.js?v=20260630c" defer></script>
+<script src="assets/viz2-core.js?v=20260630d" defer></script>
+<script src="assets/viz2-metrics.js?v=20260630d" defer></script>
+<script src="assets/viz2-removal.js?v=20260630d" defer></script>
+<script src="assets/viz2-coverage.js?v=20260630d" defer></script>
+<script src="assets/viz2-scenarios.js?v=20260630d" defer></script>
+<script src="assets/viz2-montecarlo.js?v=20260630d" defer></script>
+<script src="assets/viz2-permutation.js?v=20260630d" defer></script>
+<script src="assets/viz2-grouping.js?v=20260630d" defer></script>
+<script src="assets/viz2-nodebrowser.js?v=20260630d" defer></script>
+<script src="assets/viz2-tutorial.js?v=20260630d" defer></script>
 <script>
 // v2 card state persistence — restores each <details data-card="..."> from
 // localStorage and writes back on toggle. Wraps in try/catch since Safari

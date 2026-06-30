@@ -111,6 +111,154 @@
     },
   ];
 
+  // ── style injection ─────────────────────────────────────────
+  // Driver.js ships a light-blue/white stock sheet; override it to match the
+  // netsci dark/neon-green palette (design tokens in assets/design.css).
+  // Injected once, on first tour run, so we don't add CSS until needed.
+  function injectTutorialCss() {
+    if (document.getElementById('viz2-tutorial-css')) return;
+    const css = `
+      /* Driver.js overlay — darker than default for contrast on dark theme. */
+      .driver-overlay {
+        fill: #050a05 !important;
+      }
+
+      /* Popover card */
+      .driver-popover {
+        background: rgba(5, 10, 5, 0.96) !important;
+        color: #d1fae5 !important;
+        border: 1px solid rgba(57, 255, 20, 0.55) !important;
+        border-radius: 8px !important;
+        box-shadow: 0 0 24px rgba(57, 255, 20, 0.18),
+                    0 8px 32px rgba(0, 0, 0, 0.6) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        font-family: 'DM Sans', system-ui, sans-serif !important;
+        padding: 18px 20px 16px !important;
+        max-width: 340px !important;
+      }
+
+      /* Title — big display font with neon-green underline accent */
+      .driver-popover-title {
+        font-family: 'Bebas Neue', 'Impact', sans-serif !important;
+        color: #f0fdf4 !important;
+        font-size: 20px !important;
+        font-weight: 400 !important;
+        letter-spacing: 0.06em !important;
+        line-height: 1.15 !important;
+        margin: 0 0 10px !important;
+        padding-bottom: 8px !important;
+        border-bottom: 1px solid rgba(57, 255, 20, 0.35) !important;
+      }
+
+      /* Body description */
+      .driver-popover-description {
+        font-family: 'DM Sans', system-ui, sans-serif !important;
+        color: #a7f3d0 !important;
+        font-size: 13.5px !important;
+        line-height: 1.5 !important;
+        margin: 0 !important;
+      }
+
+      /* Footer wraps progress + buttons */
+      .driver-popover-footer {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-top: 14px !important;
+        padding-top: 12px !important;
+        border-top: 1px solid rgba(57, 255, 20, 0.12) !important;
+      }
+
+      /* Step counter */
+      .driver-popover-progress-text {
+        font-family: 'Space Mono', 'JetBrains Mono', ui-monospace, monospace !important;
+        color: #a3b8a3 !important;
+        font-size: 10.5px !important;
+        letter-spacing: 0.1em !important;
+        text-transform: uppercase !important;
+      }
+
+      /* Generic button base — matches .viz-btn from visualizer2.html */
+      .driver-popover-navigation-btns button,
+      .driver-popover-next-btn,
+      .driver-popover-prev-btn,
+      .driver-popover-done-btn {
+        font-family: 'Space Mono', 'JetBrains Mono', ui-monospace, monospace !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.12em !important;
+        text-transform: uppercase !important;
+        padding: 8px 14px !important;
+        border-radius: 6px !important;
+        cursor: pointer !important;
+        transition: all 0.15s !important;
+        text-shadow: none !important;
+      }
+
+      /* Next / Done — primary CTA (green-bright fill, black text) */
+      .driver-popover-next-btn,
+      .driver-popover-done-btn {
+        background: #39FF14 !important;
+        color: #050a05 !important;
+        border: 1px solid #39FF14 !important;
+      }
+      .driver-popover-next-btn:hover,
+      .driver-popover-done-btn:hover {
+        background: #86efac !important;
+        border-color: #86efac !important;
+      }
+
+      /* Back — ghost (transparent + green border) */
+      .driver-popover-prev-btn {
+        background: transparent !important;
+        color: #39FF14 !important;
+        border: 1px solid #39FF14 !important;
+      }
+      .driver-popover-prev-btn:hover {
+        background: rgba(57, 255, 20, 0.1) !important;
+      }
+
+      /* Close (✕) — top-right, neutral */
+      .driver-popover-close-btn {
+        color: #a3b8a3 !important;
+        font-size: 20px !important;
+        font-weight: 400 !important;
+        opacity: 0.7 !important;
+        transition: all 0.15s !important;
+        background: transparent !important;
+        border: none !important;
+        padding: 4px 8px !important;
+        top: 8px !important;
+        right: 8px !important;
+      }
+      .driver-popover-close-btn:hover {
+        color: #39FF14 !important;
+        opacity: 1 !important;
+      }
+
+      /* Arrows — recolor to match the popover border. Driver.js v1.3.1 uses
+         per-side classes; cover all four. The arrow is a CSS triangle built
+         from border colors, so override the relevant border side. */
+      .driver-popover-arrow-side-left.driver-popover-arrow {
+        border-left-color: rgba(57, 255, 20, 0.55) !important;
+      }
+      .driver-popover-arrow-side-right.driver-popover-arrow {
+        border-right-color: rgba(57, 255, 20, 0.55) !important;
+      }
+      .driver-popover-arrow-side-top.driver-popover-arrow {
+        border-top-color: rgba(57, 255, 20, 0.55) !important;
+      }
+      .driver-popover-arrow-side-bottom.driver-popover-arrow {
+        border-bottom-color: rgba(57, 255, 20, 0.55) !important;
+      }
+    `;
+    const style = document.createElement('style');
+    style.id = 'viz2-tutorial-css';
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
   // ── helpers ─────────────────────────────────────────────────
 
   // Read/write the shared card-state map without throwing in Safari private mode.
@@ -175,6 +323,7 @@
       return;
     }
 
+    injectTutorialCss();
     await ensureGraphLoaded();
     const prevCards = expandAllCards();
 

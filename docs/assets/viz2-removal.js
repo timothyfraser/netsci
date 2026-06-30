@@ -148,6 +148,7 @@
     slot.innerHTML = `
       <div class="btn-row" style="margin-top: 10px;">
         <button class="${btnCls}" id="viz2-removal-toggle" style="flex:1;">${btnTxt}</button>
+        <button class="viz-btn viz-btn-ghost" id="viz2-zoom-to-node" title="Zoom to this node + 2 hops">🔍 Zoom</button>
       </div>
       <div style="font-family: var(--font-mono); font-size: 10px; color: var(--grey-dim);
                   line-height: 1.5; margin-top: 6px; letter-spacing: 0.04em;">
@@ -155,6 +156,56 @@
       </div>`;
     const btn = document.getElementById('viz2-removal-toggle');
     if (btn) btn.addEventListener('click', () => toggleRemoval(id));
+    const zoomBtn = document.getElementById('viz2-zoom-to-node');
+    if (zoomBtn) zoomBtn.addEventListener('click', () => zoomToNode(id));
+  }
+
+  // Zoom the SVG viewport to fit the selected node + its 2-hop neighborhood.
+  // Useful when the user picked a row from Browse Nodes on a dense graph —
+  // they need a way to actually SEE which dot got selected.
+  function zoomToNode(id) {
+    if (!state.graph || !state.zoom) return;
+    const svgEl = document.getElementById('graph'); if (!svgEl) return;
+    const W = svgEl.clientWidth, H = svgEl.clientHeight;
+
+    // BFS 2 hops from id over the active subgraph.
+    const ids = new Set([id]);
+    const adj = Object.create(null);
+    state.graph.nodes.forEach((nn) => { adj[nn.id] = []; });
+    state.graph.links.forEach((l) => {
+      const s = typeof l.source === 'object' ? l.source.id : l.source;
+      const t = typeof l.target === 'object' ? l.target.id : l.target;
+      if (state.removedNodes.has(s) || state.removedNodes.has(t)) return;
+      adj[s] && adj[s].push(t);
+      adj[t] && adj[t].push(s);
+    });
+    let frontier = [id];
+    for (let d = 0; d < 2 && frontier.length; d++) {
+      const next = [];
+      frontier.forEach((u) => (adj[u] || []).forEach((v) => {
+        if (!ids.has(v)) { ids.add(v); next.push(v); }
+      }));
+      frontier = next;
+    }
+
+    // Bounding box of those nodes' x/y; pad and fit.
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    state.graph.nodes.forEach((nn) => {
+      if (!ids.has(nn.id)) return;
+      if (!isFinite(nn.x) || !isFinite(nn.y)) return;
+      if (nn.x < minX) minX = nn.x; if (nn.x > maxX) maxX = nn.x;
+      if (nn.y < minY) minY = nn.y; if (nn.y > maxY) maxY = nn.y;
+    });
+    if (!isFinite(minX)) return;
+    const pad = 80;
+    const cw = Math.max(40, maxX - minX), ch = Math.max(40, maxY - minY);
+    let scale = Math.min((W - 2 * pad) / cw, (H - 2 * pad) / ch);
+    scale = Math.max(0.5, Math.min(scale, 4));
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    const d3sel = window.d3 ? window.d3.select(svgEl) : null;
+    if (!d3sel) return;
+    const t = window.d3.zoomIdentity.translate(W / 2 - scale * cx, H / 2 - scale * cy).scale(scale);
+    d3sel.transition().duration(450).call(state.zoom.transform, t);
   }
 
   // The core mutation. CRITICAL: no layout(), no unfix(), no simulation touch.

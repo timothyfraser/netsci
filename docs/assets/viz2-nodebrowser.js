@@ -10,7 +10,6 @@
   if (!window.NetSciViz2) return;
 
   const V = window.NetSciViz2;
-  const PAGE_SIZE = 100;
   const DEBOUNCE_MS = 80;
 
   // Local UI state — kept inside the IIFE so other modules can't trip on it.
@@ -97,8 +96,9 @@
     }
 
     const { rows, totalActive } = buildRows();
-    const shown = rows.slice(0, PAGE_SIZE);
-    const truncated = rows.length - shown.length;
+    // Render every match; the .viz2-node-table-wrap caps height with a
+    // scrollbar so the table doesn't blow out the card vertically.
+    const shown = rows;
     const selected = V.state.selectedNode;
     const metrics = V.state.metrics || {};
 
@@ -123,18 +123,15 @@
       );
     }).join('');
 
-    const footer = truncated > 0
-      ? `<div class="node-empty" style="padding:6px 0 0;">+ ${truncated} more — refine the filter.</div>`
-      : '';
-
     root.innerHTML =
       `<input type="text" class="viz2-node-search" placeholder="🔎 Type to filter by id / label / group…" value="${esc(ui.query)}">` +
       `<div class="t-label" style="margin:6px 0 2px;">${rows.length} matches (of ${totalActive} total active)</div>` +
-      '<table class="viz2-node-table">' +
-        `<thead><tr>${headerRow}</tr></thead>` +
-        `<tbody>${body}</tbody>` +
-      '</table>' +
-      footer;
+      '<div class="viz2-node-table-wrap">' +
+        '<table class="viz2-node-table">' +
+          `<thead><tr>${headerRow}</tr></thead>` +
+          `<tbody>${body}</tbody>` +
+        '</table>' +
+      '</div>';
 
     wireEvents(root);
   }
