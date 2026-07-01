@@ -110,10 +110,10 @@ kinds of nodes — do a one-mode projection.
 You'll submit:
 
 1. `project.R` or `project.py` with the full pipeline.
-2. A short report (2 pages minimum, your own words, not AI-generated)
-   stating the question, the network's operationalization, the
-   procedure, and results as numeric quantities of interest in prose
-   with supporting tables/figures.
+2. A short report (5 pages minimum of text — figures and tables don't
+   count; your own words, not AI-generated) stating the question, the
+   network's operationalization, the procedure, and results as numeric
+   quantities of interest in prose with supporting tables/figures.
 
 ### Suggested project questions
 
