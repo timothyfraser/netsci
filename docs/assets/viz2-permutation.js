@@ -43,6 +43,7 @@
     blockSet:  new Set(),
     stat:      'similarity',
     reps:      100,
+    nBins:     24,        // histogram bin count — driven by the N bins dropdown
     timeSlice: ''         // '' = all time
   };
   let running = false;
@@ -377,12 +378,19 @@
         </label>
         <select id="viz2-perm-stat" class="viz-select">${statOpts.join('')}</select>
       </div>
-      <div class="color-by-row">
-        <label for="viz2-perm-reps"># replicates</label>
-        <select id="viz2-perm-reps" class="viz-select">
+      <div class="color-by-row" style="display:flex; gap:12px; align-items:center;">
+        <label for="viz2-perm-reps" style="min-width:80px;"># replicates</label>
+        <select id="viz2-perm-reps" class="viz-select" style="flex:1;">
           <option value="100"${ui.reps === 100  ? ' selected' : ''}>100 (quick check)</option>
           <option value="500"${ui.reps === 500  ? ' selected' : ''}>500 (solid)</option>
           <option value="1000"${ui.reps === 1000 ? ' selected' : ''}>1000 (defensible p-value)</option>
+        </select>
+        <label for="viz2-perm-bins" style="margin-left:6px;">N bins</label>
+        <select id="viz2-perm-bins" class="viz-select" style="flex:0 0 auto;">
+          <option value="12"${ui.nBins === 12 ? ' selected' : ''}>12</option>
+          <option value="24"${ui.nBins === 24 ? ' selected' : ''}>24</option>
+          <option value="48"${ui.nBins === 48 ? ' selected' : ''}>48</option>
+          <option value="80"${ui.nBins === 80 ? ' selected' : ''}>80</option>
         </select>
       </div>
       <div class="btn-row" style="margin-top: 4px;">
@@ -453,6 +461,13 @@
     if (repsInp) repsInp.addEventListener('change', (e) => {
       const v = parseInt(e.target.value, 10);
       if (v === 100 || v === 500 || v === 1000) ui.reps = v;
+    });
+    // N bins re-renders the LAST run's histogram (if any) so the new bin
+    // count takes effect immediately without forcing a re-run.
+    const binsSel = $('viz2-perm-bins');
+    if (binsSel) binsSel.addEventListener('change', (e) => {
+      ui.nBins = parseInt(e.target.value, 10) || 24;
+      if (lastResult) drawDist(lastResult);
     });
     const runBtn = $('viz2-perm-run');
     if (runBtn) runBtn.addEventListener('click', () => { runPermutation().catch((err) => {
@@ -572,8 +587,9 @@
     const pad = (hi - lo) * 0.06 || (Math.abs(hi) || 1) * 0.02;
     const x = d3.scaleLinear().domain([lo - pad, hi + pad]).range([0, iW]);
 
-    const nBins = Math.min(28, Math.max(8, Math.floor(samples.length / 8)));
-    const bins = d3.bin().domain(x.domain()).thresholds(x.ticks(nBins))(samples);
+    // User's N bins from the dropdown. Was previously a data-size heuristic;
+    // now the dropdown ("Fewer / Normal / More" via 12 / 24 / 48 / 80) drives it.
+    const bins = d3.bin().domain(x.domain()).thresholds(x.ticks(ui.nBins))(samples);
     const maxC = Math.max(1, ...bins.map((b) => b.length));
     const y = d3.scaleLinear().domain([0, maxC]).range([iH, 0]);
 

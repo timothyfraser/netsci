@@ -20,10 +20,10 @@
                               .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   // Brand palette (match counterfactual.html dual histogram).
-  const COLOR_BASE  = '#818cf8';   // indigo — baseline distribution
-  const COLOR_TREAT = '#39FF14';   // neon green — treated distribution
-  const COLOR_DIFF  = '#fbbf24';   // amber — difference distribution + CI lines
-  const COLOR_OBS   = '#f472b6';   // pink — observed (unperturbed) reference
+  const COLOR_BASE  = '#818cf8';   // indigo — baseline distribution + obs(B)
+  const COLOR_TREAT = '#39FF14';   // neon green — treated distribution + obs(T)
+  const COLOR_DIFF  = '#fb923c';   // orange — difference distribution + obs(Δ)
+  const COLOR_OBS   = '#f472b6';   // pink — legacy; obs lines now use their family color
 
   // ── Metric registry ─────────────────────────────────────────
   // Each entry: { label, scope: 'graph'|'node', compute(adj, ids, opts) }.
@@ -153,8 +153,12 @@
   // ── Local UI state ──────────────────────────────────────────
   let chosenMetric = 'apl_weighted';
   let replicates   = 100;
+  let nBins        = 24;    // histogram bin count — driven by the N Bins dropdown
   let timeSlice    = '';           // '' = all time
   let running      = false;
+  // Snapshot of the last completed run so the N Bins dropdown can re-bin
+  // the histograms without re-simulating. { dist: {mode, base, treat, obs, refs}, diff: same-or-null }
+  let lastRun      = null;
 
   // ── Shared tooltip (Change 4) ───────────────────────────────
   // One DIV in <body>, reused for every chart hover. Mono font + neon-
@@ -342,12 +346,19 @@
         <select id="viz2-mc-metric" class="viz-select">${opts}</select>
       </div>
       ${timeRowHtml}
-      <div class="color-by-row" style="margin-bottom:8px;">
-        <label for="viz2-mc-reps"># replicates</label>
-        <select id="viz2-mc-reps" class="viz-select">
+      <div class="color-by-row" style="margin-bottom:8px; display:flex; gap:12px; align-items:center;">
+        <label for="viz2-mc-reps" style="min-width:80px;"># replicates</label>
+        <select id="viz2-mc-reps" class="viz-select" style="flex:1;">
           <option value="100"${replicates === 100  ? ' selected' : ''}>100 (quick check)</option>
           <option value="500"${replicates === 500  ? ' selected' : ''}>500 (solid)</option>
           <option value="1000"${replicates === 1000 ? ' selected' : ''}>1000 (publishable)</option>
+        </select>
+        <label for="viz2-mc-bins" style="margin-left:6px;">N bins</label>
+        <select id="viz2-mc-bins" class="viz-select" style="flex:0 0 auto;">
+          <option value="12"${nBins === 12 ? ' selected' : ''}>12</option>
+          <option value="24"${nBins === 24 ? ' selected' : ''}>24</option>
+          <option value="48"${nBins === 48 ? ' selected' : ''}>48</option>
+          <option value="80"${nBins === 80 ? ' selected' : ''}>80</option>
         </select>
       </div>
       <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
@@ -358,7 +369,9 @@
         <button id="viz2-mc-png" class="viz-zoom-btn"
                 style="position:absolute; top:4px; right:4px; width:24px; height:24px; font-size:13px; z-index:2;"
                 title="Download chart as PNG" aria-label="Download chart as PNG">💾</button>
+        <div class="viz2-plot-tagline" style="font-family:var(--font-mono);font-size:10px;color:var(--green-mint);letter-spacing:0.06em;margin:8px 0 2px;">Baseline vs. Treated Outcomes with Uncertainty</div>
         <svg class="dist" id="viz2-mc-svg-dist"></svg>
+        <div id="viz2-mc-tagline-diff" class="viz2-plot-tagline" style="font-family:var(--font-mono);font-size:10px;color:var(--green-mint);letter-spacing:0.06em;margin:8px 0 2px;display:none;">Change from Baseline with Uncertainty</div>
         <svg class="dist" id="viz2-mc-svg-diff" style="display:none;"></svg>
       </div>
       <div id="viz2-mc-summary" class="formula-note" style="margin-top:4px;"></div>
@@ -369,10 +382,27 @@
       const v = parseInt(e.target.value, 10);
       if (v === 100 || v === 500 || v === 1000) replicates = v;
     });
+    // N bins re-renders the LAST run's chart (if any) so the new bin count
+    // takes effect immediately without forcing the student to re-simulate.
+    const binsSel = $('viz2-mc-bins');
+    if (binsSel) binsSel.addEventListener('change', (e) => {
+      nBins = parseInt(e.target.value, 10) || 24;
+      redrawLastRun();
+    });
     const slice = $('viz2-mc-slice');
     if (slice) slice.addEventListener('change', (e) => { timeSlice = e.target.value; });
     $('viz2-mc-run').addEventListener('click', run);
     $('viz2-mc-png').addEventListener('click', exportChartPng);
+  }
+
+  // Re-render whichever plots were last drawn, using the CURRENT nBins.
+  // Fired by the N Bins dropdown. Returns silently if no run has completed yet.
+  function redrawLastRun() {
+    if (!lastRun) return;
+    const d = lastRun.dist;
+    if (d) drawDistribution(d.svgId, d.mode, d.base, d.treat, d.obs, d.refs);
+    const f = lastRun.diff;
+    if (f) drawDistribution(f.svgId, f.mode, f.base, f.treat, f.obs, f.refs);
   }
 
   // ── Histogram (dual or single) ──────────────────────────────
@@ -398,7 +428,7 @@
     lo -= pad; hi += pad;
 
     const x = d3.scaleLinear().domain([lo, hi]).range([mL, W - mR]);
-    const binner = d3.bin().domain([lo, hi]).thresholds(24);
+    const binner = d3.bin().domain([lo, hi]).thresholds(nBins);
     const baseBins    = baseFinite.length    ? binner(baseFinite)    : [];
     const treatedBins = treatedFinite.length ? binner(treatedFinite) : [];
     const maxC = Math.max(
@@ -437,22 +467,26 @@
     }
 
     // Reference vertical lines (CI bounds, observed). Each gets its own
-    // tooltip describing what it represents.
+    // tooltip describing what it represents. `wide: true` on a ref → draw
+    // a thicker line (easier to mouse-hover); `low: true` → drop the label
+    // one row lower so it doesn't overlap the 2.5% / 97.5% labels at the top.
     (refLines || []).forEach((r) => {
       if (!isFinite(r.x)) return;
       const xp = x(r.x);
       root.append('line')
         .attr('x1', xp).attr('x2', xp).attr('y1', mT).attr('y2', H - mB)
-        .attr('stroke', r.color).attr('stroke-width', 1.4)
+        .attr('stroke', r.color).attr('stroke-width', r.wide ? 2.6 : 1.4)
         .attr('stroke-dasharray', r.dash || null)
         .style('cursor', 'help')
         .on('mouseover', function (ev) { showTip(`<strong>${esc(r.tipLabel)}:</strong> ${fmt(r.x)}`, ev); })
         .on('mousemove', function (ev) { showTip(`<strong>${esc(r.tipLabel)}:</strong> ${fmt(r.x)}`, ev); })
         .on('mouseout', hideTip);
+      const labelY = mT + 9 + (r.low ? 12 : 0);
       root.append('text')
-        .attr('x', xp + 3).attr('y', mT + 9)
+        .attr('x', xp + 3).attr('y', labelY)
         .attr('font-family', 'Space Mono, monospace').attr('font-size', '9px')
-        .attr('fill', r.color).text(r.label);
+        .attr('fill', r.color).attr('font-weight', r.wide ? 700 : 400)
+        .text(r.label);
     });
 
     // Axis: just min / max ticks to stay terse.
@@ -550,18 +584,22 @@
     const dqLo = isDual ? NV.utils.quantile(diffSamples, 0.025) : NaN;
     const dqHi = isDual ? NV.utils.quantile(diffSamples, 0.975) : NaN;
 
-    // Render charts. Single mode hides the diff chart entirely.
+    // Render charts. Single mode hides the diff chart + tagline entirely.
     const diffSvg = $('viz2-mc-svg-diff');
+    const diffTag = $('viz2-mc-tagline-diff');
     const hintEl  = $('viz2-mc-hint');
     if (isDual) {
       if (diffSvg) diffSvg.style.display = '';
+      if (diffTag) diffTag.style.display = '';
       const distRefs = [
         { x: bqLo,            color: COLOR_BASE,  dash: '3,2', label: 'B 2.5%',  tipLabel: 'Baseline 95% CI lower bound' },
         { x: bqHi,            color: COLOR_BASE,  dash: '3,2', label: 'B 97.5%', tipLabel: 'Baseline 95% CI upper bound' },
         { x: tqLo,            color: COLOR_TREAT, dash: '3,2', label: 'T 2.5%',  tipLabel: 'Treated 95% CI lower bound' },
         { x: tqHi,            color: COLOR_TREAT, dash: '3,2', label: 'T 97.5%', tipLabel: 'Treated 95% CI upper bound' },
-        { x: observedTreated, color: COLOR_OBS,   dash: null,  label: 'obs(T)',  tipLabel: 'Observed treated (no perturbation)' },
-        { x: observedBaseline,color: COLOR_OBS,   dash: '1,2', label: 'obs(B)',  tipLabel: 'Observed baseline (no perturbation)' }
+        // Observed lines: family color, SOLID, THICKER, and labeled one row LOWER
+        // so they don't collide with the 2.5% / 97.5% labels at the top.
+        { x: observedTreated,  color: COLOR_TREAT, dash: null, label: 'obs(T)', tipLabel: 'Observed treated (no perturbation)', wide: true, low: true },
+        { x: observedBaseline, color: COLOR_BASE,  dash: null, label: 'obs(B)', tipLabel: 'Observed baseline (no perturbation)', wide: true, low: true }
       ];
       drawDistribution('viz2-mc-svg-dist', 'dual', baseSamples, treatSamples, observedTreated, distRefs);
 
@@ -570,9 +608,13 @@
         { x: dqLo,    color: COLOR_DIFF,  dash: '3,2', label: '2.5%',  tipLabel: 'Δ 95% CI lower bound' },
         { x: dqHi,    color: COLOR_DIFF,  dash: '3,2', label: '97.5%', tipLabel: 'Δ 95% CI upper bound' },
         { x: 0,       color: '#9ca3af',   dash: '2,3', label: '0',     tipLabel: 'Zero (no effect)' },
-        { x: obsDiff, color: COLOR_OBS,   dash: null,  label: 'obsΔ',  tipLabel: 'Observed Δ (no perturbation)' }
+        { x: obsDiff, color: COLOR_DIFF,  dash: null,  label: 'obs(Δ)', tipLabel: 'Observed Δ (no perturbation)', wide: true, low: true }
       ];
       drawDistribution('viz2-mc-svg-diff', 'diff', diffSamples, null, obsDiff, diffRefs);
+      lastRun = {
+        dist: { svgId: 'viz2-mc-svg-dist', mode: 'dual', base: baseSamples, treat: treatSamples, obs: observedTreated, refs: distRefs },
+        diff: { svgId: 'viz2-mc-svg-diff', mode: 'diff', base: diffSamples, treat: null, obs: obsDiff, refs: diffRefs },
+      };
 
       const sig = (dqLo > 0) || (dqHi < 0);
       const summary = $('viz2-mc-summary');
@@ -586,12 +628,17 @@
       if (hintEl) hintEl.style.display = 'none';
     } else {
       if (diffSvg) diffSvg.style.display = 'none';
+      if (diffTag) diffTag.style.display = 'none';
       const distRefs = [
-        { x: tqLo, color: COLOR_DIFF, dash: '3,2', label: '2.5%',  tipLabel: 'Treated 95% CI lower bound' },
-        { x: tqHi, color: COLOR_DIFF, dash: '3,2', label: '97.5%', tipLabel: 'Treated 95% CI upper bound' },
-        { x: observedTreated, color: COLOR_OBS, dash: null, label: 'obs', tipLabel: 'Observed (no perturbation)' }
+        { x: tqLo, color: COLOR_TREAT, dash: '3,2', label: '2.5%',  tipLabel: 'Treated 95% CI lower bound' },
+        { x: tqHi, color: COLOR_TREAT, dash: '3,2', label: '97.5%', tipLabel: 'Treated 95% CI upper bound' },
+        { x: observedTreated, color: COLOR_TREAT, dash: null, label: 'obs', tipLabel: 'Observed (no perturbation)', wide: true, low: true }
       ];
       drawDistribution('viz2-mc-svg-dist', 'single', treatSamples, null, observedTreated, distRefs);
+      lastRun = {
+        dist: { svgId: 'viz2-mc-svg-dist', mode: 'single', base: treatSamples, treat: null, obs: observedTreated, refs: distRefs },
+        diff: null,
+      };
 
       const summary = $('viz2-mc-summary');
       if (summary) {
