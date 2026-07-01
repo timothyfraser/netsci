@@ -59,7 +59,8 @@ The number is printed at the bottom of either example script.
 
 If you pick this case study, you'll view your own network at multiple
 resolutions and report which one reveals signal. Submission:
-`project.R`/`project.py` + a 2-page-minimum report in your own words.
+`project.R`/`project.py` + a 5-page-minimum report (text only —
+figures and tables don't count) in your own words.
 
 ### Suggested project questions
 
