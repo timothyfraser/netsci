@@ -378,15 +378,17 @@
         </label>
         <select id="viz2-perm-stat" class="viz-select">${statOpts.join('')}</select>
       </div>
-      <div class="color-by-row" style="display:flex; flex-direction:row; flex-wrap:nowrap; gap:10px; align-items:center;">
-        <label for="viz2-perm-reps" style="flex:0 0 auto; margin:0;"># replicates</label>
-        <select id="viz2-perm-reps" class="viz-select" style="flex:1; min-width:0;">
+      <div class="color-by-row">
+        <label for="viz2-perm-reps"># replicates</label>
+        <select id="viz2-perm-reps" class="viz-select">
           <option value="100"${ui.reps === 100  ? ' selected' : ''}>100 (quick check)</option>
           <option value="500"${ui.reps === 500  ? ' selected' : ''}>500 (solid)</option>
           <option value="1000"${ui.reps === 1000 ? ' selected' : ''}>1000 (defensible p-value)</option>
         </select>
-        <label for="viz2-perm-bins" style="flex:0 0 auto; margin:0;">N bins</label>
-        <select id="viz2-perm-bins" class="viz-select" style="flex:0 0 auto;">
+      </div>
+      <div class="color-by-row">
+        <label for="viz2-perm-bins">N bins</label>
+        <select id="viz2-perm-bins" class="viz-select">
           <option value="12"${ui.nBins === 12 ? ' selected' : ''}>12</option>
           <option value="24"${ui.nBins === 24 ? ' selected' : ''}>24</option>
           <option value="48"${ui.nBins === 48 ? ' selected' : ''}>48</option>
