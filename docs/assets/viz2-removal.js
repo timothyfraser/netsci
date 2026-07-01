@@ -145,10 +145,42 @@
     const hint = isRemoved
       ? 'Restoring keeps the node where it was — no layout re-run.'
       : 'Removing keeps coordinates pinned for before/after comparison.';
+    // Selected-Edges dropdown + tabulation of edges by hop-distance from the
+    // selected node. Hop classification is computed by computeSelectedHops();
+    // the dropdown just picks which single depth to highlight (0 = None).
+    const hopFocus = state.selectedHopFocus || 0;
+    const counts   = state.selectedHopCounts || {};
+    // Total active edges (excludes edges with a removed endpoint).
+    let totalEdges = 0;
+    state.graph.links.forEach((l) => {
+      const s = typeof l.source === 'object' ? l.source.id : l.source;
+      const t = typeof l.target === 'object' ? l.target.id : l.target;
+      if (!state.removedNodes.has(s) && !state.removedNodes.has(t)) totalEdges++;
+    });
+    const hopOpts = [0, 1, 2, 3, 4, 5, 6].map((k) => {
+      const label = k === 0 ? 'None' : (k + '° · ' + (counts[k] || 0) + ' edge' + ((counts[k] || 0) === 1 ? '' : 's'));
+      return `<option value="${k}"${k === hopFocus ? ' selected' : ''}>${label}</option>`;
+    }).join('');
+    const rowsHtml = [1, 2, 3, 4, 5, 6].map((k) => {
+      const c = counts[k] || 0;
+      const pct = totalEdges > 0 ? (100 * c / totalEdges).toFixed(1) : '0.0';
+      const activeCls = k === hopFocus ? ' style="color:#fef08a;"' : '';
+      return `<div${activeCls}><span style="color:var(--grey-dim);">${k}°</span> ${c} <span style="color:var(--grey-dim);">(${pct}%)</span></div>`;
+    }).join('');
+
     slot.innerHTML = `
       <div class="btn-row" style="margin-top: 10px;">
         <button class="${btnCls}" id="viz2-removal-toggle" style="flex:1;">${btnTxt}</button>
         <button class="viz-btn viz-btn-ghost" id="viz2-zoom-to-node" title="Zoom to this node + 2 hops">🔍 Zoom</button>
+      </div>
+      <div class="color-by-row" style="margin-top: 10px; margin-bottom: 0;">
+        <label for="viz2-selected-hop">Selected Edges</label>
+        <select id="viz2-selected-hop" class="viz-select">${hopOpts}</select>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:6px;
+                  font-family: var(--font-mono); font-size: 10.5px;
+                  color: var(--green-mint); margin-top: 6px;">
+        ${rowsHtml}
       </div>
       <div style="font-family: var(--font-mono); font-size: 10px; color: var(--grey-dim);
                   line-height: 1.5; margin-top: 6px; letter-spacing: 0.04em;">
@@ -158,6 +190,72 @@
     if (btn) btn.addEventListener('click', () => toggleRemoval(id));
     const zoomBtn = document.getElementById('viz2-zoom-to-node');
     if (zoomBtn) zoomBtn.addEventListener('click', () => zoomToNode(id));
+    const hopSel = document.getElementById('viz2-selected-hop');
+    if (hopSel) hopSel.addEventListener('change', (e) => {
+      state.selectedHopFocus = Number(e.target.value) || 0;
+      renderSelectedActions();
+      V.render();
+    });
+  }
+
+  // Compute hop distances from `id` (BFS up to depth MAX_HOP) and classify
+  // every active edge by max(dist(u), dist(v)). Cached in state so both the
+  // tabulation and the render-time highlight can read the same map.
+  const MAX_HOP = 6;
+  function computeSelectedHops() {
+    if (!state.graph || !state.selectedNode) {
+      state.selectedHopByEdge = null;
+      state.selectedHopCounts = null;
+      return;
+    }
+    const id = state.selectedNode;
+    // Active id set + BFS adjacency
+    const activeIds = new Set();
+    state.graph.nodes.forEach((n) => { if (!state.removedNodes.has(n.id)) activeIds.add(n.id); });
+    if (!activeIds.has(id)) {
+      state.selectedHopByEdge = null;
+      state.selectedHopCounts = null;
+      return;
+    }
+    const adj = Object.create(null);
+    activeIds.forEach((nid) => { adj[nid] = []; });
+    state.graph.links.forEach((l) => {
+      const s = typeof l.source === 'object' ? l.source.id : l.source;
+      const t = typeof l.target === 'object' ? l.target.id : l.target;
+      if (!activeIds.has(s) || !activeIds.has(t)) return;
+      adj[s].push(t); adj[t].push(s);
+    });
+    // BFS up to MAX_HOP
+    const dist = Object.create(null);
+    dist[id] = 0;
+    const q = [id]; let qi = 0;
+    while (qi < q.length) {
+      const u = q[qi++];
+      if (dist[u] >= MAX_HOP) continue;
+      for (const v of adj[u]) {
+        if (dist[v] === undefined) {
+          dist[v] = dist[u] + 1;
+          q.push(v);
+        }
+      }
+    }
+    // Classify each active edge by max(dist(u), dist(v)); an edge with either
+    // endpoint further than MAX_HOP is unclassified and ignored.
+    const byEdge = new Map();
+    const counts = {}; for (let d = 1; d <= MAX_HOP; d++) counts[d] = 0;
+    state.graph.links.forEach((l) => {
+      const s = typeof l.source === 'object' ? l.source.id : l.source;
+      const t = typeof l.target === 'object' ? l.target.id : l.target;
+      if (!activeIds.has(s) || !activeIds.has(t)) return;
+      const du = dist[s], dv = dist[t];
+      if (du === undefined || dv === undefined) return;
+      const d = Math.max(du, dv);
+      if (d < 1 || d > MAX_HOP) return;
+      byEdge.set(l, d);
+      counts[d]++;
+    });
+    state.selectedHopByEdge = byEdge;
+    state.selectedHopCounts = counts;
   }
 
   // Zoom the SVG viewport to fit the selected node + its 2-hop neighborhood.
@@ -324,16 +422,27 @@
   // every removal toggle.
   on('graph-loaded', () => {
     state.removedNodes = new Set();
-    baseline = null;          // force recompute on next render
+    state.selectedHopFocus = 0;  // reset the Selected-Edges dropdown too
+    baseline = null;             // force recompute on next render
+    computeSelectedHops();
     renderSelectedActions();
     renderDisruptionCard();
   });
   on('view-rebuilt', () => {
-    baseline = null;          // aggregation / group-col / threshold may shift things
+    baseline = null;             // aggregation / group-col / threshold may shift things
+    computeSelectedHops();
     renderSelectedActions();
     renderDisruptionCard();
   });
   on('node-selected', () => {
+    computeSelectedHops();       // BFS from the newly-selected node
+    renderSelectedActions();
+    // if the user had a Selected-Edges depth focus set, the render also needs
+    // the new hop map — the caller (viz2-core's click handler) already calls
+    // render(), so we don't need to re-render here.
+  });
+  on('removed-changed', () => {
+    computeSelectedHops();       // active subgraph changed → reclassify edges
     renderSelectedActions();
   });
   // metrics-updated fires from computeMetrics(). If WE triggered it via
