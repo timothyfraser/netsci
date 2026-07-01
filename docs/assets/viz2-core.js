@@ -53,6 +53,9 @@
     removedNodes: new Set(),          // ids removed by Feature B
     scenarioNodes: [],                // {id,label,group,...,isScenario:true}
     scenarioLinks: [],                // {source,target,weight,isScenario:true}
+    selectedHopByEdge: null,          // Map<link_ref, depth 1..6> — set by viz2-removal
+    selectedHopFocus: 0,              // 0 = no highlight; K = highlight depth-K edges only
+    selectedHopCounts: null,          // { 1: N, 2: N, ... 6: N } tabulation
     stageClickMode: null,             // null | 'add-node' | 'add-edge' (Feature D1)
     addEdgePending: null              // first endpoint id when in 'add-edge' mode
   };
@@ -893,12 +896,22 @@
     if (state.zoomTransform) root.attr('transform', state.zoomTransform);
 
     const dens = vlinks.length > 2000 ? 0.4 : vlinks.length > 800 ? 0.6 : 1;
+    // Selected Edges hop-highlight: if state.selectedHopFocus > 0 and there's a
+    // hop-by-edge map, style edges at that depth with a bright color + thicker
+    // stroke so the "cascading influence" out from the selected node is visible.
+    const hopMap    = state.selectedHopByEdge;
+    const hopFocus  = state.selectedHopFocus || 0;
+    const HOP_HL    = '#fef08a';   // bright yellow accent for highlighted-depth edges
+    const isHopLit  = (l) => hopFocus > 0 && hopMap && hopMap.get(l) === hopFocus;
     const g = root.append('g').attr('class', 'links');
     g.selectAll('line').data(vlinks).enter().append('line')
-      .attr('stroke', (l) => l.isScenario ? '#fbbf24' : 'rgba(57,255,20,0.55)')
+      .attr('stroke', (l) => isHopLit(l) ? HOP_HL : (l.isScenario ? '#fbbf24' : 'rgba(57,255,20,0.55)'))
       .attr('stroke-dasharray', (l) => l.isScenario ? '4,3' : null)
-      .attr('stroke-width', (l) => (0.6 + (l.weight / maxW) * 3.5) * (dens < 1 ? 0.7 : 1))
-      .attr('stroke-opacity', (l) => (0.35 + 0.55 * (l.weight / maxW)) * dens)
+      .attr('stroke-width', (l) => {
+        const base = (0.6 + (l.weight / maxW) * 3.5) * (dens < 1 ? 0.7 : 1);
+        return isHopLit(l) ? base * 2.6 : base;
+      })
+      .attr('stroke-opacity', (l) => isHopLit(l) ? 0.95 : (0.35 + 0.55 * (l.weight / maxW)) * dens)
       // Resolve endpoints by id: scenario links pushed after the force sim has
       // stopped still hold string ids (the sim never converted them to node
       // refs), so l.source.x would be undefined → 0 and the line would draw
