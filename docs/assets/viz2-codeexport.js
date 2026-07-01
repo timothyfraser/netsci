@@ -77,6 +77,7 @@
     includeTopN: true,       // Section 6 — top-N by degree AND betweenness
     includeCoverage: true,   // Section 7 — group coverage
     includeDisrupt: true,    // Section 8 — disruption stats (baseline vs live)
+    includeAggregate: true,  // Section 9 — group-aggregation of the network
   };
 
   // ── Snapshot the visualizer's live state ────────────────────
@@ -108,6 +109,12 @@
     // Coverage card's live selections. Default: '' = giant component, 0 = unlimited hops.
     const covRef  = ($('viz2-cov-ref')  || {}).value || '';
     const covHops = parseInt(($('viz2-cov-hops') || {}).value || '0', 10) || 0;
+
+    // Aggregate menu: which trait to aggregate on, sum vs mean, optional time slice.
+    const aggBy   = s.aggregateBy || '';
+    const aggMode = s.aggregateMode || 'sum';
+    const aggTime = s.aggregateTime || '';
+    const timeCol = s.mapping.time || null;
 
     return {
       datasetKey: s.currentDatasetKey || null,
@@ -145,6 +152,7 @@
       // scenarios also skips the Section 2 "apply visualizer edits" block,
       // which is how a user asks for a "just the raw graph" reproducer.
       coverage:  { ref: covRef, hops: covHops },
+      aggregate: { by: aggBy, mode: aggMode, timeSlice: aggTime, timeCol: timeCol },
       include: {
         scenarios: !!ui.includeScenarios,
         dist:      !!ui.includeDist,
@@ -153,6 +161,7 @@
         topN:      !!ui.includeTopN,
         coverage:  !!ui.includeCoverage,
         disrupt:   !!ui.includeDisrupt,
+        aggregate: !!ui.includeAggregate,
       },
     };
   }
@@ -756,6 +765,100 @@
       L.push('  cat(sprintf("     %-14s %10s %10s %10s\\n",');
       L.push('              m, fmt_val(base[[m]]), fmt_val(live[[m]]),');
       L.push('              fmt_delta(base[[m]], live[[m]])))');
+      L.push('}');
+      L.push('');
+      L.push('');
+    }
+
+    // ── 9. Aggregation (optional) ────────────────────────────────
+    if (snap.include.aggregate && snap.aggregate.by) {
+      const trait = snap.aggregate.by;
+      const mode  = snap.aggregate.mode;
+      const time  = snap.aggregate.timeSlice;
+      const timeC = snap.aggregate.timeCol;
+      L.push('# 9. Aggregation ############################################################');
+      L.push('');
+      L.push('pretty_section("Aggregation")');
+      L.push('');
+      L.push('# Aggregation collapses every node whose value on `trait` matches into ONE');
+      L.push('# meta-node, then sums (or averages) the weights of edges between each pair');
+      L.push('# of groups. Matches the visualizer\'s ▾ Aggregate menu.');
+      L.push('trait      <- ' + rStr(trait));
+      L.push('mode       <- ' + rStr(mode) + '        # "sum" or "mean"');
+      L.push('time_slice <- ' + rStr(time) + '        # "" = no time filter');
+      L.push('');
+      L.push('## 9.1 Assign each node to its group ########################################');
+      L.push('');
+      L.push('# Copy the raw node table and derive an `agg_group` column — missing values');
+      L.push('# and empty strings collapse into a "(none)" bucket, same as the visualizer.');
+      L.push('nodes_ag <- nodes');
+      L.push('nodes_ag$agg_group <- as.character(nodes_ag[[trait]])');
+      L.push('nodes_ag$agg_group[is.na(nodes_ag$agg_group) | nodes_ag$agg_group == ""] <- "(none)"');
+      L.push('');
+      L.push('## 9.2 Map every edge to a (source_group, target_group) pair ################');
+      L.push('');
+      L.push('edges_ag <- edges');
+      if (time && timeC) {
+        L.push('# Time slice: keep only edges whose ' + rStr(timeC) + ' value matches time_slice.');
+        L.push('if (time_slice != "") {');
+        L.push('  edges_ag <- edges_ag[as.character(edges_ag$' + timeC + ') == time_slice, , drop = FALSE]');
+        L.push('}');
+      }
+      L.push('# match() finds the row index of each endpoint id in the node table so we');
+      L.push('# can pull its group in one vectorised call.');
+      const idCol   = snap.nodeIdCol || 'name';
+      const fromCol = snap.fromCol   || 'from';
+      const toCol   = snap.toCol     || 'to';
+      L.push('edges_ag$src_group <- nodes_ag$agg_group[match(edges_ag$' + fromCol + ', nodes_ag$' + idCol + ')]');
+      L.push('edges_ag$tgt_group <- nodes_ag$agg_group[match(edges_ag$' + toCol   + ', nodes_ag$' + idCol + ')]');
+      L.push('# Drop within-group edges — an aggregated graph has no self-loops on groups.');
+      L.push('edges_ag <- edges_ag[edges_ag$src_group != edges_ag$tgt_group, , drop = FALSE]');
+      L.push('');
+      L.push('## 9.3 Sum (or mean) weights per group-pair #################################');
+      L.push('');
+      if (weight) {
+        L.push('# For each (src_group, tgt_group) key: sum or average the weight column.');
+        L.push('agg_edges <- aggregate(');
+        L.push('  edges_ag[, "' + weight + '", drop = FALSE],');
+        L.push('  by = list(from = edges_ag$src_group, to = edges_ag$tgt_group),');
+        L.push('  FUN = if (mode == "mean") mean else sum');
+        L.push(')');
+        L.push('names(agg_edges)[3] <- "weight"');
+      } else {
+        L.push('# No weight column → count edges per group-pair.');
+        L.push('agg_edges <- as.data.frame(table(');
+        L.push('  from = edges_ag$src_group, to = edges_ag$tgt_group');
+        L.push('), stringsAsFactors = FALSE)');
+        L.push('names(agg_edges)[3] <- "weight"');
+        L.push('agg_edges <- agg_edges[agg_edges$weight > 0, ]');
+      }
+      L.push('# Also carry a count column so the report can say "N source edges per group-pair".');
+      L.push('edge_counts <- as.data.frame(table(from = edges_ag$src_group, to = edges_ag$tgt_group),');
+      L.push('                             stringsAsFactors = FALSE)');
+      L.push('names(edge_counts)[3] <- "count"');
+      L.push('agg_edges <- merge(agg_edges, edge_counts, by = c("from", "to"), all.x = TRUE)');
+      L.push('');
+      L.push('## 9.4 Build the aggregated graph ###########################################');
+      L.push('');
+      L.push('agg_nodes <- data.frame(name = unique(nodes_ag$agg_group), stringsAsFactors = FALSE)');
+      L.push('g_agg <- graph_from_data_frame(');
+      L.push('  agg_edges[, c("from", "to", "weight", "count")],');
+      L.push('  vertices = agg_nodes,');
+      L.push('  directed = ' + dirFlag);
+      L.push(')');
+      L.push('cat(sprintf("🔗 Aggregated by %s: %d groups · %d edges (mode = %s)\\n",');
+      L.push('            trait, vcount(g_agg), ecount(g_agg), mode))');
+      L.push('');
+      L.push('## 9.5 Top-5 heaviest aggregated edges ######################################');
+      L.push('');
+      L.push('# Sort descending, take the first five — quick "who talks to whom most" read.');
+      L.push('top_edges <- head(agg_edges[order(-agg_edges$weight), ], 5)');
+      L.push('cat("📝 Top 5 aggregated edges by weight:\\n")');
+      L.push('# For each row k in 1..5 of top_edges: print rank, source→target, weight, count.');
+      L.push('for (k in seq_len(nrow(top_edges))) {');
+      L.push('  cat(sprintf("     %d. %-12s → %-12s   weight = %.2f  (%d source edge(s))\\n",');
+      L.push('              k, top_edges$from[k], top_edges$to[k],');
+      L.push('              top_edges$weight[k], top_edges$count[k]))');
       L.push('}');
       L.push('');
       L.push('');
@@ -1374,6 +1477,97 @@
       L.push('');
     }
 
+    // ── 9. Aggregation (optional) ────────────────────────────────
+    if (snap.include.aggregate && snap.aggregate.by) {
+      const trait = snap.aggregate.by;
+      const mode  = snap.aggregate.mode;
+      const time  = snap.aggregate.timeSlice;
+      const timeC = snap.aggregate.timeCol;
+      const idCol   = snap.nodeIdCol || 'name';
+      const fromCol = snap.fromCol   || 'from';
+      const toCol   = snap.toCol     || 'to';
+      L.push('# 9. Aggregation ############################################################');
+      L.push('');
+      L.push('pretty_section("Aggregation")');
+      L.push('');
+      L.push('# Aggregation collapses every node whose value on `trait` matches into ONE');
+      L.push('# meta-node, then sums (or averages) the weights of edges between each pair');
+      L.push('# of groups. Matches the visualizer\'s ▾ Aggregate menu.');
+      L.push('trait      = ' + pyStr(trait));
+      L.push('mode       = ' + pyStr(mode) + '        # "sum" or "mean"');
+      L.push('time_slice = ' + pyStr(time) + '        # "" = no time filter');
+      L.push('');
+      L.push('## 9.1 Assign each node to its group ########################################');
+      L.push('');
+      L.push('# Copy the raw node table and derive an `agg_group` column — missing values');
+      L.push('# and empty strings collapse into a "(none)" bucket, same as the visualizer.');
+      L.push('nodes_ag = nodes.copy()');
+      L.push('nodes_ag["agg_group"] = nodes_ag[trait].astype(str).replace({"": "(none)", "nan": "(none)"})');
+      L.push('');
+      L.push('## 9.2 Map every edge to a (source_group, target_group) pair ################');
+      L.push('');
+      L.push('edges_ag = edges.copy()');
+      if (time && timeC) {
+        L.push('# Time slice: keep only edges whose ' + pyStr(timeC) + ' value matches time_slice.');
+        L.push('if time_slice != "":');
+        L.push('    edges_ag = edges_ag[edges_ag[' + pyStr(timeC) + '].astype(str) == time_slice].copy()');
+      }
+      L.push('# Look up each endpoint\'s group via a dict from id → agg_group.');
+      L.push('id_to_group = dict(zip(nodes_ag[' + pyStr(idCol) + '].astype(str), nodes_ag["agg_group"]))');
+      L.push('edges_ag["src_group"] = edges_ag[' + pyStr(fromCol) + '].astype(str).map(id_to_group)');
+      L.push('edges_ag["tgt_group"] = edges_ag[' + pyStr(toCol)   + '].astype(str).map(id_to_group)');
+      L.push('# Drop within-group edges — an aggregated graph has no self-loops on groups.');
+      L.push('edges_ag = edges_ag[edges_ag["src_group"] != edges_ag["tgt_group"]].copy()');
+      L.push('');
+      L.push('## 9.3 Sum (or mean) weights per group-pair #################################');
+      L.push('');
+      if (weight) {
+        L.push('# groupby → agg. `weight` sums or averages the source weights; `count`');
+        L.push('# tracks how many source edges collapsed into each group-pair edge.');
+        L.push('agg_fn = "mean" if mode == "mean" else "sum"');
+        L.push('agg_edges = (');
+        L.push('    edges_ag');
+        L.push('    .groupby(["src_group", "tgt_group"])');
+        L.push('    .agg(weight=(' + pyStr(weight) + ', agg_fn), count=(' + pyStr(weight) + ', "count"))');
+        L.push('    .reset_index()');
+        L.push('    .rename(columns={"src_group": "from", "tgt_group": "to"})');
+        L.push(')');
+      } else {
+        L.push('# No weight column → count edges per group-pair; use the count itself as');
+        L.push('# the aggregated edge weight.');
+        L.push('agg_edges = (');
+        L.push('    edges_ag.groupby(["src_group", "tgt_group"]).size()');
+        L.push('    .reset_index(name="count")');
+        L.push('    .rename(columns={"src_group": "from", "tgt_group": "to"})');
+        L.push(')');
+        L.push('agg_edges["weight"] = agg_edges["count"]');
+      }
+      L.push('');
+      L.push('## 9.4 Build the aggregated graph ###########################################');
+      L.push('');
+      L.push('agg_nodes = pd.DataFrame({"name": nodes_ag["agg_group"].unique()})');
+      L.push('g_agg = ig.Graph.DataFrame(');
+      L.push('    edges=agg_edges[["from", "to", "weight", "count"]],');
+      L.push('    directed=' + dirFlag + ',');
+      L.push('    vertices=agg_nodes,');
+      L.push('    use_vids=False,');
+      L.push(')');
+      L.push('print(f"🔗 Aggregated by {trait}: {g_agg.vcount()} groups · {g_agg.ecount()} edges (mode = {mode})")');
+      L.push('');
+      L.push('## 9.5 Top-5 heaviest aggregated edges ######################################');
+      L.push('');
+      L.push('# Sort descending, take the first five — quick "who talks to whom most" read.');
+      L.push('top_edges = agg_edges.sort_values("weight", ascending=False).head(5)');
+      L.push('print("📝 Top 5 aggregated edges by weight:")');
+      L.push('# For each row (rank k) in top_edges: print rank, source→target, weight, count.');
+      L.push('# name=None returns raw tuples so we sidestep pandas renaming `from` to _1.');
+      L.push('for k, row in enumerate(top_edges[["from", "to", "weight", "count"]].itertuples(index=False, name=None), start=1):');
+      L.push('    frm, to_, w, c = row');
+      L.push('    print(f"     {k}. {frm:<12} → {to_:<12}   weight = {w:.2f}  ({int(c)} source edge(s))")');
+      L.push('');
+      L.push('');
+    }
+
     L.push('print("\\n' + HR + '")');
     L.push('print("🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.")');
     L.push('print("' + HR + '")');
@@ -1477,6 +1671,7 @@
     const permCfgd = !!(snap.perm && snap.perm.attr);
     const mcCfgd   = !!(snap.mc && snap.weightCol);
     const covCfgd  = !!snap.groupCol;
+    const aggCfgd  = !!(snap.aggregate && snap.aggregate.by);
     const dimmedNote = (checked, cfgd, hint) => (!checked || cfgd) ? '' :
       ` <span style="color:var(--grey);font-size:10.5px;">(${hint || 'none set'})</span>`;
 
@@ -1518,6 +1713,10 @@
           <input type="checkbox" id="viz2-codeexport-inc-disrupt" ${ui.includeDisrupt ? 'checked' : ''} style="accent-color:var(--green-bright);">
           <span>💥 Disruption stats</span>
         </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-aggregate" ${ui.includeAggregate ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>🧬 Aggregation${dimmedNote(ui.includeAggregate, aggCfgd, 'no aggregate-by column')}</span>
+        </label>
       </fieldset>
       <div class="formula-note" style="margin:-2px 0 6px;">
         Reproduces the current state${bitsHtml}. Regenerates automatically as you change things.
@@ -1551,6 +1750,7 @@
     bind('viz2-codeexport-inc-topn',      'includeTopN');
     bind('viz2-codeexport-inc-coverage',  'includeCoverage');
     bind('viz2-codeexport-inc-disrupt',   'includeDisrupt');
+    bind('viz2-codeexport-inc-aggregate', 'includeAggregate');
   }
 
   // Re-render on every event that could change the snapshot.
