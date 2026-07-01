@@ -1026,70 +1026,31 @@ const webR = new WebR();
 let isReady = false;
 
 async function bootstrap() {
-  // Split into two phases so a package-install stall doesn't leave Run stuck:
-  //   Phase 1 — get the runtime + FS + saved files up, THEN enable Run.
-  //   Phase 2 — install packages in the background, updating the status pill.
-  // The user can hit Run any time after Phase 1; if they Run before their
-  // required package is installed, they see a normal R "no package called ..."
-  // error in the console — still 100× better than a permanently-disabled button.
+  // Install every advertised package BEFORE enabling Run — so when Run is
+  // pressable, `library(dplyr)`, `library(igraph)`, and every other pre-loaded
+  // package is guaranteed to succeed. Each package install is guarded
+  // individually so one wasm-repo hiccup can't strand the whole session — a
+  // failure gets logged to the console and we move on.
   try {
     setStatus('Loading WebR runtime…', 'loading');
     await webR.init();
 
-    // igraph is required by the Visualizer's Export-as-Code output and by
-    // every network case study. Install it in Phase 1 so Run genuinely means
-    // "ready to run igraph code." Wrapped in try/catch so a wasm-repo hiccup
-    // still lets the playground boot for non-igraph code.
-    setStatus('Installing igraph…', 'loading');
-    try {
-      await webR.installPackages(['igraph'], {
-        repos: ['https://igraph.r-universe.dev', 'https://repo.r-wasm.org'],
-      });
-      await webR.evalRVoid('suppressMessages(library(igraph))');
-    } catch (e) {
-      console.warn('igraph install failed (Run still available for non-igraph code):', e);
-    }
-
-    // Restore any previously-uploaded files from IndexedDB into the WASM FS.
-    // Done before enabling Run so restored CSVs are visible from the start.
-    const saved = await idbAllFiles();
-    for (const { name, bytes } of saved) {
-      try {
-        await webR.FS.writeFile('/home/web_user/' + name, bytes);
-        const preview = new TextDecoder().decode(bytes.slice(0, 4096));
-        dataFiles.set(name, { bytes, preview });
-      } catch (e) { /* ignore individual restore failures */ }
-    }
-    renderDataPanel();
-
-    // Phase 1 done — Run is now usable, even before packages finish installing.
-    setStatus('Runtime ready · installing packages…', 'loading');
-    isReady = true;
-    $('btn-run').disabled = false;
-    clearConsole();
-    appendConsole([{ type: 'message',
-      data: `WebR runtime ready. ${saved.length ? `Restored ${saved.length} file(s). ` : ''}You can Run now; packages are still installing in the background.\n` }]);
-    refreshObjects();
-    // Editor already got the visualizer handoff at page load; hydrate CSVs.
-    consumeVisualizerHandoff().catch(() => {});
-  } catch (e) {
-    setStatus('Failed to load WebR runtime — see console', 'error');
-    appendConsole([{ type: 'stderr', data: `WebR runtime bootstrap failed: ${e.message}\n` }]);
-    return;
-  }
-
-  // Phase 2 — background package install. Each package attempts individually
-  // so one wasm-repo hiccup doesn't leave the user without every package.
-  try {
+    // igraph lives in the r-universe wasm repo; everything else lives in the
+    // default wasm CRAN mirror. Listed here in the order shown to the user.
+    // Keep in sync with the "Pre-installed packages" disclosure panel above.
     const REPOS = ['https://igraph.r-universe.dev', 'https://repo.r-wasm.org'];
-    // igraph already installed in Phase 1 — don't reinstall it here.
-    const PACKAGES = ['dplyr','tidyr','ggplot2','readr','purrr','tidygraph','DBI','RSQLite','ggraph'];
-    for (const pkg of PACKAGES) {
+    const PACKAGES = ['igraph','dplyr','tidyr','ggplot2','readr','purrr','tidygraph','ggraph','DBI','RSQLite'];
+    for (let i = 0; i < PACKAGES.length; i++) {
+      const pkg = PACKAGES[i];
+      setStatus(`Installing packages (${i + 1}/${PACKAGES.length}): ${pkg}…`, 'loading');
       try { await webR.installPackages([pkg], { repos: REPOS }); }
       catch (e) { console.warn('install failed:', pkg, e); }
     }
-    // Auto-attach the most common ones — wrapped so one missing package
-    // doesn't kill the whole attach step.
+
+    // Attach the common ones now so a fresh Run can call `dplyr::` or
+    // `library(dplyr)` without a "no package called ..." error. Wrapped so
+    // one missing package doesn't kill the whole attach step.
+    setStatus('Attaching packages…', 'loading');
     await webR.evalRVoid(`
       .pg_load <- function(pkgs) {
         for (p in pkgs) {
@@ -1101,11 +1062,35 @@ async function bootstrap() {
       }
       .pg_load(c("dplyr","tidyr","ggplot2","purrr","igraph","tidygraph","ggraph"))
     `);
+
+    // Restore any previously-uploaded files from IndexedDB into the WASM FS.
+    // Done before enabling Run so restored CSVs are visible from the start.
+    setStatus('Restoring saved files…', 'loading');
+    const saved = await idbAllFiles();
+    for (const { name, bytes } of saved) {
+      try {
+        await webR.FS.writeFile('/home/web_user/' + name, bytes);
+        const preview = new TextDecoder().decode(bytes.slice(0, 4096));
+        dataFiles.set(name, { bytes, preview });
+      } catch (e) { /* ignore individual restore failures */ }
+    }
+    renderDataPanel();
+
+    // Every package is now installed AND every common one is attached — Run
+    // is genuinely safe to press.
     setStatus('Ready ✓', 'ready');
+    isReady = true;
+    $('btn-run').disabled = false;
+    clearConsole();
+    appendConsole([{ type: 'message',
+      data: `WebR runtime ready. ${saved.length ? `Restored ${saved.length} file(s). ` : ''}All packages installed. Press Run to execute the editor.\n` }]);
+    refreshObjects();
+    // Editor already got the visualizer handoff at page load; hydrate CSVs.
+    consumeVisualizerHandoff().catch(() => {});
   } catch (e) {
-    // Runtime is still fine, just tell the user some packages didn't install.
-    setStatus('Ready ✓ (some packages skipped)', 'ready');
-    console.warn('background package install ran into an error:', e);
+    setStatus('Failed to load WebR runtime — see console', 'error');
+    appendConsole([{ type: 'stderr', data: `WebR runtime bootstrap failed: ${e.message}\n` }]);
+    return;
   }
 }
 
