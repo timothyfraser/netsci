@@ -85,6 +85,12 @@
     const s = NV.state;
     if (!s.graph) return null;
     const removed = Array.from(s.removedNodes || []);
+    // Removed edges: turn each edgeKey ("src||tgt") back into a {from, to}
+    // pair so the emitter can drive delete_edges() / g.delete_edges().
+    const removedEdges = Array.from(s.removedEdges || []).map((k) => {
+      const parts = String(k).split('||');
+      return { from: parts[0], to: parts[1] };
+    });
     const scenarioNodes = (s.scenarioNodes || []).map((n) => ({
       id: n.id, label: n.label || n.id, group: n.group || ''
     }));
@@ -129,6 +135,7 @@
       edgeCount: s.graph.links.length,
       selectedNode: s.selectedNode || null,
       removed: removed,
+      removedEdges: removedEdges,
       scenarioNodes: scenarioNodes,
       scenarioLinks: scenarioLinks,
       nodeCsv: s.nodeCsv || [],
@@ -283,8 +290,9 @@
 
     // ── 2. Apply the visualizer's edits (only if there were any) ─
     const hasRemoval  = snap.removed.length > 0;
+    const hasEdgeCut  = (snap.removedEdges || []).length > 0;
     const hasScenario = snap.scenarioNodes.length > 0 || snap.scenarioLinks.length > 0;
-    if (snap.include.scenarios && (hasRemoval || hasScenario)) {
+    if (snap.include.scenarios && (hasRemoval || hasEdgeCut || hasScenario)) {
       L.push('# 2. Apply the visualizer\'s edits ############################################');
       L.push('');
       L.push('pretty_section("Applying visualizer edits")');
@@ -295,7 +303,7 @@
         sub++;
         L.push('## 2.' + sub + ' Node removals #########################################################');
         L.push('');
-        L.push('# You clicked "Remove" on ' + snap.removed.length + ' node(s) in the Selected Node card.');
+        L.push('# You clicked "Remove" on ' + snap.removed.length + ' node(s) in the Selected panel.');
         L.push('# delete_vertices() drops both the node itself AND all edges incident to it,');
         L.push('# so downstream metrics see the same subgraph the visualizer was showing.');
         L.push('# We guard with %in% V(g)$name so the script survives if a node happens to');
@@ -305,6 +313,28 @@
         L.push('');
         L.push('cat(sprintf("🧨 After %d removals: %d vertices, %d edges.\\n",');
         L.push('            length(removed_ids), vcount(g), ecount(g)))');
+        L.push('');
+      }
+
+      if (hasEdgeCut) {
+        sub++;
+        L.push('## 2.' + sub + ' Edge removals #########################################################');
+        L.push('');
+        L.push('# You clicked "Remove edge" on ' + snap.removedEdges.length + ' edge(s) in the Selected panel.');
+        L.push('# delete_edges() drops the specific edge without touching either endpoint,');
+        L.push('# so a hub node stays in the graph even after we cut one of its edges.');
+        L.push('# get.edge.ids() finds each edge by its (from, to) endpoint pair; edges that');
+        L.push('# are already missing (e.g. incident to a removed vertex) return 0, which');
+        L.push('# delete_edges() safely ignores.');
+        L.push('edge_pairs <- c(');
+        L.push('  ' + snap.removedEdges.map((e) => rStr(e.from) + ', ' + rStr(e.to)).join(',\n  '));
+        L.push(')');
+        L.push('# get.edge.ids expects a flat vector of alternating from/to ids.');
+        L.push('eids <- get.edge.ids(g, edge_pairs, error = FALSE)');
+        L.push('g <- delete_edges(g, eids[eids > 0])');
+        L.push('');
+        L.push('cat(sprintf("✂️  After %d edge cuts: %d edges remain.\\n",');
+        L.push('            length(eids[eids > 0]), ecount(g)))');
         L.push('');
       }
 
@@ -984,8 +1014,9 @@
 
     // ── 2. Apply the visualizer's edits ──────────────────────────
     const hasRemoval  = snap.removed.length > 0;
+    const hasEdgeCut  = (snap.removedEdges || []).length > 0;
     const hasScenario = snap.scenarioNodes.length > 0 || snap.scenarioLinks.length > 0;
-    if (snap.include.scenarios && (hasRemoval || hasScenario)) {
+    if (snap.include.scenarios && (hasRemoval || hasEdgeCut || hasScenario)) {
       L.push('# 2. Apply the visualizer\'s edits ############################################');
       L.push('');
       L.push('pretty_section("Applying visualizer edits")');
@@ -996,7 +1027,7 @@
         sub++;
         L.push('## 2.' + sub + ' Node removals #########################################################');
         L.push('');
-        L.push('# You clicked "Remove" on ' + snap.removed.length + ' node(s) in the Selected Node card.');
+        L.push('# You clicked "Remove" on ' + snap.removed.length + ' node(s) in the Selected panel.');
         L.push('# delete_vertices() drops both the node itself AND all edges incident to it,');
         L.push('# so downstream metrics see the same subgraph the visualizer was showing.');
         L.push('# The list-comprehension guard survives a stale id (already-missing node).');
@@ -1005,6 +1036,26 @@
         L.push('g.delete_vertices([v for v in removed if v in names])');
         L.push('');
         L.push('print(f"🧨 After {len(removed)} removals: {g.vcount()} vertices, {g.ecount()} edges.")');
+        L.push('');
+      }
+
+      if (hasEdgeCut) {
+        sub++;
+        L.push('## 2.' + sub + ' Edge removals #########################################################');
+        L.push('');
+        L.push('# You clicked "Remove edge" on ' + snap.removedEdges.length + ' edge(s) in the Selected panel.');
+        L.push('# delete_edges() drops the specific edge without touching either endpoint.');
+        L.push('# get_eid(from, to, error=False) returns -1 for edges that are already gone');
+        L.push('# (e.g. incident to a removed vertex); we filter those out before deleting.');
+        L.push('edge_pairs = [');
+        L.push('    ' + snap.removedEdges.map((e) => '(' + pyStr(e.from) + ', ' + pyStr(e.to) + ')').join(',\n    '));
+        L.push(']');
+        L.push('# For each (from, to) pair: find its edge id in the graph, keep only the');
+        L.push('# ones that actually resolve (>= 0), then delete them all in one call.');
+        L.push('eids = [eid for eid in (g.get_eid(a, b, error=False) for a, b in edge_pairs) if eid >= 0]');
+        L.push('g.delete_edges(eids)');
+        L.push('');
+        L.push('print(f"✂️  After {len(eids)} edge cuts: {g.ecount()} edges remain.")');
         L.push('');
       }
 
