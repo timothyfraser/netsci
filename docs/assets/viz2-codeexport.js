@@ -76,6 +76,7 @@
     includeMc: true,         // Section 5 — counterfactual Monte Carlo
     includeTopN: true,       // Section 6 — top-N by degree AND betweenness
     includeCoverage: true,   // Section 7 — group coverage
+    includeDisrupt: true,    // Section 8 — disruption stats (baseline vs live)
   };
 
   // ── Snapshot the visualizer's live state ────────────────────
@@ -151,6 +152,7 @@
         mc:        !!ui.includeMc,
         topN:      !!ui.includeTopN,
         coverage:  !!ui.includeCoverage,
+        disrupt:   !!ui.includeDisrupt,
       },
     };
   }
@@ -678,6 +680,82 @@
       L.push('  cat(sprintf("     %-24s %5.1f%%  (%d / %d)\\n",');
       L.push('              cov_rows$group[k], 100 * cov_rows$frac[k],');
       L.push('              cov_rows$reached[k], cov_rows$members[k]))');
+      L.push('}');
+      L.push('');
+      L.push('');
+    }
+
+    // ── 8. Disruption stats (optional) ───────────────────────────
+    if (snap.include.disrupt) {
+      L.push('# 8. Disruption stats ########################################################');
+      L.push('');
+      L.push('pretty_section("Disruption stats")');
+      L.push('');
+      L.push('# The visualizer\'s Disruption card compares four network-level metrics');
+      L.push('# before/after your removals + scenario edits:');
+      L.push('#   active       — number of non-removed nodes');
+      L.push('#   components   — number of disconnected pieces (weak components)');
+      L.push('#   apl          — mean shortest path (∞ when any pair is unreachable)');
+      L.push('#   diameter     — max shortest path (∞ when disconnected)');
+      L.push('# Convention: ANY unreachable pair → APL & diameter are Inf. Matches');
+      L.push('# viz2-removal.js:computeDisruption().');
+      L.push('');
+      L.push('## 8.1 Helper ################################################################');
+      L.push('');
+      L.push('disruption_stats <- function(gg) {');
+      L.push('  # components() defaults to mode = "weak", matching the visualizer.');
+      L.push('  comps <- components(gg)');
+      L.push('  disconnected <- comps$no > 1');
+      L.push('  # mean_distance / diameter with directed = FALSE treat every edge as');
+      L.push('  # bidirectional. weights = NA forces UNWEIGHTED (hop-count) distances,');
+      L.push('  # even when the graph has a weight attribute — matches the visualizer\'s');
+      L.push('  # structural BFS in buildAdj() so numbers on paper line up with the card.');
+      L.push('  apl  <- if (disconnected) Inf else mean_distance(gg, weights = NA, directed = FALSE)');
+      L.push('  diam <- if (disconnected) Inf else diameter(gg, weights = NA, directed = FALSE)');
+      L.push('  list(active = vcount(gg), components = comps$no, apl = apl, diameter = diam)');
+      L.push('}');
+      L.push('');
+      L.push('## 8.2 Baseline vs current ###################################################');
+      L.push('');
+      L.push('# Rebuild a BASELINE copy of the graph from the same nodes + edges frames,');
+      L.push('# so we can measure how much your removals + scenarios moved each metric.');
+      L.push('# If you unchecked "Apply scenarios" in the export card, baseline == g and');
+      L.push('# all four deltas will show as ±0.');
+      L.push('g_base <- graph_from_data_frame(edges, vertices = nodes, directed = ' + dirFlag + ')');
+      if (weight) {
+        L.push('E(g_base)$weight <- E(g_base)$' + weight);
+      }
+      L.push('');
+      L.push('base <- disruption_stats(g_base)');
+      L.push('live <- disruption_stats(g)');
+      L.push('');
+      L.push('## 8.3 Report ################################################################');
+      L.push('');
+      L.push('# Small formatters so Inf prints as "Inf" and integer-ish values don\'t');
+      L.push('# waste screen space on decimals.');
+      L.push('fmt_val <- function(x) {');
+      L.push('  if (is.infinite(x)) return("Inf")');
+      L.push('  if (abs(x - round(x)) < 0.005) return(as.character(as.integer(round(x))))');
+      L.push('  sprintf("%.2f", x)');
+      L.push('}');
+      L.push('fmt_delta <- function(a, b) {');
+      L.push('  if (is.infinite(a) && is.infinite(b)) return("—")');
+      L.push('  if (is.infinite(b) && !is.infinite(a)) return("→ Inf")');
+      L.push('  if (is.infinite(a) && !is.infinite(b)) return("↓ from Inf")');
+      L.push('  d <- b - a');
+      L.push('  if (abs(d) < 0.005) return("±0")');
+      L.push('  if (abs(d - round(d)) < 0.005) return(sprintf("%+d", as.integer(round(d))))');
+      L.push('  sprintf("%+.2f", d)');
+      L.push('}');
+      L.push('');
+      L.push('cat("📊 Disruption stats (baseline → current):\\n")');
+      L.push('cat(sprintf("     %-14s %10s %10s %10s\\n", "metric", "baseline", "current", "Δ"))');
+      L.push('# For each metric name m in the four disruption metrics: print baseline,');
+      L.push('# current, and their delta side-by-side.');
+      L.push('for (m in c("active", "components", "apl", "diameter")) {');
+      L.push('  cat(sprintf("     %-14s %10s %10s %10s\\n",');
+      L.push('              m, fmt_val(base[[m]]), fmt_val(live[[m]]),');
+      L.push('              fmt_delta(base[[m]], live[[m]])))');
       L.push('}');
       L.push('');
       L.push('');
@@ -1220,6 +1298,82 @@
       L.push('');
     }
 
+    // ── 8. Disruption stats (optional) ───────────────────────────
+    if (snap.include.disrupt) {
+      L.push('# 8. Disruption stats ########################################################');
+      L.push('');
+      L.push('pretty_section("Disruption stats")');
+      L.push('');
+      L.push('# The visualizer\'s Disruption card compares four network-level metrics');
+      L.push('# before/after your removals + scenario edits:');
+      L.push('#   active       — number of non-removed nodes');
+      L.push('#   components   — number of disconnected pieces (weak components)');
+      L.push('#   apl          — mean shortest path (∞ when any pair is unreachable)');
+      L.push('#   diameter     — max shortest path (∞ when disconnected)');
+      L.push('# Convention: ANY unreachable pair → APL & diameter are Inf. Matches');
+      L.push('# viz2-removal.js:computeDisruption().');
+      L.push('');
+      L.push('## 8.1 Helper ################################################################');
+      L.push('');
+      L.push('import math');
+      L.push('');
+      L.push('def disruption_stats(gg):');
+      L.push('    # connected_components(mode="weak") matches the visualizer\'s undirected');
+      L.push('    # BFS in buildAdj() — every edge treated as bidirectional.');
+      L.push('    comps = gg.connected_components(mode="weak")');
+      L.push('    disconnected = len(comps) > 1');
+      L.push('    # directed=False treats every edge as bidirectional during shortest-path.');
+      L.push('    apl  = math.inf if disconnected else gg.average_path_length(directed=False)');
+      L.push('    diam = math.inf if disconnected else gg.diameter(directed=False)');
+      L.push('    return {"active": gg.vcount(), "components": len(comps),');
+      L.push('            "apl": apl, "diameter": diam}');
+      L.push('');
+      L.push('## 8.2 Baseline vs current ###################################################');
+      L.push('');
+      L.push('# Rebuild a BASELINE copy of the graph from the same nodes + edges frames,');
+      L.push('# so we can measure how much your removals + scenarios moved each metric.');
+      L.push('# If you unchecked "Apply scenarios" in the export card, baseline == g and');
+      L.push('# all four deltas will show as ±0.');
+      L.push('g_base = ig.Graph.DataFrame(');
+      L.push('    edges=edges,');
+      L.push('    directed=' + dirFlag + ',');
+      L.push('    vertices=nodes,');
+      L.push('    use_vids=False,');
+      L.push(')');
+      if (weight) {
+        L.push('g_base.es["weight"] = edges[' + pyStr(weight) + '].tolist()');
+      }
+      L.push('');
+      L.push('base = disruption_stats(g_base)');
+      L.push('live = disruption_stats(g)');
+      L.push('');
+      L.push('## 8.3 Report ################################################################');
+      L.push('');
+      L.push('# Small formatters so Inf prints as "Inf" and integer-ish values don\'t');
+      L.push('# waste screen space on decimals.');
+      L.push('def fmt_val(x):');
+      L.push('    if math.isinf(x): return "Inf"');
+      L.push('    if abs(x - round(x)) < 0.005: return f"{int(round(x))}"');
+      L.push('    return f"{x:.2f}"');
+      L.push('def fmt_delta(a, b):');
+      L.push('    if math.isinf(a) and math.isinf(b): return "—"');
+      L.push('    if math.isinf(b) and not math.isinf(a): return "→ Inf"');
+      L.push('    if math.isinf(a) and not math.isinf(b): return "↓ from Inf"');
+      L.push('    d = b - a');
+      L.push('    if abs(d) < 0.005: return "±0"');
+      L.push('    if abs(d - round(d)) < 0.005: return f"{int(round(d)):+d}"');
+      L.push('    return f"{d:+.2f}"');
+      L.push('');
+      L.push('print("📊 Disruption stats (baseline → current):")');
+      L.push('print(f"     {\'metric\':<14} {\'baseline\':>10} {\'current\':>10} {\'Δ\':>10}")');
+      L.push('# For each metric name m in the four disruption metrics: print baseline,');
+      L.push('# current, and their delta side-by-side.');
+      L.push('for m in ["active", "components", "apl", "diameter"]:');
+      L.push('    print(f"     {m:<14} {fmt_val(base[m]):>10} {fmt_val(live[m]):>10} {fmt_delta(base[m], live[m]):>10}")');
+      L.push('');
+      L.push('');
+    }
+
     L.push('print("\\n' + HR + '")');
     L.push('print("🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.")');
     L.push('print("' + HR + '")');
@@ -1360,6 +1514,10 @@
           <input type="checkbox" id="viz2-codeexport-inc-coverage" ${ui.includeCoverage ? 'checked' : ''} style="accent-color:var(--green-bright);">
           <span>📐 Group coverage${dimmedNote(ui.includeCoverage, covCfgd, 'no group column')}</span>
         </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-disrupt" ${ui.includeDisrupt ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>💥 Disruption stats</span>
+        </label>
       </fieldset>
       <div class="formula-note" style="margin:-2px 0 6px;">
         Reproduces the current state${bitsHtml}. Regenerates automatically as you change things.
@@ -1392,6 +1550,7 @@
     bind('viz2-codeexport-inc-mc',        'includeMc');
     bind('viz2-codeexport-inc-topn',      'includeTopN');
     bind('viz2-codeexport-inc-coverage',  'includeCoverage');
+    bind('viz2-codeexport-inc-disrupt',   'includeDisrupt');
   }
 
   // Re-render on every event that could change the snapshot.
