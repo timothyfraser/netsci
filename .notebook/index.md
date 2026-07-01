@@ -1,6 +1,6 @@
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-07-01 18:04 UTC_
+_Auto-generated NotebookLM source · 2026-07-01 18:35 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -764,7 +764,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 - **Use case:** _(uncurated — fill me in)_
 - **Tags:** _(none)_
 
-## Network Visualizer v2 (Preview) · SYSEN 5470
+## Network Visualizer · SYSEN 5470
 
 - **URL:** https://timothyfraser.github.io/netsci/visualizer2.html
 - **Topic:** _(uncurated — fill me in)_

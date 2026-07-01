@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-07-01 18:04 UTC_
+_Auto-generated NotebookLM source · 2026-07-01 18:35 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -783,7 +783,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 - **Use case:** _(uncurated — fill me in)_
 - **Tags:** _(none)_
 
-## Network Visualizer v2 (Preview) · SYSEN 5470
+## Network Visualizer · SYSEN 5470
 
 - **URL:** https://timothyfraser.github.io/netsci/visualizer2.html
 - **Topic:** _(uncurated — fill me in)_
@@ -798,7 +798,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-07-01 18:04 UTC_
+_Auto-generated NotebookLM source · 2026-07-01 18:35 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -4199,14 +4199,14 @@ SYSEN 5470 · Tools
 
 # NETWORK VISUALIZER
 
-v2
 v1
 
 
-Load a project dataset, then remove nodes, run counterfactuals and permutation tests, edit what\-if scenarios, and inspect coverage and group composition — all without leaving the page.
+Load a project dataset, then remove nodes or edges, run counterfactuals and permutation tests, edit what\-if scenarios, and inspect coverage and group composition — all without leaving the page.
 
 
 🎓 Tutorial walkthrough
+🧹 Clear cache
 
 
 📖 What's new
@@ -4364,7 +4364,7 @@ Time filter (≤)—
 ⚙ Settings
 
 
-Node size scale1\.0x
+Node size scale0\.7x
 
 
 Edge weight threshold0\.0
@@ -4419,15 +4419,20 @@ Load a network with a group column to enable permutation tests.
 Loading group composition…
 
 
+💻 Export as Code
+
+Load a network to generate code.
+
+
 Cards
 ＋ Expand all
 − Collapse all
 
 
-🏷 Selected Node
+🏷 Selected
 
 
-Click any node to inspect.
+Click any node or edge to inspect.
 
 
 ✏ Scenarios
@@ -4438,6 +4443,11 @@ Loading scenario editor…
 
 
 Load a network to see stats.
+
+
+📊 Centrality Distributions
+
+Load a network to see distributions.
 
 
 📐 Formulas \& Definitions
@@ -4462,9 +4472,26 @@ Computed when graph loads (≤600 nodes).
 Loading node browser…
 
 
-**SYSEN 5470 · Network Visualizer v2 · Experimental**
+**SYSEN 5470 · Network Visualizer**
 
- Cornell Engineering · Summer 2026 · Internal preview — not for student release.
+ Cornell Engineering · Summer 2026
+
+
+### 🧹 Clear cache?
+
+
+ This will clear every cached script, stylesheet, and saved setting
+ for **this page only** (visualizer state, saved
+ scenarios, panel open/close, etc.), then reload with the latest
+ assets from the server.
+
+
+ Your files under `data/projects/` and anything you've
+ downloaded aren't touched.
+
+
+Cancel
+Yes, clear cache
 
 ---
 
@@ -6606,322 +6633,14 @@ Computed when graph loads (≤600 nodes).
 
 ---
 
-# Network Visualizer v2 (Preview) · SYSEN 5470
+# Network Visualizer · SYSEN 5470
 
 _Source: docs/visualizer2.html_
 
-Skip to content
+**The v2 preview has been promoted.**
 
 
-SYSEN 5470 · Tools
-
-
-# NETWORK VISUALIZER
-
-v2 preview
-v2 stable
-v1
-
-
-Load a project dataset, then remove nodes, run counterfactuals and permutation tests, edit what\-if scenarios, and inspect coverage and group composition — all without leaving the page.
-
-
-🎓 Tutorial walkthrough
-🧹 Clear cache
-
-
-**V2 PREVIEW · INTERNAL.**
- This is the v2 visualizer with two extra cards enabled for testing:
- a 📊 Centrality Distributions chart nested inside Network Stats, and a
- 💻 Export as Code card that emits an R or Python reproducer and hands it
- off to the WebR / Pyodide playgrounds. Unlinked from site nav. The
- already\-shipped v2 build lives at
- visualizer.html.
-
-
-📖 What's new
-
-
-🧨
-
-Remove \& Restore Nodes
-Click a node, hit *Remove from network*. Coordinates stay pinned so before/after comparisons match. Restore one or all.
-
-
-🛡
-
-Group Coverage
-% of each group reachable from a reference group — live as you remove nodes, slide the time filter, or cap max hops.
-
-
-🎲
-
-Counterfactuals
-Compare baseline vs treated networks under Poisson edge\-weight resampling. Difference distribution with 95% CI.
-
-
-🔀
-
-Permutation Test
-Shuffle a node attribute (optionally within blocks) and get a one\-sided p\-value vs the observed statistic.
-
-
-✏
-
-Scenarios
-＋N adds a node by clicking the stage; ＋E adds an edge by clicking two nodes. Save what\-if bundles in your browser.
-
-
-🔎
-
-Browse Nodes
-Searchable, sortable table of every node — and Zoom to Node from the Selected card when the graph is too dense to click into.
-
-
-📐
-
-Group Composition
-Switch the grouping variable for the whole network, see a per\-group bar chart, and the course Similarity Index.
-
-
-🎓
-
-Tutorial Walkthrough
-A guided tour of every card — click the green button up top any time you want to re\-orient.
-
-
-📥 Data
-
-
-Load project dataset autoloads — no upload
-
-▾ Load sample…
-
-Amazon Last\-Mile (313 nodes)
-Uber Manhattan (370 nodes)
-Semiconductor Supply (368 nodes)
-Aerospace Components (300 nodes)
-Mutual Aid · Quake (250 nodes)
-Financial Contagion (220 nodes)
-Airline Delays (200 nodes)
-Power Grid (300 nodes)
-Campus Contact (300 nodes)
-Open\-Source Deps (400 nodes)
-Trade · Commodity (140 nodes)
-Reorg Comms (250 nodes)
-Satellite Constellation (298 nodes)
-Drone Components (183 nodes)
-Transit · Multimodal (152 nodes)
-Satellite Supply Chain (276 nodes)
-Aircraft Supply Chain (300 nodes)
-UPS Ground Network (149 nodes)
-UPS Package Flow (149 nodes · 5,200 pkgs)
-NYC Real Estate · Capital (270 nodes)
-NYC Real Estate · Portfolio (190 nodes)
-
-
-Edgelist CSV required
-
-
-Nodelist CSV optional
-
-
-Drop a CSV, or load the sample graph to start.
-
-⟳ Load
-▶ Sample
-
-
-🗂 Column Mapping
-
-
-Upload an edgelist to map columns.
-
-
-🧪 Aggregate
-
-
-Aggregate by node trait
-None (raw network)
-
-
-Combine edge weight by
-
-Sum
-Average
-
-
-Time slice
-Overall
-
-Collapses nodes that share a trait (e.g. *region*): every edge is re\-pointed to its endpoints' groups and combined.
-
-
-⚙ Layout
-
-
-Force
-Radial
-Circle
-Hier.
-
-
-👁 Display
-
-
-Color nodes by
-
-Group (node attribute)
-Community (component)
-Uniform (neon green)
-
-
-Group column
-(none — uniform)
-
-
-Palette
-
-Neon
-Viridis
-Plasma
-Mako
-
-
-Time filter (≤)—
-
-
-⚙ Settings
-
-
-Node size scale0\.7x
-
-
-Edge weight threshold0\.0
-
-
-Node labels
-Edge weight labels
-Weight degree \& betweenness
-Drop isolates
-Live drift
-
-
-Your Network · V2
-
-
-💾
-＋N
-＋E
-❄
-＋
-－
-⤢
-
-
-0Active Nodes
-0Edges shown
-0Components
-—Density
-
-
-**No network loaded**
- Upload an edgelist or hit ▶ Sample to start.
-
-
-🧨 Disruption Stats
-Load a network to see disruption stats.
-
-
-🛡 Group Coverage
-Pick a group column to see coverage.
-
-
-🎲 Counterfactuals
-Load a network to enable counterfactuals.
-
-
-🔀 Permutation Test
-Load a network with a group column to enable permutation tests.
-
-
-📐 Group Composition
-Loading group composition…
-
-
-💻 Export as Code
-
-Load a network to generate code.
-
-
-Cards
-＋ Expand all
-− Collapse all
-
-
-🏷 Selected
-
-
-Click any node or edge to inspect.
-
-
-✏ Scenarios
-Loading scenario editor…
-
-
-📈 Network Stats
-
-
-Load a network to see stats.
-
-
-📊 Centrality Distributions
-
-Load a network to see distributions.
-
-
-📐 Formulas \& Definitions
-
-Formulas load when a network is loaded.
-
-
-📊 Top Degree (count)
-
-
-Load a network to see rankings.
-
-
-🔗 Top Betweenness (normalized 0–1\)
-
-
-Computed when graph loads (≤600 nodes).
-
-
-🔎 Browse Nodes
-
-Loading node browser…
-
-
-**SYSEN 5470 · Network Visualizer v2 · Experimental**
-
- Cornell Engineering · Summer 2026 · Internal preview — not for student release.
-
-
-### 🧹 Clear cache?
-
-
- This will clear every cached script, stylesheet, and saved setting
- for **this page only** (visualizer state, saved
- scenarios, panel open/close, etc.), then reload with the latest
- assets from the server.
-
-
- Your files under `data/projects/` and anything you've
- downloaded aren't touched.
-
-
-Cancel
-Yes, clear cache
+You are being redirected to visualizer.html.
 
 ---
 
@@ -7039,7 +6758,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-07-01 18:04 UTC_
+_Auto-generated NotebookLM source · 2026-07-01 18:35 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
