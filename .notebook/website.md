@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-07-01 18:35 UTC_
+_Auto-generated NotebookLM source · 2026-07-01 19:19 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -3401,6 +3401,7 @@ SYSEN 5470 · Tools
 
 # NETWORK VISUALIZER
 
+v2
 v1
 
 
