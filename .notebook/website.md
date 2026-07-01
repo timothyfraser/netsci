@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-07-01 13:51 UTC_
+_Auto-generated NotebookLM source · 2026-07-01 15:28 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -4016,6 +4016,7 @@ The packages below are loaded once Pyodide is ready. To add more, run `import mi
 
 numpy
 pandas
+igraph
 networkx
 matplotlib
 scipy
