@@ -31,12 +31,6 @@
   padding: 5px 12px; border-radius: 999px;
   text-decoration: none; transition: all 0.15s; cursor: pointer;
 }
-.viz-version-pill-active {
-  background: var(--green-bright); color: var(--black);
-  border: 1px solid var(--green-bright);
-  box-shadow: 0 0 14px rgba(57,255,20,0.45);
-  cursor: default;
-}
 .viz-version-pill-link {
   background: transparent; color: var(--grey);
   border: 1px solid var(--border);
@@ -48,18 +42,6 @@
   font-family: var(--font-body); font-size: 16px; font-weight: 300;
   line-height: 1.55; color: var(--green-mint); max-width: 720px;
   border-left: 3px solid var(--green-bright); padding-left: 18px;
-}
-
-/* Experimental banner — visible warning that this is an internal preview */
-.experimental-banner {
-  background: rgba(251,191,36,0.12); border: 1px solid #fbbf24;
-  border-radius: var(--radius-md); padding: 12px 18px;
-  margin-bottom: 18px;
-  color: #fde68a; font-family: var(--font-mono); font-size: 12px;
-  letter-spacing: 0.04em; line-height: 1.55;
-}
-.experimental-banner strong {
-  color: #fbbf24; font-weight: 700; letter-spacing: 0.08em;
 }
 
 .viz-layout {
@@ -643,14 +625,14 @@ select.viz-select {
   color: var(--grey); line-height: 1.5; margin: 4px 0 10px;
 }
 </style>
-<meta property="og:title" content="Network Visualizer v2 (Experimental) · SYSEN 5470">
-<meta property="og:description" content="Experimental internal preview — do not link.">
+<meta property="og:title" content="Network Visualizer · SYSEN 5470">
+<meta property="og:description" content="Load a network, remove nodes or edges, run counterfactuals and permutation tests, and export a reproducer script.">
 <meta property="og:image" content="images/banner.png">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="assets/print.css" media="print">
 </head>
-<body data-page="viz2">
+<body data-page="viz">
 <a class="skip-link" href="#main">Skip to content</a>
 
 <canvas id="bg-canvas"></canvas>
@@ -704,15 +686,16 @@ select.viz-select {
     <h1>
       NETWORK VISUALIZER
       <span class="viz-version-row">
-        <span class="viz-version-pill viz-version-pill-active" title="You're on v2.">v2</span>
         <a class="viz-version-pill viz-version-pill-link" href="visualizer1.html" title="Original single-page visualizer, kept for compatibility.">v1</a>
       </span>
     </h1>
-    <p>Load a project dataset, then remove nodes, run counterfactuals and permutation tests, edit what-if scenarios, and inspect coverage and group composition — all without leaving the page.</p>
+    <p>Load a project dataset, then remove nodes or edges, run counterfactuals and permutation tests, edit what-if scenarios, and inspect coverage and group composition — all without leaving the page.</p>
     <div class="btn-row" style="margin-top: 14px;">
       <button class="viz-btn viz-btn-primary" id="viz2-tutorial-btn">🎓 Tutorial walkthrough</button>
+      <button class="viz-btn viz-btn-ghost" id="viz2-clear-cache-btn" title="Force-refresh every cached script + reset saved settings on this page">🧹 Clear cache</button>
     </div>
   </section>
+
 
   <!-- What's New surfaced just under the hero. Icon-grid of profile boxes
        (3 columns on desktop, single column on narrow viewports). -->
@@ -914,8 +897,8 @@ select.viz-select {
         <summary>⚙ Settings</summary>
         <div class="agg-body">
         <div class="slider-row">
-          <div class="lbl"><span>Node size scale</span><span class="v" id="node-scale-val">1.0x</span></div>
-          <input type="range" min="50" max="200" value="100" id="node-scale">
+          <div class="lbl"><span>Node size scale</span><span class="v" id="node-scale-val">0.7x</span></div>
+          <input type="range" min="50" max="200" value="70" id="node-scale">
         </div>
         <div class="slider-row">
           <div class="lbl"><span>Edge weight threshold</span><span class="v" id="thresh-val">0.0</span></div>
@@ -993,6 +976,15 @@ select.viz-select {
         <summary>📐 Group Composition</summary>
         <div class="agg-body" id="viz2-group-composition-body"><div class="node-empty">Loading group composition…</div></div>
       </details>
+
+      <!-- Code export lives beneath every analysis card so its output reflects
+           the full state above it (removals + scenarios + counterfactuals + perm). -->
+      <details class="analysis-card agg-panel" data-card="code-export" id="viz2-codeexport-panel" style="margin-top:16px;">
+        <summary>💻 Export as Code</summary>
+        <div class="agg-body" id="viz2-codeexport-body">
+          <div class="node-empty">Load a network to generate code.</div>
+        </div>
+      </details>
     </div>
 
     <!-- ── RIGHT: node inspector first (closest to graph), then v2 stats ── -->
@@ -1003,12 +995,14 @@ select.viz-select {
         <button type="button" id="viz2-collapse-all" title="Collapse every card">− Collapse all</button>
       </div>
 
-      <!-- v2: Selected Node first so the Remove button sits right next to the graph. -->
+      <!-- v2: Selected first so the Remove button sits right next to the graph.
+           Handles either a picked node or a picked edge — the panel body swaps
+           its contents in viz2-removal.js based on which one is set. -->
       <details open class="viz-panel agg-panel" data-card="selected">
-        <summary>🏷 Selected Node</summary>
+        <summary>🏷 Selected</summary>
         <div class="agg-body">
         <div id="node-card-wrap">
-          <div class="node-empty">Click any node to inspect.</div>
+          <div class="node-empty">Click any node or edge to inspect.</div>
         </div>
         <!-- v2: removal controls (mounted by viz2-removal.js) -->
         <div id="viz2-selected-actions"></div>
@@ -1030,6 +1024,12 @@ select.viz-select {
           <div id="viz2-network-stats-body">
             <div class="node-empty">Load a network to see stats.</div>
           </div>
+          <details class="viz2-nested-formulas" data-card="distributions" id="viz2-distributions-panel">
+            <summary>📊 Centrality Distributions</summary>
+            <div class="agg-body" id="viz2-distributions-body">
+              <div class="node-empty">Load a network to see distributions.</div>
+            </div>
+          </details>
           <details class="viz2-nested-formulas" data-card="formulas" id="viz2-formulas-panel">
             <summary>📐 Formulas &amp; Definitions</summary>
             <div class="agg-body" id="viz2-formulas-body">
@@ -1068,13 +1068,14 @@ select.viz-select {
           <div class="node-empty">Loading node browser…</div>
         </div>
       </details>
+
     </div>
 
   </div>
 
   <p class="site-footer">
-    <strong>SYSEN 5470 · Network Visualizer v2 · Experimental</strong><br>
-    Cornell Engineering · Summer 2026 · Internal preview — not for student release.
+    <strong>SYSEN 5470 · Network Visualizer</strong><br>
+    Cornell Engineering · Summer 2026
   </p>
 
 </div>
@@ -1085,16 +1086,92 @@ select.viz-select {
      Driver.js loaded from cdnjs (same CDN as d3/papaparse → allow-listed). -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/driver.js/1.3.1/driver.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/driver.js/1.3.1/driver.js.iife.js" defer></script>
-<script src="assets/viz2-core.js?v=20260630f" defer></script>
-<script src="assets/viz2-metrics.js?v=20260630f" defer></script>
-<script src="assets/viz2-removal.js?v=20260630f" defer></script>
-<script src="assets/viz2-coverage.js?v=20260630f" defer></script>
-<script src="assets/viz2-scenarios.js?v=20260630f" defer></script>
-<script src="assets/viz2-montecarlo.js?v=20260630f" defer></script>
-<script src="assets/viz2-permutation.js?v=20260630f" defer></script>
-<script src="assets/viz2-grouping.js?v=20260630f" defer></script>
-<script src="assets/viz2-nodebrowser.js?v=20260630f" defer></script>
-<script src="assets/viz2-tutorial.js?v=20260630f" defer></script>
+<script src="assets/viz2-core.js?v=20260702a" defer></script>
+<script src="assets/viz2-metrics.js?v=20260701c" defer></script>
+<script src="assets/viz2-distributions.js?v=20260701c" defer></script>
+<script src="assets/viz2-removal.js?v=20260702a" defer></script>
+<script src="assets/viz2-coverage.js?v=20260701c" defer></script>
+<script src="assets/viz2-scenarios.js?v=20260701c" defer></script>
+<script src="assets/viz2-montecarlo.js?v=20260702b" defer></script>
+<script src="assets/viz2-permutation.js?v=20260702b" defer></script>
+<script src="assets/viz2-grouping.js?v=20260701d" defer></script>
+<script src="assets/viz2-nodebrowser.js?v=20260701c" defer></script>
+<script src="assets/viz2-codeexport.js?v=20260701l" defer></script>
+<script src="assets/viz2-tutorial.js?v=20260701c" defer></script>
+
+<!-- ── Clear-cache dialog ─────────────────────────────────────
+  Small modal + button that lets the user reset every browser-side cache
+  for this page. Version-bumped `?v=` query strings only bust the HTTP
+  cache for files the HTML references *after* the bump; a stuck service
+  worker or a stale Cache Storage entry can override that. This button
+  gives students a one-click "just make it fresh" escape hatch. -->
+<div id="clear-cache-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div role="dialog" aria-labelledby="clear-cache-title" style="background:var(--card-bg,#0f2818);border:1px solid var(--green-bright,#39FF14);border-radius:12px;padding:22px 24px;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.7);">
+    <h3 id="clear-cache-title" style="font-family:var(--font-mono);font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--green-bright);margin:0 0 10px;">🧹 Clear cache?</h3>
+    <p style="font-family:var(--font-body);font-size:13.5px;color:var(--green-mint);line-height:1.55;margin:0 0 16px;">
+      This will clear every cached script, stylesheet, and saved setting
+      for <strong>this page only</strong> (visualizer state, saved
+      scenarios, panel open/close, etc.), then reload with the latest
+      assets from the server.
+    </p>
+    <p style="font-family:var(--font-body);font-size:12px;color:var(--grey);line-height:1.5;margin:0 0 16px;">
+      Your files under <code>data/projects/</code> and anything you've
+      downloaded aren't touched.
+    </p>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" id="clear-cache-cancel" class="viz-btn viz-btn-ghost">Cancel</button>
+      <button type="button" id="clear-cache-confirm" class="viz-btn viz-btn-danger">Yes, clear cache</button>
+    </div>
+  </div>
+</div>
+<script>
+// Standalone (no viz2 deps): wire the "🧹 Clear cache" button to a modal,
+// and on confirm nuke Cache Storage + localStorage + sessionStorage,
+// then reload with a fresh cache-bust query param appended to the URL.
+(function () {
+  const btn     = document.getElementById('viz2-clear-cache-btn');
+  const modal   = document.getElementById('clear-cache-modal');
+  const cancel  = document.getElementById('clear-cache-cancel');
+  const confirm = document.getElementById('clear-cache-confirm');
+  if (!btn || !modal) return;
+  const open  = () => { modal.style.display = 'flex'; };
+  const close = () => { modal.style.display = 'none'; };
+  btn.addEventListener('click', open);
+  cancel.addEventListener('click', close);
+  // Click outside the dialog card also closes it.
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display === 'flex') close();
+  });
+  confirm.addEventListener('click', async () => {
+    confirm.disabled = true;
+    confirm.textContent = 'Clearing…';
+    try {
+      // Kill Cache Storage (from any accidentally-registered SW).
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      // Unregister any service workers pinned to this origin.
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+      // Nuke this-page state. Session + local storage.
+      try { sessionStorage.clear(); } catch (_) {}
+      try { localStorage.clear(); }   catch (_) {}
+    } catch (err) {
+      console.warn('[clear-cache]', err);
+    }
+    // Reload with a fresh cache-bust so any lingering HTTP-cached JS/CSS
+    // for THIS page falls back to a network fetch. Doesn't fix already-
+    // cached files served by cdnjs, but everything we ship locally does.
+    const url = new URL(location.href);
+    url.searchParams.set('_cb', String(Date.now()));
+    location.replace(url.toString());
+  });
+})();
+</script>
 <script>
 // v2 card state persistence — restores each <details data-card="..."> from
 // localStorage and writes back on toggle. Wraps in try/catch since Safari
