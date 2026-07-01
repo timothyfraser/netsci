@@ -73,14 +73,17 @@
     };
   }
 
-  // Compute baseline (no removals). Temporarily empties state.removedNodes
-  // for the adjacency build, then restores. We do NOT call computeMetrics()
-  // because that has the side-effect of mutating n.deg / n.weighted on the
-  // graph nodes; baseline disruption only needs APL/diameter/components.
+  // Compute baseline (no removals). Temporarily empties BOTH state.removedNodes
+  // and state.removedEdges for the adjacency build, then restores them. We do
+  // NOT call computeMetrics() because that has the side-effect of mutating
+  // n.deg / n.weighted on the graph nodes; baseline disruption only needs
+  // APL/diameter/components computed against the original graph.
   function computeBaseline() {
     if (!state.graph) return null;
-    const saved = state.removedNodes;
+    const savedNodes = state.removedNodes;
+    const savedEdges = state.removedEdges;
     state.removedNodes = new Set();
+    state.removedEdges = new Set();
     const ids = state.graph.nodes
       .filter((nn) => !(state.dropIsolates && (state.metrics[nn.id]?.degree || 0) === 0))
       .map((nn) => nn.id);
@@ -88,8 +91,10 @@
     // isn't a structural isolate under the current dropIsolates setting.
     // To stay faithful to the baseline regardless of removed-driven isolates,
     // include all non-isolate nodes ignoring removals.
-    state.removedNodes = saved;
-    return computeDisruption(ids);
+    const result = computeDisruption(ids);
+    state.removedNodes = savedNodes;
+    state.removedEdges = savedEdges;
+    return result;
   }
 
   function computeLive() {
@@ -527,6 +532,11 @@
   on('removed-changed', () => {
     computeSelectedHops();       // active subgraph changed → reclassify edges
     renderSelectedActions();
+    // Node removal already fires metrics-updated via toggleRemoval, which
+    // re-renders the Disruption card. Edge removal fires removed-changed
+    // without a metrics-updated bounce (computeMetrics is called but its
+    // event isn't wired here), so refresh the card explicitly.
+    renderDisruptionCard();
   });
   // metrics-updated fires from computeMetrics(). If WE triggered it via
   // toggleRemoval, the disruption card was already re-rendered. But weight

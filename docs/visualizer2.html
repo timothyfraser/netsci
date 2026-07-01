@@ -713,6 +713,7 @@ select.viz-select {
     <p>Load a project dataset, then remove nodes, run counterfactuals and permutation tests, edit what-if scenarios, and inspect coverage and group composition — all without leaving the page.</p>
     <div class="btn-row" style="margin-top: 14px;">
       <button class="viz-btn viz-btn-primary" id="viz2-tutorial-btn">🎓 Tutorial walkthrough</button>
+      <button class="viz-btn viz-btn-ghost" id="viz2-clear-cache-btn" title="Force-refresh every cached script + reset saved settings on this page">🧹 Clear cache</button>
     </div>
   </section>
 
@@ -926,8 +927,8 @@ select.viz-select {
         <summary>⚙ Settings</summary>
         <div class="agg-body">
         <div class="slider-row">
-          <div class="lbl"><span>Node size scale</span><span class="v" id="node-scale-val">1.0x</span></div>
-          <input type="range" min="50" max="200" value="100" id="node-scale">
+          <div class="lbl"><span>Node size scale</span><span class="v" id="node-scale-val">0.7x</span></div>
+          <input type="range" min="50" max="200" value="70" id="node-scale">
         </div>
         <div class="slider-row">
           <div class="lbl"><span>Edge weight threshold</span><span class="v" id="thresh-val">0.0</span></div>
@@ -1115,10 +1116,10 @@ select.viz-select {
      Driver.js loaded from cdnjs (same CDN as d3/papaparse → allow-listed). -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/driver.js/1.3.1/driver.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/driver.js/1.3.1/driver.js.iife.js" defer></script>
-<script src="assets/viz2-core.js?v=20260701d" defer></script>
+<script src="assets/viz2-core.js?v=20260702a" defer></script>
 <script src="assets/viz2-metrics.js?v=20260701c" defer></script>
 <script src="assets/viz2-distributions.js?v=20260701c" defer></script>
-<script src="assets/viz2-removal.js?v=20260701e" defer></script>
+<script src="assets/viz2-removal.js?v=20260702a" defer></script>
 <script src="assets/viz2-coverage.js?v=20260701c" defer></script>
 <script src="assets/viz2-scenarios.js?v=20260701c" defer></script>
 <script src="assets/viz2-montecarlo.js?v=20260701d" defer></script>
@@ -1127,6 +1128,80 @@ select.viz-select {
 <script src="assets/viz2-nodebrowser.js?v=20260701c" defer></script>
 <script src="assets/viz2-codeexport.js?v=20260701l" defer></script>
 <script src="assets/viz2-tutorial.js?v=20260701c" defer></script>
+
+<!-- ── Clear-cache dialog ─────────────────────────────────────
+  Small modal + button that lets the user reset every browser-side cache
+  for this page. Version-bumped `?v=` query strings only bust the HTTP
+  cache for files the HTML references *after* the bump; a stuck service
+  worker or a stale Cache Storage entry can override that. This button
+  gives students a one-click "just make it fresh" escape hatch. -->
+<div id="clear-cache-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div role="dialog" aria-labelledby="clear-cache-title" style="background:var(--card-bg,#0f2818);border:1px solid var(--green-bright,#39FF14);border-radius:12px;padding:22px 24px;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.7);">
+    <h3 id="clear-cache-title" style="font-family:var(--font-mono);font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--green-bright);margin:0 0 10px;">🧹 Clear cache?</h3>
+    <p style="font-family:var(--font-body);font-size:13.5px;color:var(--green-mint);line-height:1.55;margin:0 0 16px;">
+      This will clear every cached script, stylesheet, and saved setting
+      for <strong>this page only</strong> (visualizer state, saved
+      scenarios, panel open/close, etc.), then reload with the latest
+      assets from the server.
+    </p>
+    <p style="font-family:var(--font-body);font-size:12px;color:var(--grey);line-height:1.5;margin:0 0 16px;">
+      Your files under <code>data/projects/</code> and anything you've
+      downloaded aren't touched.
+    </p>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" id="clear-cache-cancel" class="viz-btn viz-btn-ghost">Cancel</button>
+      <button type="button" id="clear-cache-confirm" class="viz-btn viz-btn-danger">Yes, clear cache</button>
+    </div>
+  </div>
+</div>
+<script>
+// Standalone (no viz2 deps): wire the "🧹 Clear cache" button to a modal,
+// and on confirm nuke Cache Storage + localStorage + sessionStorage,
+// then reload with a fresh cache-bust query param appended to the URL.
+(function () {
+  const btn     = document.getElementById('viz2-clear-cache-btn');
+  const modal   = document.getElementById('clear-cache-modal');
+  const cancel  = document.getElementById('clear-cache-cancel');
+  const confirm = document.getElementById('clear-cache-confirm');
+  if (!btn || !modal) return;
+  const open  = () => { modal.style.display = 'flex'; };
+  const close = () => { modal.style.display = 'none'; };
+  btn.addEventListener('click', open);
+  cancel.addEventListener('click', close);
+  // Click outside the dialog card also closes it.
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display === 'flex') close();
+  });
+  confirm.addEventListener('click', async () => {
+    confirm.disabled = true;
+    confirm.textContent = 'Clearing…';
+    try {
+      // Kill Cache Storage (from any accidentally-registered SW).
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      // Unregister any service workers pinned to this origin.
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+      // Nuke this-page state. Session + local storage.
+      try { sessionStorage.clear(); } catch (_) {}
+      try { localStorage.clear(); }   catch (_) {}
+    } catch (err) {
+      console.warn('[clear-cache]', err);
+    }
+    // Reload with a fresh cache-bust so any lingering HTTP-cached JS/CSS
+    // for THIS page falls back to a network fetch. Doesn't fix already-
+    // cached files served by cdnjs, but everything we ship locally does.
+    const url = new URL(location.href);
+    url.searchParams.set('_cb', String(Date.now()));
+    location.replace(url.toString());
+  });
+})();
+</script>
 <script>
 // v2 card state persistence — restores each <details data-card="..."> from
 // localStorage and writes back on toggle. Wraps in try/catch since Safari
