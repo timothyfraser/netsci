@@ -159,7 +159,7 @@
       .attr('fill-opacity', 0.85)
       .append('title').text((g) => {
         const f = stats.incident[g] / Math.max(1, stats.totalEnd);
-        return `${g}: ${(f * 100).toFixed(1)}% of edge-endpoint weight (${stats.members[g]} members)`;
+        return `${g}: ${(f * 100).toFixed(1)}% of edges (${stats.members[g]} members)`;
       });
 
     row.append('text')
@@ -201,7 +201,7 @@
       <div id="viz2-grouping-swatches" style="display:flex;flex-wrap:wrap;gap:4px;margin:0 0 10px;"></div>
       <div id="viz2-grouping-cellbar" style="margin-bottom:4px;"></div>
       <div id="viz2-grouping-celllegend" style="font-family:var(--font-mono);font-size:10px;color:var(--grey);margin-bottom:12px;line-height:1.5;"></div>
-      <div style="font-family:var(--font-mono);font-size:9.5px;color:var(--grey);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Per-group share of edge endpoints</div>
+      <div style="font-family:var(--font-mono);font-size:9.5px;color:var(--grey);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;" title="Each edge contributes to both endpoint groups; group shares sum to 100%.">Per-group share of edges</div>
       <div id="viz2-grouping-bars"></div>
       <div id="viz2-grouping-sim" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border-soft);font-family:var(--font-mono);font-size:11px;color:var(--green-mint);"></div>`;
 

@@ -43,7 +43,7 @@
     colorBy: 'group',
     groupPalette: {}, groupColors: {},
     dropIsolates: true, showDrift: false, frozen: false,
-    nodeScale: 1, edgeThreshold: 0,
+    nodeScale: 0.7, edgeThreshold: 0,
     timeFilter: null, timeRange: null,
     selectedNode: null, selectedEdge: null, simulation: null,
     zoom: null, zoomTransform: null,
@@ -1344,13 +1344,19 @@
     },
     // Build undirected adjacency map from a {nodes, links} graph and a Set of
     // active ids. Returns { id → [{neighborId, weight}, ...] }.
+    // Also skips edges whose edgeKey is in state.removedEdges — that way every
+    // downstream card that walks this adjacency (disruption stats, group
+    // coverage, permutation APL/diameter, MC baseline/treated) automatically
+    // reflects edges the user cut in the Selected panel, not just node cuts.
     buildAdj(graph, activeIdsSet) {
       const adj = Object.create(null);
       activeIdsSet.forEach((id) => { adj[id] = []; });
+      const removedE = state.removedEdges;
       graph.links.forEach((l) => {
         const s = typeof l.source === 'object' ? l.source.id : l.source;
         const t = typeof l.target === 'object' ? l.target.id : l.target;
         if (!activeIdsSet.has(s) || !activeIdsSet.has(t)) return;
+        if (removedE && removedE.has(String(s) + '||' + String(t))) return;
         const w = (l.weight && l.weight > 0) ? l.weight : 1;
         adj[s].push({ to: t, w }); adj[t].push({ to: s, w });
       });

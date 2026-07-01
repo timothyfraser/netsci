@@ -78,6 +78,7 @@
     includeCoverage: true,   // Section 7 — group coverage
     includeDisrupt: true,    // Section 8 — disruption stats (baseline vs live)
     includeAggregate: true,  // Section 9 — group-aggregation of the network
+    includeViz: true,        // Section 10 — static ggplot / matplotlib of the graph
   };
 
   // ── Snapshot the visualizer's live state ────────────────────
@@ -122,6 +123,16 @@
     const aggTime = s.aggregateTime || '';
     const timeCol = s.mapping.time || null;
 
+    // Visualization state — layout (frozen x/y per node), group palette,
+    // edge threshold. Layout coords let R + Python reproduce EXACTLY the
+    // arrangement the visualizer is showing on screen.
+    const layout = {};
+    (s.graph.nodes || []).forEach((n) => {
+      if (isFinite(n.x) && isFinite(n.y)) layout[n.id] = { x: +n.x, y: +n.y };
+    });
+    const groupPalette = Object.assign({}, s.groupColors || {}, s.groupPalette || {});
+    const edgeThreshold = +s.edgeThreshold || 0;
+
     return {
       datasetKey: s.currentDatasetKey || null,
       directed: !!s.directed,
@@ -160,6 +171,7 @@
       // which is how a user asks for a "just the raw graph" reproducer.
       coverage:  { ref: covRef, hops: covHops },
       aggregate: { by: aggBy, mode: aggMode, timeSlice: aggTime, timeCol: timeCol },
+      viz:       { layout, groupPalette, edgeThreshold },
       include: {
         scenarios: !!ui.includeScenarios,
         dist:      !!ui.includeDist,
@@ -169,6 +181,7 @@
         coverage:  !!ui.includeCoverage,
         disrupt:   !!ui.includeDisrupt,
         aggregate: !!ui.includeAggregate,
+        viz:       !!ui.includeViz,
       },
     };
   }
@@ -597,11 +610,12 @@
       L.push('');
       L.push('# quantile(., c(0.025, 0.975)) reads off a percentile-based 95% CI.');
       L.push('ci <- quantile(apls, c(0.025, 0.975))');
-      L.push('cat(sprintf("🧪 MC APL: mean %.4f · sd %.4f · 95%% CI [%.4f, %.4f]\\n",');
+      L.push('cat(sprintf("🧪 MC Average Path Length: mean %.4f · sd %.4f · 95%% CI [%.4f, %.4f]\\n",');
       L.push('            mean(apls), sd(apls), ci[1], ci[2]))');
       L.push('');
       L.push('hist(apls, breaks = 24, col = "#39FF14", border = "#0a0f0a",');
-      L.push('     main = "MC weighted APL", xlab = "APL (1 / weight cost)")');
+      L.push('     main = "MC weighted Average Path Length",');
+      L.push('     xlab = "Average Path Length (using 1 / weight as cost)")');
       L.push('');
       L.push('');
     }
@@ -732,12 +746,12 @@
       L.push('');
       L.push('# The visualizer\'s Disruption card compares four network-level metrics');
       L.push('# before/after your removals + scenario edits:');
-      L.push('#   active       — number of non-removed nodes');
-      L.push('#   components   — number of disconnected pieces (weak components)');
-      L.push('#   apl          — mean shortest path (∞ when any pair is unreachable)');
-      L.push('#   diameter     — max shortest path (∞ when disconnected)');
-      L.push('# Convention: ANY unreachable pair → APL & diameter are Inf. Matches');
-      L.push('# viz2-removal.js:computeDisruption().');
+      L.push('#   active             — number of non-removed nodes');
+      L.push('#   components         — number of disconnected pieces (weak components)');
+      L.push('#   avg_path_length    — mean shortest path (∞ when any pair is unreachable)');
+      L.push('#   diameter           — max shortest path (∞ when disconnected)');
+      L.push('# Convention: ANY unreachable pair → avg_path_length & diameter are Inf.');
+      L.push('# Matches viz2-removal.js:computeDisruption().');
       L.push('');
       L.push('## 8.1 Helper ################################################################');
       L.push('');
@@ -751,7 +765,8 @@
       L.push('  # structural BFS in buildAdj() so numbers on paper line up with the card.');
       L.push('  apl  <- if (disconnected) Inf else mean_distance(gg, weights = NA, directed = FALSE)');
       L.push('  diam <- if (disconnected) Inf else diameter(gg, weights = NA, directed = FALSE)');
-      L.push('  list(active = vcount(gg), components = comps$no, apl = apl, diameter = diam)');
+      L.push('  list(active = vcount(gg), components = comps$no,');
+      L.push('       avg_path_length = apl, diameter = diam)');
       L.push('}');
       L.push('');
       L.push('## 8.2 Baseline vs current ###################################################');
@@ -788,11 +803,11 @@
       L.push('}');
       L.push('');
       L.push('cat("📊 Disruption stats (baseline → current):\\n")');
-      L.push('cat(sprintf("     %-14s %10s %10s %10s\\n", "metric", "baseline", "current", "Δ"))');
+      L.push('cat(sprintf("     %-18s %10s %10s %10s\\n", "metric", "baseline", "current", "Δ"))');
       L.push('# For each metric name m in the four disruption metrics: print baseline,');
       L.push('# current, and their delta side-by-side.');
-      L.push('for (m in c("active", "components", "apl", "diameter")) {');
-      L.push('  cat(sprintf("     %-14s %10s %10s %10s\\n",');
+      L.push('for (m in c("active", "components", "avg_path_length", "diameter")) {');
+      L.push('  cat(sprintf("     %-18s %10s %10s %10s\\n",');
       L.push('              m, fmt_val(base[[m]]), fmt_val(live[[m]]),');
       L.push('              fmt_delta(base[[m]], live[[m]])))');
       L.push('}');
@@ -890,6 +905,123 @@
       L.push('              k, top_edges$from[k], top_edges$to[k],');
       L.push('              top_edges$weight[k], top_edges$count[k]))');
       L.push('}');
+      L.push('');
+      L.push('');
+    }
+
+    // ── 10. Network visualization (ggplot, optional) ─────────────
+    if (snap.include.viz) {
+      const idCol   = snap.nodeIdCol || 'name';
+      const fromCol = snap.fromCol   || 'from';
+      const toCol   = snap.toCol     || 'to';
+      const layoutIds = Object.keys(snap.viz.layout);
+      const groupCol  = snap.groupCol;
+      const paletteKeys = Object.keys(snap.viz.groupPalette);
+
+      L.push('# 10. Network visualization ##################################################');
+      L.push('');
+      L.push('pretty_section("Network visualization")');
+      L.push('');
+      L.push('# A static reproduction of the network as it looked on the visualizer stage:');
+      L.push('# same node positions (frozen force-sim layout), same group palette, same edge');
+      L.push('# threshold. Drawn with ggplot2 for portability — the playground has ggplot2');
+      L.push('# preloaded, and the same script runs unchanged on a laptop.');
+      L.push('');
+      L.push('library(ggplot2)');
+      L.push('');
+      L.push('## 10.1 Layout ##############################################################');
+      L.push('');
+      L.push('# The visualizer runs a force-directed layout, freezes it once it settles,');
+      L.push('# and hands us the final (x, y) per node. We inline those coordinates as a');
+      L.push('# data.frame so ggplot draws the SAME picture you had on screen.');
+      L.push('# (Nodes not in this table were either not in the active subgraph at handoff');
+      L.push('# time OR had no valid position — they\'re dropped from the plot.)');
+      L.push('layout_df <- data.frame(');
+      L.push('  name = c(' + layoutIds.map(rStr).join(', ') + '),');
+      L.push('  x    = c(' + layoutIds.map((id) => snap.viz.layout[id].x.toFixed(2)).join(', ') + '),');
+      L.push('  y    = c(' + layoutIds.map((id) => (-snap.viz.layout[id].y).toFixed(2)).join(', ') + '),  # flip Y so up is up');
+      L.push('  stringsAsFactors = FALSE');
+      L.push(')');
+      L.push('');
+      L.push('## 10.2 Palette + threshold #################################################');
+      L.push('');
+      if (paletteKeys.length) {
+        L.push('# Named vector: group label → hex color. Matches the visualizer\'s picker.');
+        L.push('group_palette <- c(');
+        L.push('  ' + paletteKeys.map((k) => rStr(k) + ' = ' + rStr(snap.viz.groupPalette[k])).join(',\n  '));
+        L.push(')');
+      } else {
+        L.push('# No grouping mapped in the visualizer → every node draws in the same green.');
+        L.push('group_palette <- c()');
+      }
+      L.push('edge_threshold <- ' + snap.viz.edgeThreshold + '  # weight ≥ this stays; below → dropped');
+      L.push('');
+      L.push('## 10.3 Prepare node + edge tables ##########################################');
+      L.push('');
+      L.push('# Build id → x and id → y lookup vectors so we can attach coordinates by');
+      L.push('# vectorised name-indexing WITHOUT going through merge() (which would rename');
+      L.push('# any pre-existing `x` or `y` column in `nodes` or `edges` and break aes()).');
+      L.push('xpos_of <- setNames(layout_df$x, layout_df$name)');
+      L.push('ypos_of <- setNames(layout_df$y, layout_df$name)');
+      L.push('');
+      L.push('# Node data = layout + group lookup');
+      L.push('node_data <- layout_df');
+      if (groupCol) {
+        L.push('# For plotting: any missing group becomes "(none)" so ggplot doesn\'t drop the row.');
+        L.push('group_of <- setNames(as.character(nodes[[' + rStr(groupCol) + ']]), nodes[[' + rStr(idCol) + ']])');
+        L.push('node_data$plot_group <- group_of[node_data$name]');
+        L.push('node_data$plot_group[is.na(node_data$plot_group) | node_data$plot_group == ""] <- "(none)"');
+      }
+      L.push('');
+      L.push('# Edge data: keep only edges above the visualizer\'s weight threshold, then');
+      L.push('# attach the start/end coordinates by looking up each endpoint in xpos_of.');
+      L.push('edge_data <- edges');
+      if (weight) {
+        L.push('edge_data <- edge_data[edge_data$' + weight + ' >= edge_threshold, , drop = FALSE]');
+      }
+      L.push('edge_data$x_from <- xpos_of[as.character(edge_data$' + fromCol + ')]');
+      L.push('edge_data$y_from <- ypos_of[as.character(edge_data$' + fromCol + ')]');
+      L.push('edge_data$x_to   <- xpos_of[as.character(edge_data$' + toCol   + ')]');
+      L.push('edge_data$y_to   <- ypos_of[as.character(edge_data$' + toCol   + ')]');
+      L.push('# Drop edges where either endpoint has no layout coord (isolated / removed).');
+      L.push('edge_data <- edge_data[!is.na(edge_data$x_from) & !is.na(edge_data$x_to), , drop = FALSE]');
+      L.push('');
+      L.push('## 10.4 Draw the plot #######################################################');
+      L.push('');
+      const nodeAes = groupCol ? 'aes(x = x, y = y, color = plot_group)' : 'aes(x = x, y = y)';
+      L.push('p <- ggplot() +');
+      L.push('  geom_segment(data = edge_data,');
+      L.push('               aes(x = x_from, y = y_from, xend = x_to, yend = y_to),');
+      L.push('               color = "#556655", alpha = 0.35, linewidth = 0.3) +');
+      L.push('  geom_point(data = node_data,');
+      L.push('             ' + nodeAes + ',');
+      L.push('             size = 3.5, alpha = 0.9) +');
+      if (groupCol && paletteKeys.length) {
+        L.push('  scale_color_manual(values = group_palette, na.value = "#39FF14", name = ' + rStr(groupCol) + ') +');
+      }
+      L.push('  coord_equal() +');
+      L.push('  theme_void() +');
+      L.push('  theme(');
+      L.push('    plot.background  = element_rect(fill = "#050a05", color = NA),');
+      L.push('    panel.background = element_rect(fill = "#050a05", color = NA),');
+      L.push('    legend.text = element_text(color = "#d1fae5"),');
+      L.push('    legend.title = element_text(color = "#d1fae5")');
+      L.push('  )');
+      if (snap.selectedNode) {
+        L.push('');
+        L.push('# Ego highlight: draw a bright pink ring around the selected node so it pops.');
+        L.push('sel_name <- ' + rStr(snap.selectedNode));
+        L.push('sel_row  <- node_data[node_data$name == sel_name, ]');
+        L.push('if (nrow(sel_row) == 1) {');
+        L.push('  p <- p + geom_point(data = sel_row, aes(x = x, y = y),');
+        L.push('                      shape = 21, size = 8, stroke = 1.6,');
+        L.push('                      color = "#f472b6", fill = NA, inherit.aes = FALSE)');
+        L.push('}');
+      }
+      L.push('');
+      L.push('print(p)');
+      L.push('cat(sprintf("🖼  Rendered network: %d nodes, %d edges (threshold ≥ %.2f)\\n",');
+      L.push('            nrow(node_data), nrow(edge_data), edge_threshold))');
       L.push('');
       L.push('');
     }
@@ -1319,12 +1451,12 @@
       L.push('');
       L.push('# np.quantile(., [0.025, 0.975]) reads off a percentile-based 95% CI.');
       L.push('lo, hi = np.quantile(apls, [0.025, 0.975])');
-      L.push('print(f"🧪 MC APL: mean {apls.mean():.4f} · sd {apls.std():.4f} · 95% CI [{lo:.4f}, {hi:.4f}]")');
+      L.push('print(f"🧪 MC Average Path Length: mean {apls.mean():.4f} · sd {apls.std():.4f} · 95% CI [{lo:.4f}, {hi:.4f}]")');
       L.push('');
       L.push('plt.figure(figsize=(6, 3.2))');
       L.push('plt.hist(apls, bins=24, color="#39FF14", edgecolor="#0a0f0a")');
-      L.push('plt.title("MC weighted APL")');
-      L.push('plt.xlabel("APL (1 / weight cost)")');
+      L.push('plt.title("MC weighted Average Path Length")');
+      L.push('plt.xlabel("Average Path Length (using 1 / weight as cost)")');
       L.push('plt.tight_layout()');
       L.push('plt.show()');
       L.push('');
@@ -1460,12 +1592,12 @@
       L.push('');
       L.push('# The visualizer\'s Disruption card compares four network-level metrics');
       L.push('# before/after your removals + scenario edits:');
-      L.push('#   active       — number of non-removed nodes');
-      L.push('#   components   — number of disconnected pieces (weak components)');
-      L.push('#   apl          — mean shortest path (∞ when any pair is unreachable)');
-      L.push('#   diameter     — max shortest path (∞ when disconnected)');
-      L.push('# Convention: ANY unreachable pair → APL & diameter are Inf. Matches');
-      L.push('# viz2-removal.js:computeDisruption().');
+      L.push('#   active             — number of non-removed nodes');
+      L.push('#   components         — number of disconnected pieces (weak components)');
+      L.push('#   avg_path_length    — mean shortest path (∞ when any pair is unreachable)');
+      L.push('#   diameter           — max shortest path (∞ when disconnected)');
+      L.push('# Convention: ANY unreachable pair → avg_path_length & diameter are inf.');
+      L.push('# Matches viz2-removal.js:computeDisruption().');
       L.push('');
       L.push('## 8.1 Helper ################################################################');
       L.push('');
@@ -1480,7 +1612,7 @@
       L.push('    apl  = math.inf if disconnected else gg.average_path_length(directed=False)');
       L.push('    diam = math.inf if disconnected else gg.diameter(directed=False)');
       L.push('    return {"active": gg.vcount(), "components": len(comps),');
-      L.push('            "apl": apl, "diameter": diam}');
+      L.push('            "avg_path_length": apl, "diameter": diam}');
       L.push('');
       L.push('## 8.2 Baseline vs current ###################################################');
       L.push('');
@@ -1519,11 +1651,11 @@
       L.push('    return f"{d:+.2f}"');
       L.push('');
       L.push('print("📊 Disruption stats (baseline → current):")');
-      L.push('print(f"     {\'metric\':<14} {\'baseline\':>10} {\'current\':>10} {\'Δ\':>10}")');
+      L.push('print(f"     {\'metric\':<18} {\'baseline\':>10} {\'current\':>10} {\'Δ\':>10}")');
       L.push('# For each metric name m in the four disruption metrics: print baseline,');
       L.push('# current, and their delta side-by-side.');
-      L.push('for m in ["active", "components", "apl", "diameter"]:');
-      L.push('    print(f"     {m:<14} {fmt_val(base[m]):>10} {fmt_val(live[m]):>10} {fmt_delta(base[m], live[m]):>10}")');
+      L.push('for m in ["active", "components", "avg_path_length", "diameter"]:');
+      L.push('    print(f"     {m:<18} {fmt_val(base[m]):>10} {fmt_val(live[m]):>10} {fmt_delta(base[m], live[m]):>10}")');
       L.push('');
       L.push('');
     }
@@ -1615,6 +1747,134 @@
       L.push('for k, row in enumerate(top_edges[["from", "to", "weight", "count"]].itertuples(index=False, name=None), start=1):');
       L.push('    frm, to_, w, c = row');
       L.push('    print(f"     {k}. {frm:<12} → {to_:<12}   weight = {w:.2f}  ({int(c)} source edge(s))")');
+      L.push('');
+      L.push('');
+    }
+
+    // ── 10. Network visualization (matplotlib, optional) ─────────
+    if (snap.include.viz) {
+      const idCol   = snap.nodeIdCol || 'name';
+      const fromCol = snap.fromCol   || 'from';
+      const toCol   = snap.toCol     || 'to';
+      const layoutIds = Object.keys(snap.viz.layout);
+      const groupCol  = snap.groupCol;
+      const paletteKeys = Object.keys(snap.viz.groupPalette);
+
+      L.push('# 10. Network visualization ##################################################');
+      L.push('');
+      L.push('pretty_section("Network visualization")');
+      L.push('');
+      L.push('# A static reproduction of the network as it looked on the visualizer stage:');
+      L.push('# same node positions (frozen force-sim layout), same group palette, same edge');
+      L.push('# threshold. Drawn with matplotlib for portability — the playground has it');
+      L.push('# preloaded, and the same script runs unchanged on a laptop.');
+      L.push('');
+      L.push('## 10.1 Layout ##############################################################');
+      L.push('');
+      L.push('# The visualizer runs a force-directed layout, freezes it once it settles,');
+      L.push('# and hands us the final (x, y) per node. We inline those coordinates as a');
+      L.push('# dict so matplotlib draws the SAME picture you had on screen.');
+      L.push('layout = {');
+      layoutIds.forEach((id, i) => {
+        const p = snap.viz.layout[id];
+        const sep = (i === layoutIds.length - 1) ? '' : ',';
+        L.push('    ' + pyStr(id) + ': (' + p.x.toFixed(2) + ', ' + (-p.y).toFixed(2) + ')' + sep + '  # flip Y so up is up');
+      });
+      L.push('}');
+      L.push('');
+      L.push('## 10.2 Palette + threshold #################################################');
+      L.push('');
+      if (paletteKeys.length) {
+        L.push('# Dict: group label → hex color. Matches the visualizer\'s picker.');
+        L.push('group_palette = {');
+        paletteKeys.forEach((k, i) => {
+          const sep = (i === paletteKeys.length - 1) ? '' : ',';
+          L.push('    ' + pyStr(k) + ': ' + pyStr(snap.viz.groupPalette[k]) + sep);
+        });
+        L.push('}');
+      } else {
+        L.push('# No grouping mapped in the visualizer → every node draws in the same green.');
+        L.push('group_palette = {}');
+      }
+      L.push('edge_threshold = ' + snap.viz.edgeThreshold + '  # weight ≥ this stays; below → dropped');
+      L.push('');
+      L.push('## 10.3 Draw the plot #######################################################');
+      L.push('');
+      L.push('fig, ax = plt.subplots(figsize=(8, 8), facecolor="#050a05")');
+      L.push('ax.set_facecolor("#050a05")');
+      L.push('');
+      L.push('# Edges first so nodes render ON TOP.');
+      L.push('# For each edge e in g.es: draw a grey line between the endpoints\' layout coords,');
+      L.push('# skipping edges below the visualizer\'s threshold.');
+      if (weight) {
+        L.push('# g.es["weight"] was set in Section 1 when we built the graph, so bracket-');
+        L.push('# access is safe. Any edge whose weight is below the visualizer\'s threshold');
+        L.push('# is dropped from the plot — matches the on-screen picture.');
+        L.push('for e in g.es:');
+        L.push('    if e["weight"] < edge_threshold:');
+        L.push('        continue');
+        L.push('    n_from = g.vs[e.source]["name"]');
+        L.push('    n_to   = g.vs[e.target]["name"]');
+        L.push('    if n_from not in layout or n_to not in layout:');
+        L.push('        continue');
+        L.push('    x0, y0 = layout[n_from]');
+        L.push('    x1, y1 = layout[n_to]');
+        L.push('    ax.plot([x0, x1], [y0, y1], color="#556655", alpha=0.35, lw=0.4, zorder=1)');
+      } else {
+        L.push('for e in g.es:');
+        L.push('    n_from = g.vs[e.source]["name"]');
+        L.push('    n_to   = g.vs[e.target]["name"]');
+        L.push('    if n_from not in layout or n_to not in layout:');
+        L.push('        continue');
+        L.push('    x0, y0 = layout[n_from]');
+        L.push('    x1, y1 = layout[n_to]');
+        L.push('    ax.plot([x0, x1], [y0, y1], color="#556655", alpha=0.35, lw=0.4, zorder=1)');
+      }
+      L.push('');
+      L.push('# Nodes.');
+      L.push('# For each node v in g.vs: look up its group and color, then scatter at its');
+      L.push('# frozen (x, y) coordinates.');
+      if (groupCol) {
+        L.push('vs_names  = g.vs["name"]');
+        L.push('vs_groups = g.vs[' + pyStr(groupCol) + ']');
+        L.push('# Track which groups we\'ve already added to the legend so we don\'t duplicate.');
+        L.push('legend_seen = set()');
+        L.push('for name, gv in zip(vs_names, vs_groups):');
+        L.push('    if name not in layout:');
+        L.push('        continue');
+        L.push('    x, y = layout[name]');
+        L.push('    gkey = str(gv) if gv not in ("", None) else "(none)"');
+        L.push('    color = group_palette.get(gkey, "#39FF14")');
+        L.push('    label = gkey if gkey not in legend_seen else None');
+        L.push('    legend_seen.add(gkey)');
+        L.push('    ax.scatter([x], [y], s=40, c=color, alpha=0.9, zorder=2, label=label)');
+        L.push('');
+        L.push('leg = ax.legend(loc="upper right", frameon=False,');
+        L.push('                labelcolor="#d1fae5", title=' + pyStr(groupCol) + ')');
+        L.push('if leg is not None:');
+        L.push('    leg.get_title().set_color("#d1fae5")');
+      } else {
+        L.push('for name in g.vs["name"]:');
+        L.push('    if name not in layout:');
+        L.push('        continue');
+        L.push('    x, y = layout[name]');
+        L.push('    ax.scatter([x], [y], s=40, c="#39FF14", alpha=0.9, zorder=2)');
+      }
+      if (snap.selectedNode) {
+        L.push('');
+        L.push('# Ego highlight: bright pink ring around the selected node so it pops.');
+        L.push('sel = ' + pyStr(snap.selectedNode));
+        L.push('if sel in layout:');
+        L.push('    sx, sy = layout[sel]');
+        L.push('    ax.scatter([sx], [sy], s=200, facecolors="none", edgecolors="#f472b6",');
+        L.push('               linewidths=1.6, zorder=3)');
+      }
+      L.push('');
+      L.push('ax.set_axis_off()');
+      L.push('ax.set_aspect("equal", adjustable="datalim")');
+      L.push('plt.tight_layout()');
+      L.push('plt.show()');
+      L.push('print(f"🖼  Rendered network: {len(layout)} nodes, threshold ≥ {edge_threshold}")');
       L.push('');
       L.push('');
     }
@@ -1768,6 +2028,10 @@
           <input type="checkbox" id="viz2-codeexport-inc-aggregate" ${ui.includeAggregate ? 'checked' : ''} style="accent-color:var(--green-bright);">
           <span>🧬 Aggregation${dimmedNote(ui.includeAggregate, aggCfgd, 'no aggregate-by column')}</span>
         </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-viz" ${ui.includeViz ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>🖼 Network visualization</span>
+        </label>
       </fieldset>
       <div class="formula-note" style="margin:-2px 0 6px;">
         Reproduces the current state${bitsHtml}. Regenerates automatically as you change things.
@@ -1802,6 +2066,7 @@
     bind('viz2-codeexport-inc-coverage',  'includeCoverage');
     bind('viz2-codeexport-inc-disrupt',   'includeDisrupt');
     bind('viz2-codeexport-inc-aggregate', 'includeAggregate');
+    bind('viz2-codeexport-inc-viz',       'includeViz');
   }
 
   // Re-render on every event that could change the snapshot.

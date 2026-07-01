@@ -8,6 +8,11 @@
 <link rel="stylesheet" href="assets/design.css">
 <link rel="stylesheet" href="assets/site.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/solarized.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/ambiance.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/r/r.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
@@ -144,7 +149,9 @@
   }
   .pg-select:focus { outline: none; border-color: var(--green-bright); }
 
-  /* CODEMIRROR THEME */
+  /* CODEMIRROR THEME (netsci default). Custom syntax colors below only
+     apply when theme = "default"; loaded CDN themes (dracula, material,
+     monokai, solarized, ambiance) bring their own colors and win. */
   .CodeMirror {
     height: auto; min-height: 380px; flex: 1;
     background: rgba(5,10,5,0.7) !important;
@@ -158,16 +165,30 @@
   .CodeMirror-cursor { border-left: 2px solid var(--green-bright) !important; }
   .CodeMirror-selected { background: rgba(57,255,20,0.15) !important; }
   .CodeMirror-matchingbracket { color: var(--node-4) !important; background: rgba(251,191,36,0.18); }
-  /* syntax tokens */
-  .cm-keyword  { color: var(--green-bright); }
-  .cm-builtin  { color: var(--node-3); }
-  .cm-string   { color: var(--node-4); }
-  .cm-comment  { color: var(--grey); font-style: italic; }
-  .cm-number   { color: var(--node-3); }
-  .cm-operator { color: var(--node-5); }
-  .cm-variable { color: var(--white); }
-  .cm-variable-2 { color: var(--green-laser); }
-  .cm-def      { color: var(--green-bright); }
+  /* Syntax tokens — scoped to the DEFAULT netsci theme so switching to
+     dracula / material / monokai / solarized doesn't get overridden. */
+  .cm-s-default .cm-keyword  { color: var(--green-bright); }
+  .cm-s-default .cm-builtin  { color: var(--node-3); }
+  /* Strings pushed to a brighter amber-cream (#fde68a) for contrast on
+     the dark background — the raw var(--node-4) amber was hard to read. */
+  .cm-s-default .cm-string   { color: #fde68a; }
+  .cm-s-default .cm-comment  { color: var(--grey); font-style: italic; }
+  .cm-s-default .cm-number   { color: var(--node-3); }
+  /* Operators (arrows, +, -, %) brighter — the magenta looked "too dark
+     / too purple" on some backgrounds. */
+  .cm-s-default .cm-operator { color: #f9a8d4; }
+  .cm-s-default .cm-variable { color: var(--white); }
+  .cm-s-default .cm-variable-2 { color: var(--green-laser); }
+  .cm-s-default .cm-def      { color: var(--green-bright); }
+  /* CM-theme selector next to the status pill */
+  .pg-theme-select {
+    background: rgba(5,46,22,0.5); color: var(--white);
+    border: 1px solid var(--border); border-radius: 999px;
+    padding: 6px 12px;
+    font-family: var(--font-mono); font-size: 11.5px;
+    cursor: pointer;
+  }
+  .pg-theme-select:focus { outline: none; border-color: var(--green-bright); }
 
   /* OUTPUT TABS */
   .pg-tabs {
@@ -480,7 +501,6 @@
     <p class="course-number">SYSEN 5470 · Coding Playground</p>
     <h1><em>R</em> Playground</h1>
     <p>A full R interpreter, compiled to WebAssembly, running in your browser tab. No install. Tidyverse (incl. purrr) + igraph + tidygraph + ggraph + DBI/RSQLite are pre-installed. Your code and uploaded CSVs are saved to your own browser — they survive a refresh but never leave your device.</p>
-    <span class="status-pill loading" id="status"><span class="pulse"></span><span id="status-text">Loading WebR runtime…</span></span>
   </section>
 
   <details open>
@@ -551,6 +571,44 @@
     </div>
   </details>
   <!-- /PROJECT-DATASETS -->
+
+  <!-- Status pill + editor-theme picker live right above the editor so
+       users can't miss when the runtime is Loading vs Ready. -->
+  <div style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0 6px;">
+    <span class="status-pill loading" id="status"><span class="pulse"></span><span id="status-text">Loading WebR runtime…</span></span>
+    <label for="cm-theme" style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.06em;color:var(--grey);">Editor theme</label>
+    <select id="cm-theme" class="pg-theme-select">
+      <option value="default">Netsci</option>
+      <option value="dracula">Dracula</option>
+      <option value="material-darker">Material Darker</option>
+      <option value="monokai">Monokai</option>
+      <option value="solarized dark">Solarized Dark</option>
+      <option value="ambiance">Ambiance</option>
+    </select>
+    <button type="button" id="pg-clear-cache-btn" class="pg-btn ghost" title="Force-refresh every cached script + reset saved code/settings on this page">🧹 Clear cache</button>
+  </div>
+
+  <!-- ── Clear-cache dialog (shared shell — see visualizer2.html) ── -->
+  <div id="clear-cache-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+    <div role="dialog" aria-labelledby="clear-cache-title" style="background:var(--card-bg,#0f2818);border:1px solid var(--green-bright,#39FF14);border-radius:12px;padding:22px 24px;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.7);">
+      <h3 id="clear-cache-title" style="font-family:var(--font-mono);font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--green-bright);margin:0 0 10px;">🧹 Clear cache?</h3>
+      <p style="font-family:var(--font-body);font-size:13.5px;color:var(--green-mint);line-height:1.55;margin:0 0 12px;">
+        This will clear every cached script and saved setting for
+        <strong>this playground page</strong>: your editor contents,
+        chosen theme, and any code auto-saved to <code>localStorage</code>.
+        Then it reloads with fresh assets from the server.
+      </p>
+      <p style="font-family:var(--font-body);font-size:12px;color:var(--grey);line-height:1.5;margin:0 0 16px;">
+        Files you uploaded to the playground (kept in
+        <code>IndexedDB</code>) stay put.
+      </p>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" id="clear-cache-cancel" class="pg-btn ghost">Cancel</button>
+        <button type="button" id="clear-cache-confirm" class="pg-btn">Yes, clear cache</button>
+      </div>
+    </div>
+  </div>
+
   <div class="pg-grid">
 
     <!-- EDITOR -->
@@ -861,6 +919,23 @@ editor.setOption('extraKeys', {
   'Ctrl-Enter': () => runCode(),
   'Cmd-Enter':  () => runCode(),
 });
+
+// ── Editor theme picker ─────────────────────────────────────
+// Loads the last picked theme from localStorage on page load, and saves
+// any change so it survives a refresh. All theme CSS files are already
+// linked in <head> — theme names match the CSS file basenames.
+(function initTheme() {
+  const THEME_KEY = 'netsci-editor-theme';
+  const sel = document.getElementById('cm-theme');
+  const saved = localStorage.getItem(THEME_KEY) || 'default';
+  if (sel) sel.value = saved;
+  editor.setOption('theme', saved);
+  if (sel) sel.addEventListener('change', (e) => {
+    const t = e.target.value || 'default';
+    editor.setOption('theme', t);
+    try { localStorage.setItem(THEME_KEY, t); } catch (err) { /* private mode; ignore */ }
+  });
+})();
 
 // ── Visualizer handoff — drop code into the editor IMMEDIATELY on page load ──
 // The file-hydration step (fetch dataset CSVs into WebR's virtual FS) still
@@ -1456,6 +1531,58 @@ bootstrap();
 
   renderChips();
   setInterval(introspect, 2000);
+})();
+</script>
+
+<script>
+// Clear-cache modal wiring — separate <script> (not the module block above)
+// so it runs even if the WebR bootstrap module fails or hangs. Same shape
+// as the visualizer2 clear-cache flow.
+(function () {
+  const btn     = document.getElementById('pg-clear-cache-btn');
+  const modal   = document.getElementById('clear-cache-modal');
+  const cancel  = document.getElementById('clear-cache-cancel');
+  const confirm = document.getElementById('clear-cache-confirm');
+  if (!btn || !modal) return;
+  const open  = () => { modal.style.display = 'flex'; };
+  const close = () => { modal.style.display = 'none'; };
+  btn.addEventListener('click', open);
+  cancel.addEventListener('click', close);
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display === 'flex') close();
+  });
+  confirm.addEventListener('click', async () => {
+    confirm.disabled = true;
+    confirm.textContent = 'Clearing…';
+    try {
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+      // localStorage: only touch playground / netsci keys, so shared
+      // preferences from other subdomains stay put. IndexedDB (uploaded
+      // files) is deliberately untouched.
+      try {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && (k.startsWith('playground-') || k.startsWith('netsci-'))) {
+            localStorage.removeItem(k);
+          }
+        }
+      } catch (_) {}
+      try { sessionStorage.clear(); } catch (_) {}
+    } catch (err) {
+      console.warn('[clear-cache]', err);
+    }
+    const url = new URL(location.href);
+    url.searchParams.set('_cb', String(Date.now()));
+    location.replace(url.toString());
+  });
 })();
 </script>
 </body>
