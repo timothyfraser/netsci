@@ -75,6 +75,7 @@
     includePerm: true,       // Section 4 — permutation test
     includeMc: true,         // Section 5 — counterfactual Monte Carlo
     includeTopN: true,       // Section 6 — top-N by degree AND betweenness
+    includeCoverage: true,   // Section 7 — group coverage
   };
 
   // ── Snapshot the visualizer's live state ────────────────────
@@ -102,6 +103,10 @@
     const permReps = parseInt(($('viz2-perm-reps') || {}).value || '0', 10) || 0;
     const permBlocks = Array.from(document.querySelectorAll('.viz2-perm-block-chk:checked'))
       .map((el) => el.value);
+
+    // Coverage card's live selections. Default: '' = giant component, 0 = unlimited hops.
+    const covRef  = ($('viz2-cov-ref')  || {}).value || '';
+    const covHops = parseInt(($('viz2-cov-hops') || {}).value || '0', 10) || 0;
 
     return {
       datasetKey: s.currentDatasetKey || null,
@@ -138,12 +143,14 @@
       // short + fast when they don't need that analysis. Unchecking
       // scenarios also skips the Section 2 "apply visualizer edits" block,
       // which is how a user asks for a "just the raw graph" reproducer.
+      coverage:  { ref: covRef, hops: covHops },
       include: {
         scenarios: !!ui.includeScenarios,
         dist:      !!ui.includeDist,
         perm:      !!ui.includePerm,
         mc:        !!ui.includeMc,
         topN:      !!ui.includeTopN,
+        coverage:  !!ui.includeCoverage,
       },
     };
   }
@@ -599,6 +606,78 @@
       L.push('# For each of the top-N nodes k in 1..N: print rank, name, and betweenness.');
       L.push('for (k in seq_along(top_btw)) {');
       L.push('  cat(sprintf("     %d. %-24s %.4f\\n", k, names(top_btw)[k], top_btw[k]))');
+      L.push('}');
+      L.push('');
+      L.push('');
+    }
+
+    // ── 7. Group coverage (optional) ─────────────────────────────
+    if (snap.include.coverage && snap.groupCol) {
+      const covRef  = snap.coverage.ref;
+      const covHops = snap.coverage.hops;
+      L.push('# 7. Group coverage ##########################################################');
+      L.push('');
+      L.push('pretty_section("Group coverage")');
+      L.push('');
+      L.push('# Group coverage = "what fraction of each group lands in the REACHED set."');
+      L.push('# The reached set is either:');
+      L.push('#   (a) the GIANT COMPONENT of the active graph (ref_group = ""), or');
+      L.push('#   (b) every node within max_hops BFS distance of any node in ref_group.');
+      L.push('# Matches the visualizer\'s "📐 Group Coverage" card exactly.');
+      L.push('group_col <- ' + rStr(snap.groupCol));
+      L.push('ref_group <- ' + rStr(covRef) + '   # "" = giant component');
+      L.push('max_hops  <- ' + covHops + '           # 0 = unlimited');
+      L.push('');
+      L.push('## 7.1 Build the reached set #################################################');
+      L.push('');
+      L.push('if (ref_group == "") {');
+      L.push('  # Reference is the giant component. igraph::components() labels every node');
+      L.push('  # with a component id; the biggest one is the giant component.');
+      L.push('  comps <- components(g)');
+      L.push('  gc_id <- which.max(comps$csize)');
+      L.push('  reached_ids <- V(g)$name[comps$membership == gc_id]');
+      L.push('} else {');
+      L.push('  # Reference is every node in ref_group. We start from those and walk out.');
+      L.push('  ref_nodes <- V(g)$name[vertex_attr(g, group_col) == ref_group]');
+      L.push('  if (length(ref_nodes) == 0) {');
+      L.push('    reached_ids <- character(0)');
+      L.push('  } else if (max_hops > 0) {');
+      L.push('    # Radius-limited neighborhood: ego(order = max_hops) collects every node');
+      L.push('    # within max_hops BFS steps of each seed, then we union them.');
+      L.push('    neigh <- ego(g, order = max_hops, nodes = ref_nodes)');
+      L.push('    reached_ids <- unique(V(g)$name[unlist(neigh)])');
+      L.push('  } else {');
+      L.push('    # Unlimited hops → any node in a component containing a seed is reachable.');
+      L.push('    comps <- components(g)');
+      L.push('    ref_comps <- unique(comps$membership[V(g)$name %in% ref_nodes])');
+      L.push('    reached_ids <- V(g)$name[comps$membership %in% ref_comps]');
+      L.push('  }');
+      L.push('}');
+      L.push('');
+      L.push('## 7.2 Per-group counts ######################################################');
+      L.push('');
+      L.push('# Bucket every node by group, then count how many landed in reached_ids.');
+      L.push('groups_by <- split(V(g)$name, vertex_attr(g, group_col))');
+      L.push('cov_rows <- data.frame(');
+      L.push('  group   = names(groups_by),');
+      L.push('  members = sapply(groups_by, length),');
+      L.push('  reached = sapply(groups_by, function(m) sum(m %in% reached_ids)),');
+      L.push('  stringsAsFactors = FALSE');
+      L.push(')');
+      L.push('cov_rows$frac <- ifelse(cov_rows$members > 0, cov_rows$reached / cov_rows$members, 0)');
+      L.push('# Sort most-vulnerable first so the smallest coverages jump out.');
+      L.push('cov_rows <- cov_rows[order(cov_rows$frac), ]');
+      L.push('');
+      L.push('## 7.3 Report ################################################################');
+      L.push('');
+      L.push('ref_label  <- if (ref_group == "") "giant component" else sprintf("\\"%s\\"", ref_group)');
+      L.push('hops_label <- if (max_hops == 0)   "unlimited"       else as.character(max_hops)');
+      L.push('cat(sprintf("📊 Group coverage (ref = %s, hops = %s):\\n", ref_label, hops_label))');
+      L.push('# For each group row k in 1..nrow(cov_rows): print group name, %, and counts.');
+      L.push('for (k in seq_len(nrow(cov_rows))) {');
+      L.push('  cat(sprintf("     %-24s %5.1f%%  (%d / %d)\\n",');
+      L.push('              cov_rows$group[k], 100 * cov_rows$frac[k],');
+      L.push('              cov_rows$reached[k], cov_rows$members[k]))');
       L.push('}');
       L.push('');
       L.push('');
@@ -1066,6 +1145,81 @@
       L.push('');
     }
 
+    // ── 7. Group coverage (optional) ─────────────────────────────
+    if (snap.include.coverage && snap.groupCol) {
+      const covRef  = snap.coverage.ref;
+      const covHops = snap.coverage.hops;
+      L.push('# 7. Group coverage ##########################################################');
+      L.push('');
+      L.push('pretty_section("Group coverage")');
+      L.push('');
+      L.push('# Group coverage = "what fraction of each group lands in the REACHED set."');
+      L.push('# The reached set is either:');
+      L.push('#   (a) the GIANT COMPONENT of the active graph (ref_group = ""), or');
+      L.push('#   (b) every node within max_hops BFS distance of any node in ref_group.');
+      L.push('# Matches the visualizer\'s "📐 Group Coverage" card exactly.');
+      L.push('group_col = ' + pyStr(snap.groupCol));
+      L.push('ref_group = ' + pyStr(covRef) + '   # "" = giant component');
+      L.push('max_hops  = ' + covHops + '           # 0 = unlimited');
+      L.push('');
+      L.push('## 7.1 Build the reached set #################################################');
+      L.push('');
+      L.push('vs_names  = g.vs["name"]');
+      L.push('vs_groups = g.vs[group_col]');
+      L.push('');
+      L.push('if ref_group == "":');
+      L.push('    # Reference is the giant component. connected_components() returns a');
+      L.push('    # VertexClustering — largest by .sizes() is the giant one.');
+      L.push('    comps = g.connected_components(mode="weak")');
+      L.push('    sizes = comps.sizes()');
+      L.push('    gc_id = sizes.index(max(sizes))');
+      L.push('    reached_ids = {vs_names[i] for i, c in enumerate(comps.membership) if c == gc_id}');
+      L.push('else:');
+      L.push('    # Reference is every node in ref_group. We start from those and walk out.');
+      L.push('    ref_idx = [i for i, gv in enumerate(vs_groups) if gv == ref_group]');
+      L.push('    if not ref_idx:');
+      L.push('        reached_ids = set()');
+      L.push('    elif max_hops > 0:');
+      L.push('        # Radius-limited: g.neighborhood(order=max_hops) returns a list of');
+      L.push('        # node-index lists. Flatten and dedupe to get the union.');
+      L.push('        neigh = g.neighborhood(vertices=ref_idx, order=max_hops)');
+      L.push('        reached_ids = {vs_names[j] for group in neigh for j in group}');
+      L.push('    else:');
+      L.push('        # Unlimited hops → any node whose component contains a seed is reachable.');
+      L.push('        comps = g.connected_components(mode="weak")');
+      L.push('        ref_comps = {comps.membership[i] for i in ref_idx}');
+      L.push('        reached_ids = {vs_names[i] for i, c in enumerate(comps.membership) if c in ref_comps}');
+      L.push('');
+      L.push('## 7.2 Per-group counts ######################################################');
+      L.push('');
+      L.push('# Bucket every node by group, then count how many landed in reached_ids.');
+      L.push('from collections import defaultdict');
+      L.push('groups_by = defaultdict(list)');
+      L.push('for name, gv in zip(vs_names, vs_groups):');
+      L.push('    groups_by[gv].append(name)');
+      L.push('');
+      L.push('cov_rows = []');
+      L.push('# For each (group name, member list): count how many members are in reached_ids.');
+      L.push('for gname, members in groups_by.items():');
+      L.push('    reached_ct = sum(1 for m in members if m in reached_ids)');
+      L.push('    frac = reached_ct / len(members) if members else 0.0');
+      L.push('    cov_rows.append({"group": gname, "members": len(members),');
+      L.push('                     "reached": reached_ct, "frac": frac})');
+      L.push('# Sort most-vulnerable first so the smallest coverages jump out.');
+      L.push('cov_rows.sort(key=lambda r: r["frac"])');
+      L.push('');
+      L.push('## 7.3 Report ################################################################');
+      L.push('');
+      L.push('ref_label  = "giant component" if ref_group == "" else f\'"{ref_group}"\'');
+      L.push('hops_label = "unlimited"       if max_hops  == 0  else str(max_hops)');
+      L.push('print(f"📊 Group coverage (ref = {ref_label}, hops = {hops_label}):")');
+      L.push('# For each row r in cov_rows: print group name, %, and counts.');
+      L.push('for r in cov_rows:');
+      L.push('    print(f\'     {r["group"]:<24} {100 * r["frac"]:5.1f}%  ({r["reached"]} / {r["members"]})\')');
+      L.push('');
+      L.push('');
+    }
+
     L.push('print("\\n' + HR + '")');
     L.push('print("🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.")');
     L.push('print("' + HR + '")');
@@ -1168,8 +1322,9 @@
     const scenariosCfgd = !!(snap.removed.length || snap.scenarioNodes.length || snap.scenarioLinks.length);
     const permCfgd = !!(snap.perm && snap.perm.attr);
     const mcCfgd   = !!(snap.mc && snap.weightCol);
-    const dimmedNote = (checked, cfgd) => (!checked || cfgd) ? '' :
-      ' <span style="color:var(--grey);font-size:10.5px;">(none set)</span>';
+    const covCfgd  = !!snap.groupCol;
+    const dimmedNote = (checked, cfgd, hint) => (!checked || cfgd) ? '' :
+      ` <span style="color:var(--grey);font-size:10.5px;">(${hint || 'none set'})</span>`;
 
     host.innerHTML = `
       <div class="color-by-row" style="margin-bottom:6px;">
@@ -1183,7 +1338,7 @@
         <legend style="padding:0 6px; font-size:10.5px; color:var(--green-bright); letter-spacing:0.1em; text-transform:uppercase;">Include analyses</legend>
         <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
           <input type="checkbox" id="viz2-codeexport-inc-scenarios" ${ui.includeScenarios ? 'checked' : ''} style="accent-color:var(--green-bright);">
-          <span>🧨 Apply scenarios${dimmedNote(ui.includeScenarios, scenariosCfgd)}</span>
+          <span>🧨 Apply scenarios${dimmedNote(ui.includeScenarios, scenariosCfgd, 'none set')}</span>
         </label>
         <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
           <input type="checkbox" id="viz2-codeexport-inc-dist" ${ui.includeDist ? 'checked' : ''} style="accent-color:var(--green-bright);">
@@ -1191,15 +1346,19 @@
         </label>
         <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
           <input type="checkbox" id="viz2-codeexport-inc-perm" ${ui.includePerm ? 'checked' : ''} style="accent-color:var(--green-bright);">
-          <span>🧪 Permutation test${dimmedNote(ui.includePerm, permCfgd)}</span>
+          <span>🧪 Permutation test${dimmedNote(ui.includePerm, permCfgd, 'not configured')}</span>
         </label>
         <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
           <input type="checkbox" id="viz2-codeexport-inc-mc" ${ui.includeMc ? 'checked' : ''} style="accent-color:var(--green-bright);">
-          <span>🧪 Counterfactual MC${dimmedNote(ui.includeMc, mcCfgd)}</span>
+          <span>🧪 Counterfactual MC${dimmedNote(ui.includeMc, mcCfgd, 'not configured')}</span>
         </label>
         <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
           <input type="checkbox" id="viz2-codeexport-inc-topn" ${ui.includeTopN ? 'checked' : ''} style="accent-color:var(--green-bright);">
           <span>🏆 Top-N rankings</span>
+        </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-coverage" ${ui.includeCoverage ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>📐 Group coverage${dimmedNote(ui.includeCoverage, covCfgd, 'no group column')}</span>
         </label>
       </fieldset>
       <div class="formula-note" style="margin:-2px 0 6px;">
@@ -1232,6 +1391,7 @@
     bind('viz2-codeexport-inc-perm',      'includePerm');
     bind('viz2-codeexport-inc-mc',        'includeMc');
     bind('viz2-codeexport-inc-topn',      'includeTopN');
+    bind('viz2-codeexport-inc-coverage',  'includeCoverage');
   }
 
   // Re-render on every event that could change the snapshot.
