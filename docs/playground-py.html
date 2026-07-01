@@ -8,6 +8,11 @@
 <link rel="stylesheet" href="assets/design.css">
 <link rel="stylesheet" href="assets/site.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/solarized.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/ambiance.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
@@ -144,15 +149,27 @@
   .CodeMirror-cursor { border-left: 2px solid var(--green-bright) !important; }
   .CodeMirror-selected { background: rgba(57,255,20,0.15) !important; }
   .CodeMirror-matchingbracket { color: var(--node-4) !important; background: rgba(251,191,36,0.18); }
-  .cm-keyword  { color: var(--green-bright); }
-  .cm-builtin  { color: var(--node-3); }
-  .cm-string   { color: var(--node-4); }
-  .cm-comment  { color: var(--grey); font-style: italic; }
-  .cm-number   { color: var(--node-3); }
-  .cm-operator { color: var(--node-5); }
-  .cm-variable { color: var(--white); }
-  .cm-variable-2 { color: var(--green-laser); }
-  .cm-def      { color: var(--green-bright); }
+  /* Syntax tokens — scoped to the DEFAULT netsci theme so switching to
+     dracula / material / monokai / solarized doesn't get overridden. */
+  .cm-s-default .cm-keyword  { color: var(--green-bright); }
+  .cm-s-default .cm-builtin  { color: var(--node-3); }
+  /* Strings pushed to a brighter amber-cream (#fde68a) for contrast. */
+  .cm-s-default .cm-string   { color: #fde68a; }
+  .cm-s-default .cm-comment  { color: var(--grey); font-style: italic; }
+  .cm-s-default .cm-number   { color: var(--node-3); }
+  /* Operators brighter — the magenta looked "too dark / too purple". */
+  .cm-s-default .cm-operator { color: #f9a8d4; }
+  .cm-s-default .cm-variable { color: var(--white); }
+  .cm-s-default .cm-variable-2 { color: var(--green-laser); }
+  .cm-s-default .cm-def      { color: var(--green-bright); }
+  .pg-theme-select {
+    background: rgba(5,46,22,0.5); color: var(--white);
+    border: 1px solid var(--border); border-radius: 999px;
+    padding: 6px 12px;
+    font-family: var(--font-mono); font-size: 11.5px;
+    cursor: pointer;
+  }
+  .pg-theme-select:focus { outline: none; border-color: var(--green-bright); }
 
   .pg-tabs {
     display: flex; gap: 4px; margin-bottom: 10px;
@@ -505,10 +522,19 @@
   </details>
   <!-- /PROJECT-DATASETS -->
 
-  <!-- Status pill lives right above the editor so users can't miss when the
-       runtime is Loading vs Ready — was previously buried up in the hero. -->
-  <div style="display:flex;justify-content:center;margin:18px 0 6px;">
+  <!-- Status pill + editor-theme picker live right above the editor so
+       users can't miss when the runtime is Loading vs Ready. -->
+  <div style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0 6px;">
     <span class="status-pill loading" id="status"><span class="pulse"></span><span id="status-text">Loading Pyodide runtime…</span></span>
+    <label for="cm-theme" style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.06em;color:var(--grey);">Editor theme</label>
+    <select id="cm-theme" class="pg-theme-select">
+      <option value="default">Netsci</option>
+      <option value="dracula">Dracula</option>
+      <option value="material-darker">Material Darker</option>
+      <option value="monokai">Monokai</option>
+      <option value="solarized dark">Solarized Dark</option>
+      <option value="ambiance">Ambiance</option>
+    </select>
   </div>
 
   <div class="pg-grid">
@@ -832,6 +858,23 @@ editor.setOption('extraKeys', {
   'Ctrl-Enter': () => runCode(),
   'Cmd-Enter':  () => runCode(),
 });
+
+// ── Editor theme picker ─────────────────────────────────────
+// Loads the last picked theme from localStorage on page load, and saves
+// any change so it survives a refresh. All theme CSS files are already
+// linked in <head> — theme names match the CSS file basenames.
+(function initTheme() {
+  const THEME_KEY = 'netsci-editor-theme';
+  const sel = document.getElementById('cm-theme');
+  const saved = localStorage.getItem(THEME_KEY) || 'default';
+  if (sel) sel.value = saved;
+  editor.setOption('theme', saved);
+  if (sel) sel.addEventListener('change', (e) => {
+    const t = e.target.value || 'default';
+    editor.setOption('theme', t);
+    try { localStorage.setItem(THEME_KEY, t); } catch (err) { /* private mode; ignore */ }
+  });
+})();
 
 // ── Visualizer handoff — drop code into the editor IMMEDIATELY on page load ──
 // The file-hydration step (fetch dataset CSVs into Pyodide's virtual FS) still
