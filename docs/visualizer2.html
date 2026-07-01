@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="SYSEN 5470 network visualizer — load a network, remove nodes, run counterfactuals and permutation tests, edit what-if scenarios.">
-<title>Network Visualizer · SYSEN 5470</title>
+<title>Network Visualizer v3 (Preview) · SYSEN 5470</title>
+<meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="assets/design.css">
 <link rel="stylesheet" href="assets/site.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
@@ -704,7 +705,8 @@ select.viz-select {
     <h1>
       NETWORK VISUALIZER
       <span class="viz-version-row">
-        <span class="viz-version-pill viz-version-pill-active" title="You're on v2.">v2</span>
+        <span class="viz-version-pill viz-version-pill-active" title="You're on v3 (internal preview).">v3&nbsp;preview</span>
+        <a class="viz-version-pill viz-version-pill-link" href="visualizer.html" title="The stable v2 build shipped to students.">v2</a>
         <a class="viz-version-pill viz-version-pill-link" href="visualizer1.html" title="Original single-page visualizer, kept for compatibility.">v1</a>
       </span>
     </h1>
@@ -713,6 +715,15 @@ select.viz-select {
       <button class="viz-btn viz-btn-primary" id="viz2-tutorial-btn">🎓 Tutorial walkthrough</button>
     </div>
   </section>
+
+  <div class="experimental-banner" role="status">
+    <strong>EXPERIMENTAL · INTERNAL PREVIEW.</strong>
+    This is <code>visualizer2.html</code>, unlinked from the site nav.
+    Adds a centrality-distribution chart nested inside Network Stats and a
+    💻 Export as Code card that emits an R or Python reproducer and hands it
+    off to the WebR / Pyodide playgrounds. The stable build sits at
+    <a href="visualizer.html" style="color:inherit;text-decoration:underline;">visualizer.html</a>.
+  </div>
 
   <!-- What's New surfaced just under the hero. Icon-grid of profile boxes
        (3 columns on desktop, single column on narrow viewports). -->
@@ -993,6 +1004,15 @@ select.viz-select {
         <summary>📐 Group Composition</summary>
         <div class="agg-body" id="viz2-group-composition-body"><div class="node-empty">Loading group composition…</div></div>
       </details>
+
+      <!-- Code export lives beneath every analysis card so its output reflects
+           the full state above it (removals + scenarios + counterfactuals + perm). -->
+      <details class="analysis-card agg-panel" data-card="code-export" id="viz2-codeexport-panel" style="margin-top:16px;">
+        <summary>💻 Export as Code</summary>
+        <div class="agg-body" id="viz2-codeexport-body">
+          <div class="node-empty">Load a network to generate code.</div>
+        </div>
+      </details>
     </div>
 
     <!-- ── RIGHT: node inspector first (closest to graph), then v2 stats ── -->
@@ -1030,6 +1050,12 @@ select.viz-select {
           <div id="viz2-network-stats-body">
             <div class="node-empty">Load a network to see stats.</div>
           </div>
+          <details class="viz2-nested-formulas" data-card="distributions" id="viz2-distributions-panel">
+            <summary>📊 Centrality Distributions</summary>
+            <div class="agg-body" id="viz2-distributions-body">
+              <div class="node-empty">Load a network to see distributions.</div>
+            </div>
+          </details>
           <details class="viz2-nested-formulas" data-card="formulas" id="viz2-formulas-panel">
             <summary>📐 Formulas &amp; Definitions</summary>
             <div class="agg-body" id="viz2-formulas-body">
@@ -1068,6 +1094,7 @@ select.viz-select {
           <div class="node-empty">Loading node browser…</div>
         </div>
       </details>
+
     </div>
 
   </div>
@@ -1085,16 +1112,18 @@ select.viz-select {
      Driver.js loaded from cdnjs (same CDN as d3/papaparse → allow-listed). -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/driver.js/1.3.1/driver.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/driver.js/1.3.1/driver.js.iife.js" defer></script>
-<script src="assets/viz2-core.js?v=20260630f" defer></script>
-<script src="assets/viz2-metrics.js?v=20260630f" defer></script>
-<script src="assets/viz2-removal.js?v=20260630f" defer></script>
-<script src="assets/viz2-coverage.js?v=20260630f" defer></script>
-<script src="assets/viz2-scenarios.js?v=20260630f" defer></script>
-<script src="assets/viz2-montecarlo.js?v=20260630f" defer></script>
-<script src="assets/viz2-permutation.js?v=20260630f" defer></script>
-<script src="assets/viz2-grouping.js?v=20260630f" defer></script>
-<script src="assets/viz2-nodebrowser.js?v=20260630f" defer></script>
-<script src="assets/viz2-tutorial.js?v=20260630f" defer></script>
+<script src="assets/viz2-core.js?v=20260701a" defer></script>
+<script src="assets/viz2-metrics.js?v=20260701a" defer></script>
+<script src="assets/viz2-distributions.js?v=20260701a" defer></script>
+<script src="assets/viz2-removal.js?v=20260701a" defer></script>
+<script src="assets/viz2-coverage.js?v=20260701a" defer></script>
+<script src="assets/viz2-scenarios.js?v=20260701a" defer></script>
+<script src="assets/viz2-montecarlo.js?v=20260701a" defer></script>
+<script src="assets/viz2-permutation.js?v=20260701a" defer></script>
+<script src="assets/viz2-grouping.js?v=20260701a" defer></script>
+<script src="assets/viz2-nodebrowser.js?v=20260701a" defer></script>
+<script src="assets/viz2-codeexport.js?v=20260701a" defer></script>
+<script src="assets/viz2-tutorial.js?v=20260701a" defer></script>
 <script>
 // v2 card state persistence — restores each <details data-card="..."> from
 // localStorage and writes back on toggle. Wraps in try/catch since Safari
