@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-06-30 22:33 UTC_
+_Auto-generated NotebookLM source · 2026-07-01 01:16 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -3443,13 +3443,70 @@ Skip to content
 SYSEN 5470 · Tools
 
 
-# Network *Visualizer*
+# NETWORK VISUALIZER
+
+v2
+v1
 
 
-Bring your own data. Drop an edgelist CSV (and an optional nodelist), pick which columns are **from**, **to**, **weight**, and **time**, and explore. Everything runs locally in your browser — your data never leaves this page.
+Load a project dataset, then remove nodes, run counterfactuals and permutation tests, edit what\-if scenarios, and inspect coverage and group composition — all without leaving the page.
 
 
-### 📥 Data
+🎓 Tutorial walkthrough
+
+
+📖 What's new
+
+
+🧨
+
+Remove \& Restore Nodes
+Click a node, hit *Remove from network*. Coordinates stay pinned so before/after comparisons match. Restore one or all.
+
+
+🛡
+
+Group Coverage
+% of each group reachable from a reference group — live as you remove nodes, slide the time filter, or cap max hops.
+
+
+🎲
+
+Counterfactuals
+Compare baseline vs treated networks under Poisson edge\-weight resampling. Difference distribution with 95% CI.
+
+
+🔀
+
+Permutation Test
+Shuffle a node attribute (optionally within blocks) and get a one\-sided p\-value vs the observed statistic.
+
+
+✏
+
+Scenarios
+＋N adds a node by clicking the stage; ＋E adds an edge by clicking two nodes. Save what\-if bundles in your browser.
+
+
+🔎
+
+Browse Nodes
+Searchable, sortable table of every node — and Zoom to Node from the Selected card when the graph is too dense to click into.
+
+
+📐
+
+Group Composition
+Switch the grouping variable for the whole network, see a per\-group bar chart, and the course Similarity Index.
+
+
+🎓
+
+Tutorial Walkthrough
+A guided tour of every card — click the green button up top any time you want to re\-orient.
+
+
+📥 Data
 
 
 Load project dataset autoloads — no upload
@@ -3491,13 +3548,13 @@ Drop a CSV, or load the sample graph to start.
 ▶ Sample
 
 
-### 🗂 Column Mapping
+🗂 Column Mapping
 
 
 Upload an edgelist to map columns.
 
 
-🧪 Aggregate experimental
+🧪 Aggregate
 
 
 Aggregate by node trait
@@ -3513,10 +3570,10 @@ Average
 Time slice
 Overall
 
-Collapses nodes that share a trait (e.g. *region*): every edge is re\-pointed to its endpoints' groups and combined. Intra\-group edges are dropped. Updates live. With a time variable you can aggregate *overall* or a single time slice.
+Collapses nodes that share a trait (e.g. *region*): every edge is re\-pointed to its endpoints' groups and combined.
 
 
-### ⚙ Layout
+⚙ Layout
 
 
 Force
@@ -3525,19 +3582,7 @@ Circle
 Hier.
 
 
-### 🎚 Tunables
-
-
-Node size scale1\.0x
-
-
-Edge weight threshold0\.0
-
-
-Time filter (≤)—
-
-
-### 👁 Display
+👁 Display
 
 
 Color nodes by
@@ -3559,6 +3604,18 @@ Plasma
 Mako
 
 
+Time filter (≤)—
+
+
+⚙ Settings
+
+
+Node size scale1\.0x
+
+
+Edge weight threshold0\.0
+
+
 Node labels
 Edge weight labels
 Weight degree \& betweenness
@@ -3566,22 +3623,19 @@ Drop isolates
 Live drift
 
 
-### 📤 Export
+Your Network · V2
 
 
-⤓ Export PNG
-
-
-Your Network
-
-
+💾
+＋N
+＋E
 ❄
 ＋
 －
 ⤢
 
 
-0Nodes
+0Active Nodes
 0Edges shown
 0Components
 —Density
@@ -3591,36 +3645,72 @@ Your Network
  Upload an edgelist or hit ▶ Sample to start.
 
 
-### 📖 Quickstart
+🧨 Disruption Stats
+Load a network to see disruption stats.
 
 
-1. Drop an edgelist CSV. Expected columns: `from, to, weight, time` (any names — you'll map them).
-2. Auto\-detection guesses the four columns. Adjust the dropdowns if needed.
-3. Click **Load**. The graph renders with force layout; node size encodes degree.
-4. Switch layouts, color nodes by a group attribute (and recolor groups), slide the time filter, and export PNG.
+🛡 Group Coverage
+Pick a group column to see coverage.
 
 
-### 🏷 Selected Node
+🎲 Counterfactuals
+Load a network to enable counterfactuals.
+
+
+🔀 Permutation Test
+Load a network with a group column to enable permutation tests.
+
+
+📐 Group Composition
+Loading group composition…
+
+
+Cards
+＋ Expand all
+− Collapse all
+
+
+🏷 Selected Node
 
 
 Click any node to inspect.
 
 
-### 📊 Top Degree
+✏ Scenarios
+Loading scenario editor…
+
+
+📈 Network Stats
+
+
+Load a network to see stats.
+
+
+📐 Formulas \& Definitions
+
+Formulas load when a network is loaded.
+
+
+📊 Top Degree (count)
 
 
 Load a network to see rankings.
 
 
-### 🔗 Top Betweenness
+🔗 Top Betweenness (normalized 0–1\)
 
 
 Computed when graph loads (≤600 nodes).
 
 
-**SYSEN 5470 · Network Visualizer**
+🔎 Browse Nodes
 
- Cornell Engineering · Summer 2026 · All processing happens in your browser.
+Loading node browser…
+
+
+**SYSEN 5470 · Network Visualizer v2 · Experimental**
+
+ Cornell Engineering · Summer 2026 · Internal preview — not for student release.
 
 ---
 
@@ -5516,84 +5606,23 @@ Final due 9 AM**Week 3 \+ final project submission.** Remaining sketches and LCs
 
 ---
 
-# Network Visualizer v2 (Experimental) · SYSEN 5470
+# Network Visualizer · SYSEN 5470
 
-_Source: docs/visualizer2.html_
+_Source: docs/visualizer1.html_
 
 Skip to content
 
 
-**⚠ EXPERIMENTAL · INTERNAL PREVIEW** ·
- This is `visualizer2.html`, an unreleased working draft of new analytics features
- (node removal, group coverage, counterfactuals, permutation tests, scenario editing).
- It is intentionally unlinked from the site navigation and from `visualizer.html`.
- Do not share this URL with students until the features here are signed off and merged into the main visualizer.
+SYSEN 5470 · Tools
 
 
-SYSEN 5470 · Tools · Experimental
+# Network *Visualizer*
 
 
-# Network *Visualizer v2*
+Bring your own data. Drop an edgelist CSV (and an optional nodelist), pick which columns are **from**, **to**, **weight**, and **time**, and explore. Everything runs locally in your browser — your data never leaves this page.
 
 
-Same data, more analytics. Load a project dataset, then remove nodes, run counterfactuals and permutation tests, edit what\-if scenarios, and inspect coverage and group composition — all without leaving the page.
-
-
-🎓 Tutorial walkthrough
-
-
-📖 What's new in v2
-
-
-🧨
-
-Remove \& Restore Nodes
-Click a node, hit *Remove from network*. Coordinates stay pinned so before/after comparisons match. Restore one or all.
-
-
-🛡
-
-Group Coverage
-% of each group reachable from a reference group — live as you remove nodes, slide the time filter, or cap max hops.
-
-
-🎲
-
-Counterfactuals
-Compare baseline vs treated networks under Poisson edge\-weight resampling. Difference distribution with 95% CI.
-
-
-🔀
-
-Permutation Test
-Shuffle a node attribute (optionally within blocks) and get a one\-sided p\-value vs the observed statistic.
-
-
-✏
-
-Scenarios
-＋N adds a node by clicking the stage; ＋E adds an edge by clicking two nodes. Save what\-if bundles in your browser.
-
-
-🔎
-
-Browse Nodes
-Searchable, sortable table of every node — and Zoom to Node from the Selected card when the graph is too dense to click into.
-
-
-📐
-
-Group Composition
-Switch the grouping variable for the whole network, see a per\-group bar chart, and the course Similarity Index.
-
-
-🎓
-
-Tutorial Walkthrough
-A guided tour of every card — click the green button up top any time you want to re\-orient.
-
-
-📥 Data
+### 📥 Data
 
 
 Load project dataset autoloads — no upload
@@ -5635,13 +5664,13 @@ Drop a CSV, or load the sample graph to start.
 ▶ Sample
 
 
-🗂 Column Mapping
+### 🗂 Column Mapping
 
 
 Upload an edgelist to map columns.
 
 
-🧪 Aggregate
+🧪 Aggregate experimental
 
 
 Aggregate by node trait
@@ -5657,10 +5686,10 @@ Average
 Time slice
 Overall
 
-Collapses nodes that share a trait (e.g. *region*): every edge is re\-pointed to its endpoints' groups and combined.
+Collapses nodes that share a trait (e.g. *region*): every edge is re\-pointed to its endpoints' groups and combined. Intra\-group edges are dropped. Updates live. With a time variable you can aggregate *overall* or a single time slice.
 
 
-⚙ Layout
+### ⚙ Layout
 
 
 Force
@@ -5669,7 +5698,19 @@ Circle
 Hier.
 
 
-👁 Display
+### 🎚 Tunables
+
+
+Node size scale1\.0x
+
+
+Edge weight threshold0\.0
+
+
+Time filter (≤)—
+
+
+### 👁 Display
 
 
 Color nodes by
@@ -5691,18 +5732,6 @@ Plasma
 Mako
 
 
-Time filter (≤)—
-
-
-⚙ Settings
-
-
-Node size scale1\.0x
-
-
-Edge weight threshold0\.0
-
-
 Node labels
 Edge weight labels
 Weight degree \& betweenness
@@ -5710,19 +5739,22 @@ Drop isolates
 Live drift
 
 
-Your Network · V2
+### 📤 Export
 
 
-💾
-＋N
-＋E
+⤓ Export PNG
+
+
+Your Network
+
+
 ❄
 ＋
 －
 ⤢
 
 
-0Active Nodes
+0Nodes
 0Edges shown
 0Components
 —Density
@@ -5732,72 +5764,36 @@ Your Network · V2
  Upload an edgelist or hit ▶ Sample to start.
 
 
-🧨 Disruption Stats
-Load a network to see disruption stats.
+### 📖 Quickstart
 
 
-🛡 Group Coverage
-Pick a group column to see coverage.
+1. Drop an edgelist CSV. Expected columns: `from, to, weight, time` (any names — you'll map them).
+2. Auto\-detection guesses the four columns. Adjust the dropdowns if needed.
+3. Click **Load**. The graph renders with force layout; node size encodes degree.
+4. Switch layouts, color nodes by a group attribute (and recolor groups), slide the time filter, and export PNG.
 
 
-🎲 Counterfactuals
-Load a network to enable counterfactuals.
-
-
-🔀 Permutation Test
-Load a network with a group column to enable permutation tests.
-
-
-📐 Group Composition
-Loading group composition…
-
-
-Cards
-＋ Expand all
-− Collapse all
-
-
-🏷 Selected Node
+### 🏷 Selected Node
 
 
 Click any node to inspect.
 
 
-✏ Scenarios
-Loading scenario editor…
-
-
-📈 Network Stats
-
-
-Load a network to see stats.
-
-
-📐 Formulas \& Definitions
-
-Formulas load when a network is loaded.
-
-
-📊 Top Degree (count)
+### 📊 Top Degree
 
 
 Load a network to see rankings.
 
 
-🔗 Top Betweenness (normalized 0–1\)
+### 🔗 Top Betweenness
 
 
 Computed when graph loads (≤600 nodes).
 
 
-🔎 Browse Nodes
+**SYSEN 5470 · Network Visualizer**
 
-Loading node browser…
-
-
-**SYSEN 5470 · Network Visualizer v2 · Experimental**
-
- Cornell Engineering · Summer 2026 · Internal preview — not for student release.
+ Cornell Engineering · Summer 2026 · All processing happens in your browser.
 
 ---
 
