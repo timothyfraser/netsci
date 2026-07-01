@@ -1036,6 +1036,20 @@ async function bootstrap() {
     setStatus('Loading WebR runtime…', 'loading');
     await webR.init();
 
+    // igraph is required by the Visualizer's Export-as-Code output and by
+    // every network case study. Install it in Phase 1 so Run genuinely means
+    // "ready to run igraph code." Wrapped in try/catch so a wasm-repo hiccup
+    // still lets the playground boot for non-igraph code.
+    setStatus('Installing igraph…', 'loading');
+    try {
+      await webR.installPackages(['igraph'], {
+        repos: ['https://igraph.r-universe.dev', 'https://repo.r-wasm.org'],
+      });
+      await webR.evalRVoid('suppressMessages(library(igraph))');
+    } catch (e) {
+      console.warn('igraph install failed (Run still available for non-igraph code):', e);
+    }
+
     // Restore any previously-uploaded files from IndexedDB into the WASM FS.
     // Done before enabling Run so restored CSVs are visible from the start.
     const saved = await idbAllFiles();
@@ -1068,7 +1082,8 @@ async function bootstrap() {
   // so one wasm-repo hiccup doesn't leave the user without every package.
   try {
     const REPOS = ['https://igraph.r-universe.dev', 'https://repo.r-wasm.org'];
-    const PACKAGES = ['dplyr','tidyr','ggplot2','readr','purrr','igraph','tidygraph','DBI','RSQLite','ggraph'];
+    // igraph already installed in Phase 1 — don't reinstall it here.
+    const PACKAGES = ['dplyr','tidyr','ggplot2','readr','purrr','tidygraph','DBI','RSQLite','ggraph'];
     for (const pkg of PACKAGES) {
       try { await webR.installPackages([pkg], { repos: REPOS }); }
       catch (e) { console.warn('install failed:', pkg, e); }
