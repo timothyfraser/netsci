@@ -66,9 +66,15 @@
     return 'pd.DataFrame({\n    ' + parts.join(',\n    ') + '\n})';
   }
 
-  // UI state persists across renders. The three include* flags gate the
+  // UI state persists across renders. The include* flags gate the
   // optional analysis sections; ui.lang picks between R / Python emitters.
-  const ui = { lang: 'r', includeDist: true, includePerm: true, includeMc: true };
+  const ui = {
+    lang: 'r',
+    includeScenarios: true,  // Section 2 — node removals + scenario nodes/edges
+    includeDist: true,       // Section 3 — centrality distribution
+    includePerm: true,       // Section 4 — permutation test
+    includeMc: true,         // Section 5 — counterfactual Monte Carlo
+  };
 
   // ── Snapshot the visualizer's live state ────────────────────
   function snapshot() {
@@ -126,13 +132,16 @@
           return { kind, col };
         })
       } : null,
-      // The three "include" flags come from the checkboxes in the export
-      // card. Default true; a student can uncheck to keep the emitted
-      // script short + fast when they don't need that analysis.
+      // The "include" flags come from the checkboxes in the export card.
+      // Default true; a student can uncheck to keep the emitted script
+      // short + fast when they don't need that analysis. Unchecking
+      // scenarios also skips the Section 2 "apply visualizer edits" block,
+      // which is how a user asks for a "just the raw graph" reproducer.
       include: {
-        dist: !!ui.includeDist,
-        perm: !!ui.includePerm,
-        mc:   !!ui.includeMc,
+        scenarios: !!ui.includeScenarios,
+        dist:      !!ui.includeDist,
+        perm:      !!ui.includePerm,
+        mc:        !!ui.includeMc,
       },
     };
   }
@@ -255,7 +264,7 @@
     // ── 2. Apply the visualizer's edits (only if there were any) ─
     const hasRemoval  = snap.removed.length > 0;
     const hasScenario = snap.scenarioNodes.length > 0 || snap.scenarioLinks.length > 0;
-    if (hasRemoval || hasScenario) {
+    if (snap.include.scenarios && (hasRemoval || hasScenario)) {
       L.push('# 2. Apply the visualizer\'s edits ############################################');
       L.push('');
       L.push('pretty_section("Applying visualizer edits")');
@@ -668,7 +677,7 @@
     // ── 2. Apply the visualizer's edits ──────────────────────────
     const hasRemoval  = snap.removed.length > 0;
     const hasScenario = snap.scenarioNodes.length > 0 || snap.scenarioLinks.length > 0;
-    if (hasRemoval || hasScenario) {
+    if (snap.include.scenarios && (hasRemoval || hasScenario)) {
       L.push('# 2. Apply the visualizer\'s edits ############################################');
       L.push('');
       L.push('pretty_section("Applying visualizer edits")');
@@ -1060,12 +1069,13 @@
       ? '<div class="formula-note" style="color:#fbbf24;">You uploaded custom CSVs — the export will read them by filename but the playground doesn\'t know about them. Upload the same files into the playground first, or download the .R/.py file and open it locally.</div>'
       : '';
 
-    // A permutation checkbox that's checked but has no card configuration
-    // renders a hint so the student knows why the section didn't appear.
+    // A checkbox that's on but has no card configuration renders a hint
+    // so the student knows why the section didn't appear.
+    const scenariosCfgd = !!(snap.removed.length || snap.scenarioNodes.length || snap.scenarioLinks.length);
     const permCfgd = !!(snap.perm && snap.perm.attr);
     const mcCfgd   = !!(snap.mc && snap.weightCol);
     const dimmedNote = (checked, cfgd) => (!checked || cfgd) ? '' :
-      ' <span style="color:var(--grey);font-size:10.5px;">(not configured)</span>';
+      ' <span style="color:var(--grey);font-size:10.5px;">(none set)</span>';
 
     host.innerHTML = `
       <div class="color-by-row" style="margin-bottom:6px;">
@@ -1077,6 +1087,10 @@
       </div>
       <fieldset class="viz2-export-includes" style="border:1px solid var(--border-soft); border-radius:6px; padding:4px 10px 6px; margin:2px 0 8px;">
         <legend style="padding:0 6px; font-size:10.5px; color:var(--green-bright); letter-spacing:0.1em; text-transform:uppercase;">Include analyses</legend>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-scenarios" ${ui.includeScenarios ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>🧨 Apply scenarios${dimmedNote(ui.includeScenarios, scenariosCfgd)}</span>
+        </label>
         <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
           <input type="checkbox" id="viz2-codeexport-inc-dist" ${ui.includeDist ? 'checked' : ''} style="accent-color:var(--green-bright);">
           <span>📊 Centrality distribution</span>
@@ -1115,9 +1129,10 @@
       if (!el) return;
       el.addEventListener('change', (e) => { ui[key] = !!e.target.checked; render(); });
     };
-    bind('viz2-codeexport-inc-dist', 'includeDist');
-    bind('viz2-codeexport-inc-perm', 'includePerm');
-    bind('viz2-codeexport-inc-mc',   'includeMc');
+    bind('viz2-codeexport-inc-scenarios', 'includeScenarios');
+    bind('viz2-codeexport-inc-dist',      'includeDist');
+    bind('viz2-codeexport-inc-perm',      'includePerm');
+    bind('viz2-codeexport-inc-mc',        'includeMc');
   }
 
   // Re-render on every event that could change the snapshot.
