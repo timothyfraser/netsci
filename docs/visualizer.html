@@ -31,6 +31,10 @@
   padding: 5px 12px; border-radius: 999px;
   text-decoration: none; transition: all 0.15s; cursor: pointer;
 }
+.viz-version-pill-active {
+  background: rgba(251,191,36,0.15); color: #fbbf24;
+  border: 1px solid #fbbf24;
+}
 .viz-version-pill-link {
   background: transparent; color: var(--grey);
   border: 1px solid var(--border);
@@ -45,9 +49,13 @@
 }
 
 .viz-layout {
-  display: grid; grid-template-columns: 320px 1fr 340px;
+  display: grid; grid-template-columns: 320px minmax(0, 1fr) 340px;
   gap: 16px; align-items: start;
 }
+/* Every direct child gets min-width:0 so a wide SVG in the center column
+   (a big loaded network) can't push the track past its 1fr share and
+   blow the layout off the page. Grid items default to min-content width. */
+.viz-layout > * { min-width: 0; }
 @media (max-width: 1200px) {
   .viz-layout { grid-template-columns: 1fr; }
 }
@@ -686,6 +694,7 @@ select.viz-select {
     <h1>
       NETWORK VISUALIZER
       <span class="viz-version-row">
+        <span class="viz-version-pill viz-version-pill-active" title="You're on the current v2 visualizer.">v2</span>
         <a class="viz-version-pill viz-version-pill-link" href="visualizer1.html" title="Original single-page visualizer, kept for compatibility.">v1</a>
       </span>
     </h1>
