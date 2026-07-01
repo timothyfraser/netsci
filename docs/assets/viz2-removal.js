@@ -171,7 +171,7 @@
     slot.innerHTML = `
       <div class="btn-row" style="margin-top: 10px;">
         <button class="${btnCls}" id="viz2-removal-toggle" style="flex:1;">${btnTxt}</button>
-        <button class="viz-btn viz-btn-ghost" id="viz2-zoom-to-node" title="Zoom to this node + 2 hops">🔍 Zoom</button>
+        <button class="viz-btn viz-btn-ghost" id="viz2-zoom-to-node" title="Zoom to this node + its 1st-degree neighbors">🔍 Zoom</button>
       </div>
       <div class="color-by-row" style="margin-top: 10px; margin-bottom: 0;">
         <label for="viz2-selected-hop">Selected Edges</label>
@@ -258,33 +258,26 @@
     state.selectedHopCounts = counts;
   }
 
-  // Zoom the SVG viewport to fit the selected node + its 2-hop neighborhood.
-  // Useful when the user picked a row from Browse Nodes on a dense graph —
-  // they need a way to actually SEE which dot got selected.
+  // Zoom the SVG viewport to fit the selected node + its FIRST-degree
+  // neighbors (immediate neighbors only). Useful when the user picked a
+  // row from Browse Nodes on a dense graph — they need a way to actually
+  // SEE which dot got selected without pulling in half the network.
   function zoomToNode(id) {
     if (!state.graph || !state.zoom) return;
     const svgEl = document.getElementById('graph'); if (!svgEl) return;
     const W = svgEl.clientWidth, H = svgEl.clientHeight;
 
-    // BFS 2 hops from id over the active subgraph.
+    // Collect id + every node it's directly connected to over the active
+    // subgraph (removed nodes' edges are skipped). One pass, no BFS needed
+    // for a 1-hop neighborhood.
     const ids = new Set([id]);
-    const adj = Object.create(null);
-    state.graph.nodes.forEach((nn) => { adj[nn.id] = []; });
     state.graph.links.forEach((l) => {
       const s = typeof l.source === 'object' ? l.source.id : l.source;
       const t = typeof l.target === 'object' ? l.target.id : l.target;
       if (state.removedNodes.has(s) || state.removedNodes.has(t)) return;
-      adj[s] && adj[s].push(t);
-      adj[t] && adj[t].push(s);
+      if (s === id) ids.add(t);
+      else if (t === id) ids.add(s);
     });
-    let frontier = [id];
-    for (let d = 0; d < 2 && frontier.length; d++) {
-      const next = [];
-      frontier.forEach((u) => (adj[u] || []).forEach((v) => {
-        if (!ids.has(v)) { ids.add(v); next.push(v); }
-      }));
-      frontier = next;
-    }
 
     // Bounding box of those nodes' x/y; pad and fit.
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;

@@ -7,9 +7,13 @@
 //     the user pastes into it)
 //   • removed nodes (delete_vertices)
 //   • scenario nodes + edges (add_vertices + add_edges)
-//   • centrality distribution for the metric picked in the Distributions card
-//   • permutation-test block if the Permutation card has an attribute + stat set
-//   • counterfactual MC block if the Counterfactuals card has a metric set
+//   • [optional] centrality distribution
+//   • [optional] permutation-test block if the Permutation card has an
+//     attribute + stat set
+//   • [optional] counterfactual MC block if the Counterfactuals card has a
+//     metric set
+// Each "optional" section has an include-checkbox in the card so students
+// can uncheck the heavier analyses when they only want a quick script.
 //
 // Handoff: writes { lang, code, datasetKey, ts, source } to
 // localStorage['netsci-playground-handoff'] then opens the R or Python
@@ -17,13 +21,14 @@
 // bootstrap-ready, fetch the dataset's CSVs into their WASM FS, and drop
 // the code into the CodeMirror editor.
 //
-// Mounted at: #viz2-codeexport-body (declared in visualizer.html).
+// Mounted at: #viz2-codeexport-body (declared in visualizer2.html).
 // ============================================================
 (function () {
   'use strict';
   if (!window.NetSciViz2) return;
   const NV = window.NetSciViz2;
   const HANDOFF_KEY = 'netsci-playground-handoff';
+  const HR = '────────────────────────────────────────────────────────────';
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -46,9 +51,6 @@
     if (allLogical) return 'c(' + values.map((v) => isMissing(v) ? 'NA' : (v ? 'TRUE' : 'FALSE')).join(', ') + ')';
     return 'c(' + values.map((v) => isMissing(v) ? 'NA_character_' : rStr(v)).join(', ') + ')';
   }
-  // Emit `data.frame(col1 = c(...), col2 = c(...), stringsAsFactors = FALSE)`
-  // for a table-of-rows + ordered column names. One line per column so it's
-  // still readable in the emitted script when there are only a few dozen rows.
   function dfLiteralR(rows, cols) {
     const parts = cols.map((c) => c + ' = ' + rVectorLit(rows.map((r) => r[c])));
     return 'data.frame(\n  ' + parts.join(',\n  ') + ',\n  stringsAsFactors = FALSE\n)';
@@ -59,17 +61,26 @@
     if (allNumeric) return '[' + values.map((v) => isMissing(v) ? 'None' : String(v)).join(', ') + ']';
     return '[' + values.map((v) => isMissing(v) ? 'None' : pyStr(v)).join(', ') + ']';
   }
-  // `pd.DataFrame({'col1': [...], 'col2': [...]})`
   function dfLiteralPy(rows, cols) {
     const parts = cols.map((c) => pyStr(c) + ': ' + pyListLit(rows.map((r) => r[c])));
     return 'pd.DataFrame({\n    ' + parts.join(',\n    ') + '\n})';
   }
 
-  const ui = { lang: 'r' };  // 'r' | 'py'
+  // UI state persists across renders. The include* flags gate the
+  // optional analysis sections; ui.lang picks between R / Python emitters.
+  const ui = {
+    lang: 'r',
+    includeScenarios: true,  // Section 2 — node removals + scenario nodes/edges
+    includeDist: true,       // Section 3 — centrality distribution
+    includePerm: true,       // Section 4 — permutation test
+    includeMc: true,         // Section 5 — counterfactual Monte Carlo
+    includeTopN: true,       // Section 6 — top-N by degree AND betweenness
+    includeCoverage: true,   // Section 7 — group coverage
+    includeDisrupt: true,    // Section 8 — disruption stats (baseline vs live)
+    includeAggregate: true,  // Section 9 — group-aggregation of the network
+  };
 
   // ── Snapshot the visualizer's live state ────────────────────
-  // Everything the code-export needs, gathered into ONE plain object so the
-  // R / Python emitters are pure serializers.
   function snapshot() {
     const s = NV.state;
     if (!s.graph) return null;
@@ -95,8 +106,18 @@
     const permBlocks = Array.from(document.querySelectorAll('.viz2-perm-block-chk:checked'))
       .map((el) => el.value);
 
+    // Coverage card's live selections. Default: '' = giant component, 0 = unlimited hops.
+    const covRef  = ($('viz2-cov-ref')  || {}).value || '';
+    const covHops = parseInt(($('viz2-cov-hops') || {}).value || '0', 10) || 0;
+
+    // Aggregate menu: which trait to aggregate on, sum vs mean, optional time slice.
+    const aggBy   = s.aggregateBy || '';
+    const aggMode = s.aggregateMode || 'sum';
+    const aggTime = s.aggregateTime || '';
+    const timeCol = s.mapping.time || null;
+
     return {
-      datasetKey: s.currentDatasetKey || null,   // null when the user uploaded custom CSVs OR used the ▶ Sample button
+      datasetKey: s.currentDatasetKey || null,
       directed: !!s.directed,
       weightCol: s.mapping.weight || null,
       groupCol: s.mapping.nodeGroup || null,
@@ -110,9 +131,6 @@
       removed: removed,
       scenarioNodes: scenarioNodes,
       scenarioLinks: scenarioLinks,
-      // Raw CSV rows — the emitter inlines these as data.frame(...) when no
-      // project dataset key is set so the code is self-contained (doesn't
-      // depend on the playground having any files hydrated).
       nodeCsv: s.nodeCsv || [],
       edgeCsv: s.edgeCsv || [],
       nodeCols: s.nodeCols || [],
@@ -128,13 +146,29 @@
           return { kind, col };
         })
       } : null,
+      // The "include" flags come from the checkboxes in the export card.
+      // Default true; a student can uncheck to keep the emitted script
+      // short + fast when they don't need that analysis. Unchecking
+      // scenarios also skips the Section 2 "apply visualizer edits" block,
+      // which is how a user asks for a "just the raw graph" reproducer.
+      coverage:  { ref: covRef, hops: covHops },
+      aggregate: { by: aggBy, mode: aggMode, timeSlice: aggTime, timeCol: timeCol },
+      include: {
+        scenarios: !!ui.includeScenarios,
+        dist:      !!ui.includeDist,
+        perm:      !!ui.includePerm,
+        mc:        !!ui.includeMc,
+        topN:      !!ui.includeTopN,
+        coverage:  !!ui.includeCoverage,
+        disrupt:   !!ui.includeDisrupt,
+        aggregate: !!ui.includeAggregate,
+      },
     };
   }
 
   // Reorder columns so the endpoint columns come first — igraph's
   // graph_from_data_frame / Graph.DataFrame both use the first two columns
-  // as source/target. Works for any inlined data (from a sample graph, an
-  // uploaded CSV, or a project dataset).
+  // as source/target.
   function reorderEdgeCols(cols, fromCol, toCol) {
     if (!fromCol || !toCol) return cols;
     return [fromCol, toCol].concat(cols.filter((c) => c !== fromCol && c !== toCol));
@@ -162,8 +196,8 @@
     L.push("#' Network Visualizer at the moment you pressed \"Open in playground\":");
     L.push("#' the same dataset (or the same inline data if you were on the ▶ Sample");
     L.push("#' or an uploaded CSV), the same node removals, the same scenario items,");
-    L.push("#' the same centrality distribution, and — if you had them configured —");
-    L.push("#' the same permutation test and counterfactual Monte Carlo simulation.");
+    L.push("#' and whichever of the three analyses you left checked in the export card");
+    L.push("#' (centrality distribution, permutation test, counterfactual MC).");
     L.push('');
     L.push('');
 
@@ -176,12 +210,26 @@
     L.push('# available too if you want to extend the analysis beyond this script.');
     L.push('library(igraph)');
     L.push('');
+    L.push('## 0.2 Helpers ###############################################################');
+    L.push('');
+    L.push('# pretty_section() prints a bordered header before each analysis block. It\'s');
+    L.push('# purely cosmetic — it just makes the playground console output easier to');
+    L.push('# skim by giving each section a visible divider.');
+    L.push('pretty_section <- function(name) {');
+    L.push('  cat("\\n", "' + HR + '", "\\n", sep = "")');
+    L.push('  cat("  ", name, "\\n", sep = "")');
+    L.push('  cat("' + HR + '", "\\n", sep = "")');
+    L.push('}');
+    L.push('');
     L.push('cat("\\n🚀 Network Visualizer reproducer — ' + label + ' (R)\\n")');
-    L.push('cat("   Reproducing the on-screen state at handoff.\\n\\n")');
+    L.push('cat("   Reproducing the on-screen state at handoff.\\n")');
+    L.push('');
     L.push('');
 
-    // ── 0.2 Data — CSV OR inline ─────────────────────────────────
-    L.push('## 0.2 Data ##################################################################');
+    // ── 0.3 Data — CSV OR inline ─────────────────────────────────
+    L.push('## 0.3 Data ##################################################################');
+    L.push('');
+    L.push('pretty_section("Loading data")');
     L.push('');
     if (cfg) {
       L.push('# The visualizer\'s handoff hook wrote these CSVs into WebR\'s virtual FS');
@@ -212,6 +260,8 @@
     // ── 1. Build the graph ───────────────────────────────────────
     L.push('# 1. Build the graph #########################################################');
     L.push('');
+    L.push('pretty_section("Building the graph")');
+    L.push('');
     L.push('# graph_from_data_frame() treats the FIRST TWO columns of the edges table as');
     L.push('# endpoints (from -> to). Vertex metadata (kind, region, …) is joined onto');
     L.push('# each node by matching the first column of the nodelist to those endpoints.');
@@ -234,8 +284,10 @@
     // ── 2. Apply the visualizer's edits (only if there were any) ─
     const hasRemoval  = snap.removed.length > 0;
     const hasScenario = snap.scenarioNodes.length > 0 || snap.scenarioLinks.length > 0;
-    if (hasRemoval || hasScenario) {
+    if (snap.include.scenarios && (hasRemoval || hasScenario)) {
       L.push('# 2. Apply the visualizer\'s edits ############################################');
+      L.push('');
+      L.push('pretty_section("Applying visualizer edits")');
       L.push('');
       let sub = 0;
 
@@ -267,6 +319,7 @@
         if (snap.scenarioNodes.length) {
           L.push('scenario_nodes <- c(' + snap.scenarioNodes.map((n) => rStr(n.id)).join(', ') + ')');
           L.push('g <- add_vertices(g, length(scenario_nodes), name = scenario_nodes)');
+          L.push('cat(sprintf("➕ Added %d scenario node(s).\\n", length(scenario_nodes)))');
           L.push('');
         }
         if (snap.scenarioLinks.length) {
@@ -278,71 +331,90 @@
           } else {
             L.push('g <- add_edges(g, scenario_edges)');
           }
+          L.push('cat(sprintf("➕ Added %d scenario edge(s).\\n", length(scenario_edges) / 2))');
           L.push('');
         }
       }
       L.push('');
     }
 
-    // ── 3. Centrality distribution ───────────────────────────────
-    const metric = snap.dist.metric;
-    L.push('# 3. Centrality distribution #################################################');
-    L.push('');
-    L.push('# This is the "📊 Centrality Distributions" sub-card at the bottom of the');
-    L.push('# Network Stats panel — same metric you had picked when you handed off.');
-    L.push('');
-    if (metric === 'weighted_degree') {
-      L.push('# strength(g, weights = E(g)$weight) is degree BUT summed over the weight');
-      L.push('# column instead of just counted. Same neighbor list, different accounting.');
-      L.push('vals <- strength(g' + (weight ? ', weights = E(g)$weight' : '') + ')');
-      L.push('metric_name <- "Weighted degree"');
-    } else if (metric === 'betweenness') {
-      L.push('# betweenness(v) = fraction of shortest paths between OTHER node pairs that');
-      L.push('# pass through v, normalized to [0, 1]. When we weight edges, we invert');
-      L.push('# the weight ( 1/w ) so "heavy" edges are treated as SHORT — same convention');
-      L.push('# the visualizer uses so the two numbers line up.');
-      L.push('vals <- betweenness(g, normalized = TRUE' + (weight ? ', weights = 1 / E(g)$weight' : '') + ')');
-      L.push('metric_name <- "Betweenness (normalized)"');
-    } else if (metric === 'closeness') {
-      L.push('# closeness(v) = 1 / mean shortest-path distance from v to everyone else.');
-      L.push('# High closeness = "on the way to a lot of the network."');
-      L.push('vals <- closeness(g, normalized = TRUE)');
-      L.push('metric_name <- "Closeness (normalized)"');
-    } else {
-      L.push('# degree(v) = raw count of edges incident to v. Same number that shows up');
-      L.push('# in the visualizer\'s Top Degree ranking.');
-      L.push('vals <- degree(g)');
-      L.push('metric_name <- "Degree"');
-    }
-    L.push('');
-    L.push('# Print the distribution\'s summary stats — matches the "min · median · mean · max"');
-    L.push('# line the visualizer shows below the histogram.');
-    L.push('cat(sprintf("📊 %s: min %.4f · median %.4f · mean %.4f · max %.4f\\n",');
-    L.push('            metric_name, min(vals), median(vals), mean(vals), max(vals)))');
-    L.push('');
-    L.push('# The playground renders this hist() into its Plots tab (and to Rplots.pdf if');
-    L.push('# you download the script and run it locally).');
-    L.push('hist(vals, breaks = 24, col = "#39FF14", border = "#0a0f0a",');
-    L.push('     main = paste0(metric_name, " distribution"), xlab = metric_name)');
-    if (snap.selectedNode) {
+    // ── 3. Centrality distribution (optional) ────────────────────
+    if (snap.include.dist) {
+      const metric = snap.dist.metric;
+      L.push('# 3. Centrality distribution #################################################');
       L.push('');
-      L.push('# You had this node selected on the graph, so we overlay its observed value');
-      L.push('# as a pink dashed vertical line — same treatment the visualizer uses.');
-      L.push('sel_name <- ' + rStr(snap.selectedNode));
-      L.push('if (sel_name %in% V(g)$name) {');
-      L.push('  abline(v = vals[sel_name], col = "#f472b6", lwd = 2, lty = 2)');
+      L.push('pretty_section("Centrality distribution")');
+      L.push('');
+      L.push('# This is the "📊 Centrality Distributions" sub-card at the bottom of the');
+      L.push('# Network Stats panel — same metric you had picked when you handed off.');
+      L.push('');
+      if (metric === 'weighted_degree') {
+        L.push('# strength(g, weights = E(g)$weight) is degree BUT summed over the weight');
+        L.push('# column instead of just counted. Same neighbor list, different accounting.');
+        L.push('vals <- strength(g' + (weight ? ', weights = E(g)$weight' : '') + ')');
+        L.push('metric_name <- "Weighted degree"');
+      } else if (metric === 'betweenness') {
+        L.push('# betweenness(v) = fraction of shortest paths between OTHER node pairs that');
+        L.push('# pass through v, normalized to [0, 1]. When we weight edges, we invert');
+        L.push('# the weight ( 1/w ) so "heavy" edges are treated as SHORT — same convention');
+        L.push('# the visualizer uses so the two numbers line up.');
+        L.push('vals <- betweenness(g, normalized = TRUE' + (weight ? ', weights = 1 / E(g)$weight' : '') + ')');
+        L.push('metric_name <- "Betweenness (normalized)"');
+      } else if (metric === 'closeness') {
+        L.push('# closeness(v) = 1 / mean shortest-path distance from v to everyone else.');
+        L.push('# High closeness = "on the way to a lot of the network."');
+        L.push('vals <- closeness(g, normalized = TRUE)');
+        L.push('metric_name <- "Closeness (normalized)"');
+      } else {
+        L.push('# degree(v) = raw count of edges incident to v. Same number that shows up');
+        L.push('# in the visualizer\'s Top Degree ranking.');
+        L.push('vals <- degree(g)');
+        L.push('metric_name <- "Degree"');
+      }
+      L.push('');
+      L.push('# Attach node names so we can rank them by centrality below.');
+      L.push('names(vals) <- V(g)$name');
+      L.push('');
+      L.push('# Print the distribution\'s summary stats — matches the "min · median · mean · max"');
+      L.push('# line the visualizer shows below the histogram.');
+      L.push('cat(sprintf("📊 %s: min %.4f · median %.4f · mean %.4f · max %.4f\\n",');
+      L.push('            metric_name, min(vals), median(vals), mean(vals), max(vals)))');
+      L.push('');
+      L.push('# Rank the top 3 nodes by this centrality — the same "who matters most"');
+      L.push('# reading the visualizer\'s Top-N ranking gives you.');
+      L.push('top3 <- head(sort(vals, decreasing = TRUE), 3)');
+      L.push('cat("📝 Top 3 by ", metric_name, ":\\n", sep = "")');
+      L.push('# For each of the 3 top nodes k in 1..3: print its rank, name, and score.');
+      L.push('for (k in seq_along(top3)) {');
+      L.push('  cat(sprintf("     %d. %-24s %.4f\\n", k, names(top3)[k], top3[k]))');
       L.push('}');
+      L.push('');
+      L.push('# The playground renders this hist() into its Plots tab (and to Rplots.pdf if');
+      L.push('# you download the script and run it locally).');
+      L.push('hist(vals, breaks = 24, col = "#39FF14", border = "#0a0f0a",');
+      L.push('     main = paste0(metric_name, " distribution"), xlab = metric_name)');
+      if (snap.selectedNode) {
+        L.push('');
+        L.push('# You had this node selected on the graph, so we overlay its observed value');
+        L.push('# as a pink dashed vertical line — same treatment the visualizer uses.');
+        L.push('sel_name <- ' + rStr(snap.selectedNode));
+        L.push('if (sel_name %in% V(g)$name) {');
+        L.push('  abline(v = vals[sel_name], col = "#f472b6", lwd = 2, lty = 2)');
+        L.push('}');
+      }
+      L.push('');
+      L.push('');
     }
-    L.push('');
-    L.push('');
 
-    // ── 4. Permutation test ──────────────────────────────────────
-    if (snap.perm && snap.perm.attr && snap.groupCol !== null) {
+    // ── 4. Permutation test (optional) ───────────────────────────
+    if (snap.include.perm && snap.perm && snap.perm.attr && snap.groupCol !== null) {
       const attr = snap.perm.attr;
       const stat = snap.perm.stat;
       const reps = snap.perm.reps;
       const nodeBlocks = snap.perm.blockList.filter((b) => b.kind === 'node').map((b) => b.col);
       L.push('# 4. Permutation test ########################################################');
+      L.push('');
+      L.push('pretty_section("Permutation test")');
       L.push('');
       L.push('# This mirrors what the Permutation card was set up to run: shuffle a node');
       L.push('# attribute R times, recompute the test statistic each time, and compare the');
@@ -373,9 +445,11 @@
       L.push('  } else {');
       L.push('    blocks <- vertex_attr(g, block_by)');
       L.push('    new_labs <- labs');
+      L.push('    # For each unique block value b: pull the nodes with that block, and');
+      L.push('    # reshuffle labels only within that subset. Preserves the block totals.');
       L.push('    for (b in unique(blocks)) {');
-      L.push('      m <- blocks == b');
-      L.push('      new_labs[m] <- sample(labs[m])');
+      L.push('      m <- blocks == b            # boolean mask of "this block"');
+      L.push('      new_labs[m] <- sample(labs[m])   # in-block shuffle');
       L.push('    }');
       L.push('  }');
       L.push('  set_vertex_attr(g, a, value = new_labs)');
@@ -408,16 +482,18 @@
       L.push('R <- ' + reps);
       L.push('null_dist <- numeric(R)');
       L.push('');
-      L.push('# Each iteration reshuffles the attribute, rebuilds the shuffled graph, and');
-      L.push('# stores the test statistic. No side effects on `g` — permute_labels() returns');
-      L.push('# a fresh graph every time.');
+      L.push('# For each replicate i in 1..R:');
+      L.push('#   1. Shuffle the attribute across nodes (permute_labels)');
+      L.push('#   2. Compute the test statistic on the shuffled graph (stat_fn)');
+      L.push('#   3. Store it as the i-th entry of null_dist');
+      L.push('# After R iterations, null_dist is a vector of R plausible-under-shuffling values.');
       L.push('for (i in seq_len(R)) {');
       if (nodeBlocks.length) {
-        L.push('  g_perm <- permute_labels(g, ' + rStr(attr) + ', block_by = ' + rStr(nodeBlocks[0]) + ')');
+        L.push('  g_perm <- permute_labels(g, ' + rStr(attr) + ', block_by = ' + rStr(nodeBlocks[0]) + ')  # step 1');
       } else {
-        L.push('  g_perm <- permute_labels(g, ' + rStr(attr) + ')');
+        L.push('  g_perm <- permute_labels(g, ' + rStr(attr) + ')  # step 1: one fresh shuffled graph');
       }
-      L.push('  null_dist[i] <- stat_fn(g_perm)');
+      L.push('  null_dist[i] <- stat_fn(g_perm)                  # steps 2 + 3: compute + store');
       L.push('}');
       L.push('');
       L.push('## 4.4 Report + plot #########################################################');
@@ -438,10 +514,12 @@
       L.push('');
     }
 
-    // ── 5. Counterfactual Monte Carlo ────────────────────────────
-    if (snap.mc && weight) {
+    // ── 5. Counterfactual Monte Carlo (optional) ─────────────────
+    if (snap.include.mc && snap.mc && weight) {
       const reps = snap.mc.reps;
       L.push('# 5. Counterfactual Monte Carlo ##############################################');
+      L.push('');
+      L.push('pretty_section("Counterfactual Monte Carlo")');
       L.push('');
       L.push('# This mirrors what the Counterfactuals card would run: each replicate');
       L.push('# Poisson-resamples the edge weights around their observed values, rebuilds');
@@ -475,13 +553,14 @@
       L.push('# with lambda = 0 is degenerate — always draws 0).');
       L.push('base_w <- E(g)$weight');
       L.push('');
-      L.push('# Each iteration jitters the weights, then recomputes weighted APL.');
-      L.push('# rpois(n, lambda) draws n independent Poissons with per-item lambdas —');
-      L.push('# the "edge counts vary around their observed value" noise model.');
+      L.push('# For each replicate i in 1..R:');
+      L.push('#   1. Copy the graph (assignment in R copies-on-write, so `gg <- g` is safe).');
+      L.push('#   2. Draw fresh Poisson weights around the observed edge weights.');
+      L.push('#   3. Compute weighted APL on the jittered graph and store it as apls[i].');
       L.push('for (i in seq_len(R)) {');
-      L.push('  gg <- g');
-      L.push('  E(gg)$weight <- rpois(length(base_w), lambda = pmax(base_w, 1))');
-      L.push('  apls[i] <- weighted_apl(gg)');
+      L.push('  gg <- g                                                      # step 1');
+      L.push('  E(gg)$weight <- rpois(length(base_w), lambda = pmax(base_w, 1))  # step 2');
+      L.push('  apls[i] <- weighted_apl(gg)                                  # step 3');
       L.push('}');
       L.push('');
       L.push('## 5.3 Report + plot #########################################################');
@@ -497,7 +576,297 @@
       L.push('');
     }
 
-    L.push('cat("\\n🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.\\n")');
+    // ── 6. Top-N rankings (optional) ─────────────────────────────
+    if (snap.include.topN) {
+      L.push('# 6. Top-N rankings ##########################################################');
+      L.push('');
+      L.push('pretty_section("Top-N rankings")');
+      L.push('');
+      L.push('# Two go-to "who matters most" summaries: top nodes by raw Degree, and top');
+      L.push('# nodes by (normalized) Betweenness. Same rankings the visualizer shows in');
+      L.push('# the Network Stats > Top-N panels — computed here so the reproducer script');
+      L.push('# gives you the same lists on paper as the ones on your screen.');
+      L.push('top_n <- 5');
+      L.push('');
+      L.push('## 6.1 Top-N by Degree #######################################################');
+      L.push('');
+      L.push('# degree(v) = raw count of edges incident to v.');
+      L.push('deg <- degree(g)');
+      L.push('names(deg) <- V(g)$name           # attach node names for printing');
+      L.push('top_deg <- head(sort(deg, decreasing = TRUE), top_n)');
+      L.push('cat("📝 Top ", top_n, " by Degree:\\n", sep = "")');
+      L.push('# For each of the top-N nodes k in 1..N: print rank, name, and degree.');
+      L.push('for (k in seq_along(top_deg)) {');
+      L.push('  cat(sprintf("     %d. %-24s %d\\n", k, names(top_deg)[k], top_deg[k]))');
+      L.push('}');
+      L.push('');
+      L.push('## 6.2 Top-N by Betweenness (normalized) #####################################');
+      L.push('');
+      if (weight) {
+        L.push('# Weighted graph → invert the weight ( 1/w ) so heavy edges count as SHORT');
+        L.push('# for path-based centrality, matching the visualizer\'s convention.');
+        L.push('btw <- betweenness(g, normalized = TRUE, weights = 1 / E(g)$weight)');
+      } else {
+        L.push('# Unweighted graph → normalize to [0, 1] by dividing by (N-1)(N-2)/2 so the');
+        L.push('# result is comparable across networks of different N.');
+        L.push('btw <- betweenness(g, normalized = TRUE)');
+      }
+      L.push('names(btw) <- V(g)$name');
+      L.push('top_btw <- head(sort(btw, decreasing = TRUE), top_n)');
+      L.push('cat("📝 Top ", top_n, " by Betweenness (normalized):\\n", sep = "")');
+      L.push('# For each of the top-N nodes k in 1..N: print rank, name, and betweenness.');
+      L.push('for (k in seq_along(top_btw)) {');
+      L.push('  cat(sprintf("     %d. %-24s %.4f\\n", k, names(top_btw)[k], top_btw[k]))');
+      L.push('}');
+      L.push('');
+      L.push('');
+    }
+
+    // ── 7. Group coverage (optional) ─────────────────────────────
+    if (snap.include.coverage && snap.groupCol) {
+      const covRef  = snap.coverage.ref;
+      const covHops = snap.coverage.hops;
+      L.push('# 7. Group coverage ##########################################################');
+      L.push('');
+      L.push('pretty_section("Group coverage")');
+      L.push('');
+      L.push('# Group coverage = "what fraction of each group lands in the REACHED set."');
+      L.push('# The reached set is either:');
+      L.push('#   (a) the GIANT COMPONENT of the active graph (ref_group = ""), or');
+      L.push('#   (b) every node within max_hops BFS distance of any node in ref_group.');
+      L.push('# Matches the visualizer\'s "📐 Group Coverage" card exactly.');
+      L.push('group_col <- ' + rStr(snap.groupCol));
+      L.push('ref_group <- ' + rStr(covRef) + '   # "" = giant component');
+      L.push('max_hops  <- ' + covHops + '           # 0 = unlimited');
+      L.push('');
+      L.push('## 7.1 Build the reached set #################################################');
+      L.push('');
+      L.push('if (ref_group == "") {');
+      L.push('  # Reference is the giant component. igraph::components() labels every node');
+      L.push('  # with a component id; the biggest one is the giant component.');
+      L.push('  comps <- components(g)');
+      L.push('  gc_id <- which.max(comps$csize)');
+      L.push('  reached_ids <- V(g)$name[comps$membership == gc_id]');
+      L.push('} else {');
+      L.push('  # Reference is every node in ref_group. We start from those and walk out.');
+      L.push('  ref_nodes <- V(g)$name[vertex_attr(g, group_col) == ref_group]');
+      L.push('  if (length(ref_nodes) == 0) {');
+      L.push('    reached_ids <- character(0)');
+      L.push('  } else if (max_hops > 0) {');
+      L.push('    # Radius-limited neighborhood: ego(order = max_hops) collects every node');
+      L.push('    # within max_hops BFS steps of each seed, then we union them.');
+      L.push('    neigh <- ego(g, order = max_hops, nodes = ref_nodes)');
+      L.push('    reached_ids <- unique(V(g)$name[unlist(neigh)])');
+      L.push('  } else {');
+      L.push('    # Unlimited hops → any node in a component containing a seed is reachable.');
+      L.push('    comps <- components(g)');
+      L.push('    ref_comps <- unique(comps$membership[V(g)$name %in% ref_nodes])');
+      L.push('    reached_ids <- V(g)$name[comps$membership %in% ref_comps]');
+      L.push('  }');
+      L.push('}');
+      L.push('');
+      L.push('## 7.2 Per-group counts ######################################################');
+      L.push('');
+      L.push('# Bucket every node by group, then count how many landed in reached_ids.');
+      L.push('groups_by <- split(V(g)$name, vertex_attr(g, group_col))');
+      L.push('cov_rows <- data.frame(');
+      L.push('  group   = names(groups_by),');
+      L.push('  members = sapply(groups_by, length),');
+      L.push('  reached = sapply(groups_by, function(m) sum(m %in% reached_ids)),');
+      L.push('  stringsAsFactors = FALSE');
+      L.push(')');
+      L.push('cov_rows$frac <- ifelse(cov_rows$members > 0, cov_rows$reached / cov_rows$members, 0)');
+      L.push('# Sort most-vulnerable first so the smallest coverages jump out.');
+      L.push('cov_rows <- cov_rows[order(cov_rows$frac), ]');
+      L.push('');
+      L.push('## 7.3 Report ################################################################');
+      L.push('');
+      L.push('ref_label  <- if (ref_group == "") "giant component" else sprintf("\\"%s\\"", ref_group)');
+      L.push('hops_label <- if (max_hops == 0)   "unlimited"       else as.character(max_hops)');
+      L.push('cat(sprintf("📊 Group coverage (ref = %s, hops = %s):\\n", ref_label, hops_label))');
+      L.push('# For each group row k in 1..nrow(cov_rows): print group name, %, and counts.');
+      L.push('for (k in seq_len(nrow(cov_rows))) {');
+      L.push('  cat(sprintf("     %-24s %5.1f%%  (%d / %d)\\n",');
+      L.push('              cov_rows$group[k], 100 * cov_rows$frac[k],');
+      L.push('              cov_rows$reached[k], cov_rows$members[k]))');
+      L.push('}');
+      L.push('');
+      L.push('');
+    }
+
+    // ── 8. Disruption stats (optional) ───────────────────────────
+    if (snap.include.disrupt) {
+      L.push('# 8. Disruption stats ########################################################');
+      L.push('');
+      L.push('pretty_section("Disruption stats")');
+      L.push('');
+      L.push('# The visualizer\'s Disruption card compares four network-level metrics');
+      L.push('# before/after your removals + scenario edits:');
+      L.push('#   active       — number of non-removed nodes');
+      L.push('#   components   — number of disconnected pieces (weak components)');
+      L.push('#   apl          — mean shortest path (∞ when any pair is unreachable)');
+      L.push('#   diameter     — max shortest path (∞ when disconnected)');
+      L.push('# Convention: ANY unreachable pair → APL & diameter are Inf. Matches');
+      L.push('# viz2-removal.js:computeDisruption().');
+      L.push('');
+      L.push('## 8.1 Helper ################################################################');
+      L.push('');
+      L.push('disruption_stats <- function(gg) {');
+      L.push('  # components() defaults to mode = "weak", matching the visualizer.');
+      L.push('  comps <- components(gg)');
+      L.push('  disconnected <- comps$no > 1');
+      L.push('  # mean_distance / diameter with directed = FALSE treat every edge as');
+      L.push('  # bidirectional. weights = NA forces UNWEIGHTED (hop-count) distances,');
+      L.push('  # even when the graph has a weight attribute — matches the visualizer\'s');
+      L.push('  # structural BFS in buildAdj() so numbers on paper line up with the card.');
+      L.push('  apl  <- if (disconnected) Inf else mean_distance(gg, weights = NA, directed = FALSE)');
+      L.push('  diam <- if (disconnected) Inf else diameter(gg, weights = NA, directed = FALSE)');
+      L.push('  list(active = vcount(gg), components = comps$no, apl = apl, diameter = diam)');
+      L.push('}');
+      L.push('');
+      L.push('## 8.2 Baseline vs current ###################################################');
+      L.push('');
+      L.push('# Rebuild a BASELINE copy of the graph from the same nodes + edges frames,');
+      L.push('# so we can measure how much your removals + scenarios moved each metric.');
+      L.push('# If you unchecked "Apply scenarios" in the export card, baseline == g and');
+      L.push('# all four deltas will show as ±0.');
+      L.push('g_base <- graph_from_data_frame(edges, vertices = nodes, directed = ' + dirFlag + ')');
+      if (weight) {
+        L.push('E(g_base)$weight <- E(g_base)$' + weight);
+      }
+      L.push('');
+      L.push('base <- disruption_stats(g_base)');
+      L.push('live <- disruption_stats(g)');
+      L.push('');
+      L.push('## 8.3 Report ################################################################');
+      L.push('');
+      L.push('# Small formatters so Inf prints as "Inf" and integer-ish values don\'t');
+      L.push('# waste screen space on decimals.');
+      L.push('fmt_val <- function(x) {');
+      L.push('  if (is.infinite(x)) return("Inf")');
+      L.push('  if (abs(x - round(x)) < 0.005) return(as.character(as.integer(round(x))))');
+      L.push('  sprintf("%.2f", x)');
+      L.push('}');
+      L.push('fmt_delta <- function(a, b) {');
+      L.push('  if (is.infinite(a) && is.infinite(b)) return("—")');
+      L.push('  if (is.infinite(b) && !is.infinite(a)) return("→ Inf")');
+      L.push('  if (is.infinite(a) && !is.infinite(b)) return("↓ from Inf")');
+      L.push('  d <- b - a');
+      L.push('  if (abs(d) < 0.005) return("±0")');
+      L.push('  if (abs(d - round(d)) < 0.005) return(sprintf("%+d", as.integer(round(d))))');
+      L.push('  sprintf("%+.2f", d)');
+      L.push('}');
+      L.push('');
+      L.push('cat("📊 Disruption stats (baseline → current):\\n")');
+      L.push('cat(sprintf("     %-14s %10s %10s %10s\\n", "metric", "baseline", "current", "Δ"))');
+      L.push('# For each metric name m in the four disruption metrics: print baseline,');
+      L.push('# current, and their delta side-by-side.');
+      L.push('for (m in c("active", "components", "apl", "diameter")) {');
+      L.push('  cat(sprintf("     %-14s %10s %10s %10s\\n",');
+      L.push('              m, fmt_val(base[[m]]), fmt_val(live[[m]]),');
+      L.push('              fmt_delta(base[[m]], live[[m]])))');
+      L.push('}');
+      L.push('');
+      L.push('');
+    }
+
+    // ── 9. Aggregation (optional) ────────────────────────────────
+    if (snap.include.aggregate && snap.aggregate.by) {
+      const trait = snap.aggregate.by;
+      const mode  = snap.aggregate.mode;
+      const time  = snap.aggregate.timeSlice;
+      const timeC = snap.aggregate.timeCol;
+      L.push('# 9. Aggregation ############################################################');
+      L.push('');
+      L.push('pretty_section("Aggregation")');
+      L.push('');
+      L.push('# Aggregation collapses every node whose value on `trait` matches into ONE');
+      L.push('# meta-node, then sums (or averages) the weights of edges between each pair');
+      L.push('# of groups. Matches the visualizer\'s ▾ Aggregate menu.');
+      L.push('trait      <- ' + rStr(trait));
+      L.push('mode       <- ' + rStr(mode) + '        # "sum" or "mean"');
+      L.push('time_slice <- ' + rStr(time) + '        # "" = no time filter');
+      L.push('');
+      L.push('## 9.1 Assign each node to its group ########################################');
+      L.push('');
+      L.push('# Copy the raw node table and derive an `agg_group` column — missing values');
+      L.push('# and empty strings collapse into a "(none)" bucket, same as the visualizer.');
+      L.push('nodes_ag <- nodes');
+      L.push('nodes_ag$agg_group <- as.character(nodes_ag[[trait]])');
+      L.push('nodes_ag$agg_group[is.na(nodes_ag$agg_group) | nodes_ag$agg_group == ""] <- "(none)"');
+      L.push('');
+      L.push('## 9.2 Map every edge to a (source_group, target_group) pair ################');
+      L.push('');
+      L.push('edges_ag <- edges');
+      if (time && timeC) {
+        L.push('# Time slice: keep only edges whose ' + rStr(timeC) + ' value matches time_slice.');
+        L.push('if (time_slice != "") {');
+        L.push('  edges_ag <- edges_ag[as.character(edges_ag$' + timeC + ') == time_slice, , drop = FALSE]');
+        L.push('}');
+      }
+      L.push('# match() finds the row index of each endpoint id in the node table so we');
+      L.push('# can pull its group in one vectorised call.');
+      const idCol   = snap.nodeIdCol || 'name';
+      const fromCol = snap.fromCol   || 'from';
+      const toCol   = snap.toCol     || 'to';
+      L.push('edges_ag$src_group <- nodes_ag$agg_group[match(edges_ag$' + fromCol + ', nodes_ag$' + idCol + ')]');
+      L.push('edges_ag$tgt_group <- nodes_ag$agg_group[match(edges_ag$' + toCol   + ', nodes_ag$' + idCol + ')]');
+      L.push('# Drop within-group edges — an aggregated graph has no self-loops on groups.');
+      L.push('edges_ag <- edges_ag[edges_ag$src_group != edges_ag$tgt_group, , drop = FALSE]');
+      L.push('');
+      L.push('## 9.3 Sum (or mean) weights per group-pair #################################');
+      L.push('');
+      if (weight) {
+        L.push('# For each (src_group, tgt_group) key: sum or average the weight column.');
+        L.push('agg_edges <- aggregate(');
+        L.push('  edges_ag[, "' + weight + '", drop = FALSE],');
+        L.push('  by = list(from = edges_ag$src_group, to = edges_ag$tgt_group),');
+        L.push('  FUN = if (mode == "mean") mean else sum');
+        L.push(')');
+        L.push('names(agg_edges)[3] <- "weight"');
+      } else {
+        L.push('# No weight column → count edges per group-pair.');
+        L.push('agg_edges <- as.data.frame(table(');
+        L.push('  from = edges_ag$src_group, to = edges_ag$tgt_group');
+        L.push('), stringsAsFactors = FALSE)');
+        L.push('names(agg_edges)[3] <- "weight"');
+        L.push('agg_edges <- agg_edges[agg_edges$weight > 0, ]');
+      }
+      L.push('# Also carry a count column so the report can say "N source edges per group-pair".');
+      L.push('edge_counts <- as.data.frame(table(from = edges_ag$src_group, to = edges_ag$tgt_group),');
+      L.push('                             stringsAsFactors = FALSE)');
+      L.push('names(edge_counts)[3] <- "count"');
+      L.push('agg_edges <- merge(agg_edges, edge_counts, by = c("from", "to"), all.x = TRUE)');
+      L.push('');
+      L.push('## 9.4 Build the aggregated graph ###########################################');
+      L.push('');
+      L.push('agg_nodes <- data.frame(name = unique(nodes_ag$agg_group), stringsAsFactors = FALSE)');
+      L.push('g_agg <- graph_from_data_frame(');
+      L.push('  agg_edges[, c("from", "to", "weight", "count")],');
+      L.push('  vertices = agg_nodes,');
+      L.push('  directed = ' + dirFlag);
+      L.push(')');
+      L.push('cat(sprintf("🔗 Aggregated by %s: %d groups · %d edges (mode = %s)\\n",');
+      L.push('            trait, vcount(g_agg), ecount(g_agg), mode))');
+      L.push('');
+      L.push('## 9.5 Top-5 heaviest aggregated edges ######################################');
+      L.push('');
+      L.push('# Sort descending, take the first five — quick "who talks to whom most" read.');
+      L.push('top_edges <- head(agg_edges[order(-agg_edges$weight), ], 5)');
+      L.push('cat("📝 Top 5 aggregated edges by weight:\\n")');
+      L.push('# For each row k in 1..5 of top_edges: print rank, source→target, weight, count.');
+      L.push('for (k in seq_len(nrow(top_edges))) {');
+      L.push('  cat(sprintf("     %d. %-12s → %-12s   weight = %.2f  (%d source edge(s))\\n",');
+      L.push('              k, top_edges$from[k], top_edges$to[k],');
+      L.push('              top_edges$weight[k], top_edges$count[k]))');
+      L.push('}');
+      L.push('');
+      L.push('');
+    }
+
+    L.push('cat("\\n' + HR + '\\n")');
+    L.push('cat("🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.\\n")');
+    L.push('cat("' + HR + '\\n")');
     L.push('');
     return L.join('\n');
   }
@@ -511,7 +880,7 @@
     const label = snap.datasetKey || 'inline sample / uploaded data';
     const L = [];
 
-    // ── 0. Header banner (matches code/NN_<case>/example.py) ──────
+    // ── 0. Header banner ──────────────────────────────────────────
     L.push('# reproducer.py');
     L.push('# Network Visualizer Reproducer — ' + label);
     L.push('# Author: (you — regenerate anytime from visualizer2.html)');
@@ -520,9 +889,8 @@
     L.push('# Network Visualizer at the moment you pressed "Open in playground":');
     L.push('# the same dataset (or the same inline data if you were on the');
     L.push('# ▶ Sample or an uploaded CSV), the same node removals, the same');
-    L.push('# scenario items, the same centrality distribution, and — if you');
-    L.push('# had them configured — the same permutation test and counterfactual');
-    L.push('# Monte Carlo simulation.');
+    L.push('# scenario items, and whichever of the three analyses you left');
+    L.push('# checked in the export card (centrality, permutation, MC).');
     L.push('');
     L.push('');
 
@@ -538,12 +906,25 @@
     L.push('import matplotlib.pyplot as plt');
     L.push('import igraph as ig');
     L.push('');
+    L.push('## 0.2 Helpers ###############################################################');
+    L.push('');
+    L.push('# pretty_section() prints a bordered header before each analysis block. It\'s');
+    L.push('# purely cosmetic — it just makes the playground console output easier to');
+    L.push('# skim by giving each section a visible divider.');
+    L.push('def pretty_section(name):');
+    L.push('    print("\\n" + "' + HR + '")');
+    L.push('    print("  " + name)');
+    L.push('    print("' + HR + '")');
+    L.push('');
     L.push('print("\\n🚀 Network Visualizer reproducer — ' + label + ' (Python)")');
-    L.push('print("   Reproducing the on-screen state at handoff.\\n")');
+    L.push('print("   Reproducing the on-screen state at handoff.")');
+    L.push('');
     L.push('');
 
-    // ── 0.2 Data ─────────────────────────────────────────────────
-    L.push('## 0.2 Data ##################################################################');
+    // ── 0.3 Data ─────────────────────────────────────────────────
+    L.push('## 0.3 Data ##################################################################');
+    L.push('');
+    L.push('pretty_section("Loading data")');
     L.push('');
     if (cfg) {
       L.push('# The visualizer\'s handoff hook wrote these CSVs into Pyodide\'s virtual FS');
@@ -574,6 +955,8 @@
     // ── 1. Build the graph ───────────────────────────────────────
     L.push('# 1. Build the graph #########################################################');
     L.push('');
+    L.push('pretty_section("Building the graph")');
+    L.push('');
     L.push('# ig.Graph.DataFrame() treats the FIRST TWO columns of the edges frame as');
     L.push('# endpoints (from -> to). Vertex metadata is joined onto each node by matching');
     L.push('# the first column of the nodelist to those endpoints. use_vids=False means');
@@ -602,8 +985,10 @@
     // ── 2. Apply the visualizer's edits ──────────────────────────
     const hasRemoval  = snap.removed.length > 0;
     const hasScenario = snap.scenarioNodes.length > 0 || snap.scenarioLinks.length > 0;
-    if (hasRemoval || hasScenario) {
+    if (snap.include.scenarios && (hasRemoval || hasScenario)) {
       L.push('# 2. Apply the visualizer\'s edits ############################################');
+      L.push('');
+      L.push('pretty_section("Applying visualizer edits")');
       L.push('');
       let sub = 0;
 
@@ -634,6 +1019,7 @@
         if (snap.scenarioNodes.length) {
           L.push('scenario_nodes = [' + snap.scenarioNodes.map((n) => pyStr(n.id)).join(', ') + ']');
           L.push('g.add_vertices(scenario_nodes)');
+          L.push('print(f"➕ Added {len(scenario_nodes)} scenario node(s).")');
           L.push('');
         }
         if (snap.scenarioLinks.length) {
@@ -642,83 +1028,99 @@
           L.push('added = g.add_edges(scenario_edges)');
           if (weight) {
             const ws = snap.scenarioLinks.map((l) => l.weight).join(', ');
+            L.push('# For each newly-added edge e and its intended weight w: attach w.');
             L.push('for e, w in zip(added, [' + ws + ']):');
             L.push('    e["weight"] = w');
           }
+          L.push('print(f"➕ Added {len(scenario_edges)} scenario edge(s).")');
           L.push('');
         }
       }
       L.push('');
     }
 
-    // ── 3. Centrality distribution ───────────────────────────────
-    const metric = snap.dist.metric;
-    L.push('# 3. Centrality distribution #################################################');
-    L.push('');
-    L.push('# This is the "📊 Centrality Distributions" sub-card at the bottom of the');
-    L.push('# Network Stats panel — same metric you had picked when you handed off.');
-    L.push('');
-    if (metric === 'weighted_degree') {
-      L.push('# g.strength(weights="weight") is degree summed over the weight column');
-      L.push('# instead of counted. Same neighbor list, different accounting.');
-      L.push('vals = np.array(g.strength(weights=' + (weight ? '"weight"' : 'None') + '), dtype=float)');
-      L.push('metric_name = "Weighted degree"');
-    } else if (metric === 'betweenness') {
-      L.push('# g.betweenness(v) = fraction of shortest paths between OTHER node pairs that');
-      L.push('# pass through v. When we weight edges, we invert the weight (1/w) so "heavy"');
-      L.push('# edges are treated as SHORT — same convention the visualizer uses.');
-      L.push('vals = np.array(g.betweenness(' + (weight ? 'weights=[1.0 / max(w, 1e-9) for w in g.es["weight"]]' : '') + '), dtype=float)');
+    // ── 3. Centrality distribution (optional) ────────────────────
+    if (snap.include.dist) {
+      const metric = snap.dist.metric;
+      L.push('# 3. Centrality distribution #################################################');
       L.push('');
-      L.push('# Brandes normalization for undirected graphs: divide by (N-1)(N-2)/2 so the');
-      L.push('# result lives in [0, 1] and is comparable across networks of different N.');
-      L.push('N = g.vcount()');
-      L.push('vals = vals / max(1, (N - 1) * (N - 2) / 2)');
-      L.push('metric_name = "Betweenness (normalized)"');
-    } else if (metric === 'closeness') {
-      L.push('# closeness(v) = 1 / mean shortest-path distance from v to everyone else.');
-      L.push('# High closeness = "on the way to a lot of the network."');
-      L.push('vals = np.array(g.closeness(normalized=True), dtype=float)');
-      L.push('metric_name = "Closeness (normalized)"');
-    } else {
-      L.push('# g.degree() = raw count of edges incident to v. Same number that shows up');
-      L.push('# in the visualizer\'s Top Degree ranking.');
-      L.push('vals = np.array(g.degree(), dtype=float)');
-      L.push('metric_name = "Degree"');
-    }
-    L.push('');
-    L.push('# Print the distribution\'s summary stats — matches the "min · median · mean · max"');
-    L.push('# line the visualizer shows below the histogram.');
-    L.push('print(f"📊 {metric_name}: min {vals.min():.4f} · median {np.median(vals):.4f} · mean {vals.mean():.4f} · max {vals.max():.4f}")');
-    L.push('');
-    L.push('# plt.show() sends the figure to the playground\'s Plots tab. If you run this');
-    L.push('# script locally, the same call opens a matplotlib window (or falls back to');
-    L.push('# Agg + savefig when MPLBACKEND=Agg is set).');
-    L.push('plt.figure(figsize=(6, 3.2))');
-    L.push('plt.hist(vals, bins=24, color="#39FF14", edgecolor="#0a0f0a")');
-    L.push('plt.title(f"{metric_name} distribution")');
-    L.push('plt.xlabel(metric_name)');
-    if (snap.selectedNode) {
+      L.push('pretty_section("Centrality distribution")');
       L.push('');
-      L.push('# You had this node selected on the graph, so we overlay its observed value');
-      L.push('# as a pink dashed vertical line — same treatment the visualizer uses.');
-      L.push('sel = ' + pyStr(snap.selectedNode));
+      L.push('# This is the "📊 Centrality Distributions" sub-card at the bottom of the');
+      L.push('# Network Stats panel — same metric you had picked when you handed off.');
+      L.push('');
+      if (metric === 'weighted_degree') {
+        L.push('# g.strength(weights="weight") is degree summed over the weight column');
+        L.push('# instead of counted. Same neighbor list, different accounting.');
+        L.push('vals = np.array(g.strength(weights=' + (weight ? '"weight"' : 'None') + '), dtype=float)');
+        L.push('metric_name = "Weighted degree"');
+      } else if (metric === 'betweenness') {
+        L.push('# g.betweenness(v) = fraction of shortest paths between OTHER node pairs that');
+        L.push('# pass through v. When we weight edges, we invert the weight (1/w) so "heavy"');
+        L.push('# edges are treated as SHORT — same convention the visualizer uses.');
+        L.push('vals = np.array(g.betweenness(' + (weight ? 'weights=[1.0 / max(w, 1e-9) for w in g.es["weight"]]' : '') + '), dtype=float)');
+        L.push('');
+        L.push('# Brandes normalization for undirected graphs: divide by (N-1)(N-2)/2 so the');
+        L.push('# result lives in [0, 1] and is comparable across networks of different N.');
+        L.push('N = g.vcount()');
+        L.push('vals = vals / max(1, (N - 1) * (N - 2) / 2)');
+        L.push('metric_name = "Betweenness (normalized)"');
+      } else if (metric === 'closeness') {
+        L.push('# closeness(v) = 1 / mean shortest-path distance from v to everyone else.');
+        L.push('# High closeness = "on the way to a lot of the network."');
+        L.push('vals = np.array(g.closeness(normalized=True), dtype=float)');
+        L.push('metric_name = "Closeness (normalized)"');
+      } else {
+        L.push('# g.degree() = raw count of edges incident to v. Same number that shows up');
+        L.push('# in the visualizer\'s Top Degree ranking.');
+        L.push('vals = np.array(g.degree(), dtype=float)');
+        L.push('metric_name = "Degree"');
+      }
+      L.push('');
+      L.push('# Print the distribution\'s summary stats — matches the "min · median · mean · max"');
+      L.push('# line the visualizer shows below the histogram.');
+      L.push('print(f"📊 {metric_name}: min {vals.min():.4f} · median {np.median(vals):.4f} · mean {vals.mean():.4f} · max {vals.max():.4f}")');
+      L.push('');
+      L.push('# Rank the top 3 nodes by this centrality — the same "who matters most"');
+      L.push('# reading the visualizer\'s Top-N ranking gives you.');
       L.push('names = g.vs["name"]');
-      L.push('if sel in names:');
-      L.push('    plt.axvline(vals[names.index(sel)], color="#f472b6", ls="--", lw=2, label="selected")');
-      L.push('    plt.legend()');
+      L.push('order = np.argsort(-vals)   # indices, sorted DESCENDING by vals');
+      L.push('print(f"📝 Top 3 by {metric_name}:")');
+      L.push('# For each of the 3 top nodes k in 1..3: print rank, name, and score.');
+      L.push('for k, idx in enumerate(order[:3], start=1):');
+      L.push('    print(f"     {k}. {names[idx]:<24} {vals[idx]:.4f}")');
+      L.push('');
+      L.push('# plt.show() sends the figure to the playground\'s Plots tab. If you run this');
+      L.push('# script locally, the same call opens a matplotlib window (or falls back to');
+      L.push('# Agg + savefig when MPLBACKEND=Agg is set).');
+      L.push('plt.figure(figsize=(6, 3.2))');
+      L.push('plt.hist(vals, bins=24, color="#39FF14", edgecolor="#0a0f0a")');
+      L.push('plt.title(f"{metric_name} distribution")');
+      L.push('plt.xlabel(metric_name)');
+      if (snap.selectedNode) {
+        L.push('');
+        L.push('# You had this node selected on the graph, so we overlay its observed value');
+        L.push('# as a pink dashed vertical line — same treatment the visualizer uses.');
+        L.push('sel = ' + pyStr(snap.selectedNode));
+        L.push('if sel in names:');
+        L.push('    plt.axvline(vals[names.index(sel)], color="#f472b6", ls="--", lw=2, label="selected")');
+        L.push('    plt.legend()');
+      }
+      L.push('plt.tight_layout()');
+      L.push('plt.show()');
+      L.push('');
+      L.push('');
     }
-    L.push('plt.tight_layout()');
-    L.push('plt.show()');
-    L.push('');
-    L.push('');
 
-    // ── 4. Permutation test ──────────────────────────────────────
-    if (snap.perm && snap.perm.attr && snap.groupCol !== null) {
+    // ── 4. Permutation test (optional) ───────────────────────────
+    if (snap.include.perm && snap.perm && snap.perm.attr && snap.groupCol !== null) {
       const attr = snap.perm.attr;
       const stat = snap.perm.stat;
       const reps = snap.perm.reps;
       const nodeBlocks = snap.perm.blockList.filter((b) => b.kind === 'node').map((b) => b.col);
       L.push('# 4. Permutation test ########################################################');
+      L.push('');
+      L.push('pretty_section("Permutation test")');
       L.push('');
       L.push('# This mirrors what the Permutation card was set up to run: shuffle a node');
       L.push('# attribute R times, recompute the test statistic each time, and compare');
@@ -747,9 +1149,11 @@
       L.push('    else:');
       L.push('        blocks = np.array(g.vs[block_by])');
       L.push('        new_labs = labs.copy()');
+      L.push('        # For each unique block value b: pull the nodes with that block,');
+      L.push('        # and reshuffle labels only within that subset.');
       L.push('        for b in np.unique(blocks):');
-      L.push('            m = blocks == b');
-      L.push('            new_labs[m] = rng.permutation(labs[m])');
+      L.push('            m = blocks == b                       # boolean mask of "this block"');
+      L.push('            new_labs[m] = rng.permutation(labs[m])   # in-block shuffle');
       L.push('    g2 = g.copy()');
       L.push('    g2.vs[a] = new_labs.tolist()');
       L.push('    return g2');
@@ -783,16 +1187,18 @@
       L.push('R = ' + reps);
       L.push('null_dist = np.empty(R)');
       L.push('');
-      L.push('# Each iteration reshuffles the attribute, rebuilds the shuffled graph, and');
-      L.push('# stores the test statistic. permute_labels() returns a fresh graph every');
-      L.push('# time — no side effects on the original g.');
+      L.push('# For each replicate i in 0..R-1:');
+      L.push('#   1. Shuffle the attribute across nodes (permute_labels)');
+      L.push('#   2. Compute the test statistic on the shuffled graph (stat_fn)');
+      L.push('#   3. Store it as the i-th entry of null_dist');
+      L.push('# After R iterations, null_dist is a length-R vector of plausible-under-shuffling values.');
       L.push('for i in range(R):');
       if (nodeBlocks.length) {
-        L.push('    gp = permute_labels(g, ' + pyStr(attr) + ', block_by=' + pyStr(nodeBlocks[0]) + ', rng=rng)');
+        L.push('    gp = permute_labels(g, ' + pyStr(attr) + ', block_by=' + pyStr(nodeBlocks[0]) + ', rng=rng)  # step 1');
       } else {
-        L.push('    gp = permute_labels(g, ' + pyStr(attr) + ', rng=rng)');
+        L.push('    gp = permute_labels(g, ' + pyStr(attr) + ', rng=rng)  # step 1: one fresh shuffled graph');
       }
-      L.push('    null_dist[i] = stat_fn(gp)');
+      L.push('    null_dist[i] = stat_fn(gp)                       # steps 2 + 3: compute + store');
       L.push('');
       L.push('## 4.4 Report + plot #########################################################');
       L.push('');
@@ -814,10 +1220,12 @@
       L.push('');
     }
 
-    // ── 5. Counterfactual Monte Carlo ────────────────────────────
-    if (snap.mc && weight) {
+    // ── 5. Counterfactual Monte Carlo (optional) ─────────────────
+    if (snap.include.mc && snap.mc && weight) {
       const reps = snap.mc.reps;
       L.push('# 5. Counterfactual Monte Carlo ##############################################');
+      L.push('');
+      L.push('pretty_section("Counterfactual Monte Carlo")');
       L.push('');
       L.push('# This mirrors what the Counterfactuals card would run: each replicate');
       L.push('# Poisson-resamples the edge weights around their observed values, rebuilds');
@@ -847,13 +1255,14 @@
       L.push('# (Poisson with lambda = 0 is degenerate — always draws 0).');
       L.push('base_w = np.maximum(np.array(g.es["weight"], dtype=float), 1.0)');
       L.push('');
-      L.push('# Each iteration jitters weights, then recomputes weighted APL. rng.poisson()');
-      L.push('# takes a per-item lambda array — the "edge counts vary around their observed');
-      L.push('# value" noise model.');
+      L.push('# For each replicate i in 0..R-1:');
+      L.push('#   1. Copy the graph so we don\'t mutate g.');
+      L.push('#   2. Draw fresh Poisson weights (rng.poisson takes a per-item lambda array).');
+      L.push('#   3. Recompute weighted APL and store as apls[i].');
       L.push('for i in range(R):');
-      L.push('    gg = g.copy()');
-      L.push('    gg.es["weight"] = rng.poisson(lam=base_w).tolist()');
-      L.push('    apls[i] = weighted_apl(gg)');
+      L.push('    gg = g.copy()                                       # step 1');
+      L.push('    gg.es["weight"] = rng.poisson(lam=base_w).tolist()  # step 2');
+      L.push('    apls[i] = weighted_apl(gg)                          # step 3');
       L.push('');
       L.push('## 5.3 Report + plot #########################################################');
       L.push('');
@@ -871,16 +1280,303 @@
       L.push('');
     }
 
-    L.push('print("\\n🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.")');
+    // ── 6. Top-N rankings (optional) ─────────────────────────────
+    if (snap.include.topN) {
+      L.push('# 6. Top-N rankings ##########################################################');
+      L.push('');
+      L.push('pretty_section("Top-N rankings")');
+      L.push('');
+      L.push('# Two go-to "who matters most" summaries: top nodes by raw Degree, and top');
+      L.push('# nodes by (normalized) Betweenness. Same rankings the visualizer shows in');
+      L.push('# the Network Stats > Top-N panels — computed here so the reproducer script');
+      L.push('# gives you the same lists on paper as the ones on your screen.');
+      L.push('names = g.vs["name"]');
+      L.push('top_n = 5');
+      L.push('');
+      L.push('## 6.1 Top-N by Degree #######################################################');
+      L.push('');
+      L.push('# g.degree() = raw count of edges incident to each node.');
+      L.push('deg = np.array(g.degree(), dtype=float)');
+      L.push('order = np.argsort(-deg)                # indices, sorted DESCENDING by deg');
+      L.push('print(f"📝 Top {top_n} by Degree:")');
+      L.push('# For each of the top-N nodes k in 1..N: print rank, name, and degree.');
+      L.push('for k, idx in enumerate(order[:top_n], start=1):');
+      L.push('    print(f"     {k}. {names[idx]:<24} {int(deg[idx])}")');
+      L.push('');
+      L.push('## 6.2 Top-N by Betweenness (normalized) #####################################');
+      L.push('');
+      if (weight) {
+        L.push('# Weighted graph → invert weights (1/w) so heavy edges count as SHORT for');
+        L.push('# path-based centrality, matching the visualizer\'s convention.');
+        L.push('btw = np.array(g.betweenness(weights=[1.0 / max(w, 1e-9) for w in g.es["weight"]]), dtype=float)');
+      } else {
+        L.push('# Unweighted graph → count shortest paths as-is, then normalize below.');
+        L.push('btw = np.array(g.betweenness(), dtype=float)');
+      }
+      L.push('# Brandes normalization: divide by (N-1)(N-2)/2 so betweenness lives in [0,1]');
+      L.push('# and is comparable across networks of different N.');
+      L.push('N = g.vcount()');
+      L.push('btw = btw / max(1, (N - 1) * (N - 2) / 2)');
+      L.push('order = np.argsort(-btw)');
+      L.push('print(f"📝 Top {top_n} by Betweenness (normalized):")');
+      L.push('# For each of the top-N nodes k in 1..N: print rank, name, and betweenness.');
+      L.push('for k, idx in enumerate(order[:top_n], start=1):');
+      L.push('    print(f"     {k}. {names[idx]:<24} {btw[idx]:.4f}")');
+      L.push('');
+      L.push('');
+    }
+
+    // ── 7. Group coverage (optional) ─────────────────────────────
+    if (snap.include.coverage && snap.groupCol) {
+      const covRef  = snap.coverage.ref;
+      const covHops = snap.coverage.hops;
+      L.push('# 7. Group coverage ##########################################################');
+      L.push('');
+      L.push('pretty_section("Group coverage")');
+      L.push('');
+      L.push('# Group coverage = "what fraction of each group lands in the REACHED set."');
+      L.push('# The reached set is either:');
+      L.push('#   (a) the GIANT COMPONENT of the active graph (ref_group = ""), or');
+      L.push('#   (b) every node within max_hops BFS distance of any node in ref_group.');
+      L.push('# Matches the visualizer\'s "📐 Group Coverage" card exactly.');
+      L.push('group_col = ' + pyStr(snap.groupCol));
+      L.push('ref_group = ' + pyStr(covRef) + '   # "" = giant component');
+      L.push('max_hops  = ' + covHops + '           # 0 = unlimited');
+      L.push('');
+      L.push('## 7.1 Build the reached set #################################################');
+      L.push('');
+      L.push('vs_names  = g.vs["name"]');
+      L.push('vs_groups = g.vs[group_col]');
+      L.push('');
+      L.push('if ref_group == "":');
+      L.push('    # Reference is the giant component. connected_components() returns a');
+      L.push('    # VertexClustering — largest by .sizes() is the giant one.');
+      L.push('    comps = g.connected_components(mode="weak")');
+      L.push('    sizes = comps.sizes()');
+      L.push('    gc_id = sizes.index(max(sizes))');
+      L.push('    reached_ids = {vs_names[i] for i, c in enumerate(comps.membership) if c == gc_id}');
+      L.push('else:');
+      L.push('    # Reference is every node in ref_group. We start from those and walk out.');
+      L.push('    ref_idx = [i for i, gv in enumerate(vs_groups) if gv == ref_group]');
+      L.push('    if not ref_idx:');
+      L.push('        reached_ids = set()');
+      L.push('    elif max_hops > 0:');
+      L.push('        # Radius-limited: g.neighborhood(order=max_hops) returns a list of');
+      L.push('        # node-index lists. Flatten and dedupe to get the union.');
+      L.push('        neigh = g.neighborhood(vertices=ref_idx, order=max_hops)');
+      L.push('        reached_ids = {vs_names[j] for group in neigh for j in group}');
+      L.push('    else:');
+      L.push('        # Unlimited hops → any node whose component contains a seed is reachable.');
+      L.push('        comps = g.connected_components(mode="weak")');
+      L.push('        ref_comps = {comps.membership[i] for i in ref_idx}');
+      L.push('        reached_ids = {vs_names[i] for i, c in enumerate(comps.membership) if c in ref_comps}');
+      L.push('');
+      L.push('## 7.2 Per-group counts ######################################################');
+      L.push('');
+      L.push('# Bucket every node by group, then count how many landed in reached_ids.');
+      L.push('from collections import defaultdict');
+      L.push('groups_by = defaultdict(list)');
+      L.push('for name, gv in zip(vs_names, vs_groups):');
+      L.push('    groups_by[gv].append(name)');
+      L.push('');
+      L.push('cov_rows = []');
+      L.push('# For each (group name, member list): count how many members are in reached_ids.');
+      L.push('for gname, members in groups_by.items():');
+      L.push('    reached_ct = sum(1 for m in members if m in reached_ids)');
+      L.push('    frac = reached_ct / len(members) if members else 0.0');
+      L.push('    cov_rows.append({"group": gname, "members": len(members),');
+      L.push('                     "reached": reached_ct, "frac": frac})');
+      L.push('# Sort most-vulnerable first so the smallest coverages jump out.');
+      L.push('cov_rows.sort(key=lambda r: r["frac"])');
+      L.push('');
+      L.push('## 7.3 Report ################################################################');
+      L.push('');
+      L.push('ref_label  = "giant component" if ref_group == "" else f\'"{ref_group}"\'');
+      L.push('hops_label = "unlimited"       if max_hops  == 0  else str(max_hops)');
+      L.push('print(f"📊 Group coverage (ref = {ref_label}, hops = {hops_label}):")');
+      L.push('# For each row r in cov_rows: print group name, %, and counts.');
+      L.push('for r in cov_rows:');
+      L.push('    print(f\'     {r["group"]:<24} {100 * r["frac"]:5.1f}%  ({r["reached"]} / {r["members"]})\')');
+      L.push('');
+      L.push('');
+    }
+
+    // ── 8. Disruption stats (optional) ───────────────────────────
+    if (snap.include.disrupt) {
+      L.push('# 8. Disruption stats ########################################################');
+      L.push('');
+      L.push('pretty_section("Disruption stats")');
+      L.push('');
+      L.push('# The visualizer\'s Disruption card compares four network-level metrics');
+      L.push('# before/after your removals + scenario edits:');
+      L.push('#   active       — number of non-removed nodes');
+      L.push('#   components   — number of disconnected pieces (weak components)');
+      L.push('#   apl          — mean shortest path (∞ when any pair is unreachable)');
+      L.push('#   diameter     — max shortest path (∞ when disconnected)');
+      L.push('# Convention: ANY unreachable pair → APL & diameter are Inf. Matches');
+      L.push('# viz2-removal.js:computeDisruption().');
+      L.push('');
+      L.push('## 8.1 Helper ################################################################');
+      L.push('');
+      L.push('import math');
+      L.push('');
+      L.push('def disruption_stats(gg):');
+      L.push('    # connected_components(mode="weak") matches the visualizer\'s undirected');
+      L.push('    # BFS in buildAdj() — every edge treated as bidirectional.');
+      L.push('    comps = gg.connected_components(mode="weak")');
+      L.push('    disconnected = len(comps) > 1');
+      L.push('    # directed=False treats every edge as bidirectional during shortest-path.');
+      L.push('    apl  = math.inf if disconnected else gg.average_path_length(directed=False)');
+      L.push('    diam = math.inf if disconnected else gg.diameter(directed=False)');
+      L.push('    return {"active": gg.vcount(), "components": len(comps),');
+      L.push('            "apl": apl, "diameter": diam}');
+      L.push('');
+      L.push('## 8.2 Baseline vs current ###################################################');
+      L.push('');
+      L.push('# Rebuild a BASELINE copy of the graph from the same nodes + edges frames,');
+      L.push('# so we can measure how much your removals + scenarios moved each metric.');
+      L.push('# If you unchecked "Apply scenarios" in the export card, baseline == g and');
+      L.push('# all four deltas will show as ±0.');
+      L.push('g_base = ig.Graph.DataFrame(');
+      L.push('    edges=edges,');
+      L.push('    directed=' + dirFlag + ',');
+      L.push('    vertices=nodes,');
+      L.push('    use_vids=False,');
+      L.push(')');
+      if (weight) {
+        L.push('g_base.es["weight"] = edges[' + pyStr(weight) + '].tolist()');
+      }
+      L.push('');
+      L.push('base = disruption_stats(g_base)');
+      L.push('live = disruption_stats(g)');
+      L.push('');
+      L.push('## 8.3 Report ################################################################');
+      L.push('');
+      L.push('# Small formatters so Inf prints as "Inf" and integer-ish values don\'t');
+      L.push('# waste screen space on decimals.');
+      L.push('def fmt_val(x):');
+      L.push('    if math.isinf(x): return "Inf"');
+      L.push('    if abs(x - round(x)) < 0.005: return f"{int(round(x))}"');
+      L.push('    return f"{x:.2f}"');
+      L.push('def fmt_delta(a, b):');
+      L.push('    if math.isinf(a) and math.isinf(b): return "—"');
+      L.push('    if math.isinf(b) and not math.isinf(a): return "→ Inf"');
+      L.push('    if math.isinf(a) and not math.isinf(b): return "↓ from Inf"');
+      L.push('    d = b - a');
+      L.push('    if abs(d) < 0.005: return "±0"');
+      L.push('    if abs(d - round(d)) < 0.005: return f"{int(round(d)):+d}"');
+      L.push('    return f"{d:+.2f}"');
+      L.push('');
+      L.push('print("📊 Disruption stats (baseline → current):")');
+      L.push('print(f"     {\'metric\':<14} {\'baseline\':>10} {\'current\':>10} {\'Δ\':>10}")');
+      L.push('# For each metric name m in the four disruption metrics: print baseline,');
+      L.push('# current, and their delta side-by-side.');
+      L.push('for m in ["active", "components", "apl", "diameter"]:');
+      L.push('    print(f"     {m:<14} {fmt_val(base[m]):>10} {fmt_val(live[m]):>10} {fmt_delta(base[m], live[m]):>10}")');
+      L.push('');
+      L.push('');
+    }
+
+    // ── 9. Aggregation (optional) ────────────────────────────────
+    if (snap.include.aggregate && snap.aggregate.by) {
+      const trait = snap.aggregate.by;
+      const mode  = snap.aggregate.mode;
+      const time  = snap.aggregate.timeSlice;
+      const timeC = snap.aggregate.timeCol;
+      const idCol   = snap.nodeIdCol || 'name';
+      const fromCol = snap.fromCol   || 'from';
+      const toCol   = snap.toCol     || 'to';
+      L.push('# 9. Aggregation ############################################################');
+      L.push('');
+      L.push('pretty_section("Aggregation")');
+      L.push('');
+      L.push('# Aggregation collapses every node whose value on `trait` matches into ONE');
+      L.push('# meta-node, then sums (or averages) the weights of edges between each pair');
+      L.push('# of groups. Matches the visualizer\'s ▾ Aggregate menu.');
+      L.push('trait      = ' + pyStr(trait));
+      L.push('mode       = ' + pyStr(mode) + '        # "sum" or "mean"');
+      L.push('time_slice = ' + pyStr(time) + '        # "" = no time filter');
+      L.push('');
+      L.push('## 9.1 Assign each node to its group ########################################');
+      L.push('');
+      L.push('# Copy the raw node table and derive an `agg_group` column — missing values');
+      L.push('# and empty strings collapse into a "(none)" bucket, same as the visualizer.');
+      L.push('nodes_ag = nodes.copy()');
+      L.push('nodes_ag["agg_group"] = nodes_ag[trait].astype(str).replace({"": "(none)", "nan": "(none)"})');
+      L.push('');
+      L.push('## 9.2 Map every edge to a (source_group, target_group) pair ################');
+      L.push('');
+      L.push('edges_ag = edges.copy()');
+      if (time && timeC) {
+        L.push('# Time slice: keep only edges whose ' + pyStr(timeC) + ' value matches time_slice.');
+        L.push('if time_slice != "":');
+        L.push('    edges_ag = edges_ag[edges_ag[' + pyStr(timeC) + '].astype(str) == time_slice].copy()');
+      }
+      L.push('# Look up each endpoint\'s group via a dict from id → agg_group.');
+      L.push('id_to_group = dict(zip(nodes_ag[' + pyStr(idCol) + '].astype(str), nodes_ag["agg_group"]))');
+      L.push('edges_ag["src_group"] = edges_ag[' + pyStr(fromCol) + '].astype(str).map(id_to_group)');
+      L.push('edges_ag["tgt_group"] = edges_ag[' + pyStr(toCol)   + '].astype(str).map(id_to_group)');
+      L.push('# Drop within-group edges — an aggregated graph has no self-loops on groups.');
+      L.push('edges_ag = edges_ag[edges_ag["src_group"] != edges_ag["tgt_group"]].copy()');
+      L.push('');
+      L.push('## 9.3 Sum (or mean) weights per group-pair #################################');
+      L.push('');
+      if (weight) {
+        L.push('# groupby → agg. `weight` sums or averages the source weights; `count`');
+        L.push('# tracks how many source edges collapsed into each group-pair edge.');
+        L.push('agg_fn = "mean" if mode == "mean" else "sum"');
+        L.push('agg_edges = (');
+        L.push('    edges_ag');
+        L.push('    .groupby(["src_group", "tgt_group"])');
+        L.push('    .agg(weight=(' + pyStr(weight) + ', agg_fn), count=(' + pyStr(weight) + ', "count"))');
+        L.push('    .reset_index()');
+        L.push('    .rename(columns={"src_group": "from", "tgt_group": "to"})');
+        L.push(')');
+      } else {
+        L.push('# No weight column → count edges per group-pair; use the count itself as');
+        L.push('# the aggregated edge weight.');
+        L.push('agg_edges = (');
+        L.push('    edges_ag.groupby(["src_group", "tgt_group"]).size()');
+        L.push('    .reset_index(name="count")');
+        L.push('    .rename(columns={"src_group": "from", "tgt_group": "to"})');
+        L.push(')');
+        L.push('agg_edges["weight"] = agg_edges["count"]');
+      }
+      L.push('');
+      L.push('## 9.4 Build the aggregated graph ###########################################');
+      L.push('');
+      L.push('agg_nodes = pd.DataFrame({"name": nodes_ag["agg_group"].unique()})');
+      L.push('g_agg = ig.Graph.DataFrame(');
+      L.push('    edges=agg_edges[["from", "to", "weight", "count"]],');
+      L.push('    directed=' + dirFlag + ',');
+      L.push('    vertices=agg_nodes,');
+      L.push('    use_vids=False,');
+      L.push(')');
+      L.push('print(f"🔗 Aggregated by {trait}: {g_agg.vcount()} groups · {g_agg.ecount()} edges (mode = {mode})")');
+      L.push('');
+      L.push('## 9.5 Top-5 heaviest aggregated edges ######################################');
+      L.push('');
+      L.push('# Sort descending, take the first five — quick "who talks to whom most" read.');
+      L.push('top_edges = agg_edges.sort_values("weight", ascending=False).head(5)');
+      L.push('print("📝 Top 5 aggregated edges by weight:")');
+      L.push('# For each row (rank k) in top_edges: print rank, source→target, weight, count.');
+      L.push('# name=None returns raw tuples so we sidestep pandas renaming `from` to _1.');
+      L.push('for k, row in enumerate(top_edges[["from", "to", "weight", "count"]].itertuples(index=False, name=None), start=1):');
+      L.push('    frm, to_, w, c = row');
+      L.push('    print(f"     {k}. {frm:<12} → {to_:<12}   weight = {w:.2f}  ({int(c)} source edge(s))")');
+      L.push('');
+      L.push('');
+    }
+
+    L.push('print("\\n' + HR + '")');
+    L.push('print("🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.")');
+    L.push('print("' + HR + '")');
     L.push('');
     return L.join('\n');
   }
 
   // Minimal mirror of the playground SAMPLE_CONFIGS — only the fields the
-  // export module needs (file list + weight column). Kept here so the export
-  // doesn't need to reach into the playground JS. Two-file loaders only —
-  // datasets with a third lookup CSV drop it silently (the export never
-  // touches lookup tables anyway).
+  // export module needs (file list + weight column).
   const SAMPLE_CONFIGS_LITE = {
     'karate':                { files: ['karate-nodes.csv',                'karate-edges.csv'],                weight: null },
     'lakeside':              { files: ['lakeside-nodes.csv',              'lakeside-edges.csv'],              weight: null },
@@ -969,6 +1665,16 @@
       ? '<div class="formula-note" style="color:#fbbf24;">You uploaded custom CSVs — the export will read them by filename but the playground doesn\'t know about them. Upload the same files into the playground first, or download the .R/.py file and open it locally.</div>'
       : '';
 
+    // A checkbox that's on but has no card configuration renders a hint
+    // so the student knows why the section didn't appear.
+    const scenariosCfgd = !!(snap.removed.length || snap.scenarioNodes.length || snap.scenarioLinks.length);
+    const permCfgd = !!(snap.perm && snap.perm.attr);
+    const mcCfgd   = !!(snap.mc && snap.weightCol);
+    const covCfgd  = !!snap.groupCol;
+    const aggCfgd  = !!(snap.aggregate && snap.aggregate.by);
+    const dimmedNote = (checked, cfgd, hint) => (!checked || cfgd) ? '' :
+      ` <span style="color:var(--grey);font-size:10.5px;">(${hint || 'none set'})</span>`;
+
     host.innerHTML = `
       <div class="color-by-row" style="margin-bottom:6px;">
         <label for="viz2-codeexport-lang">Language</label>
@@ -977,6 +1683,41 @@
           <option value="py"${ui.lang === 'py' ? ' selected' : ''}>Python (Pyodide playground)</option>
         </select>
       </div>
+      <fieldset class="viz2-export-includes" style="border:1px solid var(--border-soft); border-radius:6px; padding:4px 10px 6px; margin:2px 0 8px;">
+        <legend style="padding:0 6px; font-size:10.5px; color:var(--green-bright); letter-spacing:0.1em; text-transform:uppercase;">Include analyses</legend>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-scenarios" ${ui.includeScenarios ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>🧨 Apply scenarios${dimmedNote(ui.includeScenarios, scenariosCfgd, 'none set')}</span>
+        </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-dist" ${ui.includeDist ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>📊 Centrality distribution</span>
+        </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-perm" ${ui.includePerm ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>🧪 Permutation test${dimmedNote(ui.includePerm, permCfgd, 'not configured')}</span>
+        </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-mc" ${ui.includeMc ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>🧪 Counterfactual MC${dimmedNote(ui.includeMc, mcCfgd, 'not configured')}</span>
+        </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-topn" ${ui.includeTopN ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>🏆 Top-N rankings</span>
+        </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-coverage" ${ui.includeCoverage ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>📐 Group coverage${dimmedNote(ui.includeCoverage, covCfgd, 'no group column')}</span>
+        </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-disrupt" ${ui.includeDisrupt ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>💥 Disruption stats</span>
+        </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-aggregate" ${ui.includeAggregate ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>🧬 Aggregation${dimmedNote(ui.includeAggregate, aggCfgd, 'no aggregate-by column')}</span>
+        </label>
+      </fieldset>
       <div class="formula-note" style="margin:-2px 0 6px;">
         Reproduces the current state${bitsHtml}. Regenerates automatically as you change things.
       </div>
@@ -994,6 +1735,22 @@
     const openBtn = $('viz2-codeexport-open'); if (openBtn) openBtn.addEventListener('click', openInPlayground);
     const copyBtn = $('viz2-codeexport-copy'); if (copyBtn) copyBtn.addEventListener('click', copyCode);
     const dlBtn   = $('viz2-codeexport-dl');   if (dlBtn)   dlBtn.addEventListener('click', downloadCode);
+
+    // Wire the three include-checkboxes. Each toggles a ui.* flag and
+    // re-renders so the code preview reflects the new selection.
+    const bind = (id, key) => {
+      const el = $(id);
+      if (!el) return;
+      el.addEventListener('change', (e) => { ui[key] = !!e.target.checked; render(); });
+    };
+    bind('viz2-codeexport-inc-scenarios', 'includeScenarios');
+    bind('viz2-codeexport-inc-dist',      'includeDist');
+    bind('viz2-codeexport-inc-perm',      'includePerm');
+    bind('viz2-codeexport-inc-mc',        'includeMc');
+    bind('viz2-codeexport-inc-topn',      'includeTopN');
+    bind('viz2-codeexport-inc-coverage',  'includeCoverage');
+    bind('viz2-codeexport-inc-disrupt',   'includeDisrupt');
+    bind('viz2-codeexport-inc-aggregate', 'includeAggregate');
   }
 
   // Re-render on every event that could change the snapshot.
