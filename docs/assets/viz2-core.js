@@ -571,6 +571,9 @@
   function loadProjectDataset(key) {
     if (!key) return;
     setStatus('Loading ' + key + '…');
+    // Record which project dataset is loaded so the code-export module can
+    // reference it by key when handing off a reproducer script to the playgrounds.
+    state.currentDatasetKey = key;
     // Wipe scenarios from any previous dataset — they reference ids that
     // either don't exist in the new graph or accidentally collide. The
     // bug was that buildGraph would still fold them in, blocking the

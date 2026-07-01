@@ -826,6 +826,27 @@ editor.setOption('extraKeys', {
   'Cmd-Enter':  () => runCode(),
 });
 
+// ── Visualizer handoff — drop code into the editor IMMEDIATELY on page load ──
+// The file-hydration step (fetch dataset CSVs into Pyodide's virtual FS) still
+// waits for bootstrap-ready (see the deferred call at the end of bootstrap()),
+// but the editor content update fires right here so students see the code
+// even if Pyodide takes 20+ seconds to boot (or never boots).
+const _pendingVisualizerHandoff = (function () {
+  try {
+    const raw = localStorage.getItem('netsci-playground-handoff');
+    if (!raw) return null;
+    const payload = JSON.parse(raw);
+    if (!payload || payload.lang !== 'py') return null;
+    if (payload.ts && Date.now() - payload.ts > 5 * 60 * 1000) {
+      localStorage.removeItem('netsci-playground-handoff');
+      return null;
+    }
+    localStorage.removeItem('netsci-playground-handoff');
+    editor.setValue(payload.code || '');
+    return payload;
+  } catch (_) { return null; }
+})();
+
 // ============================================================
 // UI HELPERS
 // ============================================================
@@ -1018,6 +1039,8 @@ def _list_globals():
     clearConsole();
     appendConsoleLine(`Pyodide ready. ${saved.length ? `Restored ${saved.length} file(s). ` : ''}Press Ctrl/Cmd+Enter to run.`, 'message');
     refreshObjects();
+    // If the Visualizer handed us a script + dataset, drop them into the editor.
+    consumeVisualizerHandoff().catch(() => {});
   } catch (e) {
     setStatus('Failed to load Pyodide — see console', 'error');
     appendConsoleLine(`Pyodide bootstrap failed: ${e.message}`, 'stderr');
@@ -1060,6 +1083,34 @@ function refreshObjects() {
     proxy.destroy?.();
     renderObjects(rows);
   } catch (e) { /* skip */ }
+}
+
+// ============================================================
+// VISUALIZER HANDOFF — hydrate the dataset CSVs into Pyodide's FS.
+// The editor content was ALREADY set the moment the page loaded (see the
+// _pendingVisualizerHandoff IIFE next to the CodeMirror init). This second
+// step only runs once Pyodide is ready so the pd.read_csv() calls in the
+// pasted code find the CSVs where the visualizer said they'd be.
+// ============================================================
+async function consumeVisualizerHandoff() {
+  const payload = _pendingVisualizerHandoff;
+  if (!payload) return;
+  if (payload.datasetKey && SAMPLE_CONFIGS[payload.datasetKey]) {
+    const cfg = SAMPLE_CONFIGS[payload.datasetKey];
+    for (const fname of cfg.files) {
+      try {
+        const resp = await fetch(`playground-data/${fname}`);
+        if (!resp.ok) continue;
+        const buf = new Uint8Array(await resp.arrayBuffer());
+        pyodide.FS.writeFile(fname, buf);
+        await idbPutFile(fname, buf);
+        const preview = new TextDecoder().decode(buf.slice(0, 4096));
+        dataFiles.set(fname, { bytes: buf, preview });
+      } catch (_) {}
+    }
+    renderDataPanel();
+  }
+  toast(`Loaded from Visualizer — ${payload.datasetKey || 'no sample'}. Press ▶ Run.`);
 }
 
 // ============================================================
