@@ -555,11 +555,6 @@
     </div>
   </section>
 
-  <aside class="lab-sketchpad-prompt">
-    <strong class="label">✏️ Sketchpad — before you click anything</strong>
-    Before you touch the builder, sketch the join on paper. List the columns in <code>factories</code> and the columns in <code>shipments</code>. Draw arrows between the columns that have to match for the join. Where do you predict a forgotten rename would cause a silent collision? Mark it. Then build the pipeline and check whether your prediction held.
-  </aside>
-
   <div class="lang-toggle-card">
     <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
       <span class="toggle-label">Language:</span>
@@ -594,14 +589,7 @@
 
   <div class="sketchpad-card" id="sketchpad" style="scroll-margin-top: 90px;">
     <h3><span class="sketchpad-icon">✏️</span>Sketchpad Moment (do this before touching the builder)</h3>
-    <p>On your physical sketchpad:</p>
-    <ol>
-      <li>Sketch the two tables side by side. List the column names of each.</li>
-      <li><strong>Draw an arrow</strong> from <code>edges.from_id</code> to <code>nodes.node_id</code>. This arrow is your join key — the visual definition of a join. It exists independently of whether you'll write the code in R or Python.</li>
-      <li>Now sketch what the joined table would look like. Which columns survive? How many rows? What happens to <code>tier</code> if you join twice — once on <code>from_id</code> and once on <code>to_id</code>? Draw what you think the column names will look like.</li>
-      <li>Question to write down: when does the rename step become essential, and what columns is it renaming?</li>
-    </ol>
-    <p style="margin-top: 12px; font-size: 13.5px; font-family: var(--font-body); color: var(--grey);">Then come back here, pick your language, and verify your sketch with the builder. Sketches first, syntax second.</p>
+    <p>On your sketchpad, sketch the <em>factories</em> and <em>shipments</em> tables side by side and list their columns. Draw an arrow from <code>edges.from_id</code> to <code>nodes.node_id</code> — that arrow <em>is</em> your join key. Then sketch the joined table: which columns survive, how many rows, and what happens to <code>tier</code> if you join twice (once on <code>from_id</code>, once on <code>to_id</code>). Write one line answering: when does the rename step become essential, and what is it renaming?</p>
   </div>
 
   <div class="card" id="interactive-tutorial" style="scroll-margin-top: 90px;">

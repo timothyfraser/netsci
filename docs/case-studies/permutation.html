@@ -288,11 +288,6 @@
     </div>
   </section>
 
-  <aside class="lab-sketchpad-prompt" id="sketchpad" style="scroll-margin-top: 90px;">
-    <strong class="label">✏️ Sketchpad — before you click anything</strong>
-    Before you click Run, predict on paper what you'd expect the null distribution to look like if there were no real structure: where should the observed statistic sit relative to the bulk of the null? Draw the histogram you expect, mark the observed value. Then run the sampler and compare.
-  </aside>
-
   <div class="lab-layout">
     <div>
 
@@ -427,10 +422,10 @@
   </div>
 
   <!-- ── SKETCH PROMPT ── -->
-  <div class="lab-card" style="margin-top: 20px;">
+  <div class="lab-card" id="sketchpad" style="margin-top: 20px; scroll-margin-top: 90px;">
     <h3>✏️ Sketchpad Prompt</h3>
     <p style="color: var(--green-mint); font-size: 13px; line-height: 1.65;">
-      <strong style="color: var(--white);">Before you permute:</strong> On your sketchpad, draw the 5 neighborhoods as labeled circles. Mark each as high-income (amber) or low-income (indigo) — then sketch where you expect most arrows to point and which pairs you think carry the heaviest ridership. After running 50+ permutations of each type, draw two rough null distributions from memory. Where does the observed value sit relative to each? Does income structure appear to shape ridership beyond what chance would produce?
+      Before you permute: on your sketchpad, draw the five neighborhoods as labeled circles. Mark each as high-income (amber) or low-income (indigo), then sketch where you expect most arrows to point and which pairs carry the heaviest ridership. After running 50+ permutations of each type, sketch two rough null distributions from memory and mark where the observed value sits relative to each. Write one line: does income structure appear to shape ridership beyond what chance would produce?
     </p>
   </div>
 

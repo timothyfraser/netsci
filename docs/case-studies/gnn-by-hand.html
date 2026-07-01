@@ -340,10 +340,6 @@
   </div>
 
 
-  <aside class="lab-sketchpad-prompt" id="sketchpad" style="scroll-margin-top: 90px;">
-    <strong class="label">✏️ Sketchpad — before you click anything</strong>
-    Before you click <strong>Forward Pass</strong>, do the first GCN propagation step on paper. For each of the four factories, average the output feature across itself and its direct neighbors. Write those four numbers down. The lab will compute exactly the same numbers in the next click — your sketch is the answer key.
-  </aside>
   <div class="network-diagram">
     <svg width="460" height="220" viewBox="0 0 460 220">
       <line x1="100" y1="110" x2="230" y2="55"  stroke="rgba(57,255,20,0.25)" stroke-width="2"/>
@@ -785,10 +781,9 @@ GNN MAE = (0.450 + 0.565 + 0.579 + 0.423) / 4 = 2.017 / 4 = <span style="color: 
     </div>
   </div>
 
-  <div class="sketchpad-box">
+  <div class="sketchpad-box" id="sketchpad" style="scroll-margin-top: 90px;">
     <h2>✏️ Sketchpad Prompt</h2>
-    <p>Put down the keyboard. On your sketchpad, draw a six-node supply chain of your own design. Label each node with an x value between 0 and 1. Choose which nodes are true bottlenecks (label them y = 1) and which aren't (y = 0).</p>
-    <p>Now trace one message-passing step by hand: for each node, write down x̃ = x + mean(neighbors' x). Circle the node where x̃ is highest. Is that node a true bottleneck? Does the GNN have a chance of getting it right with appropriate trained weights? Why or why not?</p>
+    <p>On your sketchpad, draw a six-node supply chain of your own design. Label each node with <code>x ∈ [0,1]</code> and <code>y = 0/1</code> for bottleneck. Trace one message-passing step by hand: <code>x̃ = x + mean(neighbors' x)</code>. Circle the highest-x̃ node. Is it a true bottleneck?</p>
   </div>
 
   <section id="code-it" style="scroll-margin-top: 90px; margin: 36px 0 24px; padding: 18px 22px; background: var(--card-bg); border: 1px solid var(--border); border-left: 3px solid var(--green-bright); border-radius: var(--radius-md);">
