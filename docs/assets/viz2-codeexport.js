@@ -7,9 +7,13 @@
 //     the user pastes into it)
 //   • removed nodes (delete_vertices)
 //   • scenario nodes + edges (add_vertices + add_edges)
-//   • centrality distribution for the metric picked in the Distributions card
-//   • permutation-test block if the Permutation card has an attribute + stat set
-//   • counterfactual MC block if the Counterfactuals card has a metric set
+//   • [optional] centrality distribution
+//   • [optional] permutation-test block if the Permutation card has an
+//     attribute + stat set
+//   • [optional] counterfactual MC block if the Counterfactuals card has a
+//     metric set
+// Each "optional" section has an include-checkbox in the card so students
+// can uncheck the heavier analyses when they only want a quick script.
 //
 // Handoff: writes { lang, code, datasetKey, ts, source } to
 // localStorage['netsci-playground-handoff'] then opens the R or Python
@@ -17,13 +21,14 @@
 // bootstrap-ready, fetch the dataset's CSVs into their WASM FS, and drop
 // the code into the CodeMirror editor.
 //
-// Mounted at: #viz2-codeexport-body (declared in visualizer.html).
+// Mounted at: #viz2-codeexport-body (declared in visualizer2.html).
 // ============================================================
 (function () {
   'use strict';
   if (!window.NetSciViz2) return;
   const NV = window.NetSciViz2;
   const HANDOFF_KEY = 'netsci-playground-handoff';
+  const HR = '────────────────────────────────────────────────────────────';
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -46,9 +51,6 @@
     if (allLogical) return 'c(' + values.map((v) => isMissing(v) ? 'NA' : (v ? 'TRUE' : 'FALSE')).join(', ') + ')';
     return 'c(' + values.map((v) => isMissing(v) ? 'NA_character_' : rStr(v)).join(', ') + ')';
   }
-  // Emit `data.frame(col1 = c(...), col2 = c(...), stringsAsFactors = FALSE)`
-  // for a table-of-rows + ordered column names. One line per column so it's
-  // still readable in the emitted script when there are only a few dozen rows.
   function dfLiteralR(rows, cols) {
     const parts = cols.map((c) => c + ' = ' + rVectorLit(rows.map((r) => r[c])));
     return 'data.frame(\n  ' + parts.join(',\n  ') + ',\n  stringsAsFactors = FALSE\n)';
@@ -59,17 +61,16 @@
     if (allNumeric) return '[' + values.map((v) => isMissing(v) ? 'None' : String(v)).join(', ') + ']';
     return '[' + values.map((v) => isMissing(v) ? 'None' : pyStr(v)).join(', ') + ']';
   }
-  // `pd.DataFrame({'col1': [...], 'col2': [...]})`
   function dfLiteralPy(rows, cols) {
     const parts = cols.map((c) => pyStr(c) + ': ' + pyListLit(rows.map((r) => r[c])));
     return 'pd.DataFrame({\n    ' + parts.join(',\n    ') + '\n})';
   }
 
-  const ui = { lang: 'r' };  // 'r' | 'py'
+  // UI state persists across renders. The three include* flags gate the
+  // optional analysis sections; ui.lang picks between R / Python emitters.
+  const ui = { lang: 'r', includeDist: true, includePerm: true, includeMc: true };
 
   // ── Snapshot the visualizer's live state ────────────────────
-  // Everything the code-export needs, gathered into ONE plain object so the
-  // R / Python emitters are pure serializers.
   function snapshot() {
     const s = NV.state;
     if (!s.graph) return null;
@@ -96,7 +97,7 @@
       .map((el) => el.value);
 
     return {
-      datasetKey: s.currentDatasetKey || null,   // null when the user uploaded custom CSVs OR used the ▶ Sample button
+      datasetKey: s.currentDatasetKey || null,
       directed: !!s.directed,
       weightCol: s.mapping.weight || null,
       groupCol: s.mapping.nodeGroup || null,
@@ -110,9 +111,6 @@
       removed: removed,
       scenarioNodes: scenarioNodes,
       scenarioLinks: scenarioLinks,
-      // Raw CSV rows — the emitter inlines these as data.frame(...) when no
-      // project dataset key is set so the code is self-contained (doesn't
-      // depend on the playground having any files hydrated).
       nodeCsv: s.nodeCsv || [],
       edgeCsv: s.edgeCsv || [],
       nodeCols: s.nodeCols || [],
@@ -128,13 +126,20 @@
           return { kind, col };
         })
       } : null,
+      // The three "include" flags come from the checkboxes in the export
+      // card. Default true; a student can uncheck to keep the emitted
+      // script short + fast when they don't need that analysis.
+      include: {
+        dist: !!ui.includeDist,
+        perm: !!ui.includePerm,
+        mc:   !!ui.includeMc,
+      },
     };
   }
 
   // Reorder columns so the endpoint columns come first — igraph's
   // graph_from_data_frame / Graph.DataFrame both use the first two columns
-  // as source/target. Works for any inlined data (from a sample graph, an
-  // uploaded CSV, or a project dataset).
+  // as source/target.
   function reorderEdgeCols(cols, fromCol, toCol) {
     if (!fromCol || !toCol) return cols;
     return [fromCol, toCol].concat(cols.filter((c) => c !== fromCol && c !== toCol));
@@ -162,8 +167,8 @@
     L.push("#' Network Visualizer at the moment you pressed \"Open in playground\":");
     L.push("#' the same dataset (or the same inline data if you were on the ▶ Sample");
     L.push("#' or an uploaded CSV), the same node removals, the same scenario items,");
-    L.push("#' the same centrality distribution, and — if you had them configured —");
-    L.push("#' the same permutation test and counterfactual Monte Carlo simulation.");
+    L.push("#' and whichever of the three analyses you left checked in the export card");
+    L.push("#' (centrality distribution, permutation test, counterfactual MC).");
     L.push('');
     L.push('');
 
@@ -176,12 +181,26 @@
     L.push('# available too if you want to extend the analysis beyond this script.');
     L.push('library(igraph)');
     L.push('');
+    L.push('## 0.2 Helpers ###############################################################');
+    L.push('');
+    L.push('# pretty_section() prints a bordered header before each analysis block. It\'s');
+    L.push('# purely cosmetic — it just makes the playground console output easier to');
+    L.push('# skim by giving each section a visible divider.');
+    L.push('pretty_section <- function(name) {');
+    L.push('  cat("\\n", "' + HR + '", "\\n", sep = "")');
+    L.push('  cat("  ", name, "\\n", sep = "")');
+    L.push('  cat("' + HR + '", "\\n", sep = "")');
+    L.push('}');
+    L.push('');
     L.push('cat("\\n🚀 Network Visualizer reproducer — ' + label + ' (R)\\n")');
-    L.push('cat("   Reproducing the on-screen state at handoff.\\n\\n")');
+    L.push('cat("   Reproducing the on-screen state at handoff.\\n")');
+    L.push('');
     L.push('');
 
-    // ── 0.2 Data — CSV OR inline ─────────────────────────────────
-    L.push('## 0.2 Data ##################################################################');
+    // ── 0.3 Data — CSV OR inline ─────────────────────────────────
+    L.push('## 0.3 Data ##################################################################');
+    L.push('');
+    L.push('pretty_section("Loading data")');
     L.push('');
     if (cfg) {
       L.push('# The visualizer\'s handoff hook wrote these CSVs into WebR\'s virtual FS');
@@ -212,6 +231,8 @@
     // ── 1. Build the graph ───────────────────────────────────────
     L.push('# 1. Build the graph #########################################################');
     L.push('');
+    L.push('pretty_section("Building the graph")');
+    L.push('');
     L.push('# graph_from_data_frame() treats the FIRST TWO columns of the edges table as');
     L.push('# endpoints (from -> to). Vertex metadata (kind, region, …) is joined onto');
     L.push('# each node by matching the first column of the nodelist to those endpoints.');
@@ -236,6 +257,8 @@
     const hasScenario = snap.scenarioNodes.length > 0 || snap.scenarioLinks.length > 0;
     if (hasRemoval || hasScenario) {
       L.push('# 2. Apply the visualizer\'s edits ############################################');
+      L.push('');
+      L.push('pretty_section("Applying visualizer edits")');
       L.push('');
       let sub = 0;
 
@@ -267,6 +290,7 @@
         if (snap.scenarioNodes.length) {
           L.push('scenario_nodes <- c(' + snap.scenarioNodes.map((n) => rStr(n.id)).join(', ') + ')');
           L.push('g <- add_vertices(g, length(scenario_nodes), name = scenario_nodes)');
+          L.push('cat(sprintf("➕ Added %d scenario node(s).\\n", length(scenario_nodes)))');
           L.push('');
         }
         if (snap.scenarioLinks.length) {
@@ -278,71 +302,90 @@
           } else {
             L.push('g <- add_edges(g, scenario_edges)');
           }
+          L.push('cat(sprintf("➕ Added %d scenario edge(s).\\n", length(scenario_edges) / 2))');
           L.push('');
         }
       }
       L.push('');
     }
 
-    // ── 3. Centrality distribution ───────────────────────────────
-    const metric = snap.dist.metric;
-    L.push('# 3. Centrality distribution #################################################');
-    L.push('');
-    L.push('# This is the "📊 Centrality Distributions" sub-card at the bottom of the');
-    L.push('# Network Stats panel — same metric you had picked when you handed off.');
-    L.push('');
-    if (metric === 'weighted_degree') {
-      L.push('# strength(g, weights = E(g)$weight) is degree BUT summed over the weight');
-      L.push('# column instead of just counted. Same neighbor list, different accounting.');
-      L.push('vals <- strength(g' + (weight ? ', weights = E(g)$weight' : '') + ')');
-      L.push('metric_name <- "Weighted degree"');
-    } else if (metric === 'betweenness') {
-      L.push('# betweenness(v) = fraction of shortest paths between OTHER node pairs that');
-      L.push('# pass through v, normalized to [0, 1]. When we weight edges, we invert');
-      L.push('# the weight ( 1/w ) so "heavy" edges are treated as SHORT — same convention');
-      L.push('# the visualizer uses so the two numbers line up.');
-      L.push('vals <- betweenness(g, normalized = TRUE' + (weight ? ', weights = 1 / E(g)$weight' : '') + ')');
-      L.push('metric_name <- "Betweenness (normalized)"');
-    } else if (metric === 'closeness') {
-      L.push('# closeness(v) = 1 / mean shortest-path distance from v to everyone else.');
-      L.push('# High closeness = "on the way to a lot of the network."');
-      L.push('vals <- closeness(g, normalized = TRUE)');
-      L.push('metric_name <- "Closeness (normalized)"');
-    } else {
-      L.push('# degree(v) = raw count of edges incident to v. Same number that shows up');
-      L.push('# in the visualizer\'s Top Degree ranking.');
-      L.push('vals <- degree(g)');
-      L.push('metric_name <- "Degree"');
-    }
-    L.push('');
-    L.push('# Print the distribution\'s summary stats — matches the "min · median · mean · max"');
-    L.push('# line the visualizer shows below the histogram.');
-    L.push('cat(sprintf("📊 %s: min %.4f · median %.4f · mean %.4f · max %.4f\\n",');
-    L.push('            metric_name, min(vals), median(vals), mean(vals), max(vals)))');
-    L.push('');
-    L.push('# The playground renders this hist() into its Plots tab (and to Rplots.pdf if');
-    L.push('# you download the script and run it locally).');
-    L.push('hist(vals, breaks = 24, col = "#39FF14", border = "#0a0f0a",');
-    L.push('     main = paste0(metric_name, " distribution"), xlab = metric_name)');
-    if (snap.selectedNode) {
+    // ── 3. Centrality distribution (optional) ────────────────────
+    if (snap.include.dist) {
+      const metric = snap.dist.metric;
+      L.push('# 3. Centrality distribution #################################################');
       L.push('');
-      L.push('# You had this node selected on the graph, so we overlay its observed value');
-      L.push('# as a pink dashed vertical line — same treatment the visualizer uses.');
-      L.push('sel_name <- ' + rStr(snap.selectedNode));
-      L.push('if (sel_name %in% V(g)$name) {');
-      L.push('  abline(v = vals[sel_name], col = "#f472b6", lwd = 2, lty = 2)');
+      L.push('pretty_section("Centrality distribution")');
+      L.push('');
+      L.push('# This is the "📊 Centrality Distributions" sub-card at the bottom of the');
+      L.push('# Network Stats panel — same metric you had picked when you handed off.');
+      L.push('');
+      if (metric === 'weighted_degree') {
+        L.push('# strength(g, weights = E(g)$weight) is degree BUT summed over the weight');
+        L.push('# column instead of just counted. Same neighbor list, different accounting.');
+        L.push('vals <- strength(g' + (weight ? ', weights = E(g)$weight' : '') + ')');
+        L.push('metric_name <- "Weighted degree"');
+      } else if (metric === 'betweenness') {
+        L.push('# betweenness(v) = fraction of shortest paths between OTHER node pairs that');
+        L.push('# pass through v, normalized to [0, 1]. When we weight edges, we invert');
+        L.push('# the weight ( 1/w ) so "heavy" edges are treated as SHORT — same convention');
+        L.push('# the visualizer uses so the two numbers line up.');
+        L.push('vals <- betweenness(g, normalized = TRUE' + (weight ? ', weights = 1 / E(g)$weight' : '') + ')');
+        L.push('metric_name <- "Betweenness (normalized)"');
+      } else if (metric === 'closeness') {
+        L.push('# closeness(v) = 1 / mean shortest-path distance from v to everyone else.');
+        L.push('# High closeness = "on the way to a lot of the network."');
+        L.push('vals <- closeness(g, normalized = TRUE)');
+        L.push('metric_name <- "Closeness (normalized)"');
+      } else {
+        L.push('# degree(v) = raw count of edges incident to v. Same number that shows up');
+        L.push('# in the visualizer\'s Top Degree ranking.');
+        L.push('vals <- degree(g)');
+        L.push('metric_name <- "Degree"');
+      }
+      L.push('');
+      L.push('# Attach node names so we can rank them by centrality below.');
+      L.push('names(vals) <- V(g)$name');
+      L.push('');
+      L.push('# Print the distribution\'s summary stats — matches the "min · median · mean · max"');
+      L.push('# line the visualizer shows below the histogram.');
+      L.push('cat(sprintf("📊 %s: min %.4f · median %.4f · mean %.4f · max %.4f\\n",');
+      L.push('            metric_name, min(vals), median(vals), mean(vals), max(vals)))');
+      L.push('');
+      L.push('# Rank the top 3 nodes by this centrality — the same "who matters most"');
+      L.push('# reading the visualizer\'s Top-N ranking gives you.');
+      L.push('top3 <- head(sort(vals, decreasing = TRUE), 3)');
+      L.push('cat("📝 Top 3 by ", metric_name, ":\\n", sep = "")');
+      L.push('# For each of the 3 top nodes k in 1..3: print its rank, name, and score.');
+      L.push('for (k in seq_along(top3)) {');
+      L.push('  cat(sprintf("     %d. %-24s %.4f\\n", k, names(top3)[k], top3[k]))');
       L.push('}');
+      L.push('');
+      L.push('# The playground renders this hist() into its Plots tab (and to Rplots.pdf if');
+      L.push('# you download the script and run it locally).');
+      L.push('hist(vals, breaks = 24, col = "#39FF14", border = "#0a0f0a",');
+      L.push('     main = paste0(metric_name, " distribution"), xlab = metric_name)');
+      if (snap.selectedNode) {
+        L.push('');
+        L.push('# You had this node selected on the graph, so we overlay its observed value');
+        L.push('# as a pink dashed vertical line — same treatment the visualizer uses.');
+        L.push('sel_name <- ' + rStr(snap.selectedNode));
+        L.push('if (sel_name %in% V(g)$name) {');
+        L.push('  abline(v = vals[sel_name], col = "#f472b6", lwd = 2, lty = 2)');
+        L.push('}');
+      }
+      L.push('');
+      L.push('');
     }
-    L.push('');
-    L.push('');
 
-    // ── 4. Permutation test ──────────────────────────────────────
-    if (snap.perm && snap.perm.attr && snap.groupCol !== null) {
+    // ── 4. Permutation test (optional) ───────────────────────────
+    if (snap.include.perm && snap.perm && snap.perm.attr && snap.groupCol !== null) {
       const attr = snap.perm.attr;
       const stat = snap.perm.stat;
       const reps = snap.perm.reps;
       const nodeBlocks = snap.perm.blockList.filter((b) => b.kind === 'node').map((b) => b.col);
       L.push('# 4. Permutation test ########################################################');
+      L.push('');
+      L.push('pretty_section("Permutation test")');
       L.push('');
       L.push('# This mirrors what the Permutation card was set up to run: shuffle a node');
       L.push('# attribute R times, recompute the test statistic each time, and compare the');
@@ -373,9 +416,11 @@
       L.push('  } else {');
       L.push('    blocks <- vertex_attr(g, block_by)');
       L.push('    new_labs <- labs');
+      L.push('    # For each unique block value b: pull the nodes with that block, and');
+      L.push('    # reshuffle labels only within that subset. Preserves the block totals.');
       L.push('    for (b in unique(blocks)) {');
-      L.push('      m <- blocks == b');
-      L.push('      new_labs[m] <- sample(labs[m])');
+      L.push('      m <- blocks == b            # boolean mask of "this block"');
+      L.push('      new_labs[m] <- sample(labs[m])   # in-block shuffle');
       L.push('    }');
       L.push('  }');
       L.push('  set_vertex_attr(g, a, value = new_labs)');
@@ -408,16 +453,18 @@
       L.push('R <- ' + reps);
       L.push('null_dist <- numeric(R)');
       L.push('');
-      L.push('# Each iteration reshuffles the attribute, rebuilds the shuffled graph, and');
-      L.push('# stores the test statistic. No side effects on `g` — permute_labels() returns');
-      L.push('# a fresh graph every time.');
+      L.push('# For each replicate i in 1..R:');
+      L.push('#   1. Shuffle the attribute across nodes (permute_labels)');
+      L.push('#   2. Compute the test statistic on the shuffled graph (stat_fn)');
+      L.push('#   3. Store it as the i-th entry of null_dist');
+      L.push('# After R iterations, null_dist is a vector of R plausible-under-shuffling values.');
       L.push('for (i in seq_len(R)) {');
       if (nodeBlocks.length) {
-        L.push('  g_perm <- permute_labels(g, ' + rStr(attr) + ', block_by = ' + rStr(nodeBlocks[0]) + ')');
+        L.push('  g_perm <- permute_labels(g, ' + rStr(attr) + ', block_by = ' + rStr(nodeBlocks[0]) + ')  # step 1');
       } else {
-        L.push('  g_perm <- permute_labels(g, ' + rStr(attr) + ')');
+        L.push('  g_perm <- permute_labels(g, ' + rStr(attr) + ')  # step 1: one fresh shuffled graph');
       }
-      L.push('  null_dist[i] <- stat_fn(g_perm)');
+      L.push('  null_dist[i] <- stat_fn(g_perm)                  # steps 2 + 3: compute + store');
       L.push('}');
       L.push('');
       L.push('## 4.4 Report + plot #########################################################');
@@ -438,10 +485,12 @@
       L.push('');
     }
 
-    // ── 5. Counterfactual Monte Carlo ────────────────────────────
-    if (snap.mc && weight) {
+    // ── 5. Counterfactual Monte Carlo (optional) ─────────────────
+    if (snap.include.mc && snap.mc && weight) {
       const reps = snap.mc.reps;
       L.push('# 5. Counterfactual Monte Carlo ##############################################');
+      L.push('');
+      L.push('pretty_section("Counterfactual Monte Carlo")');
       L.push('');
       L.push('# This mirrors what the Counterfactuals card would run: each replicate');
       L.push('# Poisson-resamples the edge weights around their observed values, rebuilds');
@@ -475,13 +524,14 @@
       L.push('# with lambda = 0 is degenerate — always draws 0).');
       L.push('base_w <- E(g)$weight');
       L.push('');
-      L.push('# Each iteration jitters the weights, then recomputes weighted APL.');
-      L.push('# rpois(n, lambda) draws n independent Poissons with per-item lambdas —');
-      L.push('# the "edge counts vary around their observed value" noise model.');
+      L.push('# For each replicate i in 1..R:');
+      L.push('#   1. Copy the graph (assignment in R copies-on-write, so `gg <- g` is safe).');
+      L.push('#   2. Draw fresh Poisson weights around the observed edge weights.');
+      L.push('#   3. Compute weighted APL on the jittered graph and store it as apls[i].');
       L.push('for (i in seq_len(R)) {');
-      L.push('  gg <- g');
-      L.push('  E(gg)$weight <- rpois(length(base_w), lambda = pmax(base_w, 1))');
-      L.push('  apls[i] <- weighted_apl(gg)');
+      L.push('  gg <- g                                                      # step 1');
+      L.push('  E(gg)$weight <- rpois(length(base_w), lambda = pmax(base_w, 1))  # step 2');
+      L.push('  apls[i] <- weighted_apl(gg)                                  # step 3');
       L.push('}');
       L.push('');
       L.push('## 5.3 Report + plot #########################################################');
@@ -497,7 +547,9 @@
       L.push('');
     }
 
-    L.push('cat("\\n🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.\\n")');
+    L.push('cat("\\n' + HR + '\\n")');
+    L.push('cat("🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.\\n")');
+    L.push('cat("' + HR + '\\n")');
     L.push('');
     return L.join('\n');
   }
@@ -511,7 +563,7 @@
     const label = snap.datasetKey || 'inline sample / uploaded data';
     const L = [];
 
-    // ── 0. Header banner (matches code/NN_<case>/example.py) ──────
+    // ── 0. Header banner ──────────────────────────────────────────
     L.push('# reproducer.py');
     L.push('# Network Visualizer Reproducer — ' + label);
     L.push('# Author: (you — regenerate anytime from visualizer2.html)');
@@ -520,9 +572,8 @@
     L.push('# Network Visualizer at the moment you pressed "Open in playground":');
     L.push('# the same dataset (or the same inline data if you were on the');
     L.push('# ▶ Sample or an uploaded CSV), the same node removals, the same');
-    L.push('# scenario items, the same centrality distribution, and — if you');
-    L.push('# had them configured — the same permutation test and counterfactual');
-    L.push('# Monte Carlo simulation.');
+    L.push('# scenario items, and whichever of the three analyses you left');
+    L.push('# checked in the export card (centrality, permutation, MC).');
     L.push('');
     L.push('');
 
@@ -538,12 +589,25 @@
     L.push('import matplotlib.pyplot as plt');
     L.push('import igraph as ig');
     L.push('');
+    L.push('## 0.2 Helpers ###############################################################');
+    L.push('');
+    L.push('# pretty_section() prints a bordered header before each analysis block. It\'s');
+    L.push('# purely cosmetic — it just makes the playground console output easier to');
+    L.push('# skim by giving each section a visible divider.');
+    L.push('def pretty_section(name):');
+    L.push('    print("\\n" + "' + HR + '")');
+    L.push('    print("  " + name)');
+    L.push('    print("' + HR + '")');
+    L.push('');
     L.push('print("\\n🚀 Network Visualizer reproducer — ' + label + ' (Python)")');
-    L.push('print("   Reproducing the on-screen state at handoff.\\n")');
+    L.push('print("   Reproducing the on-screen state at handoff.")');
+    L.push('');
     L.push('');
 
-    // ── 0.2 Data ─────────────────────────────────────────────────
-    L.push('## 0.2 Data ##################################################################');
+    // ── 0.3 Data ─────────────────────────────────────────────────
+    L.push('## 0.3 Data ##################################################################');
+    L.push('');
+    L.push('pretty_section("Loading data")');
     L.push('');
     if (cfg) {
       L.push('# The visualizer\'s handoff hook wrote these CSVs into Pyodide\'s virtual FS');
@@ -573,6 +637,8 @@
 
     // ── 1. Build the graph ───────────────────────────────────────
     L.push('# 1. Build the graph #########################################################');
+    L.push('');
+    L.push('pretty_section("Building the graph")');
     L.push('');
     L.push('# ig.Graph.DataFrame() treats the FIRST TWO columns of the edges frame as');
     L.push('# endpoints (from -> to). Vertex metadata is joined onto each node by matching');
@@ -605,6 +671,8 @@
     if (hasRemoval || hasScenario) {
       L.push('# 2. Apply the visualizer\'s edits ############################################');
       L.push('');
+      L.push('pretty_section("Applying visualizer edits")');
+      L.push('');
       let sub = 0;
 
       if (hasRemoval) {
@@ -634,6 +702,7 @@
         if (snap.scenarioNodes.length) {
           L.push('scenario_nodes = [' + snap.scenarioNodes.map((n) => pyStr(n.id)).join(', ') + ']');
           L.push('g.add_vertices(scenario_nodes)');
+          L.push('print(f"➕ Added {len(scenario_nodes)} scenario node(s).")');
           L.push('');
         }
         if (snap.scenarioLinks.length) {
@@ -642,83 +711,99 @@
           L.push('added = g.add_edges(scenario_edges)');
           if (weight) {
             const ws = snap.scenarioLinks.map((l) => l.weight).join(', ');
+            L.push('# For each newly-added edge e and its intended weight w: attach w.');
             L.push('for e, w in zip(added, [' + ws + ']):');
             L.push('    e["weight"] = w');
           }
+          L.push('print(f"➕ Added {len(scenario_edges)} scenario edge(s).")');
           L.push('');
         }
       }
       L.push('');
     }
 
-    // ── 3. Centrality distribution ───────────────────────────────
-    const metric = snap.dist.metric;
-    L.push('# 3. Centrality distribution #################################################');
-    L.push('');
-    L.push('# This is the "📊 Centrality Distributions" sub-card at the bottom of the');
-    L.push('# Network Stats panel — same metric you had picked when you handed off.');
-    L.push('');
-    if (metric === 'weighted_degree') {
-      L.push('# g.strength(weights="weight") is degree summed over the weight column');
-      L.push('# instead of counted. Same neighbor list, different accounting.');
-      L.push('vals = np.array(g.strength(weights=' + (weight ? '"weight"' : 'None') + '), dtype=float)');
-      L.push('metric_name = "Weighted degree"');
-    } else if (metric === 'betweenness') {
-      L.push('# g.betweenness(v) = fraction of shortest paths between OTHER node pairs that');
-      L.push('# pass through v. When we weight edges, we invert the weight (1/w) so "heavy"');
-      L.push('# edges are treated as SHORT — same convention the visualizer uses.');
-      L.push('vals = np.array(g.betweenness(' + (weight ? 'weights=[1.0 / max(w, 1e-9) for w in g.es["weight"]]' : '') + '), dtype=float)');
+    // ── 3. Centrality distribution (optional) ────────────────────
+    if (snap.include.dist) {
+      const metric = snap.dist.metric;
+      L.push('# 3. Centrality distribution #################################################');
       L.push('');
-      L.push('# Brandes normalization for undirected graphs: divide by (N-1)(N-2)/2 so the');
-      L.push('# result lives in [0, 1] and is comparable across networks of different N.');
-      L.push('N = g.vcount()');
-      L.push('vals = vals / max(1, (N - 1) * (N - 2) / 2)');
-      L.push('metric_name = "Betweenness (normalized)"');
-    } else if (metric === 'closeness') {
-      L.push('# closeness(v) = 1 / mean shortest-path distance from v to everyone else.');
-      L.push('# High closeness = "on the way to a lot of the network."');
-      L.push('vals = np.array(g.closeness(normalized=True), dtype=float)');
-      L.push('metric_name = "Closeness (normalized)"');
-    } else {
-      L.push('# g.degree() = raw count of edges incident to v. Same number that shows up');
-      L.push('# in the visualizer\'s Top Degree ranking.');
-      L.push('vals = np.array(g.degree(), dtype=float)');
-      L.push('metric_name = "Degree"');
-    }
-    L.push('');
-    L.push('# Print the distribution\'s summary stats — matches the "min · median · mean · max"');
-    L.push('# line the visualizer shows below the histogram.');
-    L.push('print(f"📊 {metric_name}: min {vals.min():.4f} · median {np.median(vals):.4f} · mean {vals.mean():.4f} · max {vals.max():.4f}")');
-    L.push('');
-    L.push('# plt.show() sends the figure to the playground\'s Plots tab. If you run this');
-    L.push('# script locally, the same call opens a matplotlib window (or falls back to');
-    L.push('# Agg + savefig when MPLBACKEND=Agg is set).');
-    L.push('plt.figure(figsize=(6, 3.2))');
-    L.push('plt.hist(vals, bins=24, color="#39FF14", edgecolor="#0a0f0a")');
-    L.push('plt.title(f"{metric_name} distribution")');
-    L.push('plt.xlabel(metric_name)');
-    if (snap.selectedNode) {
+      L.push('pretty_section("Centrality distribution")');
       L.push('');
-      L.push('# You had this node selected on the graph, so we overlay its observed value');
-      L.push('# as a pink dashed vertical line — same treatment the visualizer uses.');
-      L.push('sel = ' + pyStr(snap.selectedNode));
+      L.push('# This is the "📊 Centrality Distributions" sub-card at the bottom of the');
+      L.push('# Network Stats panel — same metric you had picked when you handed off.');
+      L.push('');
+      if (metric === 'weighted_degree') {
+        L.push('# g.strength(weights="weight") is degree summed over the weight column');
+        L.push('# instead of counted. Same neighbor list, different accounting.');
+        L.push('vals = np.array(g.strength(weights=' + (weight ? '"weight"' : 'None') + '), dtype=float)');
+        L.push('metric_name = "Weighted degree"');
+      } else if (metric === 'betweenness') {
+        L.push('# g.betweenness(v) = fraction of shortest paths between OTHER node pairs that');
+        L.push('# pass through v. When we weight edges, we invert the weight (1/w) so "heavy"');
+        L.push('# edges are treated as SHORT — same convention the visualizer uses.');
+        L.push('vals = np.array(g.betweenness(' + (weight ? 'weights=[1.0 / max(w, 1e-9) for w in g.es["weight"]]' : '') + '), dtype=float)');
+        L.push('');
+        L.push('# Brandes normalization for undirected graphs: divide by (N-1)(N-2)/2 so the');
+        L.push('# result lives in [0, 1] and is comparable across networks of different N.');
+        L.push('N = g.vcount()');
+        L.push('vals = vals / max(1, (N - 1) * (N - 2) / 2)');
+        L.push('metric_name = "Betweenness (normalized)"');
+      } else if (metric === 'closeness') {
+        L.push('# closeness(v) = 1 / mean shortest-path distance from v to everyone else.');
+        L.push('# High closeness = "on the way to a lot of the network."');
+        L.push('vals = np.array(g.closeness(normalized=True), dtype=float)');
+        L.push('metric_name = "Closeness (normalized)"');
+      } else {
+        L.push('# g.degree() = raw count of edges incident to v. Same number that shows up');
+        L.push('# in the visualizer\'s Top Degree ranking.');
+        L.push('vals = np.array(g.degree(), dtype=float)');
+        L.push('metric_name = "Degree"');
+      }
+      L.push('');
+      L.push('# Print the distribution\'s summary stats — matches the "min · median · mean · max"');
+      L.push('# line the visualizer shows below the histogram.');
+      L.push('print(f"📊 {metric_name}: min {vals.min():.4f} · median {np.median(vals):.4f} · mean {vals.mean():.4f} · max {vals.max():.4f}")');
+      L.push('');
+      L.push('# Rank the top 3 nodes by this centrality — the same "who matters most"');
+      L.push('# reading the visualizer\'s Top-N ranking gives you.');
       L.push('names = g.vs["name"]');
-      L.push('if sel in names:');
-      L.push('    plt.axvline(vals[names.index(sel)], color="#f472b6", ls="--", lw=2, label="selected")');
-      L.push('    plt.legend()');
+      L.push('order = np.argsort(-vals)   # indices, sorted DESCENDING by vals');
+      L.push('print(f"📝 Top 3 by {metric_name}:")');
+      L.push('# For each of the 3 top nodes k in 1..3: print rank, name, and score.');
+      L.push('for k, idx in enumerate(order[:3], start=1):');
+      L.push('    print(f"     {k}. {names[idx]:<24} {vals[idx]:.4f}")');
+      L.push('');
+      L.push('# plt.show() sends the figure to the playground\'s Plots tab. If you run this');
+      L.push('# script locally, the same call opens a matplotlib window (or falls back to');
+      L.push('# Agg + savefig when MPLBACKEND=Agg is set).');
+      L.push('plt.figure(figsize=(6, 3.2))');
+      L.push('plt.hist(vals, bins=24, color="#39FF14", edgecolor="#0a0f0a")');
+      L.push('plt.title(f"{metric_name} distribution")');
+      L.push('plt.xlabel(metric_name)');
+      if (snap.selectedNode) {
+        L.push('');
+        L.push('# You had this node selected on the graph, so we overlay its observed value');
+        L.push('# as a pink dashed vertical line — same treatment the visualizer uses.');
+        L.push('sel = ' + pyStr(snap.selectedNode));
+        L.push('if sel in names:');
+        L.push('    plt.axvline(vals[names.index(sel)], color="#f472b6", ls="--", lw=2, label="selected")');
+        L.push('    plt.legend()');
+      }
+      L.push('plt.tight_layout()');
+      L.push('plt.show()');
+      L.push('');
+      L.push('');
     }
-    L.push('plt.tight_layout()');
-    L.push('plt.show()');
-    L.push('');
-    L.push('');
 
-    // ── 4. Permutation test ──────────────────────────────────────
-    if (snap.perm && snap.perm.attr && snap.groupCol !== null) {
+    // ── 4. Permutation test (optional) ───────────────────────────
+    if (snap.include.perm && snap.perm && snap.perm.attr && snap.groupCol !== null) {
       const attr = snap.perm.attr;
       const stat = snap.perm.stat;
       const reps = snap.perm.reps;
       const nodeBlocks = snap.perm.blockList.filter((b) => b.kind === 'node').map((b) => b.col);
       L.push('# 4. Permutation test ########################################################');
+      L.push('');
+      L.push('pretty_section("Permutation test")');
       L.push('');
       L.push('# This mirrors what the Permutation card was set up to run: shuffle a node');
       L.push('# attribute R times, recompute the test statistic each time, and compare');
@@ -747,9 +832,11 @@
       L.push('    else:');
       L.push('        blocks = np.array(g.vs[block_by])');
       L.push('        new_labs = labs.copy()');
+      L.push('        # For each unique block value b: pull the nodes with that block,');
+      L.push('        # and reshuffle labels only within that subset.');
       L.push('        for b in np.unique(blocks):');
-      L.push('            m = blocks == b');
-      L.push('            new_labs[m] = rng.permutation(labs[m])');
+      L.push('            m = blocks == b                       # boolean mask of "this block"');
+      L.push('            new_labs[m] = rng.permutation(labs[m])   # in-block shuffle');
       L.push('    g2 = g.copy()');
       L.push('    g2.vs[a] = new_labs.tolist()');
       L.push('    return g2');
@@ -783,16 +870,18 @@
       L.push('R = ' + reps);
       L.push('null_dist = np.empty(R)');
       L.push('');
-      L.push('# Each iteration reshuffles the attribute, rebuilds the shuffled graph, and');
-      L.push('# stores the test statistic. permute_labels() returns a fresh graph every');
-      L.push('# time — no side effects on the original g.');
+      L.push('# For each replicate i in 0..R-1:');
+      L.push('#   1. Shuffle the attribute across nodes (permute_labels)');
+      L.push('#   2. Compute the test statistic on the shuffled graph (stat_fn)');
+      L.push('#   3. Store it as the i-th entry of null_dist');
+      L.push('# After R iterations, null_dist is a length-R vector of plausible-under-shuffling values.');
       L.push('for i in range(R):');
       if (nodeBlocks.length) {
-        L.push('    gp = permute_labels(g, ' + pyStr(attr) + ', block_by=' + pyStr(nodeBlocks[0]) + ', rng=rng)');
+        L.push('    gp = permute_labels(g, ' + pyStr(attr) + ', block_by=' + pyStr(nodeBlocks[0]) + ', rng=rng)  # step 1');
       } else {
-        L.push('    gp = permute_labels(g, ' + pyStr(attr) + ', rng=rng)');
+        L.push('    gp = permute_labels(g, ' + pyStr(attr) + ', rng=rng)  # step 1: one fresh shuffled graph');
       }
-      L.push('    null_dist[i] = stat_fn(gp)');
+      L.push('    null_dist[i] = stat_fn(gp)                       # steps 2 + 3: compute + store');
       L.push('');
       L.push('## 4.4 Report + plot #########################################################');
       L.push('');
@@ -814,10 +903,12 @@
       L.push('');
     }
 
-    // ── 5. Counterfactual Monte Carlo ────────────────────────────
-    if (snap.mc && weight) {
+    // ── 5. Counterfactual Monte Carlo (optional) ─────────────────
+    if (snap.include.mc && snap.mc && weight) {
       const reps = snap.mc.reps;
       L.push('# 5. Counterfactual Monte Carlo ##############################################');
+      L.push('');
+      L.push('pretty_section("Counterfactual Monte Carlo")');
       L.push('');
       L.push('# This mirrors what the Counterfactuals card would run: each replicate');
       L.push('# Poisson-resamples the edge weights around their observed values, rebuilds');
@@ -847,13 +938,14 @@
       L.push('# (Poisson with lambda = 0 is degenerate — always draws 0).');
       L.push('base_w = np.maximum(np.array(g.es["weight"], dtype=float), 1.0)');
       L.push('');
-      L.push('# Each iteration jitters weights, then recomputes weighted APL. rng.poisson()');
-      L.push('# takes a per-item lambda array — the "edge counts vary around their observed');
-      L.push('# value" noise model.');
+      L.push('# For each replicate i in 0..R-1:');
+      L.push('#   1. Copy the graph so we don\'t mutate g.');
+      L.push('#   2. Draw fresh Poisson weights (rng.poisson takes a per-item lambda array).');
+      L.push('#   3. Recompute weighted APL and store as apls[i].');
       L.push('for i in range(R):');
-      L.push('    gg = g.copy()');
-      L.push('    gg.es["weight"] = rng.poisson(lam=base_w).tolist()');
-      L.push('    apls[i] = weighted_apl(gg)');
+      L.push('    gg = g.copy()                                       # step 1');
+      L.push('    gg.es["weight"] = rng.poisson(lam=base_w).tolist()  # step 2');
+      L.push('    apls[i] = weighted_apl(gg)                          # step 3');
       L.push('');
       L.push('## 5.3 Report + plot #########################################################');
       L.push('');
@@ -871,16 +963,15 @@
       L.push('');
     }
 
-    L.push('print("\\n🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.")');
+    L.push('print("\\n' + HR + '")');
+    L.push('print("🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.")');
+    L.push('print("' + HR + '")');
     L.push('');
     return L.join('\n');
   }
 
   // Minimal mirror of the playground SAMPLE_CONFIGS — only the fields the
-  // export module needs (file list + weight column). Kept here so the export
-  // doesn't need to reach into the playground JS. Two-file loaders only —
-  // datasets with a third lookup CSV drop it silently (the export never
-  // touches lookup tables anyway).
+  // export module needs (file list + weight column).
   const SAMPLE_CONFIGS_LITE = {
     'karate':                { files: ['karate-nodes.csv',                'karate-edges.csv'],                weight: null },
     'lakeside':              { files: ['lakeside-nodes.csv',              'lakeside-edges.csv'],              weight: null },
@@ -969,6 +1060,13 @@
       ? '<div class="formula-note" style="color:#fbbf24;">You uploaded custom CSVs — the export will read them by filename but the playground doesn\'t know about them. Upload the same files into the playground first, or download the .R/.py file and open it locally.</div>'
       : '';
 
+    // A permutation checkbox that's checked but has no card configuration
+    // renders a hint so the student knows why the section didn't appear.
+    const permCfgd = !!(snap.perm && snap.perm.attr);
+    const mcCfgd   = !!(snap.mc && snap.weightCol);
+    const dimmedNote = (checked, cfgd) => (!checked || cfgd) ? '' :
+      ' <span style="color:var(--grey);font-size:10.5px;">(not configured)</span>';
+
     host.innerHTML = `
       <div class="color-by-row" style="margin-bottom:6px;">
         <label for="viz2-codeexport-lang">Language</label>
@@ -977,6 +1075,21 @@
           <option value="py"${ui.lang === 'py' ? ' selected' : ''}>Python (Pyodide playground)</option>
         </select>
       </div>
+      <fieldset class="viz2-export-includes" style="border:1px solid var(--border-soft); border-radius:6px; padding:4px 10px 6px; margin:2px 0 8px;">
+        <legend style="padding:0 6px; font-size:10.5px; color:var(--green-bright); letter-spacing:0.1em; text-transform:uppercase;">Include analyses</legend>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-dist" ${ui.includeDist ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>📊 Centrality distribution</span>
+        </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-perm" ${ui.includePerm ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>🧪 Permutation test${dimmedNote(ui.includePerm, permCfgd)}</span>
+        </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-mc" ${ui.includeMc ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>🧪 Counterfactual MC${dimmedNote(ui.includeMc, mcCfgd)}</span>
+        </label>
+      </fieldset>
       <div class="formula-note" style="margin:-2px 0 6px;">
         Reproduces the current state${bitsHtml}. Regenerates automatically as you change things.
       </div>
@@ -994,6 +1107,17 @@
     const openBtn = $('viz2-codeexport-open'); if (openBtn) openBtn.addEventListener('click', openInPlayground);
     const copyBtn = $('viz2-codeexport-copy'); if (copyBtn) copyBtn.addEventListener('click', copyCode);
     const dlBtn   = $('viz2-codeexport-dl');   if (dlBtn)   dlBtn.addEventListener('click', downloadCode);
+
+    // Wire the three include-checkboxes. Each toggles a ui.* flag and
+    // re-renders so the code preview reflects the new selection.
+    const bind = (id, key) => {
+      const el = $(id);
+      if (!el) return;
+      el.addEventListener('change', (e) => { ui[key] = !!e.target.checked; render(); });
+    };
+    bind('viz2-codeexport-inc-dist', 'includeDist');
+    bind('viz2-codeexport-inc-perm', 'includePerm');
+    bind('viz2-codeexport-inc-mc',   'includeMc');
   }
 
   // Re-render on every event that could change the snapshot.
