@@ -131,10 +131,95 @@
     return `<span class="mv ${cls}">${txt}</span>`;
   }
 
-  // ── Selected-node remove/restore action ─────────────────────
+  // ── Selected-edge helpers ────────────────────────────────────
+  // The Selected panel now handles EITHER a picked node or a picked edge.
+  // Edge branch: find the link record by its edge key and render a small
+  // "Remove edge" / "Restore edge" button plus the endpoint + weight info.
+  function findEdgeByKey(key) {
+    if (!key || !state.graph) return null;
+    return state.graph.links.find((l) => utils.edgeKey(l) === key) || null;
+  }
+  function toggleEdgeRemoval(key) {
+    if (!key) return;
+    if (state.removedEdges.has(key)) state.removedEdges.delete(key);
+    else                             state.removedEdges.add(key);
+    baseline = null;
+    emit('removed-changed', { kind: 'edge', key });
+    V.computeMetrics();
+    renderSelectedActions();
+    V.render();
+  }
+
+  function renderSelectedEdge(slot, key) {
+    const link = findEdgeByKey(key);
+    if (!link) { slot.innerHTML = ''; return; }
+    const sId = typeof link.source === 'object' ? link.source.id : link.source;
+    const tId = typeof link.target === 'object' ? link.target.id : link.target;
+    const sNode = state.graph.nodes.find((n) => n.id === sId);
+    const tNode = state.graph.nodes.find((n) => n.id === tId);
+    const isRemoved = state.removedEdges.has(key);
+    const btnCls = isRemoved ? 'viz-btn viz-btn-ghost' : 'viz-btn viz-btn-danger';
+    const btnTxt = isRemoved ? '➕ Restore edge' : '➖ Remove edge';
+    const dir    = state.directed ? '→' : '·';
+    // Replace the node header (which lived in #node-card-wrap) with an edge
+    // header — that way the Selected panel always shows exactly one card body.
+    const wrap = document.getElementById('node-card-wrap');
+    if (wrap) {
+      wrap.innerHTML = `
+        <div class="node-card">
+          <div class="t-label" style="color:#f472b6;">${isRemoved ? 'REMOVED · ' : ''}Selected · Edge</div>
+          <h3 style="font-family:var(--font-mono);font-size:14px;">
+            ${esc(sNode ? (sNode.label || sNode.id) : sId)}
+            <span style="color:var(--grey-dim);"> ${dir} </span>
+            ${esc(tNode ? (tNode.label || tNode.id) : tId)}
+          </h3>
+          <div class="kvs">
+            <div class="kv"><span class="k">Source</span><span class="v">${esc(sId)}</span></div>
+            <div class="kv"><span class="k">Target</span><span class="v">${esc(tId)}</span></div>
+            <div class="kv"><span class="k">Weight</span><span class="v">${(link.weight ?? 1).toFixed(2)}</span></div>
+            ${link.isScenario ? '<div class="kv"><span class="k">Kind</span><span class="v" style="color:#fbbf24;">scenario</span></div>' : ''}
+          </div>
+        </div>`;
+    }
+    const hint = isRemoved
+      ? 'Restoring the edge re-connects the two endpoints in every downstream metric.'
+      : 'Removing keeps both endpoints in place — only the edge itself is dropped.';
+    slot.innerHTML = `
+      <div class="btn-row" style="margin-top: 10px;">
+        <button class="${btnCls}" id="viz2-edge-remove" style="flex:1;">${btnTxt}</button>
+        <button class="viz-btn viz-btn-ghost" id="viz2-edge-deselect" title="Deselect edge">✕</button>
+      </div>
+      <div style="font-family: var(--font-mono); font-size: 10px; color: var(--grey-dim);
+                  line-height: 1.5; margin-top: 6px; letter-spacing: 0.04em;">
+        ${esc(hint)}
+      </div>`;
+    const removeBtn = document.getElementById('viz2-edge-remove');
+    if (removeBtn) removeBtn.addEventListener('click', () => toggleEdgeRemoval(key));
+    const deselectBtn = document.getElementById('viz2-edge-deselect');
+    if (deselectBtn) deselectBtn.addEventListener('click', () => {
+      state.selectedEdge = null;
+      emit('edge-selected', { key: null });
+      V.render();
+      renderSelectedActions();
+      // Restore the node-empty placeholder in the top card body.
+      const w = document.getElementById('node-card-wrap');
+      if (w) w.innerHTML = '<div class="node-empty">Click any node or edge to inspect.</div>';
+    });
+  }
+
+  // ── Selected panel (node OR edge) ───────────────────────────
   function renderSelectedActions() {
     const slot = document.getElementById('viz2-selected-actions');
     if (!slot) return;
+
+    // Edge branch takes precedence when both are somehow set — clicking an
+    // edge in viz2-core already clears state.selectedNode, so the double-
+    // set case shouldn't happen, but this is the belt-and-braces order.
+    if (state.selectedEdge) {
+      renderSelectedEdge(slot, state.selectedEdge);
+      return;
+    }
+
     const id = state.selectedNode;
     if (!id || !state.graph) { slot.innerHTML = ''; return; }
     const n = state.graph.nodes.find((x) => x.id === id);
@@ -433,6 +518,11 @@
     // if the user had a Selected-Edges depth focus set, the render also needs
     // the new hop map — the caller (viz2-core's click handler) already calls
     // render(), so we don't need to re-render here.
+  });
+  on('edge-selected', () => {
+    // Selecting an edge already cleared state.selectedNode in the click
+    // handler; just re-render the Selected panel with the edge branch.
+    renderSelectedActions();
   });
   on('removed-changed', () => {
     computeSelectedHops();       // active subgraph changed → reclassify edges

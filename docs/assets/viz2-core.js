@@ -45,12 +45,13 @@
     dropIsolates: true, showDrift: false, frozen: false,
     nodeScale: 1, edgeThreshold: 0,
     timeFilter: null, timeRange: null,
-    selectedNode: null, simulation: null,
+    selectedNode: null, selectedEdge: null, simulation: null,
     zoom: null, zoomTransform: null,
     palette: 'neon', useWeights: false,
     metrics: {},
     // ── v2 additions ──
     removedNodes: new Set(),          // ids removed by Feature B
+    removedEdges: new Set(),          // edgeKey strings (`s||t`) removed by the Selected panel
     scenarioNodes: [],                // {id,label,group,...,isScenario:true}
     scenarioLinks: [],                // {source,target,weight,isScenario:true}
     selectedHopByEdge: null,          // Map<link_ref, depth 1..6> — set by viz2-removal
@@ -198,16 +199,27 @@
   function computeMetrics() {
     const { nodes, links } = state.graph;
     const removed = state.removedNodes;
+    const removedE = state.removedEdges;
     const activeNodesArr = nodes.filter((n) => !removed.has(n.id));
     const activeIds = activeNodesArr.map((n) => n.id);
     const isActive = new Set(activeIds);
+    // Skip an edge in the metric pass if either endpoint was removed OR
+    // if the edge itself was explicitly removed by the user via the
+    // Selected panel. Same rule threads through force layout + grid layout.
+    const edgeAlive = (l) => {
+      const s = typeof l.source === 'object' ? l.source.id : l.source;
+      const t = typeof l.target === 'object' ? l.target.id : l.target;
+      if (!isActive.has(s) || !isActive.has(t)) return false;
+      if (removedE && removedE.has(utils.edgeKey(l))) return false;
+      return true;
+    };
 
     const adj = {};
     activeIds.forEach((id) => { adj[id] = []; });
     links.forEach((l) => {
+      if (!edgeAlive(l)) return;
       const s = typeof l.source === 'object' ? l.source.id : l.source;
       const t = typeof l.target === 'object' ? l.target.id : l.target;
-      if (!isActive.has(s) || !isActive.has(t)) return;
       adj[s].push(t); adj[t].push(s);
     });
 
@@ -215,9 +227,9 @@
     activeNodesArr.forEach((n) => { n.deg = 0; n.weighted = 0; });
     const wNode = {};
     links.forEach((l) => {
+      if (!edgeAlive(l)) return;
       const s = typeof l.source === 'object' ? l.source.id : l.source;
       const t = typeof l.target === 'object' ? l.target.id : l.target;
-      if (!isActive.has(s) || !isActive.has(t)) return;
       wNode[s] = (wNode[s] || 0) + (l.weight || 1);
       wNode[t] = (wNode[t] || 0) + (l.weight || 1);
     });
@@ -269,9 +281,9 @@
     } else if (N <= 600 && state.useWeights) {
       const adjW = {}; activeIds.forEach((id) => { adjW[id] = new Map(); });
       links.forEach((l) => {
+        if (!edgeAlive(l)) return;
         const s = typeof l.source === 'object' ? l.source.id : l.source;
         const t = typeof l.target === 'object' ? l.target.id : l.target;
-        if (!isActive.has(s) || !isActive.has(t)) return;
         const d = 1 / (l.weight > 0 ? l.weight : 1);
         if (!adjW[s].has(t) || adjW[s].get(t) > d) adjW[s].set(t, d);
         if (!adjW[t].has(s) || adjW[t].get(s) > d) adjW[t].set(s, d);
@@ -404,6 +416,8 @@
   function loadGraph() {
     // New graph → reset v2 state (removed + scenarios cleared elsewhere via emit)
     state.removedNodes = new Set();
+    state.removedEdges = new Set();
+    state.selectedEdge = null;
     if (!buildGraph()) return;
     state.baseGraph = state.graph;
     setStatus(`Graph: ${state.graph.nodes.length} nodes · ${state.graph.links.length} edges.`, 'ok');
@@ -623,7 +637,9 @@
         .force('link',    d3.forceLink(links.filter((l) => {
           const s = typeof l.source === 'object' ? l.source.id : l.source;
           const t = typeof l.target === 'object' ? l.target.id : l.target;
-          return !state.removedNodes.has(s) && !state.removedNodes.has(t);
+          if (state.removedNodes.has(s) || state.removedNodes.has(t)) return false;
+          if (state.removedEdges && state.removedEdges.has(utils.edgeKey(l))) return false;
+          return true;
         })).id((d) => d.id).distance(linkDist).strength(0.4))
         .force('charge',  d3.forceManyBody().strength(charge).distanceMax(700))
         .force('center',  d3.forceCenter(W / 2, H / 2))
@@ -906,15 +922,44 @@
     const hopFocus  = state.selectedHopFocus || 0;
     const HOP_HL    = '#fef08a';   // bright yellow accent for highlighted-depth edges
     const isHopLit  = (l) => hopFocus > 0 && hopMap && hopMap.get(l) === hopFocus;
+    // Edge selection + removal styling. Selected edge → bright pink, thicker.
+    // Removed edge → dim orange dashed (matches the removed-node treatment).
+    const edgeKey   = utils.edgeKey;
+    const isRemoved = (l) => state.removedEdges && state.removedEdges.has(edgeKey(l));
+    const isPicked  = (l) => state.selectedEdge && state.selectedEdge === edgeKey(l);
     const g = root.append('g').attr('class', 'links');
     g.selectAll('line').data(vlinks).enter().append('line')
-      .attr('stroke', (l) => isHopLit(l) ? HOP_HL : (l.isScenario ? '#fbbf24' : 'rgba(57,255,20,0.55)'))
-      .attr('stroke-dasharray', (l) => l.isScenario ? '4,3' : null)
+      .attr('stroke', (l) =>
+        isPicked(l)  ? '#f472b6' :
+        isRemoved(l) ? '#fb923c' :
+        isHopLit(l)  ? HOP_HL    :
+        (l.isScenario ? '#fbbf24' : 'rgba(57,255,20,0.55)'))
+      .attr('stroke-dasharray', (l) =>
+        isRemoved(l) ? '3,3' :
+        l.isScenario ? '4,3' : null)
       .attr('stroke-width', (l) => {
         const base = (0.6 + (l.weight / maxW) * 3.5) * (dens < 1 ? 0.7 : 1);
-        return isHopLit(l) ? base * 2.6 : base;
+        if (isPicked(l))  return base * 3.2;
+        if (isRemoved(l)) return Math.max(1.4, base * 0.8);
+        if (isHopLit(l))  return base * 2.6;
+        return base;
       })
-      .attr('stroke-opacity', (l) => isHopLit(l) ? 0.95 : (0.35 + 0.55 * (l.weight / maxW)) * dens)
+      .attr('stroke-opacity', (l) =>
+        isPicked(l)  ? 1 :
+        isRemoved(l) ? 0.55 :
+        isHopLit(l)  ? 0.95 :
+        (0.35 + 0.55 * (l.weight / maxW)) * dens)
+      // Explicit cursor so users learn edges are clickable, even before hover.
+      .style('cursor', 'pointer')
+      .on('click', (ev, l) => {
+        ev.stopPropagation();
+        // Selecting an edge clears any node selection so the Selected panel
+        // only ever shows one thing at a time.
+        state.selectedNode = null;
+        state.selectedEdge = edgeKey(l);
+        emit('edge-selected', { key: state.selectedEdge });
+        render();
+      })
       // Resolve endpoints by id: scenario links pushed after the force sim has
       // stopped still hold string ids (the sim never converted them to node
       // refs), so l.source.x would be undefined → 0 and the line would draw
@@ -1289,6 +1334,14 @@
 
   // ── Shared graph-algorithm utilities (consumed by feature modules) ──
   const utils = {
+    // Stable string id for an edge: `"src||tgt"` in source→target order. Used
+    // to key state.removedEdges + state.selectedEdge so we don't rely on link
+    // array indices (which can shift when the view rebuilds under aggregation).
+    edgeKey(l) {
+      const s = typeof l.source === 'object' ? l.source.id : l.source;
+      const t = typeof l.target === 'object' ? l.target.id : l.target;
+      return String(s) + '||' + String(t);
+    },
     // Build undirected adjacency map from a {nodes, links} graph and a Set of
     // active ids. Returns { id → [{neighborId, weight}, ...] }.
     buildAdj(graph, activeIdsSet) {
