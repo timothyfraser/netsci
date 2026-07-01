@@ -986,9 +986,17 @@ async function bootstrap() {
     });
 
     setStatus('Loading packages (this takes ~30s on first load)…', 'loading');
-    // Everything Phase-1 code needs (matplotlib for the plot hook, pandas for
-    // basic use). The rest happens in the background.
-    await pyodide.loadPackage(['matplotlib','pandas','numpy']);
+    // Everything Phase-1 code needs — matplotlib for the plot hook, pandas +
+    // numpy for basic use, and igraph because the Visualizer's Export-as-Code
+    // output requires `import igraph as ig`. Pyodide doesn't ship igraph by
+    // default; the wheel comes from the packages index. Wrapped so a wheel
+    // hiccup on igraph still lets non-igraph code Run.
+    try {
+      await pyodide.loadPackage(['matplotlib','pandas','numpy','igraph']);
+    } catch (e) {
+      console.warn('Phase-1 package load partial failure — trying core three:', e);
+      await pyodide.loadPackage(['matplotlib','pandas','numpy']);
+    }
 
     // Install matplotlib hook for plot capture
     await pyodide.runPythonAsync(`
@@ -1056,9 +1064,8 @@ def _list_globals():
   // Phase 2 — background package load. Each package attempts individually so
   // one wheel failure doesn't strand the user without everything else.
   try {
-    // igraph is required by the visualizer's Export-as-Code output. The others
-    // are the standard case-study set.
-    const PACKAGES = ['networkx','scipy','scikit-learn','igraph'];
+    // igraph already loaded in Phase 1. These are the case-study extras.
+    const PACKAGES = ['networkx','scipy','scikit-learn'];
     for (const pkg of PACKAGES) {
       try { await pyodide.loadPackage([pkg]); }
       catch (e) { console.warn('loadPackage failed:', pkg, e); }
