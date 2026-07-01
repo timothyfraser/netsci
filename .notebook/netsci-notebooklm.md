@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-07-01 13:22 UTC_
+_Auto-generated NotebookLM source · 2026-07-01 13:51 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -783,7 +783,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 - **Use case:** _(uncurated — fill me in)_
 - **Tags:** _(none)_
 
-## Network Visualizer v3 (Preview) · SYSEN 5470
+## Network Visualizer v2 (Preview) · SYSEN 5470
 
 - **URL:** https://timothyfraser.github.io/netsci/visualizer2.html
 - **Topic:** _(uncurated — fill me in)_
@@ -798,7 +798,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-07-01 13:22 UTC_
+_Auto-generated NotebookLM source · 2026-07-01 13:51 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -6551,7 +6551,7 @@ Computed when graph loads (≤600 nodes).
 
 ---
 
-# Network Visualizer v3 (Preview) · SYSEN 5470
+# Network Visualizer v2 (Preview) · SYSEN 5470
 
 _Source: docs/visualizer2.html_
 
@@ -6563,8 +6563,8 @@ SYSEN 5470 · Tools
 
 # NETWORK VISUALIZER
 
-v3 preview
-v2
+v2 preview
+v2 stable
 v1
 
 
@@ -6574,11 +6574,12 @@ Load a project dataset, then remove nodes, run counterfactuals and permutation t
 🎓 Tutorial walkthrough
 
 
-**EXPERIMENTAL · INTERNAL PREVIEW.**
- This is `visualizer2.html`, unlinked from the site nav.
- Adds a centrality\-distribution chart nested inside Network Stats and a
+**V2 PREVIEW · INTERNAL.**
+ This is the v2 visualizer with two extra cards enabled for testing:
+ a 📊 Centrality Distributions chart nested inside Network Stats, and a
  💻 Export as Code card that emits an R or Python reproducer and hands it
- off to the WebR / Pyodide playgrounds. The stable build sits at
+ off to the WebR / Pyodide playgrounds. Unlinked from site nav. The
+ already\-shipped v2 build lives at
  visualizer.html.
 
 
@@ -6965,7 +6966,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-07-01 13:22 UTC_
+_Auto-generated NotebookLM source · 2026-07-01 13:51 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
