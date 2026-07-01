@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-07-01 15:28 UTC_
+_Auto-generated NotebookLM source · 2026-07-01 17:13 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -6006,10 +6006,10 @@ Cards
 − Collapse all
 
 
-🏷 Selected Node
+🏷 Selected
 
 
-Click any node to inspect.
+Click any node or edge to inspect.
 
 
 ✏ Scenarios
