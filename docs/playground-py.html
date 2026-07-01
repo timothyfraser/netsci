@@ -437,7 +437,6 @@
     <p class="course-number">SYSEN 5470 · Coding Playground</p>
     <h1><em>Python</em> Playground</h1>
     <p>CPython, compiled to WebAssembly, running in your browser tab. No install. NumPy, pandas, networkx, matplotlib, SciPy, and scikit-learn are pre-installed. Your code and uploaded CSVs are saved to your own browser — they survive a refresh but never leave your device.</p>
-    <span class="status-pill loading" id="status"><span class="pulse"></span><span id="status-text">Loading Pyodide runtime…</span></span>
   </section>
 
   <details open>
@@ -505,6 +504,13 @@
     </div>
   </details>
   <!-- /PROJECT-DATASETS -->
+
+  <!-- Status pill lives right above the editor so users can't miss when the
+       runtime is Loading vs Ready — was previously buried up in the hero. -->
+  <div style="display:flex;justify-content:center;margin:18px 0 6px;">
+    <span class="status-pill loading" id="status"><span class="pulse"></span><span id="status-text">Loading Pyodide runtime…</span></span>
+  </div>
+
   <div class="pg-grid">
 
     <div class="pg-card">
