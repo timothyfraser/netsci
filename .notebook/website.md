@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-07-01 17:13 UTC_
+_Auto-generated NotebookLM source · 2026-07-01 18:04 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -3787,9 +3787,6 @@ SYSEN 5470 · Coding Playground
 A full R interpreter, compiled to WebAssembly, running in your browser tab. No install. Tidyverse (incl. purrr) \+ igraph \+ tidygraph \+ ggraph \+ DBI/RSQLite are pre\-installed. Your code and uploaded CSVs are saved to your own browser — they survive a refresh but never leave your device.
 
 
-Loading WebR runtime…
-
-
 How this works
 
 * The R interpreter runs **entirely in this browser tab** via WebAssembly. Nothing is sent to a server.
@@ -3889,6 +3886,36 @@ NYC real estate capital: typed investors \& banks → properties, quarter by qua
 ![](playground-data/nyc-realestate-portfolio-thumb.png)nyc\-realestate\-portfolio
 190 nodes · 1,155 edges
 NYC properties linked by shared equity financing (concentration risk).
+
+
+Loading WebR runtime…
+Editor theme
+
+Netsci
+Dracula
+Material Darker
+Monokai
+Solarized Dark
+Ambiance
+
+🧹 Clear cache
+
+
+### 🧹 Clear cache?
+
+
+ This will clear every cached script and saved setting for
+ **this playground page**: your editor contents,
+ chosen theme, and any code auto\-saved to `localStorage`.
+ Then it reloads with fresh assets from the server.
+
+
+ Files you uploaded to the playground (kept in
+ `IndexedDB`) stay put.
+
+
+Cancel
+Yes, clear cache
 
 
 ### 📝 Code Editor
@@ -3997,9 +4024,6 @@ SYSEN 5470 · Coding Playground
 CPython, compiled to WebAssembly, running in your browser tab. No install. NumPy, pandas, networkx, matplotlib, SciPy, and scikit\-learn are pre\-installed. Your code and uploaded CSVs are saved to your own browser — they survive a refresh but never leave your device.
 
 
-Loading Pyodide runtime…
-
-
 How this works
 
 * CPython runs **entirely in this browser tab** via WebAssembly. Nothing is sent to a server.
@@ -4096,6 +4120,36 @@ NYC real estate capital: typed investors \& banks → properties, quarter by qua
 ![](playground-data/nyc-realestate-portfolio-thumb.png)nyc\-realestate\-portfolio
 190 nodes · 1,155 edges
 NYC properties linked by shared equity financing (concentration risk).
+
+
+Loading Pyodide runtime…
+Editor theme
+
+Netsci
+Dracula
+Material Darker
+Monokai
+Solarized Dark
+Ambiance
+
+🧹 Clear cache
+
+
+### 🧹 Clear cache?
+
+
+ This will clear every cached script and saved setting for
+ **this playground page**: your editor contents,
+ chosen theme, and any code auto\-saved to `localStorage`.
+ Then it reloads with fresh assets from the server.
+
+
+ Files you uploaded to the playground (kept in
+ `IndexedDB`) stay put.
+
+
+Cancel
+Yes, clear cache
 
 
 ### 📝 Code Editor
@@ -5775,6 +5829,7 @@ Load a project dataset, then remove nodes, run counterfactuals and permutation t
 
 
 🎓 Tutorial walkthrough
+🧹 Clear cache
 
 
 **V2 PREVIEW · INTERNAL.**
@@ -5941,7 +5996,7 @@ Time filter (≤)—
 ⚙ Settings
 
 
-Node size scale1\.0x
+Node size scale0\.7x
 
 
 Edge weight threshold0\.0
@@ -6052,6 +6107,23 @@ Loading node browser…
 **SYSEN 5470 · Network Visualizer v2 · Experimental**
 
  Cornell Engineering · Summer 2026 · Internal preview — not for student release.
+
+
+### 🧹 Clear cache?
+
+
+ This will clear every cached script, stylesheet, and saved setting
+ for **this page only** (visualizer state, saved
+ scenarios, panel open/close, etc.), then reload with the latest
+ assets from the server.
+
+
+ Your files under `data/projects/` and anything you've
+ downloaded aren't touched.
+
+
+Cancel
+Yes, clear cache
 
 ---
 
