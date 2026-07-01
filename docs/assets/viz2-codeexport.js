@@ -74,6 +74,7 @@
     includeDist: true,       // Section 3 — centrality distribution
     includePerm: true,       // Section 4 — permutation test
     includeMc: true,         // Section 5 — counterfactual Monte Carlo
+    includeTopN: true,       // Section 6 — top-N by degree AND betweenness
   };
 
   // ── Snapshot the visualizer's live state ────────────────────
@@ -142,6 +143,7 @@
         dist:      !!ui.includeDist,
         perm:      !!ui.includePerm,
         mc:        !!ui.includeMc,
+        topN:      !!ui.includeTopN,
       },
     };
   }
@@ -552,6 +554,52 @@
       L.push('');
       L.push('hist(apls, breaks = 24, col = "#39FF14", border = "#0a0f0a",');
       L.push('     main = "MC weighted APL", xlab = "APL (1 / weight cost)")');
+      L.push('');
+      L.push('');
+    }
+
+    // ── 6. Top-N rankings (optional) ─────────────────────────────
+    if (snap.include.topN) {
+      L.push('# 6. Top-N rankings ##########################################################');
+      L.push('');
+      L.push('pretty_section("Top-N rankings")');
+      L.push('');
+      L.push('# Two go-to "who matters most" summaries: top nodes by raw Degree, and top');
+      L.push('# nodes by (normalized) Betweenness. Same rankings the visualizer shows in');
+      L.push('# the Network Stats > Top-N panels — computed here so the reproducer script');
+      L.push('# gives you the same lists on paper as the ones on your screen.');
+      L.push('top_n <- 5');
+      L.push('');
+      L.push('## 6.1 Top-N by Degree #######################################################');
+      L.push('');
+      L.push('# degree(v) = raw count of edges incident to v.');
+      L.push('deg <- degree(g)');
+      L.push('names(deg) <- V(g)$name           # attach node names for printing');
+      L.push('top_deg <- head(sort(deg, decreasing = TRUE), top_n)');
+      L.push('cat("📝 Top ", top_n, " by Degree:\\n", sep = "")');
+      L.push('# For each of the top-N nodes k in 1..N: print rank, name, and degree.');
+      L.push('for (k in seq_along(top_deg)) {');
+      L.push('  cat(sprintf("     %d. %-24s %d\\n", k, names(top_deg)[k], top_deg[k]))');
+      L.push('}');
+      L.push('');
+      L.push('## 6.2 Top-N by Betweenness (normalized) #####################################');
+      L.push('');
+      if (weight) {
+        L.push('# Weighted graph → invert the weight ( 1/w ) so heavy edges count as SHORT');
+        L.push('# for path-based centrality, matching the visualizer\'s convention.');
+        L.push('btw <- betweenness(g, normalized = TRUE, weights = 1 / E(g)$weight)');
+      } else {
+        L.push('# Unweighted graph → normalize to [0, 1] by dividing by (N-1)(N-2)/2 so the');
+        L.push('# result is comparable across networks of different N.');
+        L.push('btw <- betweenness(g, normalized = TRUE)');
+      }
+      L.push('names(btw) <- V(g)$name');
+      L.push('top_btw <- head(sort(btw, decreasing = TRUE), top_n)');
+      L.push('cat("📝 Top ", top_n, " by Betweenness (normalized):\\n", sep = "")');
+      L.push('# For each of the top-N nodes k in 1..N: print rank, name, and betweenness.');
+      L.push('for (k in seq_along(top_btw)) {');
+      L.push('  cat(sprintf("     %d. %-24s %.4f\\n", k, names(top_btw)[k], top_btw[k]))');
+      L.push('}');
       L.push('');
       L.push('');
     }
@@ -972,6 +1020,52 @@
       L.push('');
     }
 
+    // ── 6. Top-N rankings (optional) ─────────────────────────────
+    if (snap.include.topN) {
+      L.push('# 6. Top-N rankings ##########################################################');
+      L.push('');
+      L.push('pretty_section("Top-N rankings")');
+      L.push('');
+      L.push('# Two go-to "who matters most" summaries: top nodes by raw Degree, and top');
+      L.push('# nodes by (normalized) Betweenness. Same rankings the visualizer shows in');
+      L.push('# the Network Stats > Top-N panels — computed here so the reproducer script');
+      L.push('# gives you the same lists on paper as the ones on your screen.');
+      L.push('names = g.vs["name"]');
+      L.push('top_n = 5');
+      L.push('');
+      L.push('## 6.1 Top-N by Degree #######################################################');
+      L.push('');
+      L.push('# g.degree() = raw count of edges incident to each node.');
+      L.push('deg = np.array(g.degree(), dtype=float)');
+      L.push('order = np.argsort(-deg)                # indices, sorted DESCENDING by deg');
+      L.push('print(f"📝 Top {top_n} by Degree:")');
+      L.push('# For each of the top-N nodes k in 1..N: print rank, name, and degree.');
+      L.push('for k, idx in enumerate(order[:top_n], start=1):');
+      L.push('    print(f"     {k}. {names[idx]:<24} {int(deg[idx])}")');
+      L.push('');
+      L.push('## 6.2 Top-N by Betweenness (normalized) #####################################');
+      L.push('');
+      if (weight) {
+        L.push('# Weighted graph → invert weights (1/w) so heavy edges count as SHORT for');
+        L.push('# path-based centrality, matching the visualizer\'s convention.');
+        L.push('btw = np.array(g.betweenness(weights=[1.0 / max(w, 1e-9) for w in g.es["weight"]]), dtype=float)');
+      } else {
+        L.push('# Unweighted graph → count shortest paths as-is, then normalize below.');
+        L.push('btw = np.array(g.betweenness(), dtype=float)');
+      }
+      L.push('# Brandes normalization: divide by (N-1)(N-2)/2 so betweenness lives in [0,1]');
+      L.push('# and is comparable across networks of different N.');
+      L.push('N = g.vcount()');
+      L.push('btw = btw / max(1, (N - 1) * (N - 2) / 2)');
+      L.push('order = np.argsort(-btw)');
+      L.push('print(f"📝 Top {top_n} by Betweenness (normalized):")');
+      L.push('# For each of the top-N nodes k in 1..N: print rank, name, and betweenness.');
+      L.push('for k, idx in enumerate(order[:top_n], start=1):');
+      L.push('    print(f"     {k}. {names[idx]:<24} {btw[idx]:.4f}")');
+      L.push('');
+      L.push('');
+    }
+
     L.push('print("\\n' + HR + '")');
     L.push('print("🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.")');
     L.push('print("' + HR + '")');
@@ -1103,6 +1197,10 @@
           <input type="checkbox" id="viz2-codeexport-inc-mc" ${ui.includeMc ? 'checked' : ''} style="accent-color:var(--green-bright);">
           <span>🧪 Counterfactual MC${dimmedNote(ui.includeMc, mcCfgd)}</span>
         </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-topn" ${ui.includeTopN ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>🏆 Top-N rankings</span>
+        </label>
       </fieldset>
       <div class="formula-note" style="margin:-2px 0 6px;">
         Reproduces the current state${bitsHtml}. Regenerates automatically as you change things.
@@ -1133,6 +1231,7 @@
     bind('viz2-codeexport-inc-dist',      'includeDist');
     bind('viz2-codeexport-inc-perm',      'includePerm');
     bind('viz2-codeexport-inc-mc',        'includeMc');
+    bind('viz2-codeexport-inc-topn',      'includeTopN');
   }
 
   // Re-render on every event that could change the snapshot.
