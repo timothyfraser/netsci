@@ -1026,36 +1026,55 @@ const webR = new WebR();
 let isReady = false;
 
 async function bootstrap() {
+  // Split into two phases so a package-install stall doesn't leave Run stuck:
+  //   Phase 1 — get the runtime + FS + saved files up, THEN enable Run.
+  //   Phase 2 — install packages in the background, updating the status pill.
+  // The user can hit Run any time after Phase 1; if they Run before their
+  // required package is installed, they see a normal R "no package called ..."
+  // error in the console — still 100× better than a permanently-disabled button.
   try {
     setStatus('Loading WebR runtime…', 'loading');
     await webR.init();
 
-    setStatus('Installing packages (this takes ~30s on first load)…', 'loading');
-    // The default WebR binary repo (repo.r-wasm.org) intermittently lacks
-    // igraph because of its C dependencies. r-universe builds wasm binaries
-    // for every package automatically — including igraph and tidygraph —
-    // so list it first; webR falls back to repo.r-wasm.org for the rest.
-    const REPOS = [
-      'https://igraph.r-universe.dev',
-      'https://repo.r-wasm.org',
-    ];
-    await webR.installPackages(
-      ['dplyr','tidyr','ggplot2','readr','purrr','igraph','tidygraph','DBI','RSQLite'],
-      { repos: REPOS }
-    );
-
-    // ggraph is heavier (ggforce/tweenr/polyclip and friends), so install it
-    // separately and best-effort: if its wasm build is briefly unavailable the
-    // core playground still boots fine.
-    try {
-      await webR.installPackages(['ggraph'], { repos: REPOS });
-    } catch (e) {
-      console.warn('ggraph not installed (playground still usable):', e);
+    // Restore any previously-uploaded files from IndexedDB into the WASM FS.
+    // Done before enabling Run so restored CSVs are visible from the start.
+    const saved = await idbAllFiles();
+    for (const { name, bytes } of saved) {
+      try {
+        await webR.FS.writeFile('/home/web_user/' + name, bytes);
+        const preview = new TextDecoder().decode(bytes.slice(0, 4096));
+        dataFiles.set(name, { bytes, preview });
+      } catch (e) { /* ignore individual restore failures */ }
     }
+    renderDataPanel();
 
-    // Auto-attach the most common ones. Wrapped so one missing package
-    // doesn't kill the whole boot — the playground stays usable for the
-    // packages that did load, and a clear message lands in the console.
+    // Phase 1 done — Run is now usable, even before packages finish installing.
+    setStatus('Runtime ready · installing packages…', 'loading');
+    isReady = true;
+    $('btn-run').disabled = false;
+    clearConsole();
+    appendConsole([{ type: 'message',
+      data: `WebR runtime ready. ${saved.length ? `Restored ${saved.length} file(s). ` : ''}You can Run now; packages are still installing in the background.\n` }]);
+    refreshObjects();
+    // Editor already got the visualizer handoff at page load; hydrate CSVs.
+    consumeVisualizerHandoff().catch(() => {});
+  } catch (e) {
+    setStatus('Failed to load WebR runtime — see console', 'error');
+    appendConsole([{ type: 'stderr', data: `WebR runtime bootstrap failed: ${e.message}\n` }]);
+    return;
+  }
+
+  // Phase 2 — background package install. Each package attempts individually
+  // so one wasm-repo hiccup doesn't leave the user without every package.
+  try {
+    const REPOS = ['https://igraph.r-universe.dev', 'https://repo.r-wasm.org'];
+    const PACKAGES = ['dplyr','tidyr','ggplot2','readr','purrr','igraph','tidygraph','DBI','RSQLite','ggraph'];
+    for (const pkg of PACKAGES) {
+      try { await webR.installPackages([pkg], { repos: REPOS }); }
+      catch (e) { console.warn('install failed:', pkg, e); }
+    }
+    // Auto-attach the most common ones — wrapped so one missing package
+    // doesn't kill the whole attach step.
     await webR.evalRVoid(`
       .pg_load <- function(pkgs) {
         for (p in pkgs) {
@@ -1067,31 +1086,11 @@ async function bootstrap() {
       }
       .pg_load(c("dplyr","tidyr","ggplot2","purrr","igraph","tidygraph","ggraph"))
     `);
-
-    // Restore any previously-uploaded files from IndexedDB into the WASM FS
-    setStatus('Restoring saved files…', 'loading');
-    const saved = await idbAllFiles();
-    for (const { name, bytes } of saved) {
-      try {
-        await webR.FS.writeFile('/home/web_user/' + name, bytes);
-        const preview = new TextDecoder().decode(bytes.slice(0, 4096));
-        dataFiles.set(name, { bytes, preview });
-      } catch (e) { /* ignore individual restore failures */ }
-    }
-    renderDataPanel();
-
     setStatus('Ready ✓', 'ready');
-    isReady = true;
-    $('btn-run').disabled = false;
-    clearConsole();
-    appendConsole([{ type: 'message',
-      data: `WebR ready. ${saved.length ? `Restored ${saved.length} file(s). ` : ''}Press Ctrl/Cmd+Enter to run.\n` }]);
-    refreshObjects();
-    // If the Visualizer handed us a script + dataset, drop them into the editor.
-    consumeVisualizerHandoff().catch(() => {});
   } catch (e) {
-    setStatus('Failed to load WebR — see console', 'error');
-    appendConsole([{ type: 'stderr', data: `WebR bootstrap failed: ${e.message}\n` }]);
+    // Runtime is still fine, just tell the user some packages didn't install.
+    setStatus('Ready ✓ (some packages skipped)', 'ready');
+    console.warn('background package install ran into an error:', e);
   }
 }
 

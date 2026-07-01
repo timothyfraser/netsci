@@ -34,6 +34,37 @@
   // Same for a Python single-quote-wrapped string.
   const pyStr = (s) => "'" + String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
 
+  // Emit an R vector literal from a JS array of values. Detects the "shape"
+  // of the column (numeric / logical / character) so the resulting data.frame
+  // matches what read.csv would have produced. NA'd out on null/undefined/''
+  // so the loader doesn't blow up on missing values.
+  function rVectorLit(values) {
+    const isMissing = (v) => v === null || v === undefined || v === '';
+    const allNumeric = values.every((v) => isMissing(v) || (typeof v === 'number' && Number.isFinite(v)));
+    const allLogical = values.every((v) => isMissing(v) || typeof v === 'boolean');
+    if (allNumeric) return 'c(' + values.map((v) => isMissing(v) ? 'NA' : String(v)).join(', ') + ')';
+    if (allLogical) return 'c(' + values.map((v) => isMissing(v) ? 'NA' : (v ? 'TRUE' : 'FALSE')).join(', ') + ')';
+    return 'c(' + values.map((v) => isMissing(v) ? 'NA_character_' : rStr(v)).join(', ') + ')';
+  }
+  // Emit `data.frame(col1 = c(...), col2 = c(...), stringsAsFactors = FALSE)`
+  // for a table-of-rows + ordered column names. One line per column so it's
+  // still readable in the emitted script when there are only a few dozen rows.
+  function dfLiteralR(rows, cols) {
+    const parts = cols.map((c) => c + ' = ' + rVectorLit(rows.map((r) => r[c])));
+    return 'data.frame(\n  ' + parts.join(',\n  ') + ',\n  stringsAsFactors = FALSE\n)';
+  }
+  function pyListLit(values) {
+    const isMissing = (v) => v === null || v === undefined || v === '';
+    const allNumeric = values.every((v) => isMissing(v) || (typeof v === 'number' && Number.isFinite(v)));
+    if (allNumeric) return '[' + values.map((v) => isMissing(v) ? 'None' : String(v)).join(', ') + ']';
+    return '[' + values.map((v) => isMissing(v) ? 'None' : pyStr(v)).join(', ') + ']';
+  }
+  // `pd.DataFrame({'col1': [...], 'col2': [...]})`
+  function dfLiteralPy(rows, cols) {
+    const parts = cols.map((c) => pyStr(c) + ': ' + pyListLit(rows.map((r) => r[c])));
+    return 'pd.DataFrame({\n    ' + parts.join(',\n    ') + '\n})';
+  }
+
   const ui = { lang: 'r' };  // 'r' | 'py'
 
   // ── Snapshot the visualizer's live state ────────────────────
@@ -65,11 +96,12 @@
       .map((el) => el.value);
 
     return {
-      datasetKey: s.currentDatasetKey || null,   // null when the user uploaded custom CSVs
+      datasetKey: s.currentDatasetKey || null,   // null when the user uploaded custom CSVs OR used the ▶ Sample button
       directed: !!s.directed,
       weightCol: s.mapping.weight || null,
       groupCol: s.mapping.nodeGroup || null,
       nodeIdCol: s.mapping.nodeId || null,
+      nodeLabelCol: s.mapping.nodeLabel || null,
       fromCol: s.mapping.from || null,
       toCol: s.mapping.to || null,
       nodeCount: s.graph.nodes.length,
@@ -78,6 +110,13 @@
       removed: removed,
       scenarioNodes: scenarioNodes,
       scenarioLinks: scenarioLinks,
+      // Raw CSV rows — the emitter inlines these as data.frame(...) when no
+      // project dataset key is set so the code is self-contained (doesn't
+      // depend on the playground having any files hydrated).
+      nodeCsv: s.nodeCsv || [],
+      edgeCsv: s.edgeCsv || [],
+      nodeCols: s.nodeCols || [],
+      edgeCols: s.edgeCols || [],
       dist: { metric: distMetric, groupBy: distGroupBy },
       mc: mcMetric ? { metric: mcMetric, reps: mcReps || 100 } : null,
       perm: permAttr ? {
@@ -92,30 +131,51 @@
     };
   }
 
+  // Reorder columns so the endpoint columns come first — igraph's
+  // graph_from_data_frame / Graph.DataFrame both use the first two columns
+  // as source/target. Works for any inlined data (from a sample graph, an
+  // uploaded CSV, or a project dataset).
+  function reorderEdgeCols(cols, fromCol, toCol) {
+    if (!fromCol || !toCol) return cols;
+    return [fromCol, toCol].concat(cols.filter((c) => c !== fromCol && c !== toCol));
+  }
+  function reorderNodeCols(cols, idCol) {
+    if (!idCol) return cols;
+    return [idCol].concat(cols.filter((c) => c !== idCol));
+  }
+
   // ── R script emitter ────────────────────────────────────────
   function generateR(snap) {
     const cfg = SAMPLE_CONFIGS_LITE[snap.datasetKey];
     const dirFlag = snap.directed ? 'TRUE' : 'FALSE';
     const weight = snap.weightCol || (cfg && cfg.weight) || null;
-    const filesLine = cfg
-      ? `# Files loaded into the R playground's virtual FS by the handoff:\n#   ${cfg.files.join('  ')}`
-      : `# No project sample was loaded in the visualizer — read your own CSVs.\n# Replace the read.csv() paths below with the filenames you uploaded.`;
-
-    const nodeFile = cfg ? cfg.files[0] : 'nodes.csv';
-    const edgeFile = cfg ? cfg.files[1] : 'edges.csv';
 
     const lines = [];
     lines.push('# ─────────────────────────────────────────────────────');
     lines.push('# SYSEN 5470 — Reproducer emitted by the Network Visualizer');
-    lines.push('# Source dataset: ' + (snap.datasetKey || '(uploaded CSVs)'));
+    lines.push('# Source dataset: ' + (snap.datasetKey || '(inline sample / uploaded data)'));
     lines.push('# ' + snap.nodeCount + ' nodes · ' + snap.edgeCount + ' edges · ' + (snap.directed ? 'directed' : 'undirected'));
     lines.push('# ─────────────────────────────────────────────────────');
     lines.push('');
     lines.push('library(igraph)');
     lines.push('');
-    lines.push(filesLine);
-    lines.push('nodes <- read.csv(' + rStr(nodeFile) + ', stringsAsFactors = FALSE)');
-    lines.push('edges <- read.csv(' + rStr(edgeFile) + ', stringsAsFactors = FALSE)');
+
+    if (cfg) {
+      // Known project sample — the playground's handoff hook hydrated these CSVs into WebR's FS.
+      lines.push('# Files loaded into the R playground\'s virtual FS by the handoff:');
+      lines.push('#   ' + cfg.files.join('  '));
+      lines.push('nodes <- read.csv(' + rStr(cfg.files[0]) + ', stringsAsFactors = FALSE)');
+      lines.push('edges <- read.csv(' + rStr(cfg.files[1]) + ', stringsAsFactors = FALSE)');
+    } else {
+      // Sample graph or uploaded CSVs — inline the data so the script is
+      // self-contained and runs anywhere without file dependencies.
+      lines.push('# The visualizer was on the built-in sample or uploaded CSVs (no project');
+      lines.push('# dataset), so the data is inlined below. Just run and you get the same graph.');
+      const nCols = reorderNodeCols(snap.nodeCols, snap.nodeIdCol);
+      const eCols = reorderEdgeCols(snap.edgeCols, snap.fromCol, snap.toCol);
+      lines.push('nodes <- ' + dfLiteralR(snap.nodeCsv, nCols));
+      lines.push('edges <- ' + dfLiteralR(snap.edgeCsv, eCols));
+    }
     lines.push('');
     lines.push('g <- graph_from_data_frame(edges, vertices = nodes, directed = ' + dirFlag + ')');
     if (weight) lines.push('E(g)$weight <- E(g)$' + weight + '  # weight column used in the visualizer');
@@ -244,13 +304,11 @@
     const cfg = SAMPLE_CONFIGS_LITE[snap.datasetKey];
     const dirFlag = snap.directed ? 'True' : 'False';
     const weight = snap.weightCol || (cfg && cfg.weight) || null;
-    const nodeFile = cfg ? cfg.files[0] : 'nodes.csv';
-    const edgeFile = cfg ? cfg.files[1] : 'edges.csv';
 
     const lines = [];
     lines.push('# ─────────────────────────────────────────────────────');
     lines.push('# SYSEN 5470 — Reproducer emitted by the Network Visualizer');
-    lines.push('# Source dataset: ' + (snap.datasetKey || '(uploaded CSVs)'));
+    lines.push('# Source dataset: ' + (snap.datasetKey || '(inline sample / uploaded data)'));
     lines.push('# ' + snap.nodeCount + ' nodes · ' + snap.edgeCount + ' edges · ' + (snap.directed ? 'directed' : 'undirected'));
     lines.push('# ─────────────────────────────────────────────────────');
     lines.push('');
@@ -259,8 +317,19 @@
     lines.push('import matplotlib.pyplot as plt');
     lines.push('import igraph as ig');
     lines.push('');
-    lines.push('nodes = pd.read_csv(' + pyStr(nodeFile) + ')');
-    lines.push('edges = pd.read_csv(' + pyStr(edgeFile) + ')');
+
+    if (cfg) {
+      lines.push('# Files hydrated into the Pyodide FS by the playground handoff.');
+      lines.push('nodes = pd.read_csv(' + pyStr(cfg.files[0]) + ')');
+      lines.push('edges = pd.read_csv(' + pyStr(cfg.files[1]) + ')');
+    } else {
+      lines.push('# The visualizer was on the built-in sample or uploaded CSVs (no project');
+      lines.push('# dataset), so the data is inlined below. Just run and you get the same graph.');
+      const nCols = reorderNodeCols(snap.nodeCols, snap.nodeIdCol);
+      const eCols = reorderEdgeCols(snap.edgeCols, snap.fromCol, snap.toCol);
+      lines.push('nodes = ' + dfLiteralPy(snap.nodeCsv, nCols));
+      lines.push('edges = ' + dfLiteralPy(snap.edgeCsv, eCols));
+    }
     lines.push('g = ig.Graph.DataFrame(edges=edges, directed=' + dirFlag + ', vertices=nodes, use_vids=False)');
     if (weight) lines.push('g.es["weight"] = edges[' + pyStr(weight) + '].tolist()');
     lines.push('print(f"Loaded: {g.vcount()} vertices, {g.ecount()} edges")');

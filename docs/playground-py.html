@@ -976,6 +976,9 @@ let pyodide = null;
 let isReady = false;
 
 async function bootstrap() {
+  // Split into two phases so a package-install stall doesn't leave Run stuck:
+  //   Phase 1 — get the runtime + plot capture + saved files up, THEN enable Run.
+  //   Phase 2 — load packages in the background, updating the status pill.
   try {
     setStatus('Loading Pyodide runtime…', 'loading');
     pyodide = await loadPyodide({
@@ -983,7 +986,9 @@ async function bootstrap() {
     });
 
     setStatus('Loading packages (this takes ~30s on first load)…', 'loading');
-    await pyodide.loadPackage(['numpy','pandas','networkx','matplotlib','scipy','scikit-learn']);
+    // Everything Phase-1 code needs (matplotlib for the plot hook, pandas for
+    // basic use). The rest happens in the background.
+    await pyodide.loadPackage(['matplotlib','pandas','numpy']);
 
     // Install matplotlib hook for plot capture
     await pyodide.runPythonAsync(`
@@ -1033,17 +1038,35 @@ def _list_globals():
     }
     renderDataPanel();
 
-    setStatus('Ready ✓', 'ready');
+    // Phase 1 done — enable Run now, even before every package finishes.
+    setStatus('Runtime ready · loading packages…', 'loading');
     isReady = true;
     $('btn-run').disabled = false;
     clearConsole();
-    appendConsoleLine(`Pyodide ready. ${saved.length ? `Restored ${saved.length} file(s). ` : ''}Press Ctrl/Cmd+Enter to run.`, 'message');
+    appendConsoleLine(`Pyodide runtime ready. ${saved.length ? `Restored ${saved.length} file(s). ` : ''}You can Run now; packages are still loading in the background.`, 'message');
     refreshObjects();
-    // If the Visualizer handed us a script + dataset, drop them into the editor.
+    // Editor already got the visualizer handoff at page load; hydrate CSVs.
     consumeVisualizerHandoff().catch(() => {});
   } catch (e) {
-    setStatus('Failed to load Pyodide — see console', 'error');
-    appendConsoleLine(`Pyodide bootstrap failed: ${e.message}`, 'stderr');
+    setStatus('Failed to load Pyodide runtime — see console', 'error');
+    appendConsoleLine(`Pyodide runtime bootstrap failed: ${e.message}`, 'stderr');
+    return;
+  }
+
+  // Phase 2 — background package load. Each package attempts individually so
+  // one wheel failure doesn't strand the user without everything else.
+  try {
+    // igraph is required by the visualizer's Export-as-Code output. The others
+    // are the standard case-study set.
+    const PACKAGES = ['networkx','scipy','scikit-learn','igraph'];
+    for (const pkg of PACKAGES) {
+      try { await pyodide.loadPackage([pkg]); }
+      catch (e) { console.warn('loadPackage failed:', pkg, e); }
+    }
+    setStatus('Ready ✓', 'ready');
+  } catch (e) {
+    setStatus('Ready ✓ (some packages skipped)', 'ready');
+    console.warn('background package load ran into an error:', e);
   }
 }
 

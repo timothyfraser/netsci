@@ -1277,6 +1277,9 @@
     state.nodeCols = ['node_id', 'label', 'tier', 'region'];
     state.mapping = { from: 'from', to: 'to', weight: 'weight', time: 'time',
                       nodeId: 'node_id', nodeLabel: 'label', nodeGroup: 'tier' };
+    // Not a project dataset — the code-export module inlines the graph
+    // instead of trying to read.csv() a file the playground doesn't have.
+    state.currentDatasetKey = null;
     // Wipe scenarios — they were keyed to the OLD dataset's node ids and
     // would either silently miss or, worse, half-apply against the new graph.
     state.scenarioNodes = []; state.scenarioLinks = [];
