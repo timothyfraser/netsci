@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-07-01 20:44 UTC_
+_Auto-generated NotebookLM source · 2026-07-04 15:27 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -2800,6 +2800,11 @@ The lab below lets you run the permutation sampler interactively and see two p\-
 ⟳ Unblocked Permutation
 ⟳ Block Permutation
 ⊞ Compare All Three
+
+
+−
+＋
+⤢ Fit
 
 
  High\-income neighborhood
