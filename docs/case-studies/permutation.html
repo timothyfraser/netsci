@@ -60,11 +60,27 @@
 .toggle-btn.active-block { background: rgba(94,234,212,0.18); border-color: var(--node-3); color: var(--node-3); }
 
 #network-svg {
-  width: 100%; height: 320px;
+  width: 100%; height: 400px;
   background: rgba(5, 46, 22, 0.35);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm); display: block;
+  touch-action: none;
 }
+.zoom-controls {
+  display: flex; gap: 6px; justify-content: flex-end;
+  margin-bottom: 6px; flex-wrap: wrap;
+}
+.zoom-btn {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: rgba(5, 46, 22, 0.6); color: var(--green-mint);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); cursor: pointer;
+  padding: 5px 10px; min-width: 34px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.zoom-btn:hover  { color: var(--green-bright); border-color: var(--green-bright); }
+.zoom-btn:active { transform: scale(0.97); }
 
 .btn {
   font-family: var(--font-mono); font-size: 11px; font-weight: 700;
@@ -301,6 +317,11 @@
         </div>
 
         <div id="single-view">
+          <div class="zoom-controls">
+            <button class="zoom-btn" id="zoom-out" title="Zoom out" aria-label="Zoom out">−</button>
+            <button class="zoom-btn" id="zoom-in"  title="Zoom in"  aria-label="Zoom in">＋</button>
+            <button class="zoom-btn" id="zoom-fit" title="Fit whole network in view" aria-label="Fit to view">⤢ Fit</button>
+          </div>
           <svg id="network-svg"></svg>
           <div class="legend-row">
             <div class="legend-item"><div class="legend-dot" style="background:var(--node-4); color:var(--node-4);"></div> High-income neighborhood</div>
@@ -618,7 +639,7 @@ function showState(mode) {
     permHistory.push({type:mode==="blocked"?"blocked":"unblocked",index:m.index});
     updateSidebar(m); drawBars(m); updatePVals(); updateNullDist(); updateCounters();
   }
-  drawNetwork(currentEdges,d3.select("#network-svg"),750,320,true);
+  drawNetwork(currentEdges,d3.select("#network-svg"),750,420,true);
 }
 
 function runPerm(blocked) {
@@ -632,7 +653,7 @@ function runPerm(blocked) {
   document.getElementById("compare-view").style.display="none";
   ["obs","perm","block","compare"].forEach(k=>{ const el=document.getElementById("btn-"+k); if(el) el.className="toggle-btn"; });
   document.getElementById(blocked?"btn-block":"btn-perm").classList.add(blocked?"active-block":"active-perm");
-  drawNetwork(currentEdges,d3.select("#network-svg"),750,320,true);
+  drawNetwork(currentEdges,d3.select("#network-svg"),750,420,true);
 }
 
 function runMany(blocked,n) {
@@ -685,11 +706,36 @@ function updatePVals() {
   }
 }
 
-// Draw network (shared between main + compare panels)
+// Zoom / pan for the main network. Set once at load; the transform is
+// persisted across redraws so shuffles don't reset the viewer's view.
+let networkZoom = null;
+let networkZoomT = null;
+
+function setupNetworkZoom() {
+  const svg = d3.select("#network-svg");
+  if (svg.empty()) return;
+  networkZoom = d3.zoom().scaleExtent([0.4, 8]).on("zoom", (ev) => {
+    networkZoomT = ev.transform;
+    svg.select("g.viewport").attr("transform", ev.transform);
+  });
+  svg.call(networkZoom).on("dblclick.zoom", null);
+}
+function zoomNetworkBy(k) {
+  if (!networkZoom) return;
+  d3.select("#network-svg").transition().duration(180).call(networkZoom.scaleBy, k);
+}
+function fitNetwork() {
+  if (!networkZoom) return;
+  d3.select("#network-svg").transition().duration(220).call(networkZoom.transform, d3.zoomIdentity);
+}
+
+// Draw network (shared between main + compare panels).
+// Draws in virtual coords (0..wL x 0..hL) into a <g class="viewport"> wrapper.
+// The SVG's viewBox + preserveAspectRatio handles fitting to the actual pixel
+// box, so nodes past the CSS height (e.g. Roxbury/Fenway at y=365) stay in view.
 function drawNetwork(edges,svgSel,wL,hL,interactive) {
   const svgEl=svgSel.node(); if(!svgEl) return;
-  const W=svgEl.clientWidth||500, H=svgEl.clientHeight||320;
-  const scX=x=>(x/wL)*W, scY=y=>(y/hL)*H;
+  svgSel.attr("viewBox", `0 0 ${wL} ${hL}`).attr("preserveAspectRatio","xMidYMid meet");
   svgSel.selectAll("*").remove();
   const uid=svgEl.id||"net";
   const defs=svgSel.append("defs");
@@ -700,13 +746,14 @@ function drawNetwork(edges,svgSel,wL,hL,interactive) {
       .attr("markerWidth",5).attr("markerHeight",5).attr("orient","auto")
       .append("path").attr("d","M0,-4L8,0L0,4").attr("fill",col).attr("opacity",0.8);
   });
+  const viewport = svgSel.append("g").attr("class","viewport");
   const maxW=Math.max(...edges.map(e=>e.weight));
   edges.forEach(e=>{
     const fn=NODES.find(n=>n.id===e.from),tn=NODES.find(n=>n.id===e.to);
-    const sx=scX(fn.x),sy=scY(fn.y),tx=scX(tn.x),ty=scY(tn.y);
-    const dx=tx-sx,dy=ty-sy,len=Math.sqrt(dx*dx+dy*dy)||1;
-    const off=4,px=-dy/len*off,py=dx/len*off;
-    svgSel.append("line")
+    const sx=fn.x, sy=fn.y, tx=tn.x, ty=tn.y;
+    const dx=tx-sx, dy=ty-sy, len=Math.sqrt(dx*dx+dy*dy)||1;
+    const off=4, px=-dy/len*off, py=dx/len*off;
+    viewport.append("line")
       .attr("x1",sx+px).attr("y1",sy+py).attr("x2",tx+px).attr("y2",ty+py)
       .attr("stroke",e.block==="A"?"#e8a045":"#a3b8a3")
       .attr("stroke-width",1+(e.weight/maxW)*5).attr("opacity",0.75)
@@ -715,9 +762,9 @@ function drawNetwork(edges,svgSel,wL,hL,interactive) {
   const maxTot=Math.max(...NODES.map(n=>edges.filter(e=>e.from===n.id||e.to===n.id).reduce((s,e)=>s+e.weight,0)));
   NODES.forEach(n=>{
     const tot=edges.filter(e=>e.from===n.id||e.to===n.id).reduce((s,e)=>s+e.weight,0);
-    const r=8+(tot/maxTot)*14, cx=scX(n.x),cy=scY(n.y);
+    const r=8+(tot/maxTot)*14, cx=n.x, cy=n.y;
     const fill=n.group?GROUP_HIGH:GROUP_LOW;
-    const g=svgSel.append("g");
+    const g=viewport.append("g");
     if(interactive) g.style("cursor","pointer").on("click",()=>handleNodeClick(n.id));
     if(interactive&&n.id===selectedNode)
       g.append("circle").attr("cx",cx).attr("cy",cy).attr("r",r+6)
@@ -727,15 +774,16 @@ function drawNetwork(edges,svgSel,wL,hL,interactive) {
       .attr("fill",fill)
       .attr("fill-opacity",0.85).attr("stroke","#050a05").attr("stroke-width",2)
       .style("filter", "drop-shadow(0 0 8px " + fill + ")");
-    g.append("text").attr("x",cx).attr("y",cy+r+13).attr("text-anchor","middle")
-      .attr("fill","#d1fae5").attr("font-size",W<300?"9px":"11px")
+    g.append("text").attr("x",cx).attr("y",cy+r+14).attr("text-anchor","middle")
+      .attr("fill","#d1fae5").attr("font-size","16")
       .attr("font-family","Space Mono, monospace").attr("letter-spacing","0.05em").text(n.short);
   });
+  if (svgEl.id === "network-svg" && networkZoomT) viewport.attr("transform", networkZoomT);
 }
 
 function handleNodeClick(nodeId) {
   selectedNode=nodeId;
-  drawNetwork(currentEdges,d3.select("#network-svg"),750,320,true);
+  drawNetwork(currentEdges,d3.select("#network-svg"),750,420,true);
   const n=NODES.find(nd=>nd.id===nodeId);
   document.getElementById("node-info-empty").style.display="none";
   document.getElementById("node-info-loaded").style.display="block";
@@ -846,10 +894,16 @@ function showAnswer(lc){
 }
 
 // Init
-window.addEventListener("load",()=>showState("observed"));
+window.addEventListener("load",()=>{
+  setupNetworkZoom();
+  document.getElementById("zoom-in") ?.addEventListener("click", ()=>zoomNetworkBy(1.4));
+  document.getElementById("zoom-out")?.addEventListener("click", ()=>zoomNetworkBy(1/1.4));
+  document.getElementById("zoom-fit")?.addEventListener("click", ()=>fitNetwork());
+  showState("observed");
+});
 window.addEventListener("resize",()=>{
-  if(currentMode==="compare") renderCompareView();
-  else drawNetwork(currentEdges,d3.select("#network-svg"),750,320,true);
+  // Bar + null-dist charts still measure themselves in px, so redraw those on
+  // resize; the network is viewBox-driven so it scales itself.
   drawBars(computeMetrics(currentEdges));
   updateNullDist();
 });
