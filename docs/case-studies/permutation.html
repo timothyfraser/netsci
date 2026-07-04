@@ -60,7 +60,13 @@
 .toggle-btn.active-block { background: rgba(94,234,212,0.18); border-color: var(--node-3); color: var(--node-3); }
 
 #network-svg {
-  width: 100%; height: 400px;
+  width: 100%;
+  /* Match the network's own aspect ratio so we don't waste ~40% of the
+     vertical space to letterbox bars on portrait phones. See computeViewBox
+     in the JS — the bounds' aspect is ~1.42 and we cap height so the graph
+     stays reasonable on wide desktops. */
+  aspect-ratio: 1.42 / 1;
+  max-height: 480px; min-height: 300px;
   background: rgba(5, 46, 22, 0.35);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm); display: block;
@@ -109,7 +115,9 @@
 .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
 .legend-line { width: 24px; height: 3px; border-radius: 2px; flex-shrink: 0; }
 
-.compare-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+/* Responsive: 3 across on wide, stacks 1-up on phones so each panel is wide
+   enough to actually see the 5-node structure. */
+.compare-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
 .compare-panel {
   background: rgba(5,46,22,0.4); border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm); padding: 10px;
@@ -122,7 +130,7 @@
 .compare-panel h4.obs-h   { color: var(--node-4); }
 .compare-panel h4.perm-h  { color: var(--node-6); }
 .compare-panel h4.block-h { color: var(--node-3); }
-.compare-panel svg { width: 100%; display: block; }
+.compare-panel svg { width: 100%; aspect-ratio: 1.42 / 1; height: auto; display: block; }
 
 #bar-svg { width: 100%; height: 200px; display: block; }
 
@@ -336,17 +344,17 @@
           <div class="compare-grid">
             <div class="compare-panel">
               <h4 class="obs-h">● Observed</h4>
-              <svg id="cnet-obs" height="160"></svg>
+              <svg id="cnet-obs" ></svg>
               <div style="font-family: var(--font-mono); font-size: 11px; color: var(--node-4); margin-top: 4px; text-align: center;" id="cidx-obs">—</div>
             </div>
             <div class="compare-panel">
               <h4 class="perm-h">⟳ Unblocked Perm</h4>
-              <svg id="cnet-perm" height="160"></svg>
+              <svg id="cnet-perm" ></svg>
               <div style="font-family: var(--font-mono); font-size: 11px; color: var(--node-6); margin-top: 4px; text-align: center;" id="cidx-perm">—</div>
             </div>
             <div class="compare-panel">
               <h4 class="block-h">⟳ Block Perm</h4>
-              <svg id="cnet-block" height="160"></svg>
+              <svg id="cnet-block" ></svg>
               <div style="font-family: var(--font-mono); font-size: 11px; color: var(--node-3); margin-top: 4px; text-align: center;" id="cidx-block">—</div>
             </div>
           </div>
@@ -729,13 +737,25 @@ function fitNetwork() {
   d3.select("#network-svg").transition().duration(220).call(networkZoom.transform, d3.zoomIdentity);
 }
 
+// Tight viewBox around the actual node bounds so the network fills the SVG
+// on both landscape (desktop) and portrait (phone) — no giant letterbox bars
+// on either aspect.
+function computeViewBox(pad) {
+  pad = pad ?? 40;
+  const xs = NODES.map(n=>n.x), ys = NODES.map(n=>n.y);
+  const x0 = Math.min(...xs) - pad, x1 = Math.max(...xs) + pad;
+  const y0 = Math.min(...ys) - pad, y1 = Math.max(...ys) + pad;
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
 // Draw network (shared between main + compare panels).
-// Draws in virtual coords (0..wL x 0..hL) into a <g class="viewport"> wrapper.
-// The SVG's viewBox + preserveAspectRatio handles fitting to the actual pixel
-// box, so nodes past the CSS height (e.g. Roxbury/Fenway at y=365) stay in view.
+// Renders everything in virtual coords into a <g class="viewport"> wrapper.
+// The SVG's viewBox + preserveAspectRatio="xMidYMid meet" handles fitting to
+// the actual pixel box at any aspect ratio, so nothing gets clipped.
 function drawNetwork(edges,svgSel,wL,hL,interactive) {
   const svgEl=svgSel.node(); if(!svgEl) return;
-  svgSel.attr("viewBox", `0 0 ${wL} ${hL}`).attr("preserveAspectRatio","xMidYMid meet");
+  const vb = computeViewBox();
+  svgSel.attr("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`).attr("preserveAspectRatio","xMidYMid meet");
   svgSel.selectAll("*").remove();
   const uid=svgEl.id||"net";
   const defs=svgSel.append("defs");
@@ -774,8 +794,13 @@ function drawNetwork(edges,svgSel,wL,hL,interactive) {
       .attr("fill",fill)
       .attr("fill-opacity",0.85).attr("stroke","#050a05").attr("stroke-width",2)
       .style("filter", "drop-shadow(0 0 8px " + fill + ")");
-    g.append("text").attr("x",cx).attr("y",cy+r+14).attr("text-anchor","middle")
-      .attr("fill","#d1fae5").attr("font-size","16")
+    // Font size is in the same virtual coord space as everything else — the
+    // SVG viewport scales it. 22 stays readable on ~360-px-wide phone panels
+    // (which render text at ~15 CSS px there) and merely looks a touch bold
+    // on desktop.
+    g.append("text").attr("x",cx).attr("y",cy+r+18).attr("text-anchor","middle")
+      .attr("fill","#d1fae5")
+      .attr("font-size", interactive ? "18" : "22")
       .attr("font-family","Space Mono, monospace").attr("letter-spacing","0.05em").text(n.short);
   });
   if (svgEl.id === "network-svg" && networkZoomT) viewport.attr("transform", networkZoomT);
