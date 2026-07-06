@@ -280,30 +280,40 @@
   .fp-list li { margin-bottom: 4px; }
   .fp-list strong { color: var(--white); }
 
-  /* Final Presentation rubric — sits inside the Final Presentation card,
-     just under the "See an example poster" button. Reuses .sg-list /
-     .sg-copy visuals from the self-grade checklist so the two feel like
-     part of the same system. */
-  .fp-rubric {
+  /* Final Presentation rubric — a collapsible (open by default) that sits
+     inside the Final Presentation card, just under the "See an example
+     poster" button. Reuses .sg-list / .sg-copy visuals from the self-grade
+     checklist so the two feel like part of the same system. */
+  details.fp-rubric {
     margin-top: 16px;
     background: rgba(5, 46, 22, 0.35); border: 1px solid var(--border-soft);
-    border-radius: var(--radius-sm); padding: 14px 16px 12px;
+    border-radius: var(--radius-sm);
   }
   .fp-rubric-head {
     display: flex; align-items: center; gap: 8px;
+    cursor: pointer; list-style: none;
     font-family: var(--font-mono); font-size: 10.5px;
     letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--green-bright); margin-bottom: 10px;
+    color: var(--green-bright); padding: 14px 16px;
+    transition: background .15s;
   }
+  .fp-rubric-head::-webkit-details-marker { display: none; }
+  .fp-rubric-head:hover { background: rgba(57,255,20,0.05); }
+  .fp-rubric-head::before {
+    content: '▸'; font-size: 11px; color: var(--green-bright);
+    transition: transform .15s; flex-shrink: 0;
+  }
+  details.fp-rubric[open] > .fp-rubric-head::before { transform: rotate(90deg); }
   .fp-rubric-head .pill {
     padding: 2px 8px; border-radius: 999px;
     background: rgba(57,255,20,0.12); border: 1px solid var(--green-bright);
     color: var(--green-bright); font-size: 10px;
   }
+  .fp-rubric-body { padding: 2px 16px 14px; }
   .fp-rubric-sub {
     font-family: var(--font-mono); font-size: 9.5px;
     letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--grey); margin: 10px 0 6px;
+    color: var(--grey); margin: 12px 0 6px;
   }
   .fp-rubric .sg-list { margin-bottom: 6px; }
   .fp-rubric .sg-list li { margin-bottom: 5px; }
@@ -312,7 +322,13 @@
     color: var(--node-4); letter-spacing: 0.05em;
     margin-left: 4px;
   }
-  .fp-rubric .sg-actions { margin-top: 10px; }
+  .fp-rubric-note {
+    font-family: var(--font-body); font-size: 12.5px;
+    color: var(--grey); line-height: 1.55;
+    margin: 10px 0 2px; padding-left: 2px;
+  }
+  .fp-rubric-note strong { color: var(--green-mint); }
+  .fp-rubric .sg-actions { margin-top: 12px; }
   .fp-rubric .sg-copy {
     font-size: 10.5px; padding: 6px 12px;
   }
@@ -527,29 +543,33 @@ The most between-central node is Hub_17 (betweenness = 0.41) — it sits on
         </ul>
         <a class="eg-btn" href="assignments/example-poster.html" target="_blank" rel="noopener">↗ See an example poster</a>
 
-        <div class="fp-rubric" id="fp-rubric">
-          <div class="fp-rubric-head">
+        <details class="fp-rubric" id="fp-rubric" open>
+          <summary class="fp-rubric-head">
             <span class="pill">5 pts</span>
             <span>Grading rubric</span>
+          </summary>
+          <div class="fp-rubric-body">
+            <p class="fp-rubric-sub">On the poster · 80%</p>
+            <ul class="sg-list fp-rubric-content">
+              <li><label><input type="checkbox"><span class="sg-text">One big annotated network<span class="pt">&nbsp;· 20%</span></span></label></li>
+              <li><label><input type="checkbox"><span class="sg-text">2+ supporting charts<span class="pt">&nbsp;· 20%</span></span></label></li>
+              <li><label><input type="checkbox"><span class="sg-text">Key statistics<span class="pt">&nbsp;· 10%</span></span></label></li>
+              <li><label><input type="checkbox"><span class="sg-text">Measure uncertainty or significance of your main finding (e.g. confidence interval or p-value)<span class="pt">&nbsp;· 10%</span></span></label></li>
+              <li><label><input type="checkbox"><span class="sg-text">Research question up top<span class="pt">&nbsp;· 10%</span></span></label></li>
+              <li><label><input type="checkbox"><span class="sg-text">Sufficient background about data + methods to understand what you did — no hand-waviness<span class="pt">&nbsp;· 10%</span></span></label></li>
+            </ul>
+            <p class="fp-rubric-sub">Delivery · 20%</p>
+            <ul class="sg-list fp-rubric-logistics">
+              <li><label><input type="checkbox"><span class="sg-text">Submit poster as a <code>.pdf</code> or <code>.html</code> file on Canvas<span class="pt">&nbsp;· 10%</span></span></label></li>
+              <li><label><input type="checkbox"><span class="sg-text">Presentation quality — 3–5 min lightning talk<span class="pt">&nbsp;· 10%</span></span></label></li>
+            </ul>
+            <p class="fp-rubric-note">Give your lightning talk live during the session, <strong>4:00–5:00 PM EST</strong> — Zoom link forthcoming day-of on Ed Discussion. Plan to attend if you can. If you can't, submit a video recording instead (e.g. record yourself on Zoom).</p>
+            <div class="sg-actions">
+              <button type="button" class="sg-copy" id="fp-rubric-copy">⧉ Copy checklist</button>
+              <span class="sg-feedback" id="fp-rubric-feedback" aria-live="polite"></span>
+            </div>
           </div>
-          <ul class="sg-list fp-rubric-content">
-            <li><label><input type="checkbox"><span class="sg-text">One big annotated network<span class="pt">&nbsp;· 1 pt</span></span></label></li>
-            <li><label><input type="checkbox"><span class="sg-text">2+ supporting charts<span class="pt">&nbsp;· 1 pt</span></span></label></li>
-            <li><label><input type="checkbox"><span class="sg-text">Key statistics<span class="pt">&nbsp;· 1 pt</span></span></label></li>
-            <li><label><input type="checkbox"><span class="sg-text">Research question up top<span class="pt">&nbsp;· 1 pt</span></span></label></li>
-            <li><label><input type="checkbox"><span class="sg-text">Sufficient background about data + methods to understand what you did — no hand-waviness<span class="pt">&nbsp;· 1 pt</span></span></label></li>
-          </ul>
-          <p class="fp-rubric-sub">Also required</p>
-          <ul class="sg-list fp-rubric-logistics">
-            <li><label><input type="checkbox"><span class="sg-text">Submit slide as a <code>.pdf</code> or <code>.html</code> file on Canvas</span></label></li>
-            <li><label><input type="checkbox"><span class="sg-text">Give a 3–5 min lightning talk</span></label></li>
-            <li><label><input type="checkbox"><span class="sg-text">Attend the live session, <strong>4:00–5:00 PM EST</strong>, if you can — Zoom link forthcoming day-of on Ed Discussion. If you can't attend, submit a video recording instead (e.g. record yourself on Zoom).</span></label></li>
-          </ul>
-          <div class="sg-actions">
-            <button type="button" class="sg-copy" id="fp-rubric-copy">⧉ Copy checklist</button>
-            <span class="sg-feedback" id="fp-rubric-feedback" aria-live="polite"></span>
-          </div>
-        </div>
+        </details>
       </div>
     </div>
   </section>
@@ -842,13 +862,17 @@ The most between-central node is Hub_17 (betweenness = 0.41) — it sits on
     var fb = document.getElementById('fp-rubric-feedback');
     btn.addEventListener('click', function () {
       var mount = document.getElementById('fp-rubric');
-      var boxes = mount.querySelectorAll('.sg-list input[type="checkbox"]');
-      var lines = ['Final Presentation — Grading rubric (5 pts)', ''];
-      var seenSub = false;
+      var boxes = mount.querySelectorAll('.fp-rubric-body .sg-list input[type="checkbox"]');
+      var lines = ['Final Presentation — Grading rubric (5 pts)'];
+      var lastSub = null;
       boxes.forEach(function (box) {
-        // Insert the "Also required" subhead once, before the first logistics box.
-        var inLogistics = box.closest('.fp-rubric-logistics');
-        if (inLogistics && !seenSub) { lines.push('', 'Also required'); seenSub = true; }
+        // Emit each group's subhead ("On the poster · 80%", "Delivery · 20%")
+        // when we cross into a new .sg-list, reading it straight from the DOM.
+        var list = box.closest('.sg-list');
+        var sub = list && list.previousElementSibling;
+        var subText = (sub && sub.classList.contains('fp-rubric-sub'))
+          ? sub.textContent.replace(/\s+/g, ' ').trim() : '';
+        if (subText && subText !== lastSub) { lines.push('', subText); lastSub = subText; }
         var mark = box.checked ? '[x]' : '[ ]';
         // Read visible text (span.sg-text). Preserve the "· 1 pt" tag for content items.
         var text = box.parentNode.querySelector('.sg-text').textContent
@@ -856,6 +880,8 @@ The most between-central node is Hub_17 (betweenness = 0.41) — it sits on
           .replace(/\s+/g, ' ').trim();
         lines.push('- ' + mark + ' ' + text);
       });
+      var note = mount.querySelector('.fp-rubric-note');
+      if (note) { lines.push('', 'Note: ' + note.textContent.replace(/\s+/g, ' ').trim()); }
       var block = lines.join('\n');
       var done = function () {
         fb.textContent = 'Copied — paste into your notes.';
