@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-07-06 17:19 UTC_
+_Auto-generated NotebookLM source · 2026-07-06 17:50 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -798,7 +798,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-07-06 17:19 UTC_
+_Auto-generated NotebookLM source · 2026-07-06 17:50 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -6090,19 +6090,26 @@ Design a **single hyper\-visual slide** on your strongest project — one big an
 5 pts
 Grading rubric
 
-* One big annotated network · 1 pt
-* 2\+ supporting charts · 1 pt
-* Key statistics · 1 pt
-* Research question up top · 1 pt
-* Sufficient background about data \+ methods to understand what you did — no hand\-waviness · 1 pt
+
+On the poster · 80%
 
 
-Also required
+* One big annotated network · 20%
+* 2\+ supporting charts · 20%
+* Key statistics · 10%
+* Measure uncertainty or significance of your main finding (e.g. confidence interval or p\-value) · 10%
+* Research question up top · 10%
+* Sufficient background about data \+ methods to understand what you did — no hand\-waviness · 10%
 
 
-* Submit slide as a `.pdf` or `.html` file on Canvas
-* Give a 3–5 min lightning talk
-* Attend the live session, **4:00–5:00 PM EST**, if you can — Zoom link forthcoming day\-of on Ed Discussion. If you can't attend, submit a video recording instead (e.g. record yourself on Zoom).
+Delivery · 20%
+
+
+* Submit poster as a `.pdf` or `.html` file on Canvas · 10%
+* Presentation quality — 3–5 min lightning talk · 10%
+
+
+Give your lightning talk live during the session, **4:00–5:00 PM EST** — Zoom link forthcoming day\-of on Ed Discussion. Plan to attend if you can. If you can't, submit a video recording instead (e.g. record yourself on Zoom).
 
 
 ⧉ Copy checklist
@@ -6785,7 +6792,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-07-06 17:19 UTC_
+_Auto-generated NotebookLM source · 2026-07-06 17:50 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
