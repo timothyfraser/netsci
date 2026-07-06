@@ -207,6 +207,19 @@
         .attr('font-family', 'Space Mono, monospace').attr('font-size', 13).text('No nodes to draw.');
       return;
     }
+    // An n×n matrix is n² cells; past a few hundred nodes it's both unreadable
+    // and slow to draw. Steer the user to aggregate first rather than freeze.
+    const MATRIX_MAX = 400;
+    if (n > MATRIX_MAX) {
+      const g0 = svg.append('g').attr('transform', 'translate(30,60)');
+      g0.append('text').attr('fill', '#fbbf24').attr('font-family', 'Space Mono, monospace').attr('font-size', 15)
+        .text('⚠️  ' + n + ' nodes is too many for a readable matrix.');
+      ['A DSM works best on smaller, component-style networks.', 'Use the Aggregate card to collapse this network by a trait',
+       '(e.g. region or tier) into a handful of groups, then switch to Matrix.'].forEach((line, i) => {
+        g0.append('text').attr('y', 28 + i * 22).attr('fill', '#a3b8a3').attr('font-family', 'Space Mono, monospace').attr('font-size', 12).text(line);
+      });
+      return;
+    }
     const stageW = svgEl.clientWidth || 620, stageH = svgEl.clientHeight || 620;
     const labelW = 112, labelH = 88;
     const gridMax = Math.max(40, Math.min(stageW - labelW - 14, stageH - labelH - 14));
