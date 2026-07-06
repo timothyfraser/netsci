@@ -2,7 +2,7 @@
 
 > Network Science and Applications for Systems Engineering · Cornell Engineering
 >
-> Single-file bundle generated 2026-07-04 from the course repo (`timothyfraser/netsci`). Upload **this one file** to NotebookLM instead of the three section files separately — it contains all of them.
+> Single-file bundle generated 2026-07-06 from the course repo (`timothyfraser/netsci`). Upload **this one file** to NotebookLM instead of the three section files separately — it contains all of them.
 
 ## Contents
 1. [Resource Index](#resource-index) — A map of every course resource — labs, code folders, datasets, help pages.
@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-07-04 16:07 UTC_
+_Auto-generated NotebookLM source · 2026-07-06 17:19 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -798,7 +798,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-07-04 16:07 UTC_
+_Auto-generated NotebookLM source · 2026-07-06 17:19 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -6087,6 +6087,27 @@ Design a **single hyper\-visual slide** on your strongest project — one big an
 ↗ See an example poster
 
 
+5 pts
+Grading rubric
+
+* One big annotated network · 1 pt
+* 2\+ supporting charts · 1 pt
+* Key statistics · 1 pt
+* Research question up top · 1 pt
+* Sufficient background about data \+ methods to understand what you did — no hand\-waviness · 1 pt
+
+
+Also required
+
+
+* Submit slide as a `.pdf` or `.html` file on Canvas
+* Give a 3–5 min lightning talk
+* Attend the live session, **4:00–5:00 PM EST**, if you can — Zoom link forthcoming day\-of on Ed Discussion. If you can't attend, submit a video recording instead (e.g. record yourself on Zoom).
+
+
+⧉ Copy checklist
+
+
 Project Homeworks
 
  The project is a big chunk of your grade. Over three weeks you apply a
@@ -6764,7 +6785,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-07-04 16:07 UTC_
+_Auto-generated NotebookLM source · 2026-07-06 17:19 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 

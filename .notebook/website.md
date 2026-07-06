@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-07-04 16:07 UTC_
+_Auto-generated NotebookLM source · 2026-07-06 17:19 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -5287,6 +5287,27 @@ Design a **single hyper\-visual slide** on your strongest project — one big an
 
 
 ↗ See an example poster
+
+
+5 pts
+Grading rubric
+
+* One big annotated network · 1 pt
+* 2\+ supporting charts · 1 pt
+* Key statistics · 1 pt
+* Research question up top · 1 pt
+* Sufficient background about data \+ methods to understand what you did — no hand\-waviness · 1 pt
+
+
+Also required
+
+
+* Submit slide as a `.pdf` or `.html` file on Canvas
+* Give a 3–5 min lightning talk
+* Attend the live session, **4:00–5:00 PM EST**, if you can — Zoom link forthcoming day\-of on Ed Discussion. If you can't attend, submit a video recording instead (e.g. record yourself on Zoom).
+
+
+⧉ Copy checklist
 
 
 Project Homeworks
