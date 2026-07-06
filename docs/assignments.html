@@ -280,6 +280,43 @@
   .fp-list li { margin-bottom: 4px; }
   .fp-list strong { color: var(--white); }
 
+  /* Final Presentation rubric — sits inside the Final Presentation card,
+     just under the "See an example poster" button. Reuses .sg-list /
+     .sg-copy visuals from the self-grade checklist so the two feel like
+     part of the same system. */
+  .fp-rubric {
+    margin-top: 16px;
+    background: rgba(5, 46, 22, 0.35); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm); padding: 14px 16px 12px;
+  }
+  .fp-rubric-head {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--green-bright); margin-bottom: 10px;
+  }
+  .fp-rubric-head .pill {
+    padding: 2px 8px; border-radius: 999px;
+    background: rgba(57,255,20,0.12); border: 1px solid var(--green-bright);
+    color: var(--green-bright); font-size: 10px;
+  }
+  .fp-rubric-sub {
+    font-family: var(--font-mono); font-size: 9.5px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--grey); margin: 10px 0 6px;
+  }
+  .fp-rubric .sg-list { margin-bottom: 6px; }
+  .fp-rubric .sg-list li { margin-bottom: 5px; }
+  .fp-rubric .pt {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--node-4); letter-spacing: 0.05em;
+    margin-left: 4px;
+  }
+  .fp-rubric .sg-actions { margin-top: 10px; }
+  .fp-rubric .sg-copy {
+    font-size: 10.5px; padding: 6px 12px;
+  }
+
   /* Collapsible sections — used for AI Policy and Self-grade */
   details.collapsible {
     margin: 18px 0;
@@ -489,6 +526,30 @@ The most between-central node is Hub_17 (betweenness = 0.41) — it sits on
           <li><strong>Virtual poster session, July 10, 4:00–5:00 PM EST</strong> — details forthcoming. Plan to attend!</li>
         </ul>
         <a class="eg-btn" href="assignments/example-poster.html" target="_blank" rel="noopener">↗ See an example poster</a>
+
+        <div class="fp-rubric" id="fp-rubric">
+          <div class="fp-rubric-head">
+            <span class="pill">5 pts</span>
+            <span>Grading rubric</span>
+          </div>
+          <ul class="sg-list fp-rubric-content">
+            <li><label><input type="checkbox"><span class="sg-text">One big annotated network<span class="pt">&nbsp;· 1 pt</span></span></label></li>
+            <li><label><input type="checkbox"><span class="sg-text">2+ supporting charts<span class="pt">&nbsp;· 1 pt</span></span></label></li>
+            <li><label><input type="checkbox"><span class="sg-text">Key statistics<span class="pt">&nbsp;· 1 pt</span></span></label></li>
+            <li><label><input type="checkbox"><span class="sg-text">Research question up top<span class="pt">&nbsp;· 1 pt</span></span></label></li>
+            <li><label><input type="checkbox"><span class="sg-text">Sufficient background about data + methods to understand what you did — no hand-waviness<span class="pt">&nbsp;· 1 pt</span></span></label></li>
+          </ul>
+          <p class="fp-rubric-sub">Also required</p>
+          <ul class="sg-list fp-rubric-logistics">
+            <li><label><input type="checkbox"><span class="sg-text">Submit slide as a <code>.pdf</code> or <code>.html</code> file on Canvas</span></label></li>
+            <li><label><input type="checkbox"><span class="sg-text">Give a 3–5 min lightning talk</span></label></li>
+            <li><label><input type="checkbox"><span class="sg-text">Attend the live session, <strong>4:00–5:00 PM EST</strong>, if you can — Zoom link forthcoming day-of on Ed Discussion. If you can't attend, submit a video recording instead (e.g. record yourself on Zoom).</span></label></li>
+          </ul>
+          <div class="sg-actions">
+            <button type="button" class="sg-copy" id="fp-rubric-copy">⧉ Copy checklist</button>
+            <span class="sg-feedback" id="fp-rubric-feedback" aria-live="polite"></span>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -773,6 +834,50 @@ The most between-central node is Hub_17 (betweenness = 0.41) — it sits on
 <script src="assets/site.js" defer></script>
 <script src="assets/checklist.js" defer></script>
 <script src="assets/notebooklm-bubble.js" defer></script>
+<script>
+  // Final Presentation rubric — copy the checklist as markdown to clipboard.
+  (function () {
+    var btn = document.getElementById('fp-rubric-copy');
+    if (!btn) return;
+    var fb = document.getElementById('fp-rubric-feedback');
+    btn.addEventListener('click', function () {
+      var mount = document.getElementById('fp-rubric');
+      var boxes = mount.querySelectorAll('.sg-list input[type="checkbox"]');
+      var lines = ['Final Presentation — Grading rubric (5 pts)', ''];
+      var seenSub = false;
+      boxes.forEach(function (box) {
+        // Insert the "Also required" subhead once, before the first logistics box.
+        var inLogistics = box.closest('.fp-rubric-logistics');
+        if (inLogistics && !seenSub) { lines.push('', 'Also required'); seenSub = true; }
+        var mark = box.checked ? '[x]' : '[ ]';
+        // Read visible text (span.sg-text). Preserve the "· 1 pt" tag for content items.
+        var text = box.parentNode.querySelector('.sg-text').textContent
+          .replace(/ /g, ' ')     // NBSP -> normal space, so paste-into-plaintext looks clean
+          .replace(/\s+/g, ' ').trim();
+        lines.push('- ' + mark + ' ' + text);
+      });
+      var block = lines.join('\n');
+      var done = function () {
+        fb.textContent = 'Copied — paste into your notes.';
+        setTimeout(function () { fb.textContent = ''; }, 4000);
+      };
+      var fallback = function (text) {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-1000px';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (_) {}
+        document.body.removeChild(ta);
+      };
+      // Prefer the async Clipboard API; on rejection (Safari private mode,
+      // non-HTTPS localhost, etc.) fall back to the legacy execCommand path.
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(block).then(done, function () { fallback(block); done(); });
+      } else {
+        fallback(block); done();
+      }
+    });
+  })();
+</script>
 <script>
   // If the URL hash matches a collapsible (or is inside one), auto-open it
   // and scroll. Handles initial load and later hash changes.
