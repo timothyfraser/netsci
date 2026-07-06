@@ -1,0 +1,512 @@
+// viz2p-sampling.js — PREVIEW ONLY (loaded only by visualizer2.html).
+// Sampling card: draw a sample from the current network, highlight it in the
+// graph, report coverage/triangle/degree stats vs the true population, and run
+// many samples to build a sampling distribution of a chosen statistic — then
+// compare the true population parameter to that distribution.
+//
+// Ports docs/case-studies/sampling.html (random-node, ego 1-hop, snowball
+// 2-hop, random-edge) and adds the repeated-sampling distribution the lab
+// lacked, plus runnable R/Python export.
+(function () {
+  'use strict';
+  if (!window.NetSciViz2) return;
+  const NV = window.NetSciViz2;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const ek = (a, b) => (a < b ? a + '|' + b : b + '|' + a);
+
+  function injectStyle() {
+    if ($('viz2-samp-style')) return;
+    const st = document.createElement('style');
+    st.id = 'viz2-samp-style';
+    st.textContent = `
+      .viz2-samp-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 10px 0; }
+      .viz2-samp-tile { background: rgba(5,46,22,0.5); border: 1px solid var(--border-soft);
+        border-radius: var(--radius-sm); padding: 9px 11px; }
+      .viz2-samp-tile .t-lbl { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em;
+        color: var(--grey); text-transform: uppercase; }
+      .viz2-samp-tile .t-val { font-family: var(--font-mono); font-size: 18px; color: var(--white); margin-top: 3px; }
+      .viz2-samp-tile .t-val.good { color: var(--green-bright); }
+      .viz2-samp-tile .t-val.warn { color: var(--node-4); }
+      .viz2-samp-tile .t-val.bad  { color: var(--node-7); }
+      .viz2-samp-tile .t-sub { font-family: var(--font-mono); font-size: 10px; color: var(--grey); margin-top: 1px; }
+      .viz2-samp-btnrow { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+      svg.viz2-samp-dist { width: 100%; height: 150px; display: block; background: var(--black);
+        border: 1px solid var(--border); border-radius: var(--radius-sm); margin-top: 8px; }
+      .viz2-samp-sig { font-family: var(--font-mono); font-size: 12px; color: var(--green-mint);
+        line-height: 1.6; margin-top: 8px; }
+      .viz2-samp-sig strong { color: var(--white); }
+    `;
+    document.head.appendChild(st);
+  }
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  const METHODS = {
+    random_node: 'Random node',
+    ego: 'Ego-centric (1-hop)',
+    snowball: 'Snowball (2-hop)',
+    random_edge: 'Random edge',
+  };
+  let method = 'random_node';
+  let sizeCount = null;      // absolute size (nodes for node methods, edges for edge method); null = derive 25%
+  let userSetSize = false;
+  let sampled = { nodes: new Set(), edges: new Set(), seeds: new Set() };
+  let hasSample = false;
+  let simN = 200;
+  let simStat = 'mean_degree';
+  let lastSim = null;        // { samples:[], trueVal, statLabel }
+
+  // ── Population (current active network) ────────────────────────────────────
+  function population() {
+    const nodes = NV.activeNodes().map((n) => ({ id: n.id, label: n.label || n.id }));
+    const ids = new Set(nodes.map((n) => n.id));
+    const em = new Map();
+    NV.visibleLinks().forEach((l) => {
+      const s = typeof l.source === 'object' ? l.source.id : l.source;
+      const t = typeof l.target === 'object' ? l.target.id : l.target;
+      if (!ids.has(s) || !ids.has(t) || s === t) return;
+      const k = ek(s, t);
+      if (!em.has(k)) em.set(k, { source: s, target: t, weight: l.weight || 1 });
+    });
+    return { nodes, ids, edges: [...em.values()], edgeKeys: new Set(em.keys()) };
+  }
+
+  // ── Sampling primitives (ported from the sampling lab) ────────────────────
+  function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function fullAdj(pop) {
+    const adj = Object.create(null); pop.nodes.forEach((n) => { adj[n.id] = []; });
+    pop.edges.forEach((e) => { adj[e.source].push(e.target); adj[e.target].push(e.source); });
+    return adj;
+  }
+  function sampleRandomNode(pop, k) {
+    const picked = shuffle(pop.nodes).slice(0, k).map((n) => n.id);
+    const nodeSet = new Set(picked); const edgeSet = new Set();
+    pop.edges.forEach((e) => { if (nodeSet.has(e.source) && nodeSet.has(e.target)) edgeSet.add(ek(e.source, e.target)); });
+    return { nodes: nodeSet, edges: edgeSet, seeds: new Set() };
+  }
+  function sampleEgo(pop, k, hops) {
+    const seeds = shuffle(pop.nodes).slice(0, k).map((n) => n.id);
+    const seedSet = new Set(seeds); const nodeSet = new Set(seeds);
+    const adj = fullAdj(pop);
+    let frontier = new Set(seeds);
+    for (let h = 0; h < hops; h++) {
+      const next = new Set();
+      frontier.forEach((id) => (adj[id] || []).forEach((nb) => { if (!nodeSet.has(nb)) { nodeSet.add(nb); next.add(nb); } }));
+      frontier = next;
+    }
+    const edgeSet = new Set();
+    pop.edges.forEach((e) => {
+      const k2 = ek(e.source, e.target);
+      if (hops === 1) { if (seedSet.has(e.source) || seedSet.has(e.target)) edgeSet.add(k2); }
+      else { if (nodeSet.has(e.source) && nodeSet.has(e.target)) edgeSet.add(k2); }
+    });
+    return { nodes: nodeSet, edges: edgeSet, seeds: seedSet };
+  }
+  function sampleRandomEdge(pop, k) {
+    const picked = shuffle(pop.edges).slice(0, k);
+    const nodeSet = new Set(); const edgeSet = new Set();
+    picked.forEach((e) => { nodeSet.add(e.source); nodeSet.add(e.target); edgeSet.add(ek(e.source, e.target)); });
+    return { nodes: nodeSet, edges: edgeSet, seeds: new Set() };
+  }
+  function edgeMethod() { return method === 'random_edge'; }
+  function defaultSize(pop) { return Math.max(1, Math.round(0.25 * (edgeMethod() ? pop.edges.length : pop.nodes.length))); }
+  function drawSample(pop, k) {
+    if (method === 'random_node') return sampleRandomNode(pop, k);
+    if (method === 'ego') return sampleEgo(pop, k, 1);
+    if (method === 'snowball') return sampleEgo(pop, k, 2);
+    return sampleRandomEdge(pop, k);
+  }
+
+  // ── Stats on a (nodeSet, edgeSet) ─────────────────────────────────────────
+  function buildAdj(pop, nodeSet, edgeSet) {
+    const adj = Object.create(null); nodeSet.forEach((id) => { adj[id] = []; });
+    pop.edges.forEach((e) => {
+      const k = ek(e.source, e.target);
+      if ((!edgeSet || edgeSet.has(k)) && nodeSet.has(e.source) && nodeSet.has(e.target)) { adj[e.source].push(e.target); adj[e.target].push(e.source); }
+    });
+    return adj;
+  }
+  function countTriangles(pop, nodeSet, edgeSet) {
+    const adj = buildAdj(pop, nodeSet, edgeSet);
+    const ids = [...nodeSet].sort(); const idx = {}; ids.forEach((id, i) => { idx[id] = i; });
+    const nb = {}; ids.forEach((id) => { nb[id] = new Set(adj[id]); });
+    let c = 0;
+    for (let i = 0; i < ids.length; i++) { const u = ids[i]; for (const v of adj[u]) { if (idx[v] <= idx[u]) continue; for (const w of adj[v]) { if (idx[w] <= idx[v]) continue; if (nb[u].has(w)) c++; } } }
+    return c;
+  }
+  function meanDegree(pop, nodeSet, edgeSet) {
+    if (nodeSet.size === 0) return 0;
+    const adj = buildAdj(pop, nodeSet, edgeSet); let s = 0; nodeSet.forEach((id) => { s += adj[id].length; }); return s / nodeSet.size;
+  }
+  function density(pop, nodeSet, edgeSet) {
+    const n = nodeSet.size; if (n < 2) return 0; let e = 0; nodeSet.forEach((id) => {}); // edge count = edgeSet size intersect induced
+    edgeSet.forEach((k) => { const [a, b] = k.split('|'); if (nodeSet.has(a) && nodeSet.has(b)) e++; });
+    return 2 * e / (n * (n - 1));
+  }
+  function transitivity(pop, nodeSet, edgeSet) {
+    const adj = buildAdj(pop, nodeSet, edgeSet);
+    const tri = countTriangles(pop, nodeSet, edgeSet);
+    let triples = 0; nodeSet.forEach((id) => { const d = adj[id].length; triples += d * (d - 1) / 2; });
+    return triples === 0 ? 0 : (3 * tri) / triples;
+  }
+  function apl(pop, nodeSet, edgeSet) {
+    const adj = buildAdj(pop, nodeSet, edgeSet); const ids = [...nodeSet];
+    let total = 0, count = 0;
+    ids.forEach((src) => {
+      const dist = { [src]: 0 }; const q = [src];
+      while (q.length) { const u = q.shift(); (adj[u] || []).forEach((v) => { if (dist[v] === undefined) { dist[v] = dist[u] + 1; q.push(v); } }); }
+      ids.forEach((t) => { if (t !== src && dist[t] !== undefined) { total += dist[t]; count++; } });
+    });
+    return count ? total / count : 0;
+  }
+  const STATS = {
+    mean_degree: { label: 'Mean degree', fn: (p, n, e) => meanDegree(p, n, e), dp: 2 },
+    triangles:   { label: 'Number of triangles', fn: (p, n, e) => countTriangles(p, n, e), dp: 0 },
+    transitivity:{ label: 'Transitivity (clustering)', fn: (p, n, e) => transitivity(p, n, e), dp: 3 },
+    apl:         { label: 'Average path length', fn: (p, n, e) => apl(p, n, e), dp: 2 },
+    density:     { label: 'Density', fn: (p, n, e) => density(p, n, e), dp: 3 },
+    node_cov:    { label: 'Node count', fn: (p, n, e) => n.size, dp: 0 },
+  };
+
+  // ── Highlight the sample in the graph (runs on every core render) ─────────
+  function decorate() {
+    if (!hasSample || NV.state.layout === 'matrix') return;
+    const svg = $('graph'); if (!svg) return;
+    const nodeSel = svg.querySelectorAll('g.nodes > g.node-g');
+    nodeSel.forEach((g) => {
+      const d = g.__data__; if (!d) return;
+      const inS = sampled.nodes.has(d.id), seed = sampled.seeds.has(d.id);
+      const body = g.querySelector('circle.node-body'); if (!body) return;
+      const fill = inS ? (seed ? '#fbbf24' : '#39FF14') : '#1f3d28';
+      body.setAttribute('fill', fill);
+      body.setAttribute('fill-opacity', inS ? '0.95' : '0.35');
+      body.style.filter = inS ? `drop-shadow(0 0 6px ${fill})` : 'none';
+      g.style.opacity = inS ? '1' : '0.5';
+    });
+    const lineSel = svg.querySelectorAll('g.links > line');
+    lineSel.forEach((ln) => {
+      const d = ln.__data__; if (!d) return;
+      const s = typeof d.source === 'object' ? d.source.id : d.source;
+      const t = typeof d.target === 'object' ? d.target.id : d.target;
+      const inS = sampled.edges.has(ek(s, t));
+      ln.setAttribute('stroke', inS ? '#39FF14' : '#1f3d28');
+      ln.setAttribute('stroke-opacity', inS ? '0.75' : '0.18');
+    });
+  }
+
+  // ── Take one sample ───────────────────────────────────────────────────────
+  function resample() {
+    const pop = population(); if (!pop.nodes.length) return;
+    const k = (userSetSize && sizeCount) ? sizeCount : defaultSize(pop);
+    sampled = drawSample(pop, Math.max(1, Math.min(k, edgeMethod() ? pop.edges.length : pop.nodes.length)));
+    hasSample = true;
+    NV.render();       // redraws graph; decorate() runs on the 'render' event
+    renderCard();
+  }
+  function clearSample() { hasSample = false; sampled = { nodes: new Set(), edges: new Set(), seeds: new Set() }; NV.render(); renderCard(); }
+
+  // ── Simulation: N samples → distribution vs true ──────────────────────────
+  async function runSim() {
+    const pop = population(); if (!pop.nodes.length) return;
+    const stat = STATS[simStat]; if (!stat) return;
+    const allNodes = pop.ids; const allEdges = pop.edgeKeys;
+    const trueVal = stat.fn(pop, allNodes, allEdges);
+    const k = (userSetSize && sizeCount) ? sizeCount : defaultSize(pop);
+    const kClamped = Math.max(1, Math.min(k, edgeMethod() ? pop.edges.length : pop.nodes.length));
+    const btn = $('viz2-samp-run'); if (btn) btn.disabled = true;
+    const status = $('viz2-samp-simstatus');
+    const samples = [];
+    let i = 0; const BATCH = 20;
+    while (i < simN) {
+      const end = Math.min(i + BATCH, simN);
+      for (; i < end; i++) { const s = drawSample(pop, kClamped); samples.push(stat.fn(pop, s.nodes, s.edges)); }
+      if (status) status.textContent = `Sampling… ${i}/${simN}`;
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    if (btn) btn.disabled = false;
+    if (status) status.textContent = '';
+    lastSim = { samples, trueVal, statLabel: stat.label, dp: stat.dp };
+    renderCard();
+  }
+
+  function drawDist(svg, samples, trueVal) {
+    svg.innerHTML = '';
+    const finite = samples.filter((x) => isFinite(x)); if (!finite.length) return;
+    const W = svg.clientWidth || 320, H = svg.clientHeight || 150; const mL = 6, mR = 6, mT = 8, mB = 14;
+    let lo = Math.min(...finite, trueVal), hi = Math.max(...finite, trueVal);
+    if (lo === hi) { lo -= 1; hi += 1; } const pad = (hi - lo) * 0.05; lo -= pad; hi += pad;
+    const x = d3.scaleLinear().domain([lo, hi]).range([mL, W - mR]);
+    const bins = d3.bin().domain([lo, hi]).thresholds(22)(finite);
+    const maxC = d3.max(bins, (b) => b.length) || 1;
+    const y = d3.scaleLinear().domain([0, maxC]).range([H - mB, mT]);
+    const root = d3.select(svg);
+    root.append('g').selectAll('rect').data(bins).enter().append('rect')
+      .attr('x', (b) => x(b.x0) + 0.5).attr('y', (b) => y(b.length))
+      .attr('width', (b) => Math.max(0, x(b.x1) - x(b.x0) - 1)).attr('height', (b) => (H - mB) - y(b.length))
+      .attr('fill', '#39FF14').attr('fill-opacity', 0.5).attr('stroke', '#39FF14').attr('stroke-opacity', 0.5);
+    // mean of samples
+    const mean = finite.reduce((a, b) => a + b, 0) / finite.length;
+    [{ v: mean, c: '#818cf8', lbl: 'sample mean', dash: '3,2' }, { v: trueVal, c: '#fbbf24', lbl: 'true', dash: null }].forEach((r) => {
+      if (!isFinite(r.v)) return; const xp = x(r.v);
+      root.append('line').attr('x1', xp).attr('x2', xp).attr('y1', mT).attr('y2', H - mB).attr('stroke', r.c).attr('stroke-width', r.dash ? 1.6 : 2.4).attr('stroke-dasharray', r.dash);
+      root.append('text').attr('x', xp + 3).attr('y', mT + 9).attr('font-family', 'Space Mono, monospace').attr('font-size', '9px').attr('fill', r.c).text(r.lbl);
+    });
+  }
+
+  // ── The Sampling card ─────────────────────────────────────────────────────
+  function renderCard() {
+    injectStyle();
+    const card = $('viz2-sampling-card'); if (!card) return;
+    const host = card.querySelector('.card-body'); if (!host) return;
+    const s = NV.state;
+    if (!s.graph) { host.innerHTML = '<div class="node-empty">Load a network to enable sampling.</div>'; return; }
+    const pop = population();
+    const unit = edgeMethod() ? 'edges' : 'nodes';
+    const popCount = edgeMethod() ? pop.edges.length : pop.nodes.length;
+    const curSize = (userSetSize && sizeCount) ? sizeCount : defaultSize(pop);
+    const pct = popCount ? Math.round(100 * curSize / popCount) : 0;
+
+    // Live single-sample stats
+    let statsHtml = '<div class="node-empty" style="padding:10px;">Draw a sample to see coverage stats.</div>';
+    if (hasSample) {
+      const trueTri = countTriangles(pop, pop.ids, pop.edgeKeys);
+      const trueMd = meanDegree(pop, pop.ids, pop.edgeKeys);
+      const nodeCovPct = pop.nodes.length ? Math.round(100 * sampled.nodes.size / pop.nodes.length) : 0;
+      const edgeCovPct = pop.edges.length ? Math.round(100 * sampled.edges.size / pop.edges.length) : 0;
+      const triCount = countTriangles(pop, sampled.nodes, sampled.edges);
+      const triPres = trueTri === 0 ? 0 : Math.round(100 * triCount / trueTri);
+      const md = meanDegree(pop, sampled.nodes, sampled.edges);
+      const triCls = triPres >= 70 ? 'good' : triPres >= 30 ? 'warn' : 'bad';
+      const ratio = trueMd ? md / trueMd : 1; const mdCls = (ratio > 1.4 || ratio < 0.6) ? 'bad' : (ratio > 1.15 || ratio < 0.85) ? 'warn' : 'good';
+      statsHtml = `<div class="viz2-samp-stats">
+        <div class="viz2-samp-tile"><div class="t-lbl">Node coverage</div><div class="t-val good">${sampled.nodes.size}/${pop.nodes.length} · ${nodeCovPct}%</div></div>
+        <div class="viz2-samp-tile"><div class="t-lbl">Edge coverage</div><div class="t-val good">${sampled.edges.size}/${pop.edges.length} · ${edgeCovPct}%</div></div>
+        <div class="viz2-samp-tile"><div class="t-lbl">△ Triangles</div><div class="t-val">${triCount} / ${trueTri}</div></div>
+        <div class="viz2-samp-tile"><div class="t-lbl">Triangle preservation</div><div class="t-val ${triCls}">${triPres}%</div></div>
+        <div class="viz2-samp-tile"><div class="t-lbl">Mean degree (sample)</div><div class="t-val ${mdCls}">${md.toFixed(2)}</div><div class="t-sub">true: ${trueMd.toFixed(2)}</div></div>
+        <div class="viz2-samp-tile"><div class="t-lbl">Seeds</div><div class="t-val">${sampled.seeds.size || '—'}</div></div>
+      </div>`;
+    }
+
+    // Simulation panel
+    let simHtml = '';
+    if (lastSim) {
+      const N = lastSim.samples.length; const tv = lastSim.trueVal;
+      const gt = lastSim.samples.filter((x) => x > tv).length;
+      const lt = lastSim.samples.filter((x) => x < tv).length;
+      const eqp = N - gt - lt;
+      const mean = lastSim.samples.reduce((a, b) => a + b, 0) / N;
+      const bias = mean - tv;
+      const pctG = Math.round(100 * gt / N), pctL = Math.round(100 * lt / N);
+      const dir = Math.abs(pctG - pctL) < 10 ? 'is roughly centered on' : (pctL > pctG ? 'systematically <strong>under</strong>-estimates' : 'systematically <strong>over</strong>-estimates');
+      simHtml = `
+        <svg class="viz2-samp-dist" id="viz2-samp-distsvg"></svg>
+        <div class="viz2-samp-sig">
+          Over <strong>${N}</strong> samples of <strong>${lastSim.statLabel}</strong>, the true value is <strong>${tv.toFixed(lastSim.dp)}</strong>;
+          the sample mean is <strong>${mean.toFixed(lastSim.dp)}</strong> (bias ${bias >= 0 ? '+' : ''}${bias.toFixed(lastSim.dp)}).<br>
+          <strong>${pctG}%</strong> of samples exceeded the true value, <strong>${pctL}%</strong> fell below${eqp ? `, ${100 - pctG - pctL}% tied` : ''}.
+          Sampling ${dir} the population parameter.
+        </div>`;
+    }
+
+    host.innerHTML = `
+      <p class="formula-note" style="margin:0 0 10px;">Draw a sample from the current network and see it highlighted in the graph.
+        Sampled nodes glow <span style="color:#39FF14;">green</span>, seeds <span style="color:#fbbf24;">amber</span>, the rest dim.</p>
+      <div class="color-by-row" style="margin-bottom:8px;"><label for="viz2-samp-method">Method</label>
+        <select id="viz2-samp-method" class="viz-select">${Object.entries(METHODS).map(([k, v]) => `<option value="${k}"${k === method ? ' selected' : ''}>${v}</option>`).join('')}</select></div>
+      <div class="color-by-row" style="margin-bottom:8px;"><label for="viz2-samp-size">Sample size (${unit}) — default 25%</label>
+        <input id="viz2-samp-size" type="number" min="1" max="${popCount}" value="${curSize}" class="viz-select" style="width:100%;">
+        <span class="t-sub" style="font-family:var(--font-mono);font-size:10px;color:var(--grey);">= ${pct}% of ${popCount} ${unit}</span></div>
+      <div class="viz2-samp-btnrow">
+        <button id="viz2-samp-draw" class="viz-btn viz-btn-primary">🎯 Draw sample</button>
+        <button id="viz2-samp-clear" class="viz-btn">Clear</button>
+      </div>
+      ${statsHtml}
+      <details class="viz2-nested-formulas" data-card="samp-sim" ${lastSim ? 'open' : ''} style="margin-top:6px;">
+        <summary>📈 Sampling distribution (many samples)</summary>
+        <div style="padding-top:8px;">
+          <div class="color-by-row" style="margin-bottom:8px;"><label for="viz2-samp-stat">Statistic of interest</label>
+            <select id="viz2-samp-stat" class="viz-select">${Object.entries(STATS).map(([k, v]) => `<option value="${k}"${k === simStat ? ' selected' : ''}>${v.label}</option>`).join('')}</select></div>
+          <div class="color-by-row" style="margin-bottom:8px;"><label for="viz2-samp-n"># samples</label>
+            <select id="viz2-samp-n" class="viz-select">
+              <option value="100"${simN === 100 ? ' selected' : ''}>100 (quick)</option>
+              <option value="200"${simN === 200 ? ' selected' : ''}>200</option>
+              <option value="500"${simN === 500 ? ' selected' : ''}>500 (solid)</option>
+              <option value="1000"${simN === 1000 ? ' selected' : ''}>1000</option>
+            </select></div>
+          <div class="viz2-samp-btnrow"><button id="viz2-samp-run" class="viz-btn">📈 Run ${simN} samples</button>
+            <span id="viz2-samp-simstatus" class="formula-note" style="margin:0;flex:1;"></span></div>
+          ${simHtml}
+        </div>
+      </details>
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+        <button id="viz2-samp-export-r" class="viz-btn">▶ R in playground</button>
+        <button id="viz2-samp-export-py" class="viz-btn">▶ Python in playground</button>
+      </div>
+      <div id="viz2-samp-exportmsg" class="formula-note" style="margin-top:6px;"></div>`;
+
+    // Draw the distribution after the DOM exists
+    if (lastSim) { const svg = $('viz2-samp-distsvg'); if (svg) drawDist(svg, lastSim.samples, lastSim.trueVal); }
+
+    const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
+    on('viz2-samp-method', 'change', (e) => { method = e.target.value; userSetSize = false; sizeCount = null; renderCard(); });
+    on('viz2-samp-size', 'change', (e) => { const v = parseInt(e.target.value, 10); if (v > 0) { sizeCount = v; userSetSize = true; } renderCard(); });
+    on('viz2-samp-draw', 'click', resample);
+    on('viz2-samp-clear', 'click', clearSample);
+    on('viz2-samp-stat', 'change', (e) => { simStat = e.target.value; });
+    on('viz2-samp-n', 'change', (e) => { simN = parseInt(e.target.value, 10) || 200; const b = $('viz2-samp-run'); if (b) b.textContent = `📈 Run ${simN} samples`; });
+    on('viz2-samp-run', 'click', runSim);
+    on('viz2-samp-export-r', 'click', () => exportCode('r'));
+    on('viz2-samp-export-py', 'click', () => exportCode('py'));
+  }
+
+  // ── Code export ───────────────────────────────────────────────────────────
+  function exportCtx() {
+    const s = NV.state; const map = s.mapping || {}; const key = s.currentDatasetKey || null;
+    return { key, nodesFile: key ? key + '-nodes.csv' : 'nodes.csv', edgesFile: key ? key + '-edges.csv' : 'edges.csv',
+      fromCol: map.from || 'from', toCol: map.to || 'to', idCol: map.nodeId || 'node_id' };
+  }
+  const rStr = (s) => '"' + String(s).replace(/"/g, '\\"') + '"';
+  function exportCode(lang) {
+    const code = lang === 'r' ? genR() : genPy();
+    try { localStorage.setItem('netsci-playground-handoff', JSON.stringify({ lang: lang === 'r' ? 'r' : 'python', code, datasetKey: NV.state.currentDatasetKey || null, ts: Date.now(), source: 'visualizer' })); }
+    catch (e) { const m = $('viz2-samp-exportmsg'); if (m) m.textContent = 'Could not save handoff.'; return; }
+    window.open(lang === 'r' ? 'playground-r.html' : 'playground-py.html', '_blank');
+    const m = $('viz2-samp-exportmsg'); if (m) m.textContent = 'Opened the ' + (lang === 'r' ? 'R' : 'Python') + ' playground — it runs the sampling simulation when it finishes loading.';
+  }
+  function genR() {
+    const c = exportCtx(); const isEdge = edgeMethod();
+    const pop = population(); const k = (userSetSize && sizeCount) ? sizeCount : defaultSize(pop);
+    const L = [];
+    L.push('#\' @name sampling.R');
+    L.push('#\' @title Network sampling — from the Network Visualizer');
+    L.push('#\' @description Draw ' + simN + ' ' + METHODS[method] + ' samples, build a sampling');
+    L.push('#\' distribution of ' + STATS[simStat].label + ', and compare it to the true value.');
+    L.push('');
+    L.push('# 0. Setup ###################################################################');
+    L.push('library(igraph)');
+    L.push('cat("\\n🚀 Network sampling (R)\\n")');
+    L.push('');
+    L.push('# 1. Build the graph ########################################################');
+    L.push('nodes <- read.csv(' + rStr(c.nodesFile) + ', stringsAsFactors = FALSE)');
+    L.push('edges <- read.csv(' + rStr(c.edgesFile) + ', stringsAsFactors = FALSE)');
+    L.push('edges <- edges[, c(' + rStr(c.fromCol) + ', ' + rStr(c.toCol) + ', setdiff(names(edges), c(' + rStr(c.fromCol) + ', ' + rStr(c.toCol) + ')))]');
+    L.push('nodes <- nodes[, c(' + rStr(c.idCol) + ', setdiff(names(nodes), ' + rStr(c.idCol) + '))]');
+    L.push('g <- igraph::simplify(igraph::graph_from_data_frame(edges, directed = FALSE, vertices = nodes))');
+    L.push('cat(sprintf("✅ Population: %d nodes, %d edges.\\n", igraph::gorder(g), igraph::gsize(g)))');
+    L.push('');
+    L.push('# 2. The statistic + one sampler #############################################');
+    L.push('stat_fn <- function(sg) ' + rStatExpr(simStat));
+    L.push('true_val <- stat_fn(g)');
+    L.push('');
+    L.push('SIZE <- ' + k + '   # ' + (isEdge ? 'edges' : 'nodes') + ' per sample');
+    L.push('draw_sample <- function(g) {');
+    L.push(rSamplerBody(method));
+    L.push('}');
+    L.push('');
+    L.push('# 3. Many samples → sampling distribution ###################################');
+    L.push('set.seed(5470)');
+    L.push('sims <- replicate(' + simN + ', stat_fn(draw_sample(g)))');
+    L.push('cat(sprintf("📊 True %s: %.4f\\n", ' + rStr(STATS[simStat].label) + ', true_val))');
+    L.push('cat(sprintf("📊 Sample mean: %.4f (bias %+.4f)\\n", mean(sims), mean(sims) - true_val))');
+    L.push('cat(sprintf("📝 %.0f%% of samples above true, %.0f%% below.\\n",');
+    L.push('            100 * mean(sims > true_val), 100 * mean(sims < true_val)))');
+    L.push('hist(sims, breaks = 22, col = "#39FF14", border = "white",');
+    L.push('     main = "Sampling distribution", xlab = ' + rStr(STATS[simStat].label) + ')');
+    L.push('abline(v = true_val, col = "#fbbf24", lwd = 3)');
+    L.push('');
+    L.push('cat("\\n🎉 Done.\\n")');
+    return L.join('\n');
+  }
+  function rStatExpr(key) {
+    switch (key) {
+      case 'mean_degree': return 'mean(igraph::degree(sg))';
+      case 'triangles': return 'sum(igraph::count_triangles(sg)) / 3';
+      case 'transitivity': return 'igraph::transitivity(sg, type = "global")';
+      case 'apl': return 'igraph::mean_distance(sg, directed = FALSE)';
+      case 'density': return 'igraph::edge_density(sg)';
+      default: return 'igraph::gorder(sg)';
+    }
+  }
+  function rSamplerBody(m) {
+    if (m === 'random_node') return '  vs <- sample(igraph::V(g), SIZE)\n  igraph::induced_subgraph(g, vs)';
+    if (m === 'random_edge') return '  es <- sample(igraph::E(g), min(SIZE, igraph::gsize(g)))\n  igraph::subgraph_from_edges(g, es, delete.vertices = TRUE)';
+    if (m === 'ego') return '  seeds <- sample(igraph::V(g), SIZE)\n  vs <- unique(unlist(igraph::ego(g, order = 1, nodes = seeds)))\n  igraph::induced_subgraph(g, vs)';
+    return '  seeds <- sample(igraph::V(g), SIZE)\n  vs <- unique(unlist(igraph::ego(g, order = 2, nodes = seeds)))\n  igraph::induced_subgraph(g, vs)';
+  }
+  const pyStr = (s) => '"' + String(s).replace(/"/g, '\\"') + '"';
+  function genPy() {
+    const c = exportCtx(); const isEdge = edgeMethod();
+    const pop = population(); const k = (userSetSize && sizeCount) ? sizeCount : defaultSize(pop);
+    const L = [];
+    L.push('# sampling.py');
+    L.push('# Network sampling — from the Network Visualizer');
+    L.push('# Draw ' + simN + ' ' + METHODS[method] + ' samples, build a sampling distribution of');
+    L.push('# ' + STATS[simStat].label + ', and compare it to the true value.');
+    L.push('');
+    L.push('# 0. Setup ###################################################################');
+    L.push('import numpy as np');
+    L.push('import pandas as pd');
+    L.push('import igraph as ig');
+    L.push('import matplotlib.pyplot as plt');
+    L.push('import random');
+    L.push('print("\\n🚀 Network sampling (Python)")');
+    L.push('');
+    L.push('# 1. Build the graph ########################################################');
+    L.push('nodes = pd.read_csv(' + pyStr(c.nodesFile) + ')');
+    L.push('edges = pd.read_csv(' + pyStr(c.edgesFile) + ')');
+    L.push('edges = edges[[' + pyStr(c.fromCol) + ', ' + pyStr(c.toCol) + '] + [x for x in edges.columns if x not in (' + pyStr(c.fromCol) + ', ' + pyStr(c.toCol) + ')]]');
+    L.push('nodes = nodes[[' + pyStr(c.idCol) + '] + [x for x in nodes.columns if x != ' + pyStr(c.idCol) + ']]');
+    L.push('g = ig.Graph.DataFrame(edges, directed=False, vertices=nodes, use_vids=False).simplify()');
+    L.push('print(f"✅ Population: {g.vcount()} nodes, {g.ecount()} edges.")');
+    L.push('');
+    L.push('# 2. The statistic + one sampler #############################################');
+    L.push('def stat_fn(sg):');
+    L.push('    return ' + pyStatExpr(simStat));
+    L.push('true_val = stat_fn(g)');
+    L.push('');
+    L.push('SIZE = ' + k + '   # ' + (isEdge ? 'edges' : 'nodes') + ' per sample');
+    L.push('def draw_sample(g):');
+    L.push(pySamplerBody(method));
+    L.push('');
+    L.push('# 3. Many samples → sampling distribution ###################################');
+    L.push('random.seed(5470)');
+    L.push('sims = np.array([stat_fn(draw_sample(g)) for _ in range(' + simN + ')])');
+    L.push('stat_label = ' + pyStr(STATS[simStat].label));
+    L.push('print(f"📊 True {stat_label}: {true_val:.4f}")');
+    L.push('print(f"📊 Sample mean: {sims.mean():.4f} (bias {sims.mean()-true_val:+.4f})")');
+    L.push('print(f"📝 {100*np.mean(sims>true_val):.0f}% of samples above true, {100*np.mean(sims<true_val):.0f}% below.")');
+    L.push('plt.hist(sims, bins=22, color="#39FF14", edgecolor="white")');
+    L.push('plt.axvline(true_val, color="#fbbf24", linewidth=3)');
+    L.push('plt.title("Sampling distribution"); plt.xlabel(' + pyStr(STATS[simStat].label) + '); plt.show()');
+    L.push('');
+    L.push('print("\\n🎉 Done.")');
+    return L.join('\n');
+  }
+  function pyStatExpr(key) {
+    switch (key) {
+      case 'mean_degree': return 'float(np.mean(sg.degree()))';
+      case 'triangles': return 'sum(sg.count_triangles()) / 3';
+      case 'transitivity': return 'sg.transitivity_undirected(mode="zero")';
+      case 'apl': return 'sg.average_path_length()';
+      case 'density': return 'sg.density()';
+      default: return 'sg.vcount()';
+    }
+  }
+  function pySamplerBody(m) {
+    if (m === 'random_node') return '    vs = random.sample(range(g.vcount()), SIZE)\n    return g.induced_subgraph(vs)';
+    if (m === 'random_edge') return '    es = random.sample(range(g.ecount()), min(SIZE, g.ecount()))\n    return g.subgraph_edges(es, delete_vertices=True)';
+    if (m === 'ego') return '    seeds = random.sample(range(g.vcount()), SIZE)\n    vs = set(seeds)\n    for v in seeds: vs.update(g.neighborhood(v, order=1))\n    return g.induced_subgraph(list(vs))';
+    return '    seeds = random.sample(range(g.vcount()), SIZE)\n    vs = set(seeds)\n    for v in seeds: vs.update(g.neighborhood(v, order=2))\n    return g.induced_subgraph(list(vs))';
+  }
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
+  NV.on('render', decorate);
+  NV.on('graph-loaded', () => { hasSample = false; lastSim = null; userSetSize = false; sizeCount = null; renderCard(); });
+  NV.on('view-rebuilt', () => { renderCard(); });
+  NV.on('removed-changed', () => { renderCard(); });
+
+  window.NetSciVizSample = { renderCard };
+  if (document.readyState !== 'loading') renderCard();
+  else document.addEventListener('DOMContentLoaded', renderCard);
+})();
