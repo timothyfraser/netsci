@@ -865,7 +865,9 @@ select.viz-select {
           <button class="seg-btn seg-layout"        data-layout="radial">Radial</button>
           <button class="seg-btn seg-layout"        data-layout="circle">Circle</button>
           <button class="seg-btn seg-layout"        data-layout="hierarchical">Hier.</button>
+          <button class="seg-btn seg-layout"        data-layout="matrix">Matrix</button>
         </div>
+        <p class="agg-note" style="margin-top:8px;">Matrix (DSM) view draws the network as a reorderable dependency matrix — pair it with the <strong>Clustering</strong> card below. Works best for smaller, component-style networks.</p>
         </div>
       </details>
 
@@ -985,6 +987,14 @@ select.viz-select {
       <details class="analysis-card agg-panel" data-card="group-composition" id="viz2-group-composition-card" style="margin-top:16px;">
         <summary>📐 Group Composition</summary>
         <div class="agg-body" id="viz2-group-composition-body"><div class="node-empty">Loading group composition…</div></div>
+      </details>
+      <details class="analysis-card agg-panel" data-card="clustering" id="viz2-clustering-card" style="margin-top:16px;">
+        <summary>🧩 Clustering (DSM)</summary>
+        <div class="agg-body"><div class="card-body"><div class="node-empty">Load a network to enable clustering.</div></div></div>
+      </details>
+      <details class="analysis-card agg-panel" data-card="sampling" id="viz2-sampling-card" style="margin-top:16px;">
+        <summary>🎯 Sampling</summary>
+        <div class="agg-body"><div class="card-body"><div class="node-empty">Load a network to enable sampling.</div></div></div>
       </details>
 
       <!-- Code export lives beneath every analysis card so its output reflects
@@ -1108,6 +1118,9 @@ select.viz-select {
 <script src="assets/viz2-nodebrowser.js?v=20260701c" defer></script>
 <script src="assets/viz2-codeexport.js?v=20260701l" defer></script>
 <script src="assets/viz2-tutorial.js?v=20260701c" defer></script>
+<!-- Preview-only modules (clustering + sampling). Loaded ONLY by this hidden
+     visualizer2.html; the live visualizer.html never references them. -->
+<script src="assets/viz2p-clustering.js?v=20260706a" defer></script>
 
 <!-- ── Clear-cache dialog ─────────────────────────────────────
   Small modal + button that lets the user reset every browser-side cache

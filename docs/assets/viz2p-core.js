@@ -625,6 +625,15 @@
 
   function layout() {
     stopSim();
+    // Matrix (DSM) layout has no node positions to compute — the clustering
+    // module draws it directly. Reset any leftover node-link zoom transform so
+    // the matrix starts fitted, then (re)render, which delegates to it.
+    if (state.layout === 'matrix') {
+      state.zoomTransform = null;
+      if (state.zoom) d3.select($('graph')).call(state.zoom.transform, d3.zoomIdentity);
+      render();
+      return;
+    }
     const W = $('graph-stage').clientWidth, H = $('graph-stage').clientHeight;
     const nodes = activeNodes();
     const { links } = state.graph;
@@ -898,6 +907,14 @@
     const svg = d3.select(svgEl);
     svg.selectAll('*').remove();
     if (!state.graph) return;
+
+    // Matrix (DSM) layout is drawn by the clustering module, not the node-link
+    // renderer. Delegate and bail so we don't also draw nodes/edges on top.
+    if (state.layout === 'matrix' && window.NetSciVizClust && window.NetSciVizClust.drawMatrix) {
+      window.NetSciVizClust.drawMatrix(svgEl);
+      emit('render', {});
+      return;
+    }
 
     const maxW = d3.max(state.graph.links, (l) => l.weight) || 1;
     const vlinks = visibleLinks();
