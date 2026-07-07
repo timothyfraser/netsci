@@ -15,6 +15,30 @@
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const ek = (a, b) => (a < b ? a + '|' + b : b + '|' + a);
 
+  // Linear-interpolated quantile.
+  function quantile(arr, p) {
+    const s = arr.filter((x) => isFinite(x)).slice().sort((a, b) => a - b);
+    if (!s.length) return NaN;
+    const idx = p * (s.length - 1), lo = Math.floor(idx), hi = Math.ceil(idx);
+    return lo === hi ? s[lo] : s[lo] + (s[hi] - s[lo]) * (idx - lo);
+  }
+  const fmtN = (v, dp) => (isFinite(v) ? Number(v).toFixed(dp) : '—');
+
+  // Shared tooltip (one div, reused).
+  function tipEl() {
+    let t = $('viz2-samp-tip');
+    if (!t) {
+      t = document.createElement('div'); t.id = 'viz2-samp-tip';
+      t.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;display:none;background:rgba(5,10,5,0.95);' +
+        'border:1px solid var(--green-bright);border-radius:6px;padding:5px 8px;font-family:var(--font-mono);' +
+        'font-size:11px;color:var(--green-mint);max-width:240px;box-shadow:0 2px 10px rgba(0,0,0,0.5);';
+      document.body.appendChild(t);
+    }
+    return t;
+  }
+  function showTip(html, ev) { const t = tipEl(); t.innerHTML = html; t.style.display = 'block'; t.style.left = (ev.clientX + 12) + 'px'; t.style.top = (ev.clientY + 12) + 'px'; }
+  function hideTip() { const t = $('viz2-samp-tip'); if (t) t.style.display = 'none'; }
+
   function injectStyle() {
     if ($('viz2-samp-style')) return;
     const st = document.createElement('style');
@@ -52,7 +76,7 @@
   let userSetSize = false;
   let sampled = { nodes: new Set(), edges: new Set(), seeds: new Set() };
   let hasSample = false;
-  let simN = 200;
+  let simN = 100;
   let simStat = 'mean_degree';
   let lastSim = null;        // { samples:[], trueVal, statLabel }
 
@@ -229,10 +253,11 @@
     renderCard();
   }
 
-  function drawDist(svg, samples, trueVal) {
-    svg.innerHTML = '';
+  function drawDist(svg, samples, trueVal, dp) {
+    svg.innerHTML = ''; hideTip();
+    dp = dp == null ? 2 : dp;
     const finite = samples.filter((x) => isFinite(x)); if (!finite.length) return;
-    const W = svg.clientWidth || 320, H = svg.clientHeight || 150; const mL = 6, mR = 6, mT = 8, mB = 14;
+    const W = svg.clientWidth || 320, H = svg.clientHeight || 150; const mL = 8, mR = 8, mT = 10, mB = 30;
     let lo = Math.min(...finite, trueVal), hi = Math.max(...finite, trueVal);
     if (lo === hi) { lo -= 1; hi += 1; } const pad = (hi - lo) * 0.05; lo -= pad; hi += pad;
     const x = d3.scaleLinear().domain([lo, hi]).range([mL, W - mR]);
@@ -240,16 +265,42 @@
     const maxC = d3.max(bins, (b) => b.length) || 1;
     const y = d3.scaleLinear().domain([0, maxC]).range([H - mB, mT]);
     const root = d3.select(svg);
+
+    // Histogram bars (hover → bin range + count)
     root.append('g').selectAll('rect').data(bins).enter().append('rect')
       .attr('x', (b) => x(b.x0) + 0.5).attr('y', (b) => y(b.length))
       .attr('width', (b) => Math.max(0, x(b.x1) - x(b.x0) - 1)).attr('height', (b) => (H - mB) - y(b.length))
-      .attr('fill', '#39FF14').attr('fill-opacity', 0.5).attr('stroke', '#39FF14').attr('stroke-opacity', 0.5);
-    // mean of samples
+      .attr('fill', '#39FF14').attr('fill-opacity', 0.5).attr('stroke', '#39FF14').attr('stroke-opacity', 0.5)
+      .style('cursor', 'crosshair')
+      .on('mousemove', function (ev, b) { showTip(`<strong>[${fmtN(b.x0, dp)}, ${fmtN(b.x1, dp)})</strong><br>${b.length} of ${finite.length} samples`, ev); })
+      .on('mouseout', hideTip);
+
+    // X axis: baseline + ~5 ticks with values
+    root.append('line').attr('x1', mL).attr('x2', W - mR).attr('y1', H - mB).attr('y2', H - mB).attr('stroke', '#6b8170').attr('stroke-width', 1);
+    x.ticks(5).forEach((tv) => {
+      const xp = x(tv);
+      root.append('line').attr('x1', xp).attr('x2', xp).attr('y1', H - mB).attr('y2', H - mB + 4).attr('stroke', '#6b8170');
+      root.append('text').attr('x', xp).attr('y', H - mB + 15).attr('text-anchor', 'middle')
+        .attr('font-family', 'Space Mono, monospace').attr('font-size', '8.5px').attr('fill', '#a3b8a3').text(fmtN(tv, dp));
+    });
+
+    // Reference lines: 2.5% / 97.5% percentiles (grey), sample mean (indigo), true (amber)
     const mean = finite.reduce((a, b) => a + b, 0) / finite.length;
-    [{ v: mean, c: '#818cf8', lbl: 'sample mean', dash: '3,2' }, { v: trueVal, c: '#fbbf24', lbl: 'true', dash: null }].forEach((r) => {
+    const p025 = quantile(finite, 0.025), p975 = quantile(finite, 0.975);
+    const lines = [
+      { v: p025, c: '#6b8170', lbl: '2.5%', tip: '2.5th percentile of the sampling distribution', dash: '2,2', w: 1.2 },
+      { v: p975, c: '#6b8170', lbl: '97.5%', tip: '97.5th percentile of the sampling distribution', dash: '2,2', w: 1.2 },
+      { v: mean, c: '#818cf8', lbl: 'mean', tip: 'Mean of the sampling distribution', dash: '3,2', w: 1.6 },
+      { v: trueVal, c: '#fbbf24', lbl: 'true', tip: 'True population value', dash: null, w: 2.6 },
+    ];
+    lines.forEach((r) => {
       if (!isFinite(r.v)) return; const xp = x(r.v);
-      root.append('line').attr('x1', xp).attr('x2', xp).attr('y1', mT).attr('y2', H - mB).attr('stroke', r.c).attr('stroke-width', r.dash ? 1.6 : 2.4).attr('stroke-dasharray', r.dash);
-      root.append('text').attr('x', xp + 3).attr('y', mT + 9).attr('font-family', 'Space Mono, monospace').attr('font-size', '9px').attr('fill', r.c).text(r.lbl);
+      root.append('line').attr('x1', xp).attr('x2', xp).attr('y1', mT).attr('y2', H - mB)
+        .attr('stroke', r.c).attr('stroke-width', r.w).attr('stroke-dasharray', r.dash).style('cursor', 'help')
+        .on('mousemove', function (ev) { showTip(`<strong>${r.tip}:</strong> ${fmtN(r.v, dp)}`, ev); })
+        .on('mouseout', hideTip);
+      root.append('text').attr('x', xp + 2).attr('y', mT + 8).attr('font-family', 'Space Mono, monospace')
+        .attr('font-size', '8.5px').attr('fill', r.c).attr('font-weight', r.dash ? 400 : 700).text(r.lbl);
     });
   }
 
@@ -298,14 +349,20 @@
       const mean = lastSim.samples.reduce((a, b) => a + b, 0) / N;
       const bias = mean - tv;
       const pctG = Math.round(100 * gt / N), pctL = Math.round(100 * lt / N);
-      const dir = Math.abs(pctG - pctL) < 10 ? 'is roughly centered on' : (pctL > pctG ? 'systematically <strong>under</strong>-estimates' : 'systematically <strong>over</strong>-estimates');
+      // Significance is about MAGNITUDE, not just direction: the sample is only
+      // "significantly" biased if the true value lands outside the central 95%
+      // of the sampling distribution (below 2.5% or above 97.5%).
+      const p025 = quantile(lastSim.samples, 0.025), p975 = quantile(lastSim.samples, 0.975);
+      let verdict;
+      if (tv > p975) verdict = 'The true value sits <strong>above the 97.5th percentile</strong> of the sampling distribution, so the sample <strong>significantly under-estimates</strong> it.';
+      else if (tv < p025) verdict = 'The true value sits <strong>below the 2.5th percentile</strong> of the sampling distribution, so the sample <strong>significantly over-estimates</strong> it.';
+      else verdict = 'The true value falls <strong>within the central 95%</strong> (2.5–97.5%) of the sampling distribution, so the sample is <strong>not significantly biased</strong> for this statistic.';
       simHtml = `
         <svg class="viz2-samp-dist" id="viz2-samp-distsvg"></svg>
         <div class="viz2-samp-sig">
           Over <strong>${N}</strong> samples of <strong>${lastSim.statLabel}</strong>, the true value is <strong>${tv.toFixed(lastSim.dp)}</strong>;
-          the sample mean is <strong>${mean.toFixed(lastSim.dp)}</strong> (bias ${bias >= 0 ? '+' : ''}${bias.toFixed(lastSim.dp)}).<br>
-          <strong>${pctG}%</strong> of samples exceeded the true value, <strong>${pctL}%</strong> fell below${eqp ? `, ${100 - pctG - pctL}% tied` : ''}.
-          Sampling ${dir} the population parameter.
+          the sample mean is <strong>${mean.toFixed(lastSim.dp)}</strong> (bias ${bias >= 0 ? '+' : ''}${bias.toFixed(lastSim.dp)}), central 95% = [${fmtN(p025, lastSim.dp)}, ${fmtN(p975, lastSim.dp)}].<br>
+          <strong>${pctG}%</strong> of samples exceeded the true value, <strong>${pctL}%</strong> fell below${eqp ? `, ${100 - pctG - pctL}% tied` : ''}. ${verdict}
         </div>`;
     }
 
@@ -346,7 +403,7 @@
       <div id="viz2-samp-exportmsg" class="formula-note" style="margin-top:6px;"></div>`;
 
     // Draw the distribution after the DOM exists
-    if (lastSim) { const svg = $('viz2-samp-distsvg'); if (svg) drawDist(svg, lastSim.samples, lastSim.trueVal); }
+    if (lastSim) { const svg = $('viz2-samp-distsvg'); if (svg) drawDist(svg, lastSim.samples, lastSim.trueVal, lastSim.dp); }
 
     const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
     on('viz2-samp-method', 'change', (e) => { method = e.target.value; userSetSize = false; sizeCount = null; renderCard(); });
