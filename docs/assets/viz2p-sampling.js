@@ -373,14 +373,26 @@
       { v: mean, c: '#818cf8', lbl: 'mean', tip: 'Mean of the sampling distribution', dash: '3,2', w: 1.6 },
       { v: trueVal, c: '#fbbf24', lbl: 'true', tip: 'True population value', dash: null, w: 2.6 },
     ];
-    lines.forEach((r) => {
-      if (!isFinite(r.v)) return; const xp = x(r.v);
+    // Assign each label a stacked level so close-together lines don't overlap.
+    const placed = [];
+    const withX = lines.filter((r) => isFinite(r.v)).map((r) => ({ ...r, xp: x(r.v) })).sort((a, b) => a.xp - b.xp);
+    withX.forEach((r) => {
+      let level = 0;
+      while (placed.some((p) => p.level === level && Math.abs(p.xp - r.xp) < 30)) level++;
+      placed.push({ xp: r.xp, level }); r.level = level;
+    });
+    withX.forEach((r) => {
+      const xp = r.xp;
       root.append('line').attr('x1', xp).attr('x2', xp).attr('y1', mT).attr('y2', H - mB)
         .attr('stroke', r.c).attr('stroke-width', r.w).attr('stroke-dasharray', r.dash).style('cursor', 'help')
         .on('mousemove', function (ev) { showTip(`<strong>${r.tip}:</strong> ${fmtN(r.v, dp)}`, ev); })
         .on('mouseout', hideTip);
-      root.append('text').attr('x', xp + 2).attr('y', mT + 8).attr('font-family', 'Space Mono, monospace')
-        .attr('font-size', '8.5px').attr('fill', r.c).attr('font-weight', r.dash ? 400 : 700).text(r.lbl);
+      // Flip the label to the left of the line if it would run off the right edge.
+      const leftSide = xp > W - 34;
+      root.append('text').attr('x', xp + (leftSide ? -2 : 2)).attr('y', mT + 8 + r.level * 10)
+        .attr('text-anchor', leftSide ? 'end' : 'start')
+        .attr('font-family', 'Space Mono, monospace').attr('font-size', '8.5px')
+        .attr('fill', r.c).attr('font-weight', r.dash ? 400 : 700).text(r.lbl);
     });
   }
 
