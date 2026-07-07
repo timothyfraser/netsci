@@ -90,6 +90,22 @@ const RUNTIME_PRELUDE = `<script>
       if (orig) return orig(input, init);
       return Promise.reject(new Error('offline: '+url));
     };
+    // PapaParse's {download:true} and any other XHR bypass fetch. Rewrite a
+    // playground-data/* request to a data: URL from the manifest BEFORE the real
+    // open(), so the native XHR loads it straight from the in-file bundle.
+    if (window.XMLHttpRequest) {
+      var op = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function(method, url){
+        try {
+          var mm = String(url).match(/playground-data\\/([^\\/?#]+)/);
+          if (mm && MAN[mm[1]]) {
+            var a2 = MAN[mm[1]];
+            arguments[1] = 'data:' + a2.t + ';base64,' + a2.b;
+          }
+        } catch(_){}
+        return op.apply(this, arguments);
+      };
+    }
   } catch(e){}
   // Route intra-site link clicks up to the shell for in-file navigation.
   document.addEventListener('click', function(e){
