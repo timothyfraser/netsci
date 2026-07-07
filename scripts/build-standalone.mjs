@@ -174,11 +174,13 @@ function transformPage(rel) {
   const pageDir = path.posix.dirname(rel) === '.' ? '' : path.posix.dirname(rel);
 
   // 1) Inline local stylesheets:  <link rel="stylesheet" href="(../)*assets/x.css"[ media]>
+  //    Preserve a media="print" link as <style media="print"> so the file stays
+  //    fully self-contained (no request to our origin for print.css).
   html = html.replace(/<link\b[^>]*\bhref="((?:\.\.\/)*assets\/[^"]+\.css)(?:\?[^"]*)?"[^>]*>/gi, (m, href) => {
-    if (/print\.css/.test(href) && /media="print"/i.test(m)) return m; // leave print stylesheet inert
     const p = resolveAsset(href, pageDir);
     if (!exists(p)) return m;
-    return `<style data-inlined="${p}">\n${readText(p)}\n</style>`;
+    const mediaAttr = /media="print"/i.test(m) ? ' media="print"' : '';
+    return `<style data-inlined="${p}"${mediaAttr}>\n${readText(p)}\n</style>`;
   });
 
   // 2) Inline local scripts:  <script src="(../)*assets/x.js"[ defer]></script>
