@@ -72,6 +72,26 @@ function resolveAsset(ref, pageDir) {
   return abs.replace(/^\.\//, '');
 }
 
+// ── YouTube thumbnails: fetch + inline (best-effort, cached) ─────────────────
+// Populated before the pages are assembled. If a thumbnail can't be fetched
+// (offline build / blocked host), the facade falls back to the remote URL.
+const ytThumb = {};
+const YT_CACHE = path.join(ROOT, 'scripts', '.cache', 'yt-thumbs');
+async function loadYtThumb(id) {
+  const f = path.join(YT_CACHE, id + '.jpg');
+  try { const b = fs.readFileSync(f); if (b.length > 1000) return 'data:image/jpeg;base64,' + b.toString('base64'); } catch {}
+  for (const q of ['hqdefault', 'mqdefault']) {
+    try {
+      const r = await fetch(`https://i.ytimg.com/vi/${id}/${q}.jpg`);
+      if (r.ok) {
+        const b = Buffer.from(await r.arrayBuffer());
+        if (b.length > 1000) { fs.mkdirSync(YT_CACHE, { recursive: true }); fs.writeFileSync(f, b); return 'data:image/jpeg;base64,' + b.toString('base64'); }
+      }
+    } catch {}
+  }
+  return null;
+}
+
 // ── per-page transform ───────────────────────────────────────────────────────
 const RUNTIME_PRELUDE = `<script>
 (function(){
@@ -216,7 +236,7 @@ function transformPage(rel) {
       `<a href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener"` +
       ` title="Watch on YouTube (opens youtube.com)"` +
       ` style="position:absolute;inset:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;` +
-      `text-decoration:none;background:#000 center/cover no-repeat url('https://i.ytimg.com/vi/${id}/hqdefault.jpg');">` +
+      `text-decoration:none;background:#000 center/cover no-repeat url('${ytThumb[id] || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`}');">` +
       `<span aria-hidden="true" style="width:72px;height:50px;border-radius:14px;background:rgba(200,0,0,0.88);` +
       `display:flex;align-items:center;justify-content:center;color:#fff;font:700 26px/1 sans-serif;">&#9654;</span>` +
       `<span style="position:absolute;bottom:8px;right:10px;color:#fff;font:600 12px/1 sans-serif;` +
@@ -247,6 +267,13 @@ for (const name of fs.readdirSync(dataDir)) {
 }
 
 // ── assemble PAGES map (each transformed page, base64'd to dodge all escaping) ─
+// Prefetch every unique YouTube thumbnail before assembling the pages.
+const ytIds = new Set();
+for (const rel of pages) { const s = readText(rel); let mm; const re = /youtube(?:-nocookie)?\.com\/embed\/([A-Za-z0-9_-]+)/g; while ((mm = re.exec(s))) ytIds.add(mm[1]); }
+for (const id of ytIds) ytThumb[id] = await loadYtThumb(id);
+const nThumb = Object.values(ytThumb).filter(Boolean).length;
+console.log(`  youtube thumbnails inlined: ${nThumb}/${ytIds.size}` + (nThumb < ytIds.size ? ' (rest fall back to remote i.ytimg.com — build machine had no reach)' : ''));
+
 const PAGES = {};
 for (const rel of pages) PAGES[rel] = b64Str(transformPage(rel));
 

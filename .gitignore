@@ -56,3 +56,7 @@ logs/
 !.grading/config/
 !.grading/app/
 !.grading/scripts/
+scripts/.cache/
+
+# Build artifact — published as a GitHub Release, not committed (regenerated, ~9.6MB)
+docs/netsci-standalone.html

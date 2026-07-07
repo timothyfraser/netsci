@@ -66,8 +66,24 @@ resolves within the bundle.
 - A single HTML file is inherently readable/copyable; the header carries a
   copyright + personal-use notice, which is a deterrent, not technical DRM.
 
-## Distribution
+## YouTube thumbnails
 
-The built file is ~9 MB. Options: commit it so it's downloadable from the site at
-`/netsci-standalone.html`, or attach it to a GitHub Release / your LMS and keep it
-out of git history. Re-run the build after any site change to refresh it.
+The build fetches each case-study video's thumbnail from `i.ytimg.com` and inlines
+it as a data URI (cached under `scripts/.cache/yt-thumbs/`, gitignored). If the
+build machine can't reach YouTube, the facade falls back to the remote thumbnail
+URL — so **run the build somewhere with open internet** (e.g. the GitHub Action
+below) to get a fully self-contained file.
+
+## Distribution — GitHub Release, not the repo
+
+The built file is ~9–10 MB and is regenerated on every content change, so it is
+**not committed** (it's in `.gitignore`). It ships as a **GitHub Release asset**
+via `.github/workflows/publish-standalone.yml`:
+
+- Actions tab → **Publish standalone app** → *Run workflow* → updates the
+  `standalone-latest` release, or
+- push a tag `standalone-v<n>` → creates a versioned release.
+
+The Action runs on a GitHub runner (open internet), so it inlines the YouTube
+thumbnails that a restricted local build can't. Download link:
+`https://github.com/timothyfraser/netsci/releases/latest/download/netsci-standalone.html`

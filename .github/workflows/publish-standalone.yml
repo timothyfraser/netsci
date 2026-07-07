@@ -1,0 +1,53 @@
+# Builds the single-file offline app (docs/netsci-standalone.html) and publishes
+# it as a GitHub Release asset. Runs on a GitHub-hosted runner, which has open
+# internet — so the build can fetch and INLINE the YouTube thumbnails (the local
+# build environment can't reach ytimg). The artifact is never committed to the
+# repo; the Release is its home.
+#
+# Trigger it either way:
+#   - Actions tab -> "Publish standalone app" -> Run workflow  (updates the
+#     `standalone-latest` release), or
+#   - push a tag like `standalone-v1` (creates a versioned release).
+name: Publish standalone app
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['standalone-v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-standalone
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: instructor          # gold-standard source of truth
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build the single-file app (inlines YouTube thumbnails)
+        run: node scripts/build-standalone.mjs
+
+      - name: Publish as a Release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'standalone-latest' }}
+          name: SYSEN 5470 — Offline single-file app
+          body: |
+            The entire SYSEN 5470 site — Visualizer, R & Python playgrounds, and every
+            case study — in one self-contained HTML file.
+
+            **Download `netsci-standalone.html` below, open it in any browser, and keep it.**
+            It works even if the course website goes offline; the interactive parts stream
+            their runtimes (WebR, Pyodide) from public CDNs on demand.
+          files: docs/netsci-standalone.html
+          make_latest: true
