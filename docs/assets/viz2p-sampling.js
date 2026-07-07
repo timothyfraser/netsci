@@ -237,6 +237,15 @@
   }
   function nodeBetween(pop, nodeSet, focal) { if (!focal || !pop.ids.has(focal)) return NaN; const { ids, adj } = inducedFocal(pop, nodeSet, focal); return betweennessOf(adj, ids, focal); }
   function nodeApl(pop, nodeSet, focal) { if (!focal || !pop.ids.has(focal)) return NaN; const { adj } = inducedFocal(pop, nodeSet, focal); return nodeAplFrom(adj, focal); }
+  // Number of nodes exactly k hops from the focal node (k=1 is plain degree).
+  function nodeKHop(pop, nodeSet, focal, k) {
+    if (!focal || !pop.ids.has(focal)) return NaN;
+    const { adj } = inducedFocal(pop, nodeSet, focal);
+    const dist = { [focal]: 0 }; const q = [focal];
+    while (q.length) { const u = q.shift(); (adj[u] || []).forEach((v) => { if (dist[v] === undefined) { dist[v] = dist[u] + 1; q.push(v); } }); }
+    let c = 0; for (const id in dist) if (dist[id] === k) c++;
+    return c;
+  }
 
   const STATS = {
     mean_degree:  { label: 'Mean degree', fn: (p, n, e) => meanDegree(p, n, e), dp: 2 },
@@ -252,6 +261,8 @@
     node_wdegree: { label: 'Selected node — weighted degree', node: true, fn: (p, n, e, f) => nodeWDegree(p, n, f), dp: 1 },
     node_betw:    { label: 'Selected node — betweenness', node: true, fn: (p, n, e, f) => nodeBetween(p, n, f), dp: 1 },
     node_apl:     { label: 'Selected node — avg path length', node: true, fn: (p, n, e, f) => nodeApl(p, n, f), dp: 2 },
+    node_deg2:    { label: 'Selected node — 2nd-degree neighbors', node: true, fn: (p, n, e, f) => nodeKHop(p, n, f, 2), dp: 0 },
+    node_deg3:    { label: 'Selected node — 3rd-degree neighbors', node: true, fn: (p, n, e, f) => nodeKHop(p, n, f, 3), dp: 0 },
   };
   function nodeStatsAvailable() { const f = NV.state.selectedNode; return f && population().ids.has(f); }
 
@@ -598,6 +609,8 @@
       case 'node_wdegree': return w ? 'igraph::strength(sg, vids = FOCAL, weights = ' + w + ')' : 'igraph::degree(sg, v = FOCAL)';
       case 'node_betw': return 'igraph::betweenness(sg, v = FOCAL)';
       case 'node_apl': return 'd <- igraph::distances(sg, v = FOCAL); d <- d[is.finite(d) & d > 0]; if (length(d)) mean(d) else NA_real_';
+      case 'node_deg2': return 'sum(igraph::distances(sg, v = FOCAL) == 2)';
+      case 'node_deg3': return 'sum(igraph::distances(sg, v = FOCAL) == 3)';
       default: return 'igraph::degree(sg, v = FOCAL)';
     }
   }
@@ -699,6 +712,8 @@
       case 'node_wdegree': return c.weightCol ? 'return sg.strength(fi' + w + ')' : 'return sg.degree(fi)';
       case 'node_betw': return 'return sg.betweenness(fi)';
       case 'node_apl': return 'ds = [d for d in sg.distances(source=fi)[0] if d > 0 and np.isfinite(d)]; return (sum(ds)/len(ds)) if ds else float("nan")';
+      case 'node_deg2': return 'return sum(1 for d in sg.distances(source=fi)[0] if d == 2)';
+      case 'node_deg3': return 'return sum(1 for d in sg.distances(source=fi)[0] if d == 3)';
       default: return 'return sg.degree(fi)';
     }
   }
