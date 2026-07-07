@@ -1,6 +1,6 @@
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-07-07 18:44 UTC_
+_Auto-generated NotebookLM source · 2026-07-07 19:13 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -5686,14 +5686,6 @@ Final due 9 AM**Week 3 \+ final project submission.** Remaining sketches and LCs
 **SYSEN 5470 · Calendar**
 
  Cornell Engineering · Summer 2026 · tmf77@cornell.edu
-
----
-
-# SYSEN 5470 · Network Science — Offline Copy
-
-_Source: docs/netsci-standalone.html_
-
-Loading offline copy…
 
 ---
 
