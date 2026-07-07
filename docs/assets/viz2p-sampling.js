@@ -183,14 +183,77 @@
     });
     return count ? total / count : 0;
   }
+  // Degree + weighted degree (strength) over the induced sampled edges.
+  function degMaps(pop, nodeSet, edgeSet) {
+    const deg = Object.create(null), wdeg = Object.create(null);
+    nodeSet.forEach((id) => { deg[id] = 0; wdeg[id] = 0; });
+    pop.edges.forEach((e) => {
+      const k = ek(e.source, e.target);
+      if ((!edgeSet || edgeSet.has(k)) && nodeSet.has(e.source) && nodeSet.has(e.target)) {
+        deg[e.source]++; deg[e.target]++;
+        wdeg[e.source] += e.weight; wdeg[e.target] += e.weight;
+      }
+    });
+    return { deg, wdeg };
+  }
+  function meanOfMap(m, ids) { if (!ids.length) return 0; let s = 0; ids.forEach((id) => { s += m[id]; }); return s / ids.length; }
+  function sdOfMap(m, ids) { const n = ids.length; if (n < 2) return 0; const mu = meanOfMap(m, ids); let v = 0; ids.forEach((id) => { const d = m[id] - mu; v += d * d; }); return Math.sqrt(v / (n - 1)); }
+  function meanWDegree(pop, nodeSet, edgeSet) { const { wdeg } = degMaps(pop, nodeSet, edgeSet); return meanOfMap(wdeg, [...nodeSet]); }
+  function sdDegree(pop, nodeSet, edgeSet) { const { deg } = degMaps(pop, nodeSet, edgeSet); return sdOfMap(deg, [...nodeSet]); }
+  function sdWDegree(pop, nodeSet, edgeSet) { const { wdeg } = degMaps(pop, nodeSet, edgeSet); return sdOfMap(wdeg, [...nodeSet]); }
+
+  // ── Node-level stats for the currently-selected node ──────────────────────
+  // The focal node is kept in every sample (unioned in) so its centrality is
+  // always defined; stats are measured on the induced subgraph of the sample.
+  function inducedFocal(pop, nodeSet, focal) {
+    const nset = new Set(nodeSet); if (focal) nset.add(focal);
+    return { nset, ids: [...nset], adj: buildAdj(pop, nset, null) };
+  }
+  function betweennessOf(adj, ids, focal) {
+    // Brandes' algorithm (unweighted). Undirected → halve the accumulation.
+    const CB = Object.create(null); ids.forEach((id) => { CB[id] = 0; });
+    ids.forEach((s) => {
+      const S = [], P = {}, sigma = {}, d = {};
+      ids.forEach((t) => { P[t] = []; sigma[t] = 0; d[t] = -1; });
+      sigma[s] = 1; d[s] = 0; const Q = [s];
+      while (Q.length) { const v = Q.shift(); S.push(v); (adj[v] || []).forEach((w) => { if (d[w] < 0) { d[w] = d[v] + 1; Q.push(w); } if (d[w] === d[v] + 1) { sigma[w] += sigma[v]; P[w].push(v); } }); }
+      const delta = {}; ids.forEach((t) => { delta[t] = 0; });
+      while (S.length) { const w = S.pop(); P[w].forEach((v) => { delta[v] += (sigma[v] / sigma[w]) * (1 + delta[w]); }); if (w !== s) CB[w] += delta[w]; }
+    });
+    return CB[focal] === undefined ? 0 : CB[focal] / 2;
+  }
+  function nodeAplFrom(adj, focal) {
+    const dist = { [focal]: 0 }; const q = [focal];
+    while (q.length) { const u = q.shift(); (adj[u] || []).forEach((v) => { if (dist[v] === undefined) { dist[v] = dist[u] + 1; q.push(v); } }); }
+    let tot = 0, c = 0; for (const k in dist) { if (k !== String(focal)) { tot += dist[k]; c++; } }
+    return c ? tot / c : 0;
+  }
+  function nodeDegree(pop, nodeSet, focal) { if (!focal || !pop.ids.has(focal)) return NaN; const { adj } = inducedFocal(pop, nodeSet, focal); return (adj[focal] || []).length; }
+  function nodeWDegree(pop, nodeSet, focal) {
+    if (!focal || !pop.ids.has(focal)) return NaN;
+    const nset = new Set(nodeSet); nset.add(focal); let s = 0;
+    pop.edges.forEach((e) => { if (nset.has(e.source) && nset.has(e.target) && (e.source === focal || e.target === focal)) s += e.weight; });
+    return s;
+  }
+  function nodeBetween(pop, nodeSet, focal) { if (!focal || !pop.ids.has(focal)) return NaN; const { ids, adj } = inducedFocal(pop, nodeSet, focal); return betweennessOf(adj, ids, focal); }
+  function nodeApl(pop, nodeSet, focal) { if (!focal || !pop.ids.has(focal)) return NaN; const { adj } = inducedFocal(pop, nodeSet, focal); return nodeAplFrom(adj, focal); }
+
   const STATS = {
-    mean_degree: { label: 'Mean degree', fn: (p, n, e) => meanDegree(p, n, e), dp: 2 },
-    triangles:   { label: 'Number of triangles', fn: (p, n, e) => countTriangles(p, n, e), dp: 0 },
-    transitivity:{ label: 'Transitivity (clustering)', fn: (p, n, e) => transitivity(p, n, e), dp: 3 },
-    apl:         { label: 'Average path length', fn: (p, n, e) => apl(p, n, e), dp: 2 },
-    density:     { label: 'Density', fn: (p, n, e) => density(p, n, e), dp: 3 },
-    node_cov:    { label: 'Node count', fn: (p, n, e) => n.size, dp: 0 },
+    mean_degree:  { label: 'Mean degree', fn: (p, n, e) => meanDegree(p, n, e), dp: 2 },
+    mean_wdegree: { label: 'Mean weighted degree', fn: (p, n, e) => meanWDegree(p, n, e), dp: 2 },
+    sd_degree:    { label: 'SD of degree', fn: (p, n, e) => sdDegree(p, n, e), dp: 2 },
+    sd_wdegree:   { label: 'SD of weighted degree', fn: (p, n, e) => sdWDegree(p, n, e), dp: 2 },
+    triangles:    { label: 'Number of triangles', fn: (p, n, e) => countTriangles(p, n, e), dp: 0 },
+    transitivity: { label: 'Transitivity (clustering)', fn: (p, n, e) => transitivity(p, n, e), dp: 3 },
+    apl:          { label: 'Average path length', fn: (p, n, e) => apl(p, n, e), dp: 2 },
+    density:      { label: 'Density', fn: (p, n, e) => density(p, n, e), dp: 3 },
+    node_cov:     { label: 'Node count', fn: (p, n, e) => n.size, dp: 0 },
+    node_degree:  { label: 'Selected node — degree', node: true, fn: (p, n, e, f) => nodeDegree(p, n, f), dp: 1 },
+    node_wdegree: { label: 'Selected node — weighted degree', node: true, fn: (p, n, e, f) => nodeWDegree(p, n, f), dp: 1 },
+    node_betw:    { label: 'Selected node — betweenness', node: true, fn: (p, n, e, f) => nodeBetween(p, n, f), dp: 1 },
+    node_apl:     { label: 'Selected node — avg path length', node: true, fn: (p, n, e, f) => nodeApl(p, n, f), dp: 2 },
   };
+  function nodeStatsAvailable() { const f = NV.state.selectedNode; return f && population().ids.has(f); }
 
   // ── Highlight the sample in the graph (runs on every core render) ─────────
   function decorate() {
@@ -233,23 +296,29 @@
   async function runSim() {
     const pop = population(); if (!pop.nodes.length) return;
     const stat = STATS[simStat]; if (!stat) return;
-    const allNodes = pop.ids; const allEdges = pop.edgeKeys;
-    const trueVal = stat.fn(pop, allNodes, allEdges);
+    const status = $('viz2-samp-simstatus');
+    // Node-level stats need a selected node that's in the population.
+    const focal = NV.state.selectedNode;
+    if (stat.node && (!focal || !pop.ids.has(focal))) {
+      if (status) status.textContent = 'Select a node in the graph first.';
+      return;
+    }
+    const trueVal = stat.fn(pop, pop.ids, pop.edgeKeys, focal);
     const k = (userSetSize && sizeCount) ? sizeCount : defaultSize(pop);
     const kClamped = Math.max(1, Math.min(k, edgeMethod() ? pop.edges.length : pop.nodes.length));
     const btn = $('viz2-samp-run'); if (btn) btn.disabled = true;
-    const status = $('viz2-samp-simstatus');
     const samples = [];
     let i = 0; const BATCH = 20;
     while (i < simN) {
       const end = Math.min(i + BATCH, simN);
-      for (; i < end; i++) { const s = drawSample(pop, kClamped); samples.push(stat.fn(pop, s.nodes, s.edges)); }
+      for (; i < end; i++) { const s = drawSample(pop, kClamped); samples.push(stat.fn(pop, s.nodes, s.edges, focal)); }
       if (status) status.textContent = `Sampling… ${i}/${simN}`;
       await new Promise((r) => setTimeout(r, 0));
     }
     if (btn) btn.disabled = false;
     if (status) status.textContent = '';
-    lastSim = { samples, trueVal, statLabel: stat.label, dp: stat.dp };
+    const focalLabel = stat.node ? (NV.activeNodes().find((x) => x.id === focal) || {}).label || focal : null;
+    lastSim = { samples, trueVal, statLabel: stat.label, dp: stat.dp, focalLabel };
     renderCard();
   }
 
@@ -312,6 +381,9 @@
     const s = NV.state;
     if (!s.graph) { host.innerHTML = '<div class="node-empty">Load a network to enable sampling.</div>'; return; }
     const pop = population();
+    const focalNode = NV.activeNodes().find((x) => x.id === s.selectedNode);
+    // If a per-node stat is selected but no node is (still) selected, fall back.
+    if (STATS[simStat] && STATS[simStat].node && !focalNode) simStat = 'mean_degree';
     const unit = edgeMethod() ? 'edges' : 'nodes';
     const popCount = edgeMethod() ? pop.edges.length : pop.nodes.length;
     const curSize = (userSetSize && sizeCount) ? sizeCount : defaultSize(pop);
@@ -357,10 +429,11 @@
       if (tv > p975) verdict = 'The true value sits <strong>above the 97.5th percentile</strong> of the sampling distribution, so the sample <strong>significantly under-estimates</strong> it.';
       else if (tv < p025) verdict = 'The true value sits <strong>below the 2.5th percentile</strong> of the sampling distribution, so the sample <strong>significantly over-estimates</strong> it.';
       else verdict = 'The true value falls <strong>within the central 95%</strong> (2.5–97.5%) of the sampling distribution, so the sample is <strong>not significantly biased</strong> for this statistic.';
+      const statName = lastSim.focalLabel ? `${lastSim.statLabel} of <strong>${esc(lastSim.focalLabel)}</strong>` : lastSim.statLabel;
       simHtml = `
         <svg class="viz2-samp-dist" id="viz2-samp-distsvg"></svg>
         <div class="viz2-samp-sig">
-          Over <strong>${N}</strong> samples of <strong>${lastSim.statLabel}</strong>, the true value is <strong>${tv.toFixed(lastSim.dp)}</strong>;
+          Over <strong>${N}</strong> samples of ${statName}, the true value is <strong>${tv.toFixed(lastSim.dp)}</strong>;
           the sample mean is <strong>${mean.toFixed(lastSim.dp)}</strong> (bias ${bias >= 0 ? '+' : ''}${bias.toFixed(lastSim.dp)}), central 95% = [${fmtN(p025, lastSim.dp)}, ${fmtN(p975, lastSim.dp)}].<br>
           <strong>${pctG}%</strong> of samples exceeded the true value, <strong>${pctL}%</strong> fell below${eqp ? `, ${100 - pctG - pctL}% tied` : ''}. ${verdict}
         </div>`;
@@ -383,7 +456,14 @@
         <summary>📈 Sampling distribution (many samples)</summary>
         <div style="padding-top:8px;">
           <div class="color-by-row" style="margin-bottom:8px;"><label for="viz2-samp-stat">Statistic of interest</label>
-            <select id="viz2-samp-stat" class="viz-select">${Object.entries(STATS).map(([k, v]) => `<option value="${k}"${k === simStat ? ' selected' : ''}>${v.label}</option>`).join('')}</select></div>
+            <select id="viz2-samp-stat" class="viz-select">${Object.entries(STATS).map(([k, v]) => {
+              const dis = v.node && !focalNode ? ' disabled' : '';
+              const lbl = v.node && !focalNode ? v.label + ' (select a node)' : v.label;
+              return `<option value="${k}"${k === simStat ? ' selected' : ''}${dis}>${lbl}</option>`;
+            }).join('')}</select></div>
+          <p class="formula-note" style="margin:-2px 0 8px;">${focalNode
+            ? `Per-node metrics measure the selected node <strong>${esc(focalNode.label)}</strong> (kept in every sample).`
+            : `Click a node in the graph to unlock per-node metrics (degree, weighted degree, betweenness, path length).`}</p>
           <div class="color-by-row" style="margin-bottom:8px;"><label for="viz2-samp-n"># samples</label>
             <select id="viz2-samp-n" class="viz-select">
               <option value="100"${simN === 100 ? ' selected' : ''}>100 (quick)</option>
@@ -421,10 +501,16 @@
   function exportCtx() {
     const s = NV.state; const map = s.mapping || {}; const key = s.currentDatasetKey || null;
     return { key, nodesFile: key ? key + '-nodes.csv' : 'nodes.csv', edgesFile: key ? key + '-edges.csv' : 'edges.csv',
-      fromCol: map.from || 'from', toCol: map.to || 'to', idCol: map.nodeId || 'node_id' };
+      fromCol: map.from || 'from', toCol: map.to || 'to', idCol: map.nodeId || 'node_id',
+      weightCol: map.weight || null, focal: s.selectedNode || null };
   }
   const rStr = (s) => '"' + String(s).replace(/"/g, '\\"') + '"';
+  const pyStr = (s) => '"' + String(s).replace(/"/g, '\\"') + '"';
   function exportCode(lang) {
+    const stat = STATS[simStat];
+    if (stat.node && !(NV.state.selectedNode && population().ids.has(NV.state.selectedNode))) {
+      const m = $('viz2-samp-exportmsg'); if (m) m.textContent = 'Select a node in the graph before exporting a per-node metric.'; return;
+    }
     const code = lang === 'r' ? genR() : genPy();
     try { localStorage.setItem('netsci-playground-handoff', JSON.stringify({ lang: lang === 'r' ? 'r' : 'python', code, datasetKey: NV.state.currentDatasetKey || null, ts: Date.now(), source: 'visualizer' })); }
     catch (e) { const m = $('viz2-samp-exportmsg'); if (m) m.textContent = 'Could not save handoff.'; return; }
@@ -432,13 +518,13 @@
     const m = $('viz2-samp-exportmsg'); if (m) m.textContent = 'Opened the ' + (lang === 'r' ? 'R' : 'Python') + ' playground — it runs the sampling simulation when it finishes loading.';
   }
   function genR() {
-    const c = exportCtx(); const isEdge = edgeMethod();
+    const c = exportCtx(); const isEdge = edgeMethod(); const stat = STATS[simStat]; const isNode = !!stat.node;
     const pop = population(); const k = (userSetSize && sizeCount) ? sizeCount : defaultSize(pop);
     const L = [];
     L.push('#\' @name sampling.R');
     L.push('#\' @title Network sampling — from the Network Visualizer');
     L.push('#\' @description Draw ' + simN + ' ' + METHODS[method] + ' samples, build a sampling');
-    L.push('#\' distribution of ' + STATS[simStat].label + ', and compare it to the true value.');
+    L.push('#\' distribution of ' + stat.label + ', and compare it to the true value.');
     L.push('');
     L.push('# 0. Setup ###################################################################');
     L.push('library(igraph)');
@@ -449,35 +535,55 @@
     L.push('edges <- read.csv(' + rStr(c.edgesFile) + ', stringsAsFactors = FALSE)');
     L.push('edges <- edges[, c(' + rStr(c.fromCol) + ', ' + rStr(c.toCol) + ', setdiff(names(edges), c(' + rStr(c.fromCol) + ', ' + rStr(c.toCol) + ')))]');
     L.push('nodes <- nodes[, c(' + rStr(c.idCol) + ', setdiff(names(nodes), ' + rStr(c.idCol) + '))]');
-    L.push('g <- igraph::simplify(igraph::graph_from_data_frame(edges, directed = FALSE, vertices = nodes))');
+    L.push('g <- igraph::simplify(igraph::graph_from_data_frame(edges, directed = FALSE, vertices = nodes), edge.attr.comb = "first")');
     L.push('cat(sprintf("✅ Population: %d nodes, %d edges.\\n", igraph::gorder(g), igraph::gsize(g)))');
     L.push('');
-    L.push('# 2. The statistic + one sampler #############################################');
-    L.push('stat_fn <- function(sg) ' + rStatExpr(simStat));
-    L.push('true_val <- stat_fn(g)');
-    L.push('');
     L.push('SIZE <- ' + k + '   # ' + (isEdge ? 'edges' : 'nodes') + ' per sample');
-    L.push('draw_sample <- function(g) {');
-    L.push(rSamplerBody(method));
-    L.push('}');
+    if (isNode) L.push('FOCAL <- ' + rStr(c.focal) + '   # the selected node (kept in every sample)');
+    L.push('');
+    L.push('# 2. The statistic + one sampler #############################################');
+    if (isNode) {
+      L.push('stat_fn <- function(sg) {');
+      L.push('  if (!(FOCAL %in% igraph::V(sg)$name)) return(NA_real_)');
+      L.push('  ' + rNodeStatExpr(simStat, c));
+      L.push('}');
+      L.push('draw_sample <- function(g) {');
+      L.push(rNodeSampler(method));
+      L.push('}');
+    } else {
+      L.push('stat_fn <- function(sg) ' + rStatExpr(simStat, c));
+      L.push('draw_sample <- function(g) {');
+      L.push(rSamplerBody(method));
+      L.push('}');
+    }
+    L.push('true_val <- stat_fn(g)');
     L.push('');
     L.push('# 3. Many samples → sampling distribution ###################################');
     L.push('set.seed(5470)');
     L.push('sims <- replicate(' + simN + ', stat_fn(draw_sample(g)))');
-    L.push('cat(sprintf("📊 True %s: %.4f\\n", ' + rStr(STATS[simStat].label) + ', true_val))');
+    L.push('sims <- sims[is.finite(sims)]');
+    L.push('q <- quantile(sims, c(0.025, 0.975))');
+    L.push('cat(sprintf("📊 True %s: %.4f\\n", ' + rStr(stat.label) + ', true_val))');
     L.push('cat(sprintf("📊 Sample mean: %.4f (bias %+.4f)\\n", mean(sims), mean(sims) - true_val))');
-    L.push('cat(sprintf("📝 %.0f%% of samples above true, %.0f%% below.\\n",');
-    L.push('            100 * mean(sims > true_val), 100 * mean(sims < true_val)))');
+    L.push('cat(sprintf("📊 Central 95%%: [%.4f, %.4f]\\n", q[1], q[2]))');
+    L.push('verdict <- if (true_val > q[2]) "significantly under-estimates it" else if (true_val < q[1]) "significantly over-estimates it" else "is not significantly biased"');
+    L.push('cat(sprintf("📝 %.0f%% above / %.0f%% below true. Sampling %s.\\n",');
+    L.push('            100 * mean(sims > true_val), 100 * mean(sims < true_val), verdict))');
     L.push('hist(sims, breaks = 22, col = "#39FF14", border = "white",');
-    L.push('     main = "Sampling distribution", xlab = ' + rStr(STATS[simStat].label) + ')');
+    L.push('     main = "Sampling distribution", xlab = ' + rStr(stat.label) + ')');
     L.push('abline(v = true_val, col = "#fbbf24", lwd = 3)');
+    L.push('abline(v = q, col = "#6b8170", lwd = 1, lty = 2)');
     L.push('');
     L.push('cat("\\n🎉 Done.\\n")');
     return L.join('\n');
   }
-  function rStatExpr(key) {
+  function rStatExpr(key, c) {
+    const w = c.weightCol ? 'igraph::E(sg)$' + c.weightCol : null;
     switch (key) {
       case 'mean_degree': return 'mean(igraph::degree(sg))';
+      case 'mean_wdegree': return w ? 'mean(igraph::strength(sg, weights = ' + w + '))' : 'mean(igraph::degree(sg))';
+      case 'sd_degree': return 'sd(igraph::degree(sg))';
+      case 'sd_wdegree': return w ? 'sd(igraph::strength(sg, weights = ' + w + '))' : 'sd(igraph::degree(sg))';
       case 'triangles': return 'sum(igraph::count_triangles(sg)) / 3';
       case 'transitivity': return 'igraph::transitivity(sg, type = "global")';
       case 'apl': return 'igraph::mean_distance(sg, directed = FALSE)';
@@ -485,21 +591,38 @@
       default: return 'igraph::gorder(sg)';
     }
   }
-  function rSamplerBody(m) {
-    if (m === 'random_node') return '  vs <- sample(igraph::V(g), SIZE)\n  igraph::induced_subgraph(g, vs)';
-    if (m === 'random_edge') return '  es <- sample(igraph::E(g), min(SIZE, igraph::gsize(g)))\n  igraph::subgraph_from_edges(g, es, delete.vertices = TRUE)';
-    if (m === 'ego') return '  seeds <- sample(igraph::V(g), SIZE)\n  vs <- unique(unlist(igraph::ego(g, order = 1, nodes = seeds)))\n  igraph::induced_subgraph(g, vs)';
-    return '  seeds <- sample(igraph::V(g), SIZE)\n  vs <- unique(unlist(igraph::ego(g, order = 2, nodes = seeds)))\n  igraph::induced_subgraph(g, vs)';
+  function rNodeStatExpr(key, c) {
+    const w = c.weightCol ? 'igraph::E(sg)$' + c.weightCol : null;
+    switch (key) {
+      case 'node_degree': return 'igraph::degree(sg, v = FOCAL)';
+      case 'node_wdegree': return w ? 'igraph::strength(sg, vids = FOCAL, weights = ' + w + ')' : 'igraph::degree(sg, v = FOCAL)';
+      case 'node_betw': return 'igraph::betweenness(sg, v = FOCAL)';
+      case 'node_apl': return 'd <- igraph::distances(sg, v = FOCAL); d <- d[is.finite(d) & d > 0]; if (length(d)) mean(d) else NA_real_';
+      default: return 'igraph::degree(sg, v = FOCAL)';
+    }
   }
-  const pyStr = (s) => '"' + String(s).replace(/"/g, '\\"') + '"';
+  function rSamplerBody(m) {
+    if (m === 'random_node') return '  vs <- sample(seq_len(igraph::vcount(g)), SIZE)\n  igraph::induced_subgraph(g, vs)';
+    if (m === 'random_edge') return '  es <- sample(seq_len(igraph::ecount(g)), min(SIZE, igraph::ecount(g)))\n  igraph::subgraph_from_edges(g, es, delete.vertices = TRUE)';
+    if (m === 'ego') return '  seeds <- sample(seq_len(igraph::vcount(g)), SIZE)\n  vs <- unique(unlist(igraph::ego(g, order = 1, nodes = seeds)))\n  igraph::induced_subgraph(g, vs)';
+    return '  seeds <- sample(seq_len(igraph::vcount(g)), SIZE)\n  vs <- unique(unlist(igraph::ego(g, order = 2, nodes = seeds)))\n  igraph::induced_subgraph(g, vs)';
+  }
+  // Node-stat samplers: build a vertex set, then union the focal node in.
+  function rNodeSampler(m) {
+    const tail = '\n  vs <- union(vs, which(igraph::V(g)$name == FOCAL))\n  igraph::induced_subgraph(g, vs)';
+    if (m === 'random_node') return '  vs <- sample(seq_len(igraph::vcount(g)), SIZE)' + tail;
+    if (m === 'random_edge') return '  es <- sample(seq_len(igraph::ecount(g)), min(SIZE, igraph::ecount(g)))\n  vs <- unique(as.vector(igraph::ends(g, es, names = FALSE)))' + tail;
+    if (m === 'ego') return '  seeds <- sample(seq_len(igraph::vcount(g)), SIZE)\n  vs <- unique(unlist(igraph::ego(g, order = 1, nodes = seeds)))' + tail;
+    return '  seeds <- sample(seq_len(igraph::vcount(g)), SIZE)\n  vs <- unique(unlist(igraph::ego(g, order = 2, nodes = seeds)))' + tail;
+  }
   function genPy() {
-    const c = exportCtx(); const isEdge = edgeMethod();
+    const c = exportCtx(); const isEdge = edgeMethod(); const stat = STATS[simStat]; const isNode = !!stat.node;
     const pop = population(); const k = (userSetSize && sizeCount) ? sizeCount : defaultSize(pop);
     const L = [];
     L.push('# sampling.py');
     L.push('# Network sampling — from the Network Visualizer');
     L.push('# Draw ' + simN + ' ' + METHODS[method] + ' samples, build a sampling distribution of');
-    L.push('# ' + STATS[simStat].label + ', and compare it to the true value.');
+    L.push('# ' + stat.label + ', and compare it to the true value.');
     L.push('');
     L.push('# 0. Setup ###################################################################');
     L.push('import numpy as np');
@@ -514,40 +637,69 @@
     L.push('edges = pd.read_csv(' + pyStr(c.edgesFile) + ')');
     L.push('edges = edges[[' + pyStr(c.fromCol) + ', ' + pyStr(c.toCol) + '] + [x for x in edges.columns if x not in (' + pyStr(c.fromCol) + ', ' + pyStr(c.toCol) + ')]]');
     L.push('nodes = nodes[[' + pyStr(c.idCol) + '] + [x for x in nodes.columns if x != ' + pyStr(c.idCol) + ']]');
-    L.push('g = ig.Graph.DataFrame(edges, directed=False, vertices=nodes, use_vids=False).simplify()');
+    L.push('g = ig.Graph.DataFrame(edges, directed=False, vertices=nodes, use_vids=False).simplify(combine_edges="first")');
     L.push('print(f"✅ Population: {g.vcount()} nodes, {g.ecount()} edges.")');
     L.push('');
-    L.push('# 2. The statistic + one sampler #############################################');
-    L.push('def stat_fn(sg):');
-    L.push('    return ' + pyStatExpr(simStat));
-    L.push('true_val = stat_fn(g)');
-    L.push('');
     L.push('SIZE = ' + k + '   # ' + (isEdge ? 'edges' : 'nodes') + ' per sample');
-    L.push('def draw_sample(g):');
-    L.push(pySamplerBody(method));
+    if (isNode) { L.push('FOCAL = ' + pyStr(c.focal) + '   # the selected node (kept in every sample)'); L.push('FIDX = g.vs.find(name=FOCAL).index'); }
+    L.push('');
+    L.push('# 2. The statistic + one sampler #############################################');
+    if (isNode) {
+      L.push('def stat_fn(sg):');
+      L.push('    try: fi = sg.vs.find(name=FOCAL).index');
+      L.push('    except (ValueError, KeyError): return float("nan")');
+      L.push('    ' + pyNodeStatExpr(simStat, c));
+      L.push('def draw_sample(g):');
+      L.push(pyNodeSampler(method));
+    } else {
+      L.push('def stat_fn(sg):');
+      L.push('    return ' + pyStatExpr(simStat, c));
+      L.push('def draw_sample(g):');
+      L.push(pySamplerBody(method));
+    }
+    L.push('true_val = stat_fn(g)');
     L.push('');
     L.push('# 3. Many samples → sampling distribution ###################################');
     L.push('random.seed(5470)');
     L.push('sims = np.array([stat_fn(draw_sample(g)) for _ in range(' + simN + ')])');
-    L.push('stat_label = ' + pyStr(STATS[simStat].label));
+    L.push('sims = sims[np.isfinite(sims)]');
+    L.push('q = np.quantile(sims, [0.025, 0.975])');
+    L.push('stat_label = ' + pyStr(stat.label));
     L.push('print(f"📊 True {stat_label}: {true_val:.4f}")');
     L.push('print(f"📊 Sample mean: {sims.mean():.4f} (bias {sims.mean()-true_val:+.4f})")');
-    L.push('print(f"📝 {100*np.mean(sims>true_val):.0f}% of samples above true, {100*np.mean(sims<true_val):.0f}% below.")');
+    L.push('print(f"📊 Central 95%: [{q[0]:.4f}, {q[1]:.4f}]")');
+    L.push('verdict = "significantly under-estimates it" if true_val > q[1] else "significantly over-estimates it" if true_val < q[0] else "is not significantly biased"');
+    L.push('print(f"📝 {100*np.mean(sims>true_val):.0f}% above / {100*np.mean(sims<true_val):.0f}% below true. Sampling {verdict}.")');
     L.push('plt.hist(sims, bins=22, color="#39FF14", edgecolor="white")');
     L.push('plt.axvline(true_val, color="#fbbf24", linewidth=3)');
-    L.push('plt.title("Sampling distribution"); plt.xlabel(' + pyStr(STATS[simStat].label) + '); plt.show()');
+    L.push('for qq in q: plt.axvline(qq, color="#6b8170", linewidth=1, linestyle="--")');
+    L.push('plt.title("Sampling distribution"); plt.xlabel(stat_label); plt.show()');
     L.push('');
     L.push('print("\\n🎉 Done.")');
     return L.join('\n');
   }
-  function pyStatExpr(key) {
+  function pyStatExpr(key, c) {
+    const w = c.weightCol ? 'weights=' + pyStr(c.weightCol) : null;
     switch (key) {
       case 'mean_degree': return 'float(np.mean(sg.degree()))';
+      case 'mean_wdegree': return w ? 'float(np.mean(sg.strength(' + w + ')))' : 'float(np.mean(sg.degree()))';
+      case 'sd_degree': return 'float(np.std(sg.degree(), ddof=1)) if sg.vcount() > 1 else 0.0';
+      case 'sd_wdegree': return w ? 'float(np.std(sg.strength(' + w + '), ddof=1)) if sg.vcount() > 1 else 0.0' : 'float(np.std(sg.degree(), ddof=1)) if sg.vcount() > 1 else 0.0';
       case 'triangles': return 'sum(sg.count_triangles()) / 3';
       case 'transitivity': return 'sg.transitivity_undirected(mode="zero")';
       case 'apl': return 'sg.average_path_length()';
       case 'density': return 'sg.density()';
       default: return 'sg.vcount()';
+    }
+  }
+  function pyNodeStatExpr(key, c) {
+    const w = c.weightCol ? ', weights=' + pyStr(c.weightCol) : '';
+    switch (key) {
+      case 'node_degree': return 'return sg.degree(fi)';
+      case 'node_wdegree': return c.weightCol ? 'return sg.strength(fi' + w + ')' : 'return sg.degree(fi)';
+      case 'node_betw': return 'return sg.betweenness(fi)';
+      case 'node_apl': return 'ds = [d for d in sg.distances(source=fi)[0] if d > 0 and np.isfinite(d)]; return (sum(ds)/len(ds)) if ds else float("nan")';
+      default: return 'return sg.degree(fi)';
     }
   }
   function pySamplerBody(m) {
@@ -556,12 +708,20 @@
     if (m === 'ego') return '    seeds = random.sample(range(g.vcount()), SIZE)\n    vs = set(seeds)\n    for v in seeds: vs.update(g.neighborhood(v, order=1))\n    return g.induced_subgraph(list(vs))';
     return '    seeds = random.sample(range(g.vcount()), SIZE)\n    vs = set(seeds)\n    for v in seeds: vs.update(g.neighborhood(v, order=2))\n    return g.induced_subgraph(list(vs))';
   }
+  function pyNodeSampler(m) {
+    const tail = '\n    vs.add(FIDX)\n    return g.induced_subgraph(list(vs))';
+    if (m === 'random_node') return '    vs = set(random.sample(range(g.vcount()), SIZE))' + tail;
+    if (m === 'random_edge') return '    es = random.sample(range(g.ecount()), min(SIZE, g.ecount()))\n    vs = set()\n    for e in es: vs.update(g.es[e].tuple)' + tail;
+    if (m === 'ego') return '    seeds = random.sample(range(g.vcount()), SIZE)\n    vs = set(seeds)\n    for v in seeds: vs.update(g.neighborhood(v, order=1))' + tail;
+    return '    seeds = random.sample(range(g.vcount()), SIZE)\n    vs = set(seeds)\n    for v in seeds: vs.update(g.neighborhood(v, order=2))' + tail;
+  }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   NV.on('render', decorate);
   NV.on('graph-loaded', () => { hasSample = false; lastSim = null; userSetSize = false; sizeCount = null; renderCard(); });
   NV.on('view-rebuilt', () => { renderCard(); });
   NV.on('removed-changed', () => { renderCard(); });
+  NV.on('node-selected', () => { renderCard(); });   // refresh the per-node stat options
 
   window.NetSciVizSample = { renderCard };
   if (document.readyState !== 'loading') renderCard();
