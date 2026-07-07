@@ -206,6 +206,32 @@ function transformPage(rel) {
   //     Route it through the shell to re-render the current page instead.
   html = html.replace(/location\.replace\(url\.toString\(\)\)/g, 'window.__netsciReload()');
 
+  // 4c) YouTube <iframe> embeds refuse to play from a file:// (null-origin) page,
+  //     so they break in a downloaded copy. Swap each for a click-to-open facade:
+  //     the video thumbnail linking to youtube.com (opens in a new tab). Fills the
+  //     same 16:9 .ratio box (absolute inset:0, matching the original iframe CSS).
+  html = html.replace(
+    /<iframe\b[^>]*\bsrc="https:\/\/www\.youtube(?:-nocookie)?\.com\/embed\/([A-Za-z0-9_-]+)[^"]*"[^>]*><\/iframe>/gis,
+    (m, id) =>
+      `<a href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener"` +
+      ` title="Watch on YouTube (opens youtube.com)"` +
+      ` style="position:absolute;inset:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;` +
+      `text-decoration:none;background:#000 center/cover no-repeat url('https://i.ytimg.com/vi/${id}/hqdefault.jpg');">` +
+      `<span aria-hidden="true" style="width:72px;height:50px;border-radius:14px;background:rgba(200,0,0,0.88);` +
+      `display:flex;align-items:center;justify-content:center;color:#fff;font:700 26px/1 sans-serif;">&#9654;</span>` +
+      `<span style="position:absolute;bottom:8px;right:10px;color:#fff;font:600 12px/1 sans-serif;` +
+      `background:rgba(0,0,0,0.6);padding:4px 7px;border-radius:5px;">▶ Watch on YouTube</span></a>`
+  );
+
+  // 4d) WebR's default channel needs cross-origin isolation or a service worker,
+  //     and neither is available from a file:// page — so webR.init() hangs. Force
+  //     the PostMessage channel (no special headers / no service worker required).
+  html = html.replace(
+    /import\s*\{\s*WebR\s*\}\s*from\s*(['"])(https:\/\/webr\.r-wasm\.org\/[^'"]+)\1/,
+    'import { WebR, ChannelType } from $1$2$1'
+  );
+  html = html.replace(/\bnew WebR\(\)/g, 'new WebR({ channelType: ChannelType.PostMessage })');
+
   // 5) Inject the runtime prelude as the first thing inside <head>.
   html = html.replace(/<head([^>]*)>/i, (m) => `${m}\n${RUNTIME_PRELUDE}`);
 

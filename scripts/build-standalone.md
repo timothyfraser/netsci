@@ -44,6 +44,13 @@ A small prelude injected into each page makes everything connect offline:
   which is flaky on `file://`) so it survives the page swap.
 - **Clear-cache buttons**: their `location.replace(url)` self-reload is rewritten
   at build time to re-render the current page (a single file has no HTTP cache).
+- **YouTube**: `<iframe>` embeds refuse to play from a `file://` (null-origin)
+  page, so each is swapped for a click-to-open facade (thumbnail → opens the
+  video on youtube.com in a new tab).
+- **WebR (R playground)**: `new WebR()` is rewritten to force the PostMessage
+  channel. WebR's default channel needs cross-origin isolation or a service
+  worker; neither exists on `file://`, so `webR.init()` would hang. (Pyodide is
+  unaffected — it runs on the main thread.)
 
 A dead-link scan (in the repo's build check) confirms every page-to-page link
 resolves within the bundle.
