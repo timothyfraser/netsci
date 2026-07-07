@@ -27,8 +27,9 @@ const OUT  = path.join(DOCS, 'netsci-standalone.html');
 // Pages we DON'T fold in: instructor-only, redirect stubs, legacy, and the output itself.
 const EXCLUDE = new Set([
   'netsci-standalone.html',
-  'visualizer2.html',   // redirect stub
-  'visualizer1.html',   // legacy visualizer
+  'visualizer2.html',   // redirect stub (its meta-refresh/JS points at visualizer.html)
+  // NOTE: visualizer1.html IS included — the current Visualizer's "V1" pill links
+  // to it, so leaving it out would be a dead link in the offline copy.
 ]);
 const EXCLUDE_DIRS = new Set(['instructor']);
 
@@ -107,16 +108,64 @@ const RUNTIME_PRELUDE = `<script>
       };
     }
   } catch(e){}
+
+  var isExternal = function(u){ return /^(https?:|mailto:|tel:|javascript:|data:|blob:|about:|#)/i.test(u); };
+  var navTo = function(u){ try { window.parent.postMessage({ __netsciNav: u }, '*'); } catch(_){} };
+
   // Route intra-site link clicks up to the shell for in-file navigation.
+  // Leave real downloads (a[download], blob:/data: hrefs) and external/new-tab
+  // links alone so Export-PNG / Download-code / CSV export still work.
   document.addEventListener('click', function(e){
     var a = e.target && e.target.closest && e.target.closest('a[href]');
     if(!a) return;
-    if(a.target === '_blank') return;
+    if(a.target === '_blank' || a.hasAttribute('download')) return;
     var href = a.getAttribute('href') || '';
-    if(!href || /^(https?:|mailto:|tel:|javascript:|data:|#)/i.test(href)) return;
+    if(!href || isExternal(href)) return;
     e.preventDefault();
-    try { window.parent.postMessage({ __netsciNav: href }, '*'); } catch(_){}
+    navTo(href);
   }, true);
+
+  // Programmatic navigation to another page (e.g. the code-export "Open in
+  // playground" handoff uses window.open) resolves relative URLs against the
+  // downloaded file's folder and 404s. Route same-site .html targets in-file.
+  // The handoff payload is already in localStorage (shared across pages, same
+  // origin), so the destination page picks it up on load.
+  try {
+    var origOpen = window.open ? window.open.bind(window) : null;
+    window.open = function(url, name, feat){
+      var u = String(url == null ? '' : url);
+      if (u && !isExternal(u)) { navTo(u); return null; }
+      return origOpen ? origOpen(url, name, feat) : null;
+    };
+  } catch(_){}
+
+  // The visualizer -> playground handoff passes code via localStorage, which is
+  // flaky (or absent) on file:// across browsers. Mirror just that one key
+  // through the shell so it survives the page swap no matter what — and never
+  // let it throw, so the handoff always proceeds to navigate.
+  try {
+    var HK = 'netsci-playground-handoff', P = window.parent, SP = Storage.prototype;
+    var _set = SP.setItem, _get = SP.getItem, _del = SP.removeItem;
+    SP.setItem = function(k, v){
+      if (k === HK) { try { P.__NETSCI_HANDOFF__ = v; } catch(_){}
+        try { return _set.apply(this, arguments); } catch(_){ return; } }
+      return _set.apply(this, arguments);
+    };
+    SP.getItem = function(k){
+      var r = null; try { r = _get.apply(this, arguments); } catch(_){}
+      if (k === HK && r == null) { try { return P.__NETSCI_HANDOFF__ != null ? P.__NETSCI_HANDOFF__ : null; } catch(_){} }
+      return r;
+    };
+    SP.removeItem = function(k){
+      if (k === HK) { try { P.__NETSCI_HANDOFF__ = null; } catch(_){} }
+      try { return _del.apply(this, arguments); } catch(_){ return; }
+    };
+  } catch(_){}
+
+  // A single file has no separate HTTP cache to bust, so the clear-cache
+  // buttons' self-reload (rewritten at build time to call this) just re-renders
+  // the current page after storage was cleared.
+  window.__netsciReload = function(){ try { window.parent.postMessage({ __netsciReload: true }, '*'); } catch(_){} };
 })();
 </script>`;
 
@@ -149,6 +198,11 @@ function transformPage(rel) {
   // 4) Drop any link into the instructor area — it isn't in this copy, and the
   //    offline file shouldn't advertise back-of-house tooling.
   html = html.replace(/<a\b[^>]*\bhref="(?:\.\.\/)*instructor\/[^"]*"[^>]*>.*?<\/a>/gis, '');
+
+  // 4b) The clear-cache buttons self-reload via location.replace(url) with a
+  //     cache-bust query — meaningless (and blanks the iframe) in a single file.
+  //     Route it through the shell to re-render the current page instead.
+  html = html.replace(/location\.replace\(url\.toString\(\)\)/g, 'window.__netsciReload()');
 
   // 5) Inject the runtime prelude as the first thing inside <head>.
   html = html.replace(/<head([^>]*)>/i, (m) => `${m}\n${RUNTIME_PRELUDE}`);
@@ -238,6 +292,9 @@ const shell = `<!doctype html>
       var key = resolveKey(current, d.__netsciNav);
       var frag = (d.__netsciNav.match(/#.*$/) || [''])[0];
       if (!show(key, frag)) { console.warn('[offline] not in this copy:', d.__netsciNav); }
+    } else if (d && d.__netsciReload) {
+      // re-render the current page from scratch (clear-cache buttons)
+      frame.setAttribute('srcdoc', b64ToStr(PAGES[current]));
     }
   });
   function fromHash(){

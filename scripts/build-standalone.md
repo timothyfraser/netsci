@@ -26,10 +26,27 @@ node scripts/build-standalone.mjs
 The output is a chrome-less shell hosting one `<iframe>`. Each page is stored
 base64-encoded and rendered into the iframe via `srcdoc`, so every page gets its
 own isolated `window` — the R and Python playgrounds can't collide on globals, and
-the duplicate d3/CodeMirror loads stay separate. A small prelude injected into each
-page (a) shims `fetch()` to serve `playground-data/*` from the manifest and (b)
-routes intra-site link clicks up to the shell for in-file navigation. Deep links
-work via `#page.html` in the URL hash.
+the duplicate d3/CodeMirror loads stay separate. Deep links work via `#page.html`
+in the URL hash.
+
+A small prelude injected into each page makes everything connect offline:
+
+- **Data**: shims `fetch()` *and* `XMLHttpRequest.open` (PapaParse's
+  `{download:true}` uses XHR) to serve `playground-data/*` from the in-file
+  manifest.
+- **Links**: routes intra-site `<a href>` clicks up to the shell for in-file
+  navigation — but leaves real downloads (`a[download]`, `blob:`/`data:` hrefs),
+  `target="_blank"`, and external links alone so Export-PNG / Download-code / CSV
+  export still work.
+- **Programmatic nav**: overrides `window.open` so the code-export "Open in
+  playground" handoff navigates in-file instead of 404-ing to the file's folder.
+  The handoff payload is mirrored through the shell (not just `localStorage`,
+  which is flaky on `file://`) so it survives the page swap.
+- **Clear-cache buttons**: their `location.replace(url)` self-reload is rewritten
+  at build time to re-render the current page (a single file has no HTTP cache).
+
+A dead-link scan (in the repo's build check) confirms every page-to-page link
+resolves within the bundle.
 
 ## Requirements & caveats
 
