@@ -444,11 +444,7 @@
           ${sub}
         </div>
       </details>
-      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
-        <button id="viz2-clust-export-r" class="viz-btn">▶ R in playground</button>
-        <button id="viz2-clust-export-py" class="viz-btn">▶ Python in playground</button>
-      </div>
-      <div id="viz2-clust-exportmsg" class="formula-note" style="margin-top:6px;"></div>`;
+      <p class="formula-note" style="margin-top:10px;">Reproduce this in code from the <strong>Export as Code</strong> card below — tick <strong>🧩 Clustering (DSM)</strong> to weave it into the script.</p>`;
 
     // Wire controls
     const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
@@ -458,27 +454,9 @@
     on('viz2-clust-clear', 'click', clearCascade);
     on('viz2-clust-slice', 'change', (e) => { timeSlice = e.target.value; sig = ''; NV.render(); renderCard(); });
     on('viz2-clust-comp', 'change', (e) => { const v = e.target.value; if (v === '') clearCascade(); else selectComponent(parseInt(v, 10)); });
-    on('viz2-clust-export-r', 'click', () => exportCode('r'));
-    on('viz2-clust-export-py', 'click', () => exportCode('py'));
   }
 
-  // ── Code export (R / Python) → playground handoff ─────────────────────────
-  function exportCode(lang) {
-    const s = NV.state;
-    const datasetKey = s.currentDatasetKey || null;
-    const code = lang === 'r' ? genR() : genPy();
-    try {
-      localStorage.setItem('netsci-playground-handoff', JSON.stringify({ lang: lang === 'r' ? 'r' : 'python', code, datasetKey, ts: Date.now(), source: 'visualizer' }));
-    } catch (e) {
-      const msg = $('viz2-clust-exportmsg'); if (msg) msg.textContent = 'Could not save handoff (storage full?).';
-      return;
-    }
-    window.open(lang === 'r' ? 'playground-r.html' : 'playground-py.html', '_blank');
-    const msg = $('viz2-clust-exportmsg'); if (msg) msg.textContent = 'Opened the ' + (lang === 'r' ? 'R' : 'Python') + ' playground — it runs the DSM + Louvain clustering when it finishes loading.';
-  }
-
-  // Resolve the real playground filenames + mapped column names so the emitted
-  // script reads what the handoff actually wrote into the WASM FS.
+  // Mapped column names for code export (reads NV.state.mapping).
   function exportCtx() {
     const s = NV.state;
     const map = s.mapping || {};
@@ -495,136 +473,76 @@
     };
   }
   const rStr = (s) => '"' + String(s).replace(/"/g, '\\"') + '"';
-
-  function genR() {
-    const c = exportCtx();
-    const L = [];
-    L.push('#\' @name clustering.R');
-    L.push('#\' @title Clustering & DSM — from the Network Visualizer');
-    L.push('#\' @description Louvain community detection + a reordered dependency-structure');
-    L.push('#\' matrix (DSM) + a failure-cascade trace, mirroring the DSM clustering case study.');
-    L.push('');
-    L.push('# 0. Setup ###################################################################');
-    L.push('library(igraph)');
-    L.push('cat("\\n🚀 Clustering & DSM (R)\\n")');
-    L.push('');
-    L.push('# 1. Build the graph ########################################################');
-    L.push('# The playground handoff wrote these CSVs into the virtual FS, so read.csv');
-    L.push('# finds them by bare filename.');
-    L.push('nodes <- read.csv(' + rStr(c.nodesFile) + ', stringsAsFactors = FALSE)');
-    L.push('edges <- read.csv(' + rStr(c.edgesFile) + ', stringsAsFactors = FALSE)');
-    if (c.slice !== '') {
-      L.push('# Clustering was run on a single time slice in the visualizer — match it here.');
-      L.push('edges <- edges[edges[[' + rStr(c.timeCol) + ']] == ' + rStr(c.slice) + ', ]');
-    }
-    L.push('# graph_from_data_frame() uses the first two edge columns as from/to and the');
-    L.push('# first node column as the id, so put the mapped columns first.');
-    L.push('edges <- edges[, c(' + rStr(c.fromCol) + ', ' + rStr(c.toCol) + ', setdiff(names(edges), c(' + rStr(c.fromCol) + ', ' + rStr(c.toCol) + ')))]');
-    L.push('nodes <- nodes[, c(' + rStr(c.idCol) + ', setdiff(names(nodes), ' + rStr(c.idCol) + '))]');
-    L.push('# A DSM is directional: an edge from→to means "from depends on to".');
-    L.push('g <- igraph::graph_from_data_frame(edges, directed = TRUE, vertices = nodes)');
-    L.push('cat(sprintf("✅ Loaded %d components and %d dependencies.\\n", igraph::gorder(g), igraph::gsize(g)))');
-    L.push('');
-    L.push('# 2. Cluster with Louvain ###################################################');
-    L.push('# Louvain needs an undirected graph; collapse reciprocal edges first.');
-    L.push('gu  <- igraph::as_undirected(g, mode = "collapse")');
-    L.push('set.seed(5470)');
-    L.push('lou <- igraph::cluster_louvain(gu)');
-    L.push('cat(sprintf("🧩 Louvain found %d clusters. Modularity: %.3f\\n", length(lou), igraph::modularity(lou)))');
-    L.push('');
-    L.push('# 3. Reorder the adjacency matrix by cluster (the DSM) #######################');
-    L.push('ord      <- order(lou$membership)');
-    L.push('A        <- as.matrix(igraph::as_adjacency_matrix(g))');
-    L.push('A_sorted <- A[ord, ord]');
-    L.push('image(t(A_sorted)[, nrow(A_sorted):1], col = c("white", "black"), axes = FALSE,');
-    L.push('      main = "DSM — reordered by Louvain")');
-    L.push('');
-    L.push('# 4. Coupling density + off-block marks ######################################');
-    L.push('n       <- igraph::gorder(g)');
-    L.push('deps    <- igraph::gsize(g)');
-    L.push('density <- deps / (n * (n - 1))');
-    L.push('memb    <- lou$membership');
-    L.push('el      <- igraph::as_edgelist(g, names = FALSE)');
-    L.push('offblk  <- sum(memb[el[, 1]] != memb[el[, 2]])');
-    L.push('cat(sprintf("📊 Coupling density: %.1f%%\\n", 100 * density))');
-    L.push('cat(sprintf("⚠️  Off-block marks: %d of %d dependencies\\n", offblk, deps))');
-    L.push('');
-    L.push('# 5. Failure cascade #########################################################');
-    L.push('# Who fails if a component fails? Everything that can reach it along');
-    L.push('# dependency edges (mode = "in").');
-    L.push('cascade_size <- function(g, v) length(igraph::subcomponent(g, v, mode = "in")) - 1');
-    L.push('sizes <- sapply(igraph::V(g), function(v) cascade_size(g, v))');
-    L.push('worst <- which.max(sizes)');
-    L.push('cat(sprintf("💥 Largest cascade: %d components (from %s)\\n", sizes[worst], igraph::V(g)$name[worst]))');
-    L.push('');
-    L.push('cat("\\n🎉 Done.\\n")');
-    return L.join('\n');
-  }
-
   const pyStr = (s) => '"' + String(s).replace(/"/g, '\\"') + '"';
-  function genPy() {
-    const c = exportCtx();
-    const L = [];
-    L.push('# clustering.py');
-    L.push('# Clustering & DSM — from the Network Visualizer');
-    L.push('# Louvain community detection + a reordered dependency-structure matrix (DSM)');
-    L.push('# + a failure-cascade trace, mirroring the DSM clustering case study.');
+
+  // Section-form code (woven into the comprehensive Export-as-Code script).
+  // Assumes library(igraph) / imports + the `nodes`/`edges` data frames and the
+  // pretty_section() helper already exist (the export card's setup provides them).
+  // Builds its own DIRECTED graph `gc` so the DSM/cascade are meaningful.
+  function exportSectionR() {
+    const c = exportCtx(); const L = [];
+    L.push('# Clustering (DSM) ###########################################################');
     L.push('');
-    L.push('# 0. Setup ###################################################################');
-    L.push('import numpy as np');
-    L.push('import pandas as pd');
-    L.push('import igraph as ig');
-    L.push('import matplotlib.pyplot as plt');
-    L.push('import random');
-    L.push('print("\\n🚀 Clustering & DSM (Python)")');
+    L.push('pretty_section("Clustering & DSM")');
     L.push('');
-    L.push('# 1. Build the graph ########################################################');
-    L.push('nodes = pd.read_csv(' + pyStr(c.nodesFile) + ')');
-    L.push('edges = pd.read_csv(' + pyStr(c.edgesFile) + ')');
+    L.push('# A DSM is directional (row depends on col), so build a directed graph.');
+    L.push('edges_c <- edges[, c(' + rStr(c.fromCol) + ', ' + rStr(c.toCol) + ', setdiff(names(edges), c(' + rStr(c.fromCol) + ', ' + rStr(c.toCol) + ')))]');
     if (c.slice !== '') {
       L.push('# Clustering was run on a single time slice in the visualizer — match it here.');
-      L.push('edges = edges[edges[' + pyStr(c.timeCol) + '].astype(str) == ' + pyStr(c.slice) + '].copy()');
+      L.push('edges_c <- edges_c[edges_c[[' + rStr(c.timeCol) + ']] == ' + rStr(c.slice) + ', ]');
     }
-    L.push('# Graph.DataFrame uses the first two edge columns as source/target and the');
-    L.push('# first vertex column as the id, so put the mapped columns first.');
-    L.push('edges = edges[[' + pyStr(c.fromCol) + ', ' + pyStr(c.toCol) + '] + [x for x in edges.columns if x not in (' + pyStr(c.fromCol) + ', ' + pyStr(c.toCol) + ')]]');
-    L.push('nodes = nodes[[' + pyStr(c.idCol) + '] + [x for x in nodes.columns if x != ' + pyStr(c.idCol) + ']]');
-    L.push('# A DSM is directional: an edge from→to means "from depends on to".');
-    L.push('# use_vids=False → treat the id columns as vertex NAMES, not 0-based ints.');
-    L.push('g = ig.Graph.DataFrame(edges, directed=True, vertices=nodes, use_vids=False)');
-    L.push('print(f"✅ Loaded {g.vcount()} components and {g.ecount()} dependencies.")');
+    L.push('gc  <- igraph::graph_from_data_frame(edges_c, directed = TRUE, vertices = nodes)');
+    L.push('# Louvain needs an undirected graph; collapse reciprocal edges first.');
+    L.push('guc <- igraph::as_undirected(gc, mode = "collapse")');
+    L.push('set.seed(5470)');
+    L.push('lou_c <- igraph::cluster_louvain(guc)');
+    L.push('cat(sprintf("🧩 Louvain found %d clusters (modularity %.3f)\\n", length(lou_c), igraph::modularity(lou_c)))');
+    L.push('ord   <- order(lou_c$membership)');
+    L.push('A     <- as.matrix(igraph::as_adjacency_matrix(gc))');
+    L.push('image(t(A[ord, ord])[, nrow(A):1], col = c("white", "black"), axes = FALSE, main = "DSM — reordered by Louvain")');
+    L.push('n_c <- igraph::gorder(gc); deps_c <- igraph::gsize(gc)');
+    L.push('memb <- lou_c$membership; el <- igraph::as_edgelist(gc, names = FALSE)');
+    L.push('cat(sprintf("📊 Coupling density: %.1f%%\\n", 100 * deps_c / (n_c * (n_c - 1))))');
+    L.push('cat(sprintf("⚠️  Off-block marks: %d of %d dependencies\\n", sum(memb[el[, 1]] != memb[el[, 2]]), deps_c))');
+    L.push('# Failure cascade: who fails if a component fails = everything that can reach');
+    L.push('# it along dependency edges (mode = "in").');
+    L.push('sizes <- sapply(igraph::V(gc), function(v) length(igraph::subcomponent(gc, v, mode = "in")) - 1)');
+    L.push('cat(sprintf("💥 Largest cascade: %d components (from %s)\\n", max(sizes), igraph::V(gc)$name[which.max(sizes)]))');
     L.push('');
-    L.push('# 2. Cluster with Louvain ###################################################');
-    L.push('gu = g.as_undirected(mode="collapse")');
-    L.push('random.seed(5470)');
-    L.push('lou = gu.community_multilevel()');
-    L.push('print(f"🧩 Louvain found {len(lou)} clusters. Modularity: {lou.modularity:.3f}")');
-    L.push('');
-    L.push('# 3. Reorder the adjacency matrix by cluster (the DSM) #######################');
-    L.push('memb  = np.array(lou.membership)');
-    L.push('order = np.argsort(memb, kind="stable")');
-    L.push('A = np.array(g.get_adjacency().data)');
-    L.push('A_sorted = A[np.ix_(order, order)]');
-    L.push('plt.imshow(A_sorted, cmap="Greys"); plt.title("DSM — reordered by Louvain"); plt.axis("off"); plt.show()');
-    L.push('');
-    L.push('# 4. Coupling density + off-block marks ######################################');
-    L.push('n = g.vcount(); deps = g.ecount()');
-    L.push('density = deps / (n * (n - 1))');
-    L.push('offblk = sum(1 for e in g.es if memb[e.source] != memb[e.target])');
-    L.push('print(f"📊 Coupling density: {100*density:.1f}%")');
-    L.push('print(f"⚠️  Off-block marks: {offblk} of {deps} dependencies")');
-    L.push('');
-    L.push('# 5. Failure cascade #########################################################');
-    L.push('# Who fails if a component fails? Everything that can reach it (mode="in").');
-    L.push('def cascade_size(g, v):');
-    L.push('    return len(g.subcomponent(v, mode="in")) - 1');
-    L.push('sizes = [cascade_size(g, v.index) for v in g.vs]');
-    L.push('worst = int(np.argmax(sizes))');
-    L.push('print(f"💥 Largest cascade: {sizes[worst]} components (from {g.vs[worst][\'name\']})")');
-    L.push('');
-    L.push('print("\\n🎉 Done.")');
     return L.join('\n');
   }
+  function exportSectionPy() {
+    const c = exportCtx(); const L = [];
+    L.push('# Clustering (DSM) ###########################################################');
+    L.push('');
+    L.push('pretty_section("Clustering & DSM")');
+    L.push('');
+    L.push('# A DSM is directional (row depends on col), so build a directed graph.');
+    L.push('edges_c = edges[[' + pyStr(c.fromCol) + ', ' + pyStr(c.toCol) + '] + [x for x in edges.columns if x not in (' + pyStr(c.fromCol) + ', ' + pyStr(c.toCol) + ')]]');
+    if (c.slice !== '') {
+      L.push('# Clustering was run on a single time slice in the visualizer — match it here.');
+      L.push('edges_c = edges_c[edges_c[' + pyStr(c.timeCol) + '].astype(str) == ' + pyStr(c.slice) + '].copy()');
+    }
+    L.push('gc = ig.Graph.DataFrame(edges_c, directed=True, vertices=nodes, use_vids=False)');
+    L.push('guc = gc.as_undirected(mode="collapse")');
+    L.push('import random as _rnd; _rnd.seed(5470)');
+    L.push('lou_c = guc.community_multilevel()');
+    L.push('print(f"🧩 Louvain found {len(lou_c)} clusters (modularity {lou_c.modularity:.3f})")');
+    L.push('memb = np.array(lou_c.membership); order = np.argsort(memb, kind="stable")');
+    L.push('A = np.array(gc.get_adjacency().data)');
+    L.push('plt.imshow(A[np.ix_(order, order)], cmap="Greys"); plt.title("DSM — reordered by Louvain"); plt.axis("off"); plt.show()');
+    L.push('n_c = gc.vcount(); deps_c = gc.ecount()');
+    L.push('offblk = sum(1 for e in gc.es if memb[e.source] != memb[e.target])');
+    L.push('print(f"📊 Coupling density: {100*deps_c/(n_c*(n_c-1)):.1f}%")');
+    L.push('print(f"⚠️  Off-block marks: {offblk} of {deps_c} dependencies")');
+    L.push('# Failure cascade: everything that can reach a component (mode="in").');
+    L.push('sizes = [len(gc.subcomponent(v.index, mode="in")) - 1 for v in gc.vs]');
+    L.push('w = int(np.argmax(sizes))');
+    L.push('print(f"💥 Largest cascade: {sizes[w]} components (from {gc.vs[w][\'name\']})")');
+    L.push('');
+    return L.join('\n');
+  }
+  function exportSection(lang) { return lang === 'r' ? exportSectionR() : exportSectionPy(); }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   NV.on('graph-loaded', () => { sig = ''; renderCard(); });
@@ -638,7 +556,7 @@
     renderCard();
   });
 
-  window.NetSciVizClust = { drawMatrix, renderCard };
+  window.NetSciVizClust = { drawMatrix, renderCard, exportSection };
 
   if (document.readyState !== 'loading') renderCard();
   else document.addEventListener('DOMContentLoaded', renderCard);

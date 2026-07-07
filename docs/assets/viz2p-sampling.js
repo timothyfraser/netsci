@@ -499,11 +499,7 @@
           ${simHtml}
         </div>
       </details>
-      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
-        <button id="viz2-samp-export-r" class="viz-btn">▶ R in playground</button>
-        <button id="viz2-samp-export-py" class="viz-btn">▶ Python in playground</button>
-      </div>
-      <div id="viz2-samp-exportmsg" class="formula-note" style="margin-top:6px;"></div>`;
+      <p class="formula-note" style="margin-top:10px;">Reproduce this in code from the <strong>Export as Code</strong> card below — tick <strong>🎯 Sampling</strong> to weave it into the script.</p>`;
 
     // Draw the distribution after the DOM exists
     if (lastSim) { const svg = $('viz2-samp-distsvg'); if (svg) drawDist(svg, lastSim.samples, lastSim.trueVal, lastSim.dp); }
@@ -516,8 +512,6 @@
     on('viz2-samp-stat', 'change', (e) => { simStat = e.target.value; });
     on('viz2-samp-n', 'change', (e) => { simN = parseInt(e.target.value, 10) || 200; const b = $('viz2-samp-run'); if (b) b.textContent = `📈 Run ${simN} samples`; });
     on('viz2-samp-run', 'click', runSim);
-    on('viz2-samp-export-r', 'click', () => exportCode('r'));
-    on('viz2-samp-export-py', 'click', () => exportCode('py'));
   }
 
   // ── Code export ───────────────────────────────────────────────────────────
@@ -529,42 +523,28 @@
   }
   const rStr = (s) => '"' + String(s).replace(/"/g, '\\"') + '"';
   const pyStr = (s) => '"' + String(s).replace(/"/g, '\\"') + '"';
-  function exportCode(lang) {
-    const stat = STATS[simStat];
-    if (stat.node && !(NV.state.selectedNode && population().ids.has(NV.state.selectedNode))) {
-      const m = $('viz2-samp-exportmsg'); if (m) m.textContent = 'Select a node in the graph before exporting a per-node metric.'; return;
-    }
-    const code = lang === 'r' ? genR() : genPy();
-    try { localStorage.setItem('netsci-playground-handoff', JSON.stringify({ lang: lang === 'r' ? 'r' : 'python', code, datasetKey: NV.state.currentDatasetKey || null, ts: Date.now(), source: 'visualizer' })); }
-    catch (e) { const m = $('viz2-samp-exportmsg'); if (m) m.textContent = 'Could not save handoff.'; return; }
-    window.open(lang === 'r' ? 'playground-r.html' : 'playground-py.html', '_blank');
-    const m = $('viz2-samp-exportmsg'); if (m) m.textContent = 'Opened the ' + (lang === 'r' ? 'R' : 'Python') + ' playground — it runs the sampling simulation when it finishes loading.';
-  }
-  function genR() {
+
+  // Section-form code (woven into the comprehensive Export-as-Code script).
+  // Assumes library(igraph) / imports + the `nodes`/`edges` data frames and the
+  // pretty_section() helper already exist (the export card's setup provides them).
+  // Builds its own UNDIRECTED simplified graph `gs` so the sampling stats match.
+  function exportSectionR() {
     const c = exportCtx(); const isEdge = edgeMethod(); const stat = STATS[simStat]; const isNode = !!stat.node;
     const pop = population(); const k = (userSetSize && sizeCount) ? sizeCount : defaultSize(pop);
     const L = [];
-    L.push('#\' @name sampling.R');
-    L.push('#\' @title Network sampling — from the Network Visualizer');
-    L.push('#\' @description Draw ' + simN + ' ' + METHODS[method] + ' samples, build a sampling');
-    L.push('#\' distribution of ' + stat.label + ', and compare it to the true value.');
+    L.push('# Sampling #################################################################');
     L.push('');
-    L.push('# 0. Setup ###################################################################');
-    L.push('library(igraph)');
-    L.push('cat("\\n🚀 Network sampling (R)\\n")');
+    L.push('pretty_section("Sampling distribution")');
     L.push('');
-    L.push('# 1. Build the graph ########################################################');
-    L.push('nodes <- read.csv(' + rStr(c.nodesFile) + ', stringsAsFactors = FALSE)');
-    L.push('edges <- read.csv(' + rStr(c.edgesFile) + ', stringsAsFactors = FALSE)');
-    L.push('edges <- edges[, c(' + rStr(c.fromCol) + ', ' + rStr(c.toCol) + ', setdiff(names(edges), c(' + rStr(c.fromCol) + ', ' + rStr(c.toCol) + ')))]');
-    L.push('nodes <- nodes[, c(' + rStr(c.idCol) + ', setdiff(names(nodes), ' + rStr(c.idCol) + '))]');
-    L.push('g <- igraph::simplify(igraph::graph_from_data_frame(edges, directed = FALSE, vertices = nodes), edge.attr.comb = "first")');
-    L.push('cat(sprintf("✅ Population: %d nodes, %d edges.\\n", igraph::gorder(g), igraph::gsize(g)))');
+    L.push('# Sampling stats are undirected; collapse reciprocal edges into one.');
+    L.push('edges_s <- edges[, c(' + rStr(c.fromCol) + ', ' + rStr(c.toCol) + ', setdiff(names(edges), c(' + rStr(c.fromCol) + ', ' + rStr(c.toCol) + ')))]');
+    L.push('gs <- igraph::simplify(igraph::graph_from_data_frame(edges_s, directed = FALSE, vertices = nodes), edge.attr.comb = "first")');
+    L.push('cat(sprintf("✅ Population: %d nodes, %d edges.\\n", igraph::gorder(gs), igraph::gsize(gs)))');
     L.push('');
     L.push('SIZE <- ' + k + '   # ' + (isEdge ? 'edges' : 'nodes') + ' per sample');
     if (isNode) L.push('FOCAL <- ' + rStr(c.focal) + '   # the selected node (kept in every sample)');
     L.push('');
-    L.push('# 2. The statistic + one sampler #############################################');
+    L.push('# The statistic + one sampler.');
     if (isNode) {
       L.push('stat_fn <- function(sg) {');
       L.push('  if (!(FOCAL %in% igraph::V(sg)$name)) return(NA_real_)');
@@ -579,11 +559,11 @@
       L.push(rSamplerBody(method));
       L.push('}');
     }
-    L.push('true_val <- stat_fn(g)');
+    L.push('true_val <- stat_fn(gs)');
     L.push('');
-    L.push('# 3. Many samples → sampling distribution ###################################');
+    L.push('# Many samples -> sampling distribution.');
     L.push('set.seed(5470)');
-    L.push('sims <- replicate(' + simN + ', stat_fn(draw_sample(g)))');
+    L.push('sims <- replicate(' + simN + ', stat_fn(draw_sample(gs)))');
     L.push('sims <- sims[is.finite(sims)]');
     L.push('q <- quantile(sims, c(0.025, 0.975))');
     L.push('cat(sprintf("📊 True %s: %.4f\\n", ' + rStr(stat.label) + ', true_val))');
@@ -597,7 +577,6 @@
     L.push('abline(v = true_val, col = "#fbbf24", lwd = 3)');
     L.push('abline(v = q, col = "#6b8170", lwd = 1, lty = 2)');
     L.push('');
-    L.push('cat("\\n🎉 Done.\\n")');
     return L.join('\n');
   }
   function rStatExpr(key, c) {
@@ -640,35 +619,24 @@
     if (m === 'ego') return '  seeds <- sample(seq_len(igraph::vcount(g)), SIZE)\n  vs <- unique(unlist(igraph::ego(g, order = 1, nodes = seeds)))' + tail;
     return '  seeds <- sample(seq_len(igraph::vcount(g)), SIZE)\n  vs <- unique(unlist(igraph::ego(g, order = 2, nodes = seeds)))' + tail;
   }
-  function genPy() {
+  function exportSectionPy() {
     const c = exportCtx(); const isEdge = edgeMethod(); const stat = STATS[simStat]; const isNode = !!stat.node;
     const pop = population(); const k = (userSetSize && sizeCount) ? sizeCount : defaultSize(pop);
     const L = [];
-    L.push('# sampling.py');
-    L.push('# Network sampling — from the Network Visualizer');
-    L.push('# Draw ' + simN + ' ' + METHODS[method] + ' samples, build a sampling distribution of');
-    L.push('# ' + stat.label + ', and compare it to the true value.');
+    L.push('# Sampling #################################################################');
     L.push('');
-    L.push('# 0. Setup ###################################################################');
-    L.push('import numpy as np');
-    L.push('import pandas as pd');
-    L.push('import igraph as ig');
-    L.push('import matplotlib.pyplot as plt');
+    L.push('pretty_section("Sampling distribution")');
+    L.push('');
     L.push('import random');
-    L.push('print("\\n🚀 Network sampling (Python)")');
-    L.push('');
-    L.push('# 1. Build the graph ########################################################');
-    L.push('nodes = pd.read_csv(' + pyStr(c.nodesFile) + ')');
-    L.push('edges = pd.read_csv(' + pyStr(c.edgesFile) + ')');
-    L.push('edges = edges[[' + pyStr(c.fromCol) + ', ' + pyStr(c.toCol) + '] + [x for x in edges.columns if x not in (' + pyStr(c.fromCol) + ', ' + pyStr(c.toCol) + ')]]');
-    L.push('nodes = nodes[[' + pyStr(c.idCol) + '] + [x for x in nodes.columns if x != ' + pyStr(c.idCol) + ']]');
-    L.push('g = ig.Graph.DataFrame(edges, directed=False, vertices=nodes, use_vids=False).simplify(combine_edges="first")');
-    L.push('print(f"✅ Population: {g.vcount()} nodes, {g.ecount()} edges.")');
+    L.push('# Sampling stats are undirected; collapse reciprocal edges into one.');
+    L.push('edges_s = edges[[' + pyStr(c.fromCol) + ', ' + pyStr(c.toCol) + '] + [x for x in edges.columns if x not in (' + pyStr(c.fromCol) + ', ' + pyStr(c.toCol) + ')]]');
+    L.push('gs = ig.Graph.DataFrame(edges_s, directed=False, vertices=nodes, use_vids=False).simplify(combine_edges="first")');
+    L.push('print(f"✅ Population: {gs.vcount()} nodes, {gs.ecount()} edges.")');
     L.push('');
     L.push('SIZE = ' + k + '   # ' + (isEdge ? 'edges' : 'nodes') + ' per sample');
-    if (isNode) { L.push('FOCAL = ' + pyStr(c.focal) + '   # the selected node (kept in every sample)'); L.push('FIDX = g.vs.find(name=FOCAL).index'); }
+    if (isNode) { L.push('FOCAL = ' + pyStr(c.focal) + '   # the selected node (kept in every sample)'); L.push('FIDX = gs.vs.find(name=FOCAL).index'); }
     L.push('');
-    L.push('# 2. The statistic + one sampler #############################################');
+    L.push('# The statistic + one sampler.');
     if (isNode) {
       L.push('def stat_fn(sg):');
       L.push('    try: fi = sg.vs.find(name=FOCAL).index');
@@ -742,6 +710,7 @@
     if (m === 'ego') return '    seeds = random.sample(range(g.vcount()), SIZE)\n    vs = set(seeds)\n    for v in seeds: vs.update(g.neighborhood(v, order=1))' + tail;
     return '    seeds = random.sample(range(g.vcount()), SIZE)\n    vs = set(seeds)\n    for v in seeds: vs.update(g.neighborhood(v, order=2))' + tail;
   }
+  function exportSection(lang) { return lang === 'r' ? exportSectionR() : exportSectionPy(); }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   NV.on('render', decorate);
@@ -750,7 +719,7 @@
   NV.on('removed-changed', () => { renderCard(); });
   NV.on('node-selected', () => { renderCard(); });   // refresh the per-node stat options
 
-  window.NetSciVizSample = { renderCard };
+  window.NetSciVizSample = { renderCard, exportSection };
   if (document.readyState !== 'loading') renderCard();
   else document.addEventListener('DOMContentLoaded', renderCard);
 })();
