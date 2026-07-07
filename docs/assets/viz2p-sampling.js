@@ -668,7 +668,6 @@
     L.push('for qq in q: plt.axvline(qq, color="#6b8170", linewidth=1, linestyle="--")');
     L.push('plt.title("Sampling distribution"); plt.xlabel(stat_label); plt.show()');
     L.push('');
-    L.push('print("\\n🎉 Done.")');
     return L.join('\n');
   }
   function pyStatExpr(key, c) {
@@ -678,7 +677,7 @@
       case 'mean_wdegree': return w ? 'float(np.mean(sg.strength(' + w + ')))' : 'float(np.mean(sg.degree()))';
       case 'sd_degree': return 'float(np.std(sg.degree(), ddof=1)) if sg.vcount() > 1 else 0.0';
       case 'sd_wdegree': return w ? 'float(np.std(sg.strength(' + w + '), ddof=1)) if sg.vcount() > 1 else 0.0' : 'float(np.std(sg.degree(), ddof=1)) if sg.vcount() > 1 else 0.0';
-      case 'triangles': return 'sum(sg.count_triangles()) / 3';
+      case 'triangles': return 'float(len(sg.list_triangles()))';
       case 'transitivity': return 'sg.transitivity_undirected(mode="zero")';
       case 'apl': return 'sg.average_path_length()';
       case 'density': return 'sg.density()';
