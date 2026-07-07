@@ -238,11 +238,18 @@
     curCell = cell;
     const gridW = n * cell, gridH = n * cell;
     const totalW = labelW + gridW, totalH = labelH + gridH;
-    const offX = Math.max(6, (stageW - totalW) / 2);
-    const offY = Math.max(6, (stageH - totalH) / 2);
-
+    // Draw at the origin; a fit/center zoom transform (applied at the end, on a
+    // fresh view) scales the whole matrix to fit the stage — essential on phones
+    // where a big matrix would otherwise overflow off-screen. Users can still
+    // zoom/pan afterward.
+    const offX = 0, offY = 0;
+    const fitScale = Math.min(1, (stageW - 10) / totalW, (stageH - 10) / totalH);
+    // "Fresh" = no transform yet, or the identity transform the core sets when
+    // you switch INTO matrix layout (which arrives as k=1/x=0/y=0, not null).
+    const t0 = NV.state.zoomTransform;
+    const freshView = !t0 || (Math.abs(t0.k - 1) < 1e-9 && t0.x === 0 && t0.y === 0);
     const root = svg.append('g').attr('class', 'viewport');
-    if (NV.state.zoomTransform) root.attr('transform', NV.state.zoomTransform);
+    if (t0 && !freshView) root.attr('transform', t0);
 
     const blocksOn = showBlocks && clusters.length === n;
     const showLabels = cell >= 11;
@@ -297,7 +304,7 @@
     }
     // Labels (with drag-to-reorder)
     if (showLabels) {
-      const zk = (NV.state.zoomTransform && NV.state.zoomTransform.k) || 1;
+      const zk = freshView ? fitScale : ((NV.state.zoomTransform && NV.state.zoomTransform.k) || 1);
       for (let c = 0; c < n; c++) {
         const i = order[c];
         const x = offX + labelW + c * cell + cell / 2, y = offY + labelH - 6;
@@ -322,6 +329,14 @@
         attachDrag(t, i, r, 'row', cell * zk);
         root.node().appendChild(t);
       }
+    }
+    // On a fresh view, scale+center the whole matrix to fit the stage (via the
+    // shared d3.zoom so the +/- buttons stay in sync). Big matrices shrink to
+    // fit rather than overflowing off-screen on phones.
+    if (freshView && NV.state.zoom) {
+      const tx = Math.max(5, (stageW - totalW * fitScale) / 2);
+      const ty = Math.max(5, (stageH - totalH * fitScale) / 2);
+      d3.select(svgEl).call(NV.state.zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(fitScale));
     }
   }
 
