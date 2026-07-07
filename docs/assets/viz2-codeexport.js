@@ -21,7 +21,7 @@
 // bootstrap-ready, fetch the dataset's CSVs into their WASM FS, and drop
 // the code into the CodeMirror editor.
 //
-// Mounted at: #viz2-codeexport-body (declared in visualizer2.html).
+// Mounted at: #viz2-codeexport-body (declared in visualizer.html).
 // ============================================================
 (function () {
   'use strict';
@@ -79,6 +79,8 @@
     includeDisrupt: true,    // Section 8 — disruption stats (baseline vs live)
     includeAggregate: true,  // Section 9 — group-aggregation of the network
     includeViz: true,        // Section 10 — static ggplot / matplotlib of the graph
+    includeClustering: false,// Section 11 — clustering (DSM) — OFF by default
+    includeSampling: false,  // Section 12 — sampling distribution — OFF by default
   };
 
   // ── Snapshot the visualizer's live state ────────────────────
@@ -182,6 +184,8 @@
         disrupt:   !!ui.includeDisrupt,
         aggregate: !!ui.includeAggregate,
         viz:       !!ui.includeViz,
+        clustering:!!ui.includeClustering,
+        sampling:  !!ui.includeSampling,
       },
     };
   }
@@ -210,7 +214,7 @@
     // ── 0. Header banner (roxygen-style, matches code/NN_<case>/example.R) ──
     L.push("#' @name reproducer.R");
     L.push("#' @title Network Visualizer Reproducer — " + label);
-    L.push("#' @author (you — regenerate anytime from visualizer2.html)");
+    L.push("#' @author (you — regenerate anytime from visualizer.html)");
     L.push("#' @description");
     L.push("#' This script reproduces exactly what was on your screen in the");
     L.push("#' Network Visualizer at the moment you pressed \"Open in playground\":");
@@ -1026,6 +1030,19 @@
       L.push('');
     }
 
+    // ── 11. Clustering (DSM) — optional, from the Clustering card ──
+    if (snap.include.clustering && window.NetSciVizClust && window.NetSciVizClust.exportSection) {
+      L.push('# 11. Clustering (DSM) #######################################################');
+      L.push('');
+      L.push(window.NetSciVizClust.exportSection('r'));
+    }
+    // ── 12. Sampling distribution — optional, from the Sampling card ──
+    if (snap.include.sampling && window.NetSciVizSample && window.NetSciVizSample.exportSection) {
+      L.push('# 12. Sampling ###############################################################');
+      L.push('');
+      L.push(window.NetSciVizSample.exportSection('r'));
+    }
+
     L.push('cat("\\n' + HR + '\\n")');
     L.push('cat("🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.\\n")');
     L.push('cat("' + HR + '\\n")');
@@ -1045,7 +1062,7 @@
     // ── 0. Header banner ──────────────────────────────────────────
     L.push('# reproducer.py');
     L.push('# Network Visualizer Reproducer — ' + label);
-    L.push('# Author: (you — regenerate anytime from visualizer2.html)');
+    L.push('# Author: (you — regenerate anytime from visualizer.html)');
     L.push('#');
     L.push('# This script reproduces exactly what was on your screen in the');
     L.push('# Network Visualizer at the moment you pressed "Open in playground":');
@@ -1879,6 +1896,19 @@
       L.push('');
     }
 
+    // ── 11. Clustering (DSM) — optional, from the Clustering card ──
+    if (snap.include.clustering && window.NetSciVizClust && window.NetSciVizClust.exportSection) {
+      L.push('# 11. Clustering (DSM) #######################################################');
+      L.push('');
+      L.push(window.NetSciVizClust.exportSection('py'));
+    }
+    // ── 12. Sampling distribution — optional, from the Sampling card ──
+    if (snap.include.sampling && window.NetSciVizSample && window.NetSciVizSample.exportSection) {
+      L.push('# 12. Sampling ###############################################################');
+      L.push('');
+      L.push(window.NetSciVizSample.exportSection('py'));
+    }
+
     L.push('print("\\n' + HR + '")');
     L.push('print("🎉 Done. Re-run for slightly different draws, or press Open in playground again after editing the visualizer.")');
     L.push('print("' + HR + '")');
@@ -2032,6 +2062,14 @@
           <input type="checkbox" id="viz2-codeexport-inc-viz" ${ui.includeViz ? 'checked' : ''} style="accent-color:var(--green-bright);">
           <span>🖼 Network visualization</span>
         </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-clustering" ${ui.includeClustering ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>🧩 Clustering (DSM)</span>
+        </label>
+        <label class="viz2-export-opt" style="display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:12px;color:var(--green-mint);">
+          <input type="checkbox" id="viz2-codeexport-inc-sampling" ${ui.includeSampling ? 'checked' : ''} style="accent-color:var(--green-bright);">
+          <span>🎯 Sampling</span>
+        </label>
       </fieldset>
       <div class="formula-note" style="margin:-2px 0 6px;">
         Reproduces the current state${bitsHtml}. Regenerates automatically as you change things.
@@ -2067,6 +2105,8 @@
     bind('viz2-codeexport-inc-disrupt',   'includeDisrupt');
     bind('viz2-codeexport-inc-aggregate', 'includeAggregate');
     bind('viz2-codeexport-inc-viz',       'includeViz');
+    bind('viz2-codeexport-inc-clustering','includeClustering');
+    bind('viz2-codeexport-inc-sampling',  'includeSampling');
   }
 
   // Re-render on every event that could change the snapshot.
