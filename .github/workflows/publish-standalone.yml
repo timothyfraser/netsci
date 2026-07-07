@@ -4,16 +4,21 @@
 # build environment can't reach ytimg). The artifact is never committed to the
 # repo; the Release is its home.
 #
-# Trigger it either way:
-#   - Actions tab -> "Publish standalone app" -> Run workflow  (updates the
-#     `standalone-latest` release), or
-#   - push a tag like `standalone-v1` (creates a versioned release).
+# Runs automatically whenever the site or the builder changes on `instructor`,
+# and republishes the `standalone-latest` release. (workflow_dispatch isn't
+# usable here because the default branch `main` is a generated student subset
+# that doesn't carry this workflow; auto-run on the instructor push is the
+# reliable trigger.)
 name: Publish standalone app
 
 on:
   workflow_dispatch:
   push:
-    tags: ['standalone-v*']
+    branches: [instructor]
+    paths:
+      - 'docs/**'
+      - 'scripts/build-standalone.mjs'
+      - '.github/workflows/publish-standalone.yml'
 
 permissions:
   contents: write
