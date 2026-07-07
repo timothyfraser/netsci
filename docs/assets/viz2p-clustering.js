@@ -181,11 +181,21 @@
   }
 
   // ── Actions ───────────────────────────────────────────────────────────────
+  // Flip the layout picker to Matrix (leaving it changeable afterward), so the
+  // clustering the user just ran is immediately visible as a DSM.
+  function switchToMatrix() {
+    if (!NV.state.graph || NV.state.layout === 'matrix') return;
+    NV.state.layout = 'matrix';
+    document.querySelectorAll('.seg-layout').forEach((b) => b.classList.toggle('active', b.dataset.layout === 'matrix'));
+    if (NV.unfix) NV.unfix();
+    if (NV.layout) NV.layout();
+  }
   function autoCluster() {
     const dsm = ensureDsm(); if (!dsm.n) return;
     clusters = louvain(symmetrize(dsm.adj));
     order = orderByCommunities(clusters);
     showBlocks = true;
+    switchToMatrix();
     NV.render(); renderCard();
   }
   function toggleBlocks() { if (clusters.length === 0) { autoCluster(); return; } showBlocks = !showBlocks; NV.render(); renderCard(); }
