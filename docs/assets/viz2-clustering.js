@@ -1,4 +1,4 @@
-// viz2p-clustering.js — PREVIEW ONLY (loaded only by visualizer2.html).
+// viz2-clustering.js — loaded by visualizer.html.
 // Clustering (DSM) card + the "matrix" layout renderer.
 //
 // Ports the DSM-clustering case study (code/10_dsm-clustering + the lab page)
@@ -11,7 +11,7 @@
 // matches — so clustering can run on one slice or the whole aggregated network.
 //
 // The module exposes window.NetSciVizClust.drawMatrix(svgEl); the forked core
-// (viz2p-core.js) calls it from render() when state.layout === 'matrix'.
+// (viz2-core.js) calls it from render() when state.layout === 'matrix'.
 (function () {
   'use strict';
   if (!window.NetSciViz2) return;

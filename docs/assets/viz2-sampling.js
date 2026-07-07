@@ -1,4 +1,4 @@
-// viz2p-sampling.js — PREVIEW ONLY (loaded only by visualizer2.html).
+// viz2-sampling.js — loaded by visualizer.html.
 // Sampling card: draw a sample from the current network, highlight it in the
 // graph, report coverage/triangle/degree stats vs the true population, and run
 // many samples to build a sampling distribution of a chosen statistic — then
