@@ -19,7 +19,7 @@
 
 # SYSEN 5470 — Resource Index
 
-_Auto-generated NotebookLM source · 2026-07-07 11:42 UTC_
+_Auto-generated NotebookLM source · 2026-07-07 16:08 UTC_
 
 Structured index of every public page and code file in the course. Paste this into NotebookLM as a source so it can answer 'where do I find X?' with a direct link. Each entry has a title, URL, topic, use case, and tags to help with retrieval.
 
@@ -776,6 +776,13 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 - **Use case:** _(uncurated — fill me in)_
 - **Tags:** _(none)_
 
+## SYSEN 5470 · Network Science — Offline Copy
+
+- **URL:** https://timothyfraser.github.io/netsci/netsci-standalone.html
+- **Topic:** _(uncurated — fill me in)_
+- **Use case:** _(uncurated — fill me in)_
+- **Tags:** _(none)_
+
 ## Network Visualizer · SYSEN 5470
 
 - **URL:** https://timothyfraser.github.io/netsci/visualizer1.html
@@ -798,7 +805,7 @@ _These files exist on disk but don't yet have curated metadata. Add them to `scr
 
 # SYSEN 5470 — Network Science for Systems Engineering
 
-_Auto-generated NotebookLM source · 2026-07-07 11:42 UTC_
+_Auto-generated NotebookLM source · 2026-07-07 16:08 UTC_
 
 This document is the concatenated visible text of the course website. It refreshes automatically whenever the site changes. Paste this file into NotebookLM as a source.
 
@@ -6487,6 +6494,14 @@ Final due 9 AM**Week 3 \+ final project submission.** Remaining sketches and LCs
 
 ---
 
+# SYSEN 5470 · Network Science — Offline Copy
+
+_Source: docs/netsci-standalone.html_
+
+Loading offline copy…
+
+---
+
 # Network Visualizer · SYSEN 5470
 
 _Source: docs/visualizer1.html_
@@ -6800,7 +6815,7 @@ All datasets are synthetic or public:
 
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-07-07 11:42 UTC_
+_Auto-generated NotebookLM source · 2026-07-07 16:08 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
