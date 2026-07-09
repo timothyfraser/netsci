@@ -1,10 +1,10 @@
 # SYSEN 5470 — Coding Modules Bundle
 
-_Auto-generated NotebookLM source · 2026-07-07 20:51 UTC_
+_Auto-generated NotebookLM source · 2026-07-09 15:25 UTC_
 
 Every Markdown, R, and Python file in the course's coding modules, concatenated into one document. Paste this into NotebookLM as a source alongside the website bundle.
 
-**173 files included.**
+**176 files included.**
 
 ---
 
@@ -853,6 +853,7 @@ FIELDNAMES = [
     "status",
     "instructor_comment",
     "classbot_comment",
+    "report_text_override",
     "published_at",
     "published_grade",
     "publish_error",
@@ -1119,7 +1120,8 @@ from env import GRADING_ROOT, mock_llm_enabled
 from gateway_client import get_client
 from lc_prompts import build_lc_comment_html, build_lc_system_prompt, build_lc_user_prompt
 from lc_sources import load_lc_reference
-from name_utils import display_name, first_name
+from llm_privacy import anonymize_llm_metadata, anonymize_submission_text
+from submission_text import read_submission_text
 from litellm_client import DEFAULT_MODEL, _extract_json, save_review
 from rubric import get_assignment
 
@@ -1237,16 +1239,9 @@ def run_lc_classbot_for_row(
     assignment = get_assignment(row.get("assignment_key", ""))
     if not assignment:
         raise ValueError(f"Unknown assignment: {row.get('assignment_key')}")
-    text_path = Path(row.get("cached_text_path", ""))
-    submission_text = text_path.read_text(encoding="utf-8") if text_path.is_file() else ""
-    metadata = {
-        "student_name": row.get("student_name"),
-        "student_display_name": display_name(row.get("student_name", "")),
-        "student_first_name": first_name(row.get("student_name", "")),
-        "assignment": row.get("assignment_name"),
-        "assignment_key": row.get("assignment_key"),
-        "submitted_at": row.get("submitted_at"),
-    }
+    raw_text = read_submission_text(row)
+    submission_text = anonymize_submission_text(raw_text, row)
+    metadata = anonymize_llm_metadata(row)
     review = review_lc_submission(submission_text, assignment, metadata, model=model)
     key = row["submission_key"]
     llm_path = save_review(key, review)
@@ -1307,7 +1302,7 @@ Return ONLY valid JSON:
   }},
   "format_ok": true,
   "proposed_grade": "1" or "0",
-  "classbot_summary": "2-3 sentences for instructor (use student_first_name from metadata — never last name alone)",
+  "classbot_summary": "2-3 sentences for instructor (refer to the student as 'the student' or 'they' — no personal names)",
   "confidence": "low" | "medium" | "high"
 }}
 
@@ -1317,7 +1312,7 @@ Grading policy (completion):
 - For a single wrong LC letter, still grade "1" but explain the mistake briefly in feedback.
 - Use emojis in feedback fields (👍 ✅ ⚠️ ❌ 💡 📎).
 - Be generous on formatting (LC1 vs LC 01 vs lc1: B).
-- In classbot_summary, use the student's first name only (never last name alone or shouting).
+- In classbot_summary, refer to the student as "the student" or "they" — do not use personal names.
 - For code_answer: when reference.code_check.expected_value is present (answer_source local_execution),
   treat it as the authoritative expected answer; compare student_value against it (allow minor formatting).
 
@@ -1580,7 +1575,8 @@ from pydantic import BaseModel, Field, field_validator
 
 from env import GRADING_ROOT, mock_llm_enabled
 from gateway_client import get_client
-from name_utils import display_name, first_name
+from llm_privacy import anonymize_llm_metadata, anonymize_submission_text
+from submission_text import read_submission_text
 from prompts import build_classbot_comment_from_review, build_system_prompt, build_user_prompt
 from rubric import compute_score, load_rubric, max_deduction_map
 
@@ -1591,6 +1587,99 @@ DEFAULT_MODEL = "claude-haiku-4-5"
 SONNET_MODEL = "claude-sonnet-4-6"
 PDF_MODEL = "google.gemini-2.5-pro"
 
+CHECKLIST_IDS = (
+    "research_question",
+    "dataset_assumptions",
+    "methods_client_language",
+    "results_statistics_in_text",
+    "discussion_limitations",
+)
+
+
+def _normalize_search_hint(value: Any) -> str:
+    if value is None:
+        return ""
+    text = str(value).strip()
+    if not text:
+        return ""
+    words = text.split()
+    if len(words) >= 3:
+        return " ".join(words[:3])
+    pad = ("check", "report", "section")
+    while len(words) < 3:
+        words.append(pad[len(words) % len(pad)])
+    return " ".join(words[:3])
+
+
+def _normalize_checklist_id(raw: Any) -> str | None:
+    if raw is None:
+        return None
+    text = str(raw).strip().lower()
+    text = re.sub(r"^\d+\.\s*", "", text)
+    slug = re.sub(r"[^a-z0-9]+", "_", text).strip("_")
+    for cid in CHECKLIST_IDS:
+        if slug == cid or slug.startswith(cid) or cid in slug:
+            return cid
+    if "research" in text and "question" in text:
+        return "research_question"
+    if "dataset" in text or "assumption" in text:
+        return "dataset_assumptions"
+    if "method" in text and ("client" in text or "language" in text or "jargon" in text):
+        return "methods_client_language"
+    if "result" in text and ("statistic" in text or "prose" in text or "number" in text):
+        return "results_statistics_in_text"
+    if "discussion" in text or "limitation" in text:
+        return "discussion_limitations"
+    return None
+
+
+def _normalize_rating(value: Any, *, allowed: tuple[str, ...], default: str) -> str:
+    rating = str(value or default).strip().lower()
+    return rating if rating in allowed else default
+
+
+def _normalize_review_data(data: dict[str, Any]) -> dict[str, Any]:
+    out = dict(data)
+    for req in out.get("requirements", []):
+        if isinstance(req, dict):
+            req["search_hint"] = _normalize_search_hint(req.get("search_hint"))
+    for issue in out.get("top_issues", []):
+        if isinstance(issue, dict):
+            issue["search_hint"] = _normalize_search_hint(issue.get("search_hint"))
+    checklist: list[dict[str, Any]] = []
+    for item in out.get("report_checklist", []) or []:
+        if not isinstance(item, dict):
+            continue
+        entry = dict(item)
+        cid = entry.get("id") or entry.get("item") or entry.get("name") or entry.get("label")
+        norm_id = _normalize_checklist_id(cid)
+        if not norm_id:
+            continue
+        entry["id"] = norm_id
+        for drop in ("item", "name", "label"):
+            entry.pop(drop, None)
+        entry["rating"] = _normalize_rating(
+            entry.get("rating"),
+            allowed=("strong", "partial", "weak"),
+            default="partial",
+        )
+        checklist.append(entry)
+    out["report_checklist"] = checklist[:5]
+    ai = out.get("client_ai_likelihood")
+    if isinstance(ai, dict):
+        rating = _normalize_rating(ai.get("rating"), allowed=("low", "medium", "high"), default="")
+        if not rating:
+            out["client_ai_likelihood"] = None
+        else:
+            ai = dict(ai)
+            ai["rating"] = rating
+            patterns = ai.get("patterns")
+            ai["patterns"] = [str(p) for p in patterns[:6]] if isinstance(patterns, list) else []
+            out["client_ai_likelihood"] = ai
+    else:
+        out["client_ai_likelihood"] = None
+    return out
+
 
 class RequirementReview(BaseModel):
     id: str
@@ -1600,16 +1689,10 @@ class RequirementReview(BaseModel):
     proposed_deduction: int = 0
     search_hint: str = ""
 
-    @field_validator("search_hint")
+    @field_validator("search_hint", mode="before")
     @classmethod
-    def three_words(cls, v: str) -> str:
-        v = v.strip()
-        if not v:
-            return ""
-        words = v.split()
-        if len(words) != 3:
-            raise ValueError(f"search_hint must be exactly 3 words, got {len(words)}")
-        return " ".join(words)
+    def three_words(cls, v: Any) -> str:
+        return _normalize_search_hint(v)
 
 
 class TopIssue(BaseModel):
@@ -1619,21 +1702,36 @@ class TopIssue(BaseModel):
     location: str = ""
     search_hint: str = ""
 
-    @field_validator("search_hint")
+    @field_validator("search_hint", mode="before")
     @classmethod
-    def three_words(cls, v: str) -> str:
-        v = v.strip()
-        if not v:
-            return ""
-        words = v.split()
-        if len(words) != 3:
-            raise ValueError(f"search_hint must be exactly 3 words, got {len(words)}")
-        return " ".join(words)
+    def three_words(cls, v: Any) -> str:
+        return _normalize_search_hint(v)
+
+
+class ReportChecklistItem(BaseModel):
+    id: Literal[
+        "research_question",
+        "dataset_assumptions",
+        "methods_client_language",
+        "results_statistics_in_text",
+        "discussion_limitations",
+    ]
+    rating: Literal["strong", "partial", "weak"]
+    evidence: str = ""
+    location: str = ""
+
+
+class ClientAiLikelihood(BaseModel):
+    rating: Literal["low", "medium", "high"]
+    rationale: str = ""
+    patterns: list[str] = Field(default_factory=list, max_length=6)
 
 
 class ClassbotReview(BaseModel):
     requirements: list[RequirementReview]
     top_issues: list[TopIssue] = Field(min_length=0, max_length=5)
+    report_checklist: list[ReportChecklistItem] = Field(default_factory=list, min_length=0, max_length=5)
+    client_ai_likelihood: ClientAiLikelihood | None = None
     classbot_summary: str = ""
     confidence: Literal["low", "medium", "high"] = "medium"
 
@@ -1682,8 +1780,23 @@ def _mock_review() -> dict[str, Any]:
     }
 
 
+def _normalize_hygiene_review(data: dict[str, Any]) -> dict[str, Any]:
+    """Cap GitHub noise; script not assessable from extracted text."""
+    for req in data.get("requirements", []):
+        rid = req.get("id")
+        if rid == "project_script":
+            req["status"] = "not_assessable"
+            req["proposed_deduction"] = 0
+            if not req.get("evidence"):
+                req["evidence"] = "Check Canvas attachments; not verifiable from report text alone."
+        elif rid == "github_link" and req.get("status") == "missing":
+            prop = int(req.get("proposed_deduction", 0) or 0)
+            req["proposed_deduction"] = min(prop, 2)
+    return data
+
+
 def _validate_review(data: dict[str, Any]) -> ClassbotReview:
-    return ClassbotReview.model_validate(data)
+    return ClassbotReview.model_validate(_normalize_hygiene_review(_normalize_review_data(data)))
 
 
 def _chat_text(model: str, system: str, user: str) -> str:
@@ -1735,7 +1848,7 @@ def review_submission(
     pdf_path: Path | None = None,
 ) -> dict[str, Any]:
     if mock_llm_enabled():
-        review = _validate_review(_mock_review())
+        review = _validate_review(_normalize_hygiene_review(_mock_review()))
         return review.model_dump()
 
     system = build_system_prompt()
@@ -1753,7 +1866,14 @@ def review_submission(
             return review.model_dump()
         except Exception as exc:
             last_err = exc
-            user = user + "\n\nYour previous JSON was invalid. Return ONLY valid JSON with exact schema and 3-word search_hints."
+            user = (
+                user
+                + "\n\nYour previous JSON was invalid. Return ONLY valid JSON matching the schema: "
+                "use `id` (not `item`) in report_checklist entries "
+                "(research_question, dataset_assumptions, methods_client_language, "
+                "results_statistics_in_text, discussion_limitations); "
+                "search_hint must be exactly three words."
+            )
     raise RuntimeError(f"Classbot review failed: {last_err}") from last_err
 
 
@@ -1799,17 +1919,10 @@ def run_classbot_for_row(
     model: str = DEFAULT_MODEL,
     mode: Literal["text", "pdf"] = "text",
 ) -> dict[str, Any]:
-    text_path = Path(row.get("cached_text_path", ""))
-    report_text = text_path.read_text(encoding="utf-8") if text_path.is_file() else ""
+    raw_text = read_submission_text(row)
+    report_text = anonymize_submission_text(raw_text, row)
     pdf_path = Path(row.get("cached_report_path", "")) if row.get("cached_report_path") else None
-    metadata = {
-        "student_name": row.get("student_name"),
-        "student_display_name": display_name(row.get("student_name", "")),
-        "student_first_name": first_name(row.get("student_name", "")),
-        "assignment": row.get("assignment_name"),
-        "submitted_at": row.get("submitted_at"),
-        "attempt": row.get("attempt_number"),
-    }
+    metadata = anonymize_llm_metadata(row)
     review = review_submission(
         report_text,
         metadata,
@@ -1835,6 +1948,111 @@ def run_classbot_for_row(
         "status": "synced",
         "review": review,
     }
+```
+
+---
+
+## `.grading/app/llm_privacy.py`
+
+```python
+"""Remove student-identifying fields before Cornell AI Gateway calls."""
+
+from __future__ import annotations
+
+import re
+from typing import Any
+
+from name_utils import display_name, parse_sortable_name
+
+REDACT_PLACEHOLDER = "[student]"
+
+# Keys that must never be sent to the LLM (Canvas / roster identifiers).
+_PII_KEYS = frozenset(
+    {
+        "student_name",
+        "student_display_name",
+        "student_first_name",
+        "student_netid",
+        "student_email",
+        "canvas_user_id",
+        "canvas_submission_id",
+        "submission_key",
+        "cached_dir",
+        "cached_report_path",
+        "cached_text_path",
+        "llm_review_path",
+        "instructor_comment",
+        "classbot_comment",
+        "report_text_override",
+        "published_at",
+        "published_grade",
+        "publish_error",
+        "accepted_deductions_json",
+    }
+)
+
+_CORNELL_EMAIL = re.compile(r"\b[\w.-]+@cornell\.edu\b", re.IGNORECASE)
+
+
+def _pii_strings(row: dict[str, Any]) -> list[str]:
+    """Name/netid variants from the grade row, longest first for greedy replacement."""
+    tokens: set[str] = set()
+    name = (row.get("student_name") or "").strip()
+    if name:
+        tokens.add(name)
+        disp = display_name(name)
+        if disp and disp != "Unknown":
+            tokens.add(disp)
+        first, last = parse_sortable_name(name)
+        if first and last:
+            tokens.add(f"{last}, {first}")
+            tokens.add(f"{first} {last}")
+            if len(last) >= 2:
+                tokens.add(last)
+        elif len(name) >= 3:
+            tokens.add(name)
+    netid = (row.get("student_netid") or "").strip()
+    if netid:
+        tokens.add(netid)
+        tokens.add(f"{netid}@cornell.edu")
+    return sorted((t for t in tokens if len(t) >= 2), key=len, reverse=True)
+
+
+def anonymize_submission_text(text: str, row: dict[str, Any]) -> str:
+    """Redact roster names, netids, and Cornell emails from submission body text."""
+    if not text:
+        return text
+    out = text
+    for token in _pii_strings(row):
+        out = re.sub(re.escape(token), REDACT_PLACEHOLDER, out, flags=re.IGNORECASE)
+    out = _CORNELL_EMAIL.sub(REDACT_PLACEHOLDER, out)
+    netid = (row.get("student_netid") or "").strip()
+    if netid:
+        out = re.sub(
+            rf"\b{re.escape(netid)}@[\w.-]+\b",
+            REDACT_PLACEHOLDER,
+            out,
+            flags=re.IGNORECASE,
+        )
+    return out
+
+
+def anonymize_llm_metadata(row: dict[str, Any]) -> dict[str, str]:
+    """Assignment context only — no student names, netids, or Canvas ids."""
+    out: dict[str, str] = {}
+    assignment = (row.get("assignment_name") or row.get("assignment") or "").strip()
+    if assignment:
+        out["assignment"] = assignment
+    for key in ("assignment_key", "assignment_type", "submitted_at", "attempt_number", "late"):
+        val = row.get(key)
+        if val is not None and str(val).strip():
+            out[key if key != "attempt_number" else "attempt"] = str(val).strip()
+    return out
+
+
+def strip_pii_fields(data: dict[str, Any]) -> dict[str, Any]:
+    """Drop known PII keys from an arbitrary metadata dict."""
+    return {k: v for k, v in data.items() if k not in _PII_KEYS}
 ```
 
 ---
@@ -1899,6 +2117,79 @@ Use SYSEN 5470 network-science vocabulary precisely:
 - Sampling strategy must match the inference claim.
 """
 
+INSTRUCTOR_CRITIQUE_PRIORITIES = """
+Prioritize feedback the instructor actually uses when conferencing with students.
+**At least 3 of top_issues MUST address content quality below** (question, results prose,
+figures/tables, readability). Rank #1 and #2 should usually be about results prose or
+question quality — the main gaps in a data-science report.
+
+1. **Numbers in prose (especially Results) — HIGHEST PRIORITY** — Do results paragraphs
+   state numeric findings in sentences (counts, density, centralities, modularity, path lengths,
+   etc.)? Flag when numbers appear ONLY in tables/figures with no values repeated in text.
+   Say explicitly what is missing (e.g. "no centrality values in Results paragraphs").
+
+2. **Testable scientific question** — Falsifiable with this network and analysis?
+   Flag opinion prompts ("Is X important?", "Should we…") with no measurable claim.
+
+3. **Dataset-specific vs generic** — Tied to this client/network, or a slogan any graph could use?
+
+4. **Figures explained** — Referenced by number ("Figure 1…") WITH takeaway for the client?
+
+5. **Tables explained** — Cited in text and interpreted, not orphaned.
+
+6. **Readable analysis vs buzzwords** — Concrete chain (metric → value → meaning for client)?
+
+Quote or paraphrase short evidence from the report; name section/paragraph locations.
+"""
+
+HYGIENE_AND_GITHUB_POLICY = """
+**GitHub / code — de-prioritize in narrative feedback:**
+- Students often submit code as Canvas **attachments**; extracted submission text may omit repo URLs
+  and scripts even when work is fine. Do NOT treat missing GitHub in text as a major flaw.
+- `github_link`: mark **missing** only if no URL/github.com string appears in submission text;
+  use **not_assessable** if the report otherwise looks complete (instructor will check attachments).
+  Proposed deduction 0–2 max when only absent from pasted text — never 5.
+- `project_script`: almost always **not_assessable** from report/PDF text alone. Do not discuss
+  at length in classbot_summary or top_issues.
+- **Never** put GitHub, repo URL, or "run project.R" as top_issues rank #1–#2 unless the report
+  has zero content problems. At most one brief hygiene note at the bottom of top_issues (rank 4–5).
+- classbot_summary must NOT lead with GitHub; lead with results-in-prose and question quality.
+"""
+
+# Rubric ids treated as hygiene in Canvas comment display (shown last, never drive top_issues).
+HYGIENE_REQUIREMENT_IDS = frozenset({"github_link", "project_script", "min_pages", "min_nodes"})
+
+REPORT_CHECKLIST_LABELS: dict[str, str] = {
+    "research_question": "Research question scoped, specific, and testable",
+    "dataset_assumptions": "Dataset and assumptions well described",
+    "methods_client_language": "Methods in client-ready language (not code jargon)",
+    "results_statistics_in_text": "Results with statistics cited in prose",
+    "discussion_limitations": "Discussion and limitations at the close",
+}
+
+REPORT_CHECKLIST_PROMPT = """
+**Structured report checklist (required)** — include exactly these five items in `report_checklist`,
+each with `rating` (strong | partial | weak), `evidence` (one sentence), `location`:
+
+1. `research_question` — Scoped to this client/dataset? Specific entities/measures? Falsifiable/testable
+   (not opinion: "Is X important?")?
+2. `dataset_assumptions` — Nodes, edges, weights, source, and key assumptions stated clearly?
+3. `methods_client_language` — Methods explained for a client reader? Flag code-style prose
+   (function names, snake_case, package names, "I ran cluster_fast_greedy()") as weak.
+4. `results_statistics_in_text` — Results section cites many specific numbers in sentences, not only
+   in tables/figures? Count whether prose is thin on statistics.
+5. `discussion_limitations` — Closing discusses what findings mean for the client AND limitations
+   ("what this tells me / what it doesn't")?
+
+Include `client_ai_likelihood` in JSON for the instructor dashboard (not repeated in student-facing prose elsewhere).
+- `rating`: low | medium | high — how likely a **client** would suspect the report prose is AI-generated
+  from writing patterns alone (not an accusation; a style signal).
+- `rationale`: 1-2 sentences.
+- `patterns`: up to 6 short bullets (e.g. "uniform paragraph length", "stock transitions",
+  "no typos or informal voice", "generic filler", "list-heavy buzzwords", "over-polished tone").
+Use low when voice sounds authentically student/client-specific with concrete details.
+"""
+
 DISCLOSURE_HTML = (
     "<em>Processed using Cornell's AI Gateway; No student data retained.</em>"
 )
@@ -1924,11 +2215,18 @@ Reserve scores below 75 for multiple missing core elements. Scores above 92 need
 Status values: "met", "partial", "missing", "not_assessable"
 Use "not_assessable" for project_script when the report/Canvas text does not let you verify code runs.
 For each requirement include: id, status, evidence, location, proposed_deduction (0 if met), search_hint (EXACTLY three words).
-Include top_issues: 2-5 highest-value problems with rank, title, description, location, search_hint (EXACTLY three words).
-Include classbot_summary: 2-4 sentences for the instructor (not shown verbatim to the student).
-In classbot_summary, refer to the student by first name only (see student_first_name in metadata).
-Never use last name alone or ALL CAPS — e.g. "Ryan's report…" not "ASSENHEIMER submitted…".
+Include top_issues: 2-5 highest-value **content** problems for the instructor with rank, title, description, location, search_hint (EXACTLY three words).
+top_issues titles should be plain English (e.g. "Results lack numeric prose", "Question is opinion-based", "Figure 2 never explained").
+Do NOT use top_issues for GitHub/repo/script unless all content issues are already met.
+Include classbot_summary: 2-4 sentences for the instructor only — **lead with results-in-prose and question quality**, never GitHub or page count.
+In classbot_summary, refer to the student as "the student" or "they" — do not use or invent a personal name.
 Include confidence: "low", "medium", or "high".
+
+{REPORT_CHECKLIST_PROMPT}
+
+{INSTRUCTOR_CRITIQUE_PRIORITIES}
+
+{HYGIENE_AND_GITHUB_POLICY}
 
 {GLOSSARY_DISCIPLINE}
 
@@ -1968,17 +2266,108 @@ def _status_emoji(status: str) -> str:
     }.get(status, "❓")
 
 
+def _checklist_rating_emoji(rating: str) -> str:
+    return {"strong": "✅", "partial": "⚠️", "weak": "❌"}.get(rating, "❓")
+
+
+def _ai_likelihood_label(rating: str) -> str:
+    return {
+        "low": "Low — reads human / client-specific",
+        "medium": "Medium — some AI-like polish",
+        "high": "High — client may suspect AI prose",
+    }.get(rating, rating)
+
+
+def render_report_checklist_html(
+    review: dict[str, Any], *, include_ai_likelihood: bool = False
+) -> str:
+    items = review.get("report_checklist") or []
+    ai = review.get("client_ai_likelihood") or {}
+    if not items and not ai:
+        return ""
+
+    parts: list[str] = ["<p><strong>📊 Report checklist</strong></p>", "<ul>"]
+    order = list(REPORT_CHECKLIST_LABELS.keys())
+    by_id = {str(i.get("id")): i for i in items if i.get("id")}
+    for cid in order:
+        item = by_id.get(cid)
+        if not item:
+            continue
+        label = REPORT_CHECKLIST_LABELS.get(cid, cid)
+        rating = item.get("rating", "?")
+        emoji = _checklist_rating_emoji(str(rating))
+        evidence = html.escape(str(item.get("evidence", "") or ""))
+        loc = html.escape(str(item.get("location", "") or ""))
+        loc_bit = f" <small>📍 {loc}</small>" if loc else ""
+        parts.append(
+            f"<li>{emoji} <strong>{html.escape(label)}</strong> "
+            f"({html.escape(str(rating))}) — {evidence}{loc_bit}</li>"
+        )
+    parts.append("</ul>")
+
+    if include_ai_likelihood and ai:
+        ai_rating = str(ai.get("rating", "medium"))
+        ai_emoji = {"low": "🙂", "medium": "🤔", "high": "🤖"}.get(ai_rating, "🤔")
+        rationale = html.escape(str(ai.get("rationale", "") or ""))
+        parts.append(
+            f"<p><strong>{ai_emoji} Client AI-likelihood</strong> "
+            f"({html.escape(_ai_likelihood_label(ai_rating))})<br>{rationale}</p>"
+        )
+        patterns = ai.get("patterns") or []
+        if patterns:
+            parts.append("<ul>")
+            for p in patterns[:6]:
+                parts.append(f"<li><small>{html.escape(str(p))}</small></li>")
+            parts.append("</ul>")
+
+    return "\n".join(parts)
+
+
+def _is_hygiene_top_issue(issue: dict[str, Any]) -> bool:
+    hay = " ".join(
+        str(issue.get(k, "") or "") for k in ("title", "description", "search_hint")
+    ).lower()
+    return any(
+        token in hay
+        for token in (
+            "github",
+            "repo url",
+            "repository",
+            "project script",
+            "project.r",
+            "project.py",
+            "project folder",
+        )
+    )
+
+
+def _order_top_issues(issues: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    content = [i for i in issues if not _is_hygiene_top_issue(i)]
+    hygiene = [i for i in issues if _is_hygiene_top_issue(i)]
+    ordered = content + hygiene[:1]
+    out: list[dict[str, Any]] = []
+    for rank, issue in enumerate(ordered, start=1):
+        item = dict(issue)
+        item["rank"] = rank
+        out.append(item)
+    return out
+
+
 def build_classbot_comment_html(review: dict[str, Any]) -> str:
     parts: list[str] = []
     parts.append("<p><strong>🤖 Classbot first-pass review</strong></p>")
 
     summary = (review.get("classbot_summary") or "").strip()
     if summary:
-        parts.append(f"<p><strong>📋 Summary</strong><br>{html.escape(summary)}</p>")
+        parts.append(f"<p><strong>📋 Instructor notes</strong><br>{html.escape(summary)}</p>")
 
-    issues = review.get("top_issues") or []
+    checklist_html = render_report_checklist_html(review)
+    if checklist_html:
+        parts.append(checklist_html)
+
+    issues = _order_top_issues(list(review.get("top_issues") or []))
     if issues:
-        parts.append("<p><strong>🔍 Top issues</strong></p><ul>")
+        parts.append("<p><strong>🔍 What to review with the student</strong></p><ul>")
         for issue in sorted(issues, key=lambda x: x.get("rank", 99)):
             rank = issue.get("rank", "?")
             title = html.escape(issue.get("title", "Issue"))
@@ -1993,9 +2382,23 @@ def build_classbot_comment_html(review: dict[str, Any]) -> str:
 
     reqs = review.get("requirements") or []
     gaps = [r for r in reqs if r.get("status") in ("partial", "missing")]
-    if gaps:
+    content_gaps = [r for r in gaps if r.get("id") not in HYGIENE_REQUIREMENT_IDS]
+    hygiene_gaps = [r for r in gaps if r.get("id") in HYGIENE_REQUIREMENT_IDS]
+    if content_gaps:
         parts.append("<p><strong>📝 Checklist gaps</strong></p><ul>")
-        for r in gaps:
+        for r in content_gaps:
+            emoji = _status_emoji(r.get("status", ""))
+            label = html.escape(r.get("id", ""))
+            evidence = html.escape(r.get("evidence", ""))
+            ded = r.get("proposed_deduction", 0)
+            parts.append(
+                f"<li>{emoji} <strong>{label}</strong>: {evidence}"
+                f" <em>(−{ded} pts)</em></li>"
+            )
+        parts.append("</ul>")
+    if hygiene_gaps:
+        parts.append("<p><strong>📝 Hygiene (optional — check attachments)</strong></p><ul>")
+        for r in hygiene_gaps:
             emoji = _status_emoji(r.get("status", ""))
             label = html.escape(r.get("id", ""))
             evidence = html.escape(r.get("evidence", ""))
@@ -2092,6 +2495,57 @@ def run_classbot_for_row_typed(
 
 ---
 
+## `.grading/app/row_tags.py`
+
+```python
+"""Derive filterable queue tags from a grade row."""
+
+from __future__ import annotations
+
+from typing import Any
+
+
+def row_tags(row: dict[str, Any]) -> list[str]:
+    tags: list[str] = []
+    status = (row.get("status") or "synced").strip() or "synced"
+    tags.append(status)
+
+    if row.get("late") == "true":
+        tags.append("late")
+
+    has_text = bool((row.get("cached_text_path") or "").strip())
+    if not has_text:
+        tags.append("no-text")
+    else:
+        tags.append("has-text")
+
+    llm = (row.get("llm_status") or "pending").strip() or "pending"
+    if llm == "pending" or (has_text and not (row.get("llm_review_path") or "").strip()):
+        tags.append("classbot-pending")
+    elif llm == "done":
+        tags.append("classbot-done")
+    elif llm == "error":
+        tags.append("classbot-error")
+
+    return tags
+
+
+def row_matches_tag_filters(
+    row: dict[str, Any],
+    *,
+    exclude_tags: set[str] | None = None,
+    require_tag: str | None = None,
+) -> bool:
+    tags = set(row_tags(row))
+    if exclude_tags and tags & exclude_tags:
+        return False
+    if require_tag and require_tag not in tags:
+        return False
+    return True
+```
+
+---
+
 ## `.grading/app/rubric.py`
 
 ```python
@@ -2140,6 +2594,36 @@ def get_assignment(key: str) -> dict[str, Any] | None:
         if a["key"] == key:
             return a
     return None
+
+
+def resolve_assignment_type(row: dict[str, Any]) -> str:
+    """CSV assignment_type with fallback to assignments config."""
+    stored = (row.get("assignment_type") or "").strip()
+    if stored:
+        return stored
+    return assignment_type(str(row.get("assignment_key", "")))
+
+
+_DEFAULT_CLASSBOT_UI: dict[str, Any] = {
+    "context_label": "Context for Classbot",
+    "context_hint": "Editable text sent to Classbot for this submission. Saved with the row.",
+    "context_placeholder": "",
+    "show_report_checklist": False,
+    "show_requirements": False,
+    "show_top_issues": False,
+    "show_lc_checks": False,
+}
+
+
+def classbot_features(assignment_key: str) -> dict[str, Any]:
+    """Per-assignment Classbot UI + review panels (type defaults, optional assignment override)."""
+    assignment = get_assignment(assignment_key) or {}
+    atype = assignment.get("type") or assignment_type(assignment_key)
+    type_cfg = load_assignment_types().get(atype, {})
+    out = dict(_DEFAULT_CLASSBOT_UI)
+    out.update(type_cfg.get("classbot") or {})
+    out.update(assignment.get("classbot") or {})
+    return out
 
 
 def max_deduction_map() -> dict[str, int]:
@@ -2202,7 +2686,8 @@ from name_utils import display_name, first_name
 from prompts import compose_canvas_comment, compose_canvas_comment_plain_preview
 from lc_prompts import compose_lc_canvas_comment
 from review_runner import run_classbot_for_row_typed
-from rubric import assignment_type, compute_score, load_assignments, load_assignment_types, load_rubric, points_possible
+from row_tags import row_matches_tag_filters, row_tags
+from rubric import assignment_type, classbot_features, compute_score, load_assignments, load_assignment_types, load_rubric, points_possible, resolve_assignment_type
 
 STATIC_DIR = APP_DIR / "static"
 app = FastAPI(title="Classbot Grading Dashboard")
@@ -2228,6 +2713,7 @@ class PatchRowBody(BaseModel):
     final_grade: str | None = None
     instructor_comment: str | None = None
     classbot_comment: str | None = None
+    report_text_override: str | None = None
     status: str | None = None
 
 
@@ -2239,6 +2725,7 @@ class SyncBody(BaseModel):
 class ClassbotBody(BaseModel):
     model: str = DEFAULT_MODEL
     mode: str = "text"
+    report_text_override: str | None = None
 
 
 class BatchClassbotBody(BaseModel):
@@ -2284,11 +2771,13 @@ class PublishBody(BaseModel):
     final_grade: str | None = None
 
 
-def _enrich_row(row: dict[str, str]) -> dict[str, str]:
-    out = dict(row)
+def _enrich_row(row: dict[str, str]) -> dict[str, Any]:
+    out: dict[str, Any] = dict(row)
     raw = row.get("student_name", "")
     out["student_display_name"] = display_name(raw)
     out["student_first_name"] = first_name(raw)
+    out["assignment_type"] = resolve_assignment_type(row)
+    out["tags"] = row_tags(row)
     return out
 
 
@@ -2316,7 +2805,9 @@ def api_rows(
     status: str | None = None,
     late: str | None = None,
     has_report: bool | None = None,
-) -> list[dict[str, str]]:
+    exclude_tags: str | None = None,
+    require_tag: str | None = None,
+) -> list[dict[str, Any]]:
     rows = read_rows()
     if assignment_key:
         rows = [r for r in rows if r.get("assignment_key") == assignment_key]
@@ -2328,6 +2819,14 @@ def api_rows(
         rows = [r for r in rows if r.get("cached_text_path")]
     elif has_report is False:
         rows = [r for r in rows if not r.get("cached_text_path")]
+    excluded = {t.strip() for t in (exclude_tags or "").split(",") if t.strip()}
+    req = (require_tag or "").strip() or None
+    if excluded or req:
+        rows = [
+            r
+            for r in rows
+            if row_matches_tag_filters(r, exclude_tags=excluded or None, require_tag=req)
+        ]
     return [_enrich_row(r) for r in rows]
 
 
@@ -2341,13 +2840,15 @@ def api_row_detail(submission_key: str) -> dict[str, Any]:
     if llm_path:
         review = load_review(Path(llm_path))
     deductions = parse_deductions_json(row.get("accepted_deductions_json", ""))
-    atype = assignment_type(row.get("assignment_key", ""))
+    akey = row.get("assignment_key", "")
+    atype = resolve_assignment_type(row)
     return {
         "row": _enrich_row(row),
         "review": review,
         "deductions": deductions,
         "assignment_type": atype,
-        "points_max": points_possible(row.get("assignment_key", "")),
+        "points_max": points_possible(akey),
+        "classbot_features": classbot_features(akey),
     }
 
 
@@ -2369,6 +2870,8 @@ def api_patch_row(submission_key: str, body: PatchRowBody) -> dict[str, str]:
         updates["instructor_comment"] = body.instructor_comment
     if body.classbot_comment is not None:
         updates["classbot_comment"] = body.classbot_comment
+    if body.report_text_override is not None:
+        updates["report_text_override"] = body.report_text_override
     if body.status is not None:
         updates["status"] = body.status
     elif body.accepted_deductions_json is not None or body.instructor_comment is not None:
@@ -2398,6 +2901,9 @@ def api_classbot(submission_key: str, body: ClassbotBody) -> dict[str, Any]:
     row = get_row(submission_key)
     if not row:
         raise HTTPException(404, "Row not found")
+    if body.report_text_override is not None:
+        patch_row(submission_key, {"report_text_override": body.report_text_override})
+        row = get_row(submission_key) or row
     try:
         result = run_classbot_for_row_typed(row, model=body.model, mode=body.mode)  # type: ignore[arg-type]
     except Exception as exc:
@@ -2469,14 +2975,20 @@ def api_classbot_batch(body: BatchClassbotBody) -> dict[str, Any]:
 
 
 @app.get("/api/report-text/{submission_key}")
-def api_report_text(submission_key: str) -> dict[str, str]:
+def api_report_text(submission_key: str) -> dict[str, Any]:
     row = get_row(submission_key)
     if not row:
         raise HTTPException(404, "Row not found")
-    path = Path(row.get("cached_text_path", ""))
-    if not path.is_file():
-        return {"text": ""}
-    return {"text": path.read_text(encoding="utf-8", errors="replace")}
+    from submission_text import has_report_override, read_cached_submission_text, read_submission_text
+
+    akey = row.get("assignment_key", "")
+    features = classbot_features(akey)
+    return {
+        "text": read_submission_text(row),
+        "cached_text": read_cached_submission_text(row),
+        "has_override": has_report_override(row),
+        "classbot_features": features,
+    }
 
 
 class ComposePreviewBody(BaseModel):
@@ -2586,6 +3098,39 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+```
+
+---
+
+## `.grading/app/submission_text.py`
+
+```python
+"""Read submission / Classbot context text for display and LLM review."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+
+def read_cached_submission_text(row: dict[str, Any]) -> str:
+    """Plain text extracted from Canvas sync (cached file only)."""
+    path = Path(row.get("cached_text_path", ""))
+    if not path.is_file():
+        return ""
+    return path.read_text(encoding="utf-8", errors="replace")
+
+
+def read_submission_text(row: dict[str, Any]) -> str:
+    """Classbot context: instructor override if set, else cached Canvas extraction."""
+    override = (row.get("report_text_override") or "").strip()
+    if override:
+        return override
+    return read_cached_submission_text(row)
+
+
+def has_report_override(row: dict[str, Any]) -> bool:
+    return bool((row.get("report_text_override") or "").strip())
 ```
 
 ---
