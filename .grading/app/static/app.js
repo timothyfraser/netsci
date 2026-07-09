@@ -5,6 +5,8 @@
     assignments: [],
     activeKey: null,
     detail: null,
+    detailLoadId: 0,
+    reportText: { key: null, loaded: "", cached: "", dirty: false },
     issueFilter: "",
     loading: {
       classbot: false,
@@ -122,10 +124,47 @@
     return el ? el.value : "";
   }
 
+  function markReportTextLoaded(key, text, cachedText) {
+    state.reportText = {
+      key: key,
+      loaded: text || "",
+      cached: cachedText || "",
+      dirty: false,
+    };
+  }
+
+  function isReportTextDirty() {
+    if (!state.activeKey || state.reportText.key !== state.activeKey) return false;
+    return reportPreviewText() !== state.reportText.loaded;
+  }
+
+  /** Only include override when the active row's textarea was edited in this session. */
+  function reportTextOverrideForActiveRow() {
+    if (!state.activeKey || !isReportTextDirty()) return undefined;
+    return reportPreviewText();
+  }
+
+  function patchReportTextOverride(key, text) {
+    return api("/api/rows/" + encodeURIComponent(key), {
+      method: "PATCH",
+      body: { report_text_override: text },
+    }).then(function () {
+      if (state.reportText.key === key) {
+        state.reportText.loaded = text;
+        state.reportText.dirty = false;
+      }
+    });
+  }
+
   function runClassbotOneKey(key, model) {
+    var body = { model: model, mode: "text" };
+    if (key === state.activeKey) {
+      var override = reportTextOverrideForActiveRow();
+      if (override !== undefined) body.report_text_override = override;
+    }
     return api("/api/classbot/" + encodeURIComponent(key), {
       method: "POST",
-      body: { model: model, mode: "text", report_text_override: reportPreviewText() },
+      body: body,
     });
   }
 
@@ -364,24 +403,40 @@
     updateBatchButton();
   }
 
-  function selectRow(key, options) {
-    options = options || {};
-    if (!options.force && (state.loading.classbot || state.loading.batch)) return;
+  function loadDetailForKey(key) {
     state.activeKey = key;
+    state.detailLoadId += 1;
     renderQueue();
     setLoading("detail", true, "Loading submission…");
     els.detail.innerHTML =
       "<div class='detail-loading'><span class='spinner' aria-hidden='true'></span> Loading submission…</div>";
     api("/api/rows/" + encodeURIComponent(key))
       .then(function (data) {
+        if (state.activeKey !== key) return;
         state.detail = data;
         renderDetail();
       })
       .catch(function (err) {
+        if (state.activeKey !== key) return;
         els.detail.innerHTML = "<p class='placeholder'>Failed to load row.</p>";
         alertError(err);
       })
-      .finally(function () { setLoading("detail", false); });
+      .finally(function () {
+        if (state.activeKey === key) setLoading("detail", false);
+      });
+  }
+
+  function selectRow(key, options) {
+    options = options || {};
+    if (!options.force && (state.loading.classbot || state.loading.batch)) return;
+    var prevKey = state.activeKey;
+    if (prevKey && prevKey !== key && isReportTextDirty()) {
+      patchReportTextOverride(prevKey, reportPreviewText())
+        .catch(function () { /* best-effort; never block row switch */ })
+        .finally(function () { loadDetailForKey(key); });
+      return;
+    }
+    loadDetailForKey(key);
   }
 
   function displayName(row) {
@@ -392,6 +447,31 @@
       return parts[1].trim() + " " + parts[0].trim();
     }
     return raw || "Unknown";
+  }
+
+  var COMMENT_SNIPPETS = [
+    {
+      label: "Stats in prose",
+      text: "- WRITING ABOUT STATS: I still think we've got a lot of text here and we'd benefit from a lot more statistics directly in the text - reporting them in the main text, talking about them, comparing them, etc. Better for clients - they might not understand or might misinterpret the tables if we don't explicitly name the numbers we care about."
+    },
+    {
+      label: "Null model / significance",
+      text: "- SIGNIFICANCE: One thing we probably want to know in this kind of analysis is - are these attack curves significantly different than what would have happened due to random chance? Eg. to test that, you could remove firms at random, repeating it many many times, and then plot all those lines/dots/ribbons/error-bands on the page too - that would tell you if it was actually degree or betweenness that made the difference, or if it would have happened anyway given a random attack. We call this a null model."
+    }
+  ];
+
+  function snippetToolbarHtml() {
+    return (
+      "<div class='snippet-toolbar' aria-label='Insert comment snippets'>" +
+      COMMENT_SNIPPETS.map(function (snippet, index) {
+        return (
+          "<button type='button' class='snippet-btn' data-snippet-index='" + index + "' title='" + esc(snippet.text) + "'>" +
+          esc(snippet.label) +
+          "</button>"
+        );
+      }).join("") +
+      "</div>"
+    );
   }
 
   function instructorCommentSection(body) {
@@ -405,6 +485,7 @@
         "<button type='button' class='emoji-btn' data-emoji='✅' title='Checkmark'>✅</button>" +
         "<button type='button' class='emoji-btn' data-emoji='❌' title='Red X'>❌</button>" +
         "</div>" +
+        snippetToolbarHtml() +
         "<textarea id='instructor-comment'>" + esc(body || "") + "</textarea>",
         false
       )
@@ -429,6 +510,19 @@
         e.preventDefault();
         var ta = document.getElementById("instructor-comment");
         insertAtCursor(ta, btn.getAttribute("data-emoji") || "");
+      });
+    });
+  }
+
+  function wireSnippetToolbar() {
+    document.querySelectorAll(".snippet-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        var index = parseInt(btn.getAttribute("data-snippet-index"), 10);
+        var snippet = COMMENT_SNIPPETS[index];
+        if (!snippet) return;
+        var ta = document.getElementById("instructor-comment");
+        insertAtCursor(ta, snippet.text);
       });
     });
   }
@@ -688,14 +782,19 @@
       "<button class='btn' id='btn-publish'>Publish to Canvas</button>" +
       "</div>";
 
-    api("/api/report-text/" + encodeURIComponent(row.submission_key)).then(function (r) {
+    var rowKey = row.submission_key;
+    var loadId = state.detailLoadId;
+    api("/api/report-text/" + encodeURIComponent(rowKey)).then(function (r) {
+      if (loadId !== state.detailLoadId || state.activeKey !== rowKey) return;
       var el = document.getElementById("report-preview");
       if (el) {
         el.value = r.text || "";
+        markReportTextLoaded(rowKey, r.text || "", r.cached_text || "");
         el.addEventListener("input", function () {
+          state.reportText.dirty = el.value !== state.reportText.loaded;
           var badge = document.getElementById("report-override-badge");
           if (!badge) return;
-          var cached = r.cached_text || "";
+          var cached = state.reportText.cached || "";
           badge.classList.toggle("hidden", el.value === cached && !r.has_override);
         });
       }
@@ -712,6 +811,7 @@
     }
 
     wireEmojiToolbar();
+    wireSnippetToolbar();
 
     var cb = document.getElementById("classbot-comment");
     if (cb) {
@@ -744,14 +844,19 @@
       final_grade: document.getElementById("final-grade").value,
       instructor_comment: document.getElementById("instructor-comment").value,
       classbot_comment: document.getElementById("classbot-comment").value,
-      report_text_override: reportPreviewText(),
       status: "reviewed",
     };
+    var override = reportTextOverrideForActiveRow();
+    if (override !== undefined) body.report_text_override = override;
     return api("/api/rows/" + encodeURIComponent(state.activeKey), { method: "PATCH", body: body })
       .then(function () {
+        if (override !== undefined && state.reportText.key === state.activeKey) {
+          state.reportText.loaded = override;
+          state.reportText.dirty = false;
+        }
         var fb = document.getElementById("save-feedback");
         if (fb) { fb.textContent = "Saved."; setTimeout(function () { fb.textContent = ""; }, 2500); }
-        return loadRows().then(function () { selectRow(state.activeKey); });
+        return loadRows().then(function () { selectRow(state.activeKey, { force: true }); });
       })
       .catch(alertError)
       .finally(function () { setLoading("save", false); });
