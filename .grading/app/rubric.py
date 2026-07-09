@@ -45,6 +45,36 @@ def get_assignment(key: str) -> dict[str, Any] | None:
     return None
 
 
+def resolve_assignment_type(row: dict[str, Any]) -> str:
+    """CSV assignment_type with fallback to assignments config."""
+    stored = (row.get("assignment_type") or "").strip()
+    if stored:
+        return stored
+    return assignment_type(str(row.get("assignment_key", "")))
+
+
+_DEFAULT_CLASSBOT_UI: dict[str, Any] = {
+    "context_label": "Context for Classbot",
+    "context_hint": "Editable text sent to Classbot for this submission. Saved with the row.",
+    "context_placeholder": "",
+    "show_report_checklist": False,
+    "show_requirements": False,
+    "show_top_issues": False,
+    "show_lc_checks": False,
+}
+
+
+def classbot_features(assignment_key: str) -> dict[str, Any]:
+    """Per-assignment Classbot UI + review panels (type defaults, optional assignment override)."""
+    assignment = get_assignment(assignment_key) or {}
+    atype = assignment.get("type") or assignment_type(assignment_key)
+    type_cfg = load_assignment_types().get(atype, {})
+    out = dict(_DEFAULT_CLASSBOT_UI)
+    out.update(type_cfg.get("classbot") or {})
+    out.update(assignment.get("classbot") or {})
+    return out
+
+
 def max_deduction_map() -> dict[str, int]:
     rubric = load_rubric()
     return {r["id"]: int(r["max_deduction"]) for r in rubric["requirements"]}

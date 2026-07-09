@@ -30,6 +30,7 @@
     batchStatusText: document.getElementById("batch-status-text"),
     filterAssignment: document.getElementById("filter-assignment"),
     filterStatus: document.getElementById("filter-status"),
+    filterTags: document.getElementById("filter-tags"),
     filterReport: document.getElementById("filter-report"),
     modelSelect: document.getElementById("model-select"),
     btnSync: document.getElementById("btn-sync"),
@@ -116,10 +117,15 @@
     });
   }
 
+  function reportPreviewText() {
+    var el = document.getElementById("report-preview");
+    return el ? el.value : "";
+  }
+
   function runClassbotOneKey(key, model) {
     return api("/api/classbot/" + encodeURIComponent(key), {
       method: "POST",
-      body: { model: model, mode: "text" },
+      body: { model: model, mode: "text", report_text_override: reportPreviewText() },
     });
   }
 
@@ -270,6 +276,7 @@
     return api("/api/config").then(function (cfg) {
       state.rubric = cfg.rubric;
       state.assignments = cfg.assignments;
+      state.assignmentTypes = cfg.assignment_types || {};
       cfg.assignments.forEach(function (a) {
         var opt = document.createElement("option");
         opt.value = a.key;
@@ -279,12 +286,51 @@
     });
   }
 
+  function tagFilterQuery() {
+    var raw = els.filterTags ? els.filterTags.value : "";
+    if (!raw) return {};
+    var parts = raw.split(":");
+    if (parts.length !== 2) return {};
+    var mode = parts[0];
+    var tags = parts[1];
+    if (mode === "hide") return { exclude_tags: tags };
+    if (mode === "need") return { require_tag: tags };
+    return {};
+  }
+
+  function renderTagBadges(row) {
+    var tags = row.tags || [];
+    var html = "";
+    var shown = {
+      published: "badge tag-published",
+      reviewed: "badge tag-reviewed",
+      synced: "badge",
+      late: "badge tag-late",
+      "no-text": "badge warn",
+      "classbot-pending": "badge tag-pending",
+      "classbot-done": "badge tag-done",
+      "classbot-error": "badge warn",
+    };
+    ["published", "reviewed", "synced", "classbot-pending", "classbot-done", "classbot-error", "late", "no-text"].forEach(function (t) {
+      if (tags.indexOf(t) === -1) return;
+      var cls = shown[t] || "badge";
+      html += "<span class='" + cls + "'>" + esc(t) + "</span> ";
+    });
+    return html;
+  }
+
   function loadRows() {
     var q = [];
     if (els.filterAssignment.value) q.push("assignment_key=" + encodeURIComponent(els.filterAssignment.value));
     if (els.filterStatus.value) q.push("status=" + encodeURIComponent(els.filterStatus.value));
     if (els.filterReport.value === "yes") q.push("has_report=true");
     if (els.filterReport.value === "no") q.push("has_report=false");
+    var tagQ = tagFilterQuery();
+    if (tagQ.exclude_tags) q.push("exclude_tags=" + encodeURIComponent(tagQ.exclude_tags));
+    if (tagQ.require_tag) q.push("require_tag=" + encodeURIComponent(tagQ.require_tag));
+    if (tagQ.require_tag === "classbot-done") {
+      q.push("exclude_tags=" + encodeURIComponent("published"));
+    }
     var url = "/api/rows" + (q.length ? "?" + q.join("&") : "");
     return api(url).then(function (rows) {
       state.rows = rows;
@@ -306,10 +352,8 @@
       div.innerHTML =
         "<div class='name'>" + esc(displayName(row)) + "</div>" +
         "<div class='meta'>" +
-        "<span class='badge'>" + esc(row.assignment_key) + "</span>" +
-        "<span class='badge'>" + esc(row.status || "synced") + "</span>" +
-        (row.late === "true" ? "<span class='badge'>late</span>" : "") +
-        (!row.cached_text_path ? "<span class='badge warn'>no text</span>" : "") +
+        renderTagBadges(row) +
+        "<span class='badge muted'>" + esc(row.assignment_key) + "</span>" +
         "<br>" + esc(row.student_netid) + " · score " + esc(String(score)) +
         "</div>";
       div.addEventListener("click", function () {
@@ -395,6 +439,65 @@
     return req ? req.label : id;
   }
 
+  var REPORT_CHECKLIST_LABELS = {
+    research_question: "Research question scoped, specific, and testable",
+    dataset_assumptions: "Dataset and assumptions well described",
+    methods_client_language: "Methods in client-ready language (not code jargon)",
+    results_statistics_in_text: "Results with statistics cited in prose",
+    discussion_limitations: "Discussion and limitations at the close",
+  };
+
+  function checklistEmoji(rating) {
+    if (rating === "strong") return "✅";
+    if (rating === "partial") return "⚠️";
+    if (rating === "weak") return "❌";
+    return "❓";
+  }
+
+  function renderReportChecklist(review) {
+    if (!review) return "";
+    var items = review.report_checklist || [];
+    var ai = review.client_ai_likelihood;
+    if (!items.length && !ai) {
+      return "<p class='placeholder'>Run Classbot to generate the report checklist.</p>";
+    }
+    var html = "<div class='report-checklist'>";
+    if (items.length) {
+      html += "<ul class='checklist-list'>";
+      Object.keys(REPORT_CHECKLIST_LABELS).forEach(function (cid) {
+        var item = items.find(function (i) { return i.id === cid; });
+        if (!item) return;
+        html +=
+          "<li class='checklist-item rating-" + esc(item.rating || "") + "'>" +
+          "<span class='checklist-emoji'>" + checklistEmoji(item.rating) + "</span>" +
+          "<div><strong>" + esc(REPORT_CHECKLIST_LABELS[cid]) + "</strong> " +
+          "<span class='status-chip status-" + esc(item.rating || "") + "'>" + esc(item.rating || "") + "</span>" +
+          "<div class='req-evidence'>" + esc(item.evidence || "") + "</div>" +
+          (item.location ? "<div class='req-loc'>📍 " + esc(item.location) + "</div>" : "") +
+          "</div></li>";
+      });
+      html += "</ul>";
+    }
+    if (ai) {
+      var aiEmoji = ai.rating === "high" ? "🤖" : (ai.rating === "low" ? "🙂" : "🤔");
+      html +=
+        "<div class='ai-likelihood rating-" + esc(ai.rating || "") + "'>" +
+        "<strong>" + aiEmoji + " Client AI-likelihood</strong> " +
+        "<span class='status-chip status-" + esc(ai.rating || "") + "'>" + esc(ai.rating || "") + "</span>" +
+        "<p>" + esc(ai.rationale || "") + "</p>";
+      if (ai.patterns && ai.patterns.length) {
+        html += "<ul class='ai-patterns'>";
+        ai.patterns.forEach(function (p) {
+          html += "<li>" + esc(p) + "</li>";
+        });
+        html += "</ul>";
+      }
+      html += "</div>";
+    }
+    html += "</div>";
+    return html;
+  }
+
   function section(title, bodyHtml, open) {
     return (
       "<details class='section'" + (open ? " open" : "") + ">" +
@@ -423,9 +526,30 @@
     return null;
   }
 
-  function isLearningChecks(row) {
-    return (row.assignment_type === "learning_checks") ||
-      (state.detail && state.detail.assignment_type === "learning_checks");
+  function assignmentTypeForRow(row) {
+    if (row && row.assignment_type) return row.assignment_type;
+    var meta = assignmentMeta(row.assignment_key);
+    return (meta && meta.type) || "project_case_study";
+  }
+
+  function classbotFeaturesForRow(row) {
+    var atype = assignmentTypeForRow(row);
+    var typeCfg = (state.assignmentTypes[atype] && state.assignmentTypes[atype].classbot) || {};
+    var meta = assignmentMeta(row.assignment_key);
+    var assignCfg = (meta && meta.classbot) || {};
+    return Object.assign(
+      {
+        context_label: "Context for Classbot",
+        context_hint: "",
+        context_placeholder: "",
+        show_report_checklist: false,
+        show_requirements: false,
+        show_top_issues: false,
+        show_lc_checks: false,
+      },
+      typeCfg,
+      assignCfg
+    );
   }
 
   function renderLcChecks(review) {
@@ -459,18 +583,22 @@
     var deductions = state.detail.deductions || [];
     var dedMap = {};
     deductions.forEach(function (d) { dedMap[d.id] = d; });
-    var lc = isLearningChecks(row);
-    var pointsMax = state.detail.points_max || (lc ? 1 : 100);
-    var defaultGrade = row.final_grade || row.proposed_score || (lc ? "1" : "100");
+    var features = state.detail.classbot_features || classbotFeaturesForRow(row);
+    var pointsMax = state.detail.points_max || 100;
+    var defaultGrade = row.final_grade || row.proposed_score || (features.show_lc_checks ? "1" : "100");
 
     var middleSections = "";
-    if (lc) {
+    if (features.show_lc_checks) {
       middleSections =
         section("Learning check review", renderLcChecks(review), true) +
         (review && review.classbot_summary
           ? section("Classbot summary", "<p>" + esc(review.classbot_summary) + "</p>", false)
           : "");
-    } else {
+    }
+    if (features.show_report_checklist) {
+      middleSections += section("Report checklist", renderReportChecklist(review), true);
+    }
+    if (features.show_requirements) {
       var reqsHtml = "";
       var sourceReqs = review && review.requirements ? review.requirements : [];
       if (!sourceReqs.length && state.rubric) {
@@ -495,7 +623,9 @@
           "<input type='number' class='deduction-input' min='0' max='100' value='" + esc(String(ded)) + "'>" +
           "</div>";
       });
-
+      middleSections += section("Requirements", reqsHtml, true);
+    }
+    if (features.show_top_issues) {
       var issuesHtml = "";
       var issues = (review && review.top_issues) || [];
       issues.forEach(function (issue) {
@@ -511,18 +641,22 @@
           "<div class='hint'>" + esc(issue.search_hint || "") + "</div></div>";
       });
       if (!issuesHtml) issuesHtml = "<p class='placeholder'>No issues yet.</p>";
-
-      middleSections =
-        section("Requirements", reqsHtml, true) +
-        section("Top issues", "<input type='text' class='search-box' id='issue-search' placeholder='Search issues…' value='" + esc(state.issueFilter) + "'>" + issuesHtml, true);
+      middleSections += section(
+        "Top issues",
+        "<input type='text' class='search-box' id='issue-search' placeholder='Search issues…' value='" + esc(state.issueFilter) + "'>" + issuesHtml,
+        true
+      );
     }
 
-    var previewLabel = lc ? "Submission text" : "Report preview";
+    var contextHint = features.context_hint
+      ? "<p class='field-hint'>" + esc(features.context_hint) + "</p>"
+      : "";
+    var contextPlaceholder = esc(features.context_placeholder || "Loading submission text…");
     els.detail.innerHTML =
       "<div class='meta-bar'>" +
       "<span>" + esc(displayName(row)) + " (" + esc(row.student_netid) + ")</span>" +
       "<span>" + esc(row.assignment_name) + "</span>" +
-      (lc ? "<span>📚 LC</span>" : "") +
+      (features.show_lc_checks ? "<span>📚 LC</span>" : "") +
       "<span>Attempt " + esc(row.attempt_number) + "</span>" +
       (row.late === "true" ? "<span>LATE</span>" : "") +
       "<span>Status: " + esc(row.status) + "</span>" +
@@ -534,7 +668,10 @@
       "<span class='feedback' id='save-feedback'></span>" +
       "</div>" +
 
-      section(previewLabel, "<div class='report-preview' id='report-preview'>Loading…</div>", true) +
+      section(esc(features.context_label || "Context for Classbot"), contextHint +
+        "<textarea id='report-preview' class='report-preview-edit' rows='14' spellcheck='false' " +
+        "placeholder='" + contextPlaceholder + "'></textarea>" +
+        "<span id='report-override-badge' class='override-badge hidden'>Instructor-edited</span>", true) +
       middleSections +
       instructorCommentSection(row.instructor_comment) +
       section(
@@ -553,7 +690,17 @@
 
     api("/api/report-text/" + encodeURIComponent(row.submission_key)).then(function (r) {
       var el = document.getElementById("report-preview");
-      if (el) el.textContent = r.text || "(no cached text)";
+      if (el) {
+        el.value = r.text || "";
+        el.addEventListener("input", function () {
+          var badge = document.getElementById("report-override-badge");
+          if (!badge) return;
+          var cached = r.cached_text || "";
+          badge.classList.toggle("hidden", el.value === cached && !r.has_override);
+        });
+      }
+      var badge = document.getElementById("report-override-badge");
+      if (badge) badge.classList.toggle("hidden", !r.has_override);
     });
 
     var issueSearch = document.getElementById("issue-search");
@@ -597,6 +744,7 @@
       final_grade: document.getElementById("final-grade").value,
       instructor_comment: document.getElementById("instructor-comment").value,
       classbot_comment: document.getElementById("classbot-comment").value,
+      report_text_override: reportPreviewText(),
       status: "reviewed",
     };
     return api("/api/rows/" + encodeURIComponent(state.activeKey), { method: "PATCH", body: body })
@@ -729,6 +877,7 @@
 
   els.filterAssignment.addEventListener("change", loadRows);
   els.filterStatus.addEventListener("change", loadRows);
+  els.filterTags.addEventListener("change", loadRows);
   els.filterReport.addEventListener("change", loadRows);
 
   function esc(s) {

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>Classbot Grading · SYSEN 5470</title>
-  <link rel="stylesheet" href="/static/style.css?v=20260630d">
+  <link rel="stylesheet" href="/static/style.css?v=20260708a">
 </head>
 <body>
   <header class="topbar">
@@ -28,6 +28,16 @@
         <option value="synced">Synced</option>
         <option value="reviewed">Reviewed</option>
         <option value="published">Published</option>
+      </select>
+      <select id="filter-tags" title="Filter queue by tags">
+        <option value="">All tags</option>
+        <option value="hide:published">Hide published</option>
+        <option value="hide:published,reviewed">Hide published &amp; reviewed</option>
+        <option value="need:classbot-pending">Classbot pending only</option>
+        <option value="need:classbot-done">Classbot done (not published)</option>
+        <option value="need:no-text">Missing text only</option>
+        <option value="need:published">Published only</option>
+        <option value="need:late">Late only</option>
       </select>
       <select id="model-select">
         <option value="claude-haiku-4-5">Haiku 4.5</option>
@@ -67,6 +77,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=20260630d"></script>
+  <script src="/static/app.js?v=20260708a"></script>
 </body>
 </html>

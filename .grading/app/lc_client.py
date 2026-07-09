@@ -14,7 +14,8 @@ from env import GRADING_ROOT, mock_llm_enabled
 from gateway_client import get_client
 from lc_prompts import build_lc_comment_html, build_lc_system_prompt, build_lc_user_prompt
 from lc_sources import load_lc_reference
-from name_utils import display_name, first_name
+from llm_privacy import anonymize_llm_metadata, anonymize_submission_text
+from submission_text import read_submission_text
 from litellm_client import DEFAULT_MODEL, _extract_json, save_review
 from rubric import get_assignment
 
@@ -132,16 +133,9 @@ def run_lc_classbot_for_row(
     assignment = get_assignment(row.get("assignment_key", ""))
     if not assignment:
         raise ValueError(f"Unknown assignment: {row.get('assignment_key')}")
-    text_path = Path(row.get("cached_text_path", ""))
-    submission_text = text_path.read_text(encoding="utf-8") if text_path.is_file() else ""
-    metadata = {
-        "student_name": row.get("student_name"),
-        "student_display_name": display_name(row.get("student_name", "")),
-        "student_first_name": first_name(row.get("student_name", "")),
-        "assignment": row.get("assignment_name"),
-        "assignment_key": row.get("assignment_key"),
-        "submitted_at": row.get("submitted_at"),
-    }
+    raw_text = read_submission_text(row)
+    submission_text = anonymize_submission_text(raw_text, row)
+    metadata = anonymize_llm_metadata(row)
     review = review_lc_submission(submission_text, assignment, metadata, model=model)
     key = row["submission_key"]
     llm_path = save_review(key, review)

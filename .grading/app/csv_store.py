@@ -42,6 +42,7 @@ FIELDNAMES = [
     "status",
     "instructor_comment",
     "classbot_comment",
+    "report_text_override",
     "published_at",
     "published_grade",
     "publish_error",

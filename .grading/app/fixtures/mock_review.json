@@ -2,11 +2,11 @@
   "requirements": [
     {
       "id": "question",
-      "status": "met",
-      "evidence": "Clear one-sentence question stated upfront.",
-      "location": "Question section",
-      "proposed_deduction": 0,
-      "search_hint": "question sentence clear"
+      "status": "partial",
+      "evidence": "Question asks whether supply chains are 'important' — opinion-based, not a testable claim with this graph.",
+      "location": "Introduction, first paragraph",
+      "proposed_deduction": 4,
+      "search_hint": "opinion not testable"
     },
     {
       "id": "operationalization",
@@ -19,18 +19,34 @@
     {
       "id": "results_prose",
       "status": "partial",
-      "evidence": "Results section references figures without numeric summaries in prose.",
-      "location": "Results, paragraph 2",
+      "evidence": "Results section points to Table 2 but does not state any centrality or density values in sentences.",
+      "location": "Results, paragraphs 2–3",
       "proposed_deduction": 8,
       "search_hint": "numbers prose missing"
     },
     {
-      "id": "github_link",
+      "id": "figures_tables_in_prose",
       "status": "missing",
-      "evidence": "No GitHub URL found in submission text.",
-      "location": "Canvas submission body",
+      "evidence": "Figure 1 appears with no 'Figure 1' reference or explanation in the body text.",
+      "location": "Results section",
+      "proposed_deduction": 6,
+      "search_hint": "figure not explained"
+    },
+    {
+      "id": "analysis_readability",
+      "status": "partial",
+      "evidence": "Analysis repeats 'community structure' and 'robustness' without tying terms to named groups or numeric findings.",
+      "location": "Discussion",
       "proposed_deduction": 4,
-      "search_hint": "github link missing"
+      "search_hint": "buzzwords without evidence"
+    },
+    {
+      "id": "github_link",
+      "status": "not_assessable",
+      "evidence": "No GitHub URL in pasted text; code may be in Canvas attachments.",
+      "location": "Canvas submission body",
+      "proposed_deduction": 0,
+      "search_hint": "github not text"
     },
     {
       "id": "project_script",
@@ -41,22 +57,78 @@
       "search_hint": "script not verified"
     }
   ],
+  "report_checklist": [
+    {
+      "id": "research_question",
+      "rating": "weak",
+      "evidence": "Question is generic and opinion-based ('how important is resilience') rather than a falsifiable claim about this supplier network.",
+      "location": "Introduction"
+    },
+    {
+      "id": "dataset_assumptions",
+      "rating": "strong",
+      "evidence": "Nodes, edges, weights, and CSV source are described with sensible scope.",
+      "location": "Network / Data section"
+    },
+    {
+      "id": "methods_client_language",
+      "rating": "partial",
+      "evidence": "Methods mention igraph functions by name; client would need translation from code jargon.",
+      "location": "Methods"
+    },
+    {
+      "id": "results_statistics_in_text",
+      "rating": "weak",
+      "evidence": "Almost no numeric statistics in Results prose — values appear only in Table 2.",
+      "location": "Results, paragraphs 2–3"
+    },
+    {
+      "id": "discussion_limitations",
+      "rating": "partial",
+      "evidence": "Discussion summarizes findings but limitations are one vague sentence without tying to what the network cannot show.",
+      "location": "Discussion / Conclusion"
+    }
+  ],
+  "client_ai_likelihood": {
+    "rating": "medium",
+    "rationale": "Polished, uniform section openings and stock transitions; limited informal or dataset-specific voice.",
+    "patterns": [
+      "stock transitions (furthermore, in conclusion)",
+      "uniform paragraph length",
+      "buzzword stacks without numbers",
+      "no typos or informal phrasing"
+    ]
+  },
   "top_issues": [
     {
       "rank": 1,
-      "title": "Results are figure-only",
-      "description": "No betweenness or degree values stated in prose.",
-      "location": "Results section",
-      "search_hint": "figure only results"
+      "title": "Results lack numeric prose",
+      "description": "Results section references Table 2 but states no centrality, degree, or density values in sentences — numbers appear only in the table.",
+      "location": "Results, paragraphs 2–3",
+      "search_hint": "numbers prose missing"
     },
     {
       "rank": 2,
-      "title": "Missing GitHub link",
-      "description": "Canvas box does not include a repo URL.",
-      "location": "Canvas submission",
-      "search_hint": "github link missing"
+      "title": "Question is opinion-based, not testable",
+      "description": "Opening asks if resilience 'matters' instead of a falsifiable claim about this procurement network.",
+      "location": "Introduction",
+      "search_hint": "opinion not testable"
+    },
+    {
+      "rank": 3,
+      "title": "Figure 1 never explained",
+      "description": "Chart is shown but text never says 'Figure 1 shows…' or what the client should conclude.",
+      "location": "Results section",
+      "search_hint": "figure not explained"
+    },
+    {
+      "rank": 4,
+      "title": "Buzzwordy analysis",
+      "description": "Discussion stacks network-science terms without numeric anchors or named actors from the dataset.",
+      "location": "Discussion",
+      "search_hint": "buzzwords without evidence"
     }
   ],
-  "classbot_summary": "Solid operationalization; push on numeric results in prose and paste the GitHub link in Canvas.",
+  "classbot_summary": "Main gap: Results need numeric findings in prose, not just tables. Reframe the question as testable and client-specific; methods should drop code function names for client language.",
   "confidence": "medium"
 }

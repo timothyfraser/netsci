@@ -13,7 +13,8 @@ from pydantic import BaseModel, Field, field_validator
 
 from env import GRADING_ROOT, mock_llm_enabled
 from gateway_client import get_client
-from name_utils import display_name, first_name
+from llm_privacy import anonymize_llm_metadata, anonymize_submission_text
+from submission_text import read_submission_text
 from prompts import build_classbot_comment_from_review, build_system_prompt, build_user_prompt
 from rubric import compute_score, load_rubric, max_deduction_map
 
@@ -24,6 +25,99 @@ DEFAULT_MODEL = "claude-haiku-4-5"
 SONNET_MODEL = "claude-sonnet-4-6"
 PDF_MODEL = "google.gemini-2.5-pro"
 
+CHECKLIST_IDS = (
+    "research_question",
+    "dataset_assumptions",
+    "methods_client_language",
+    "results_statistics_in_text",
+    "discussion_limitations",
+)
+
+
+def _normalize_search_hint(value: Any) -> str:
+    if value is None:
+        return ""
+    text = str(value).strip()
+    if not text:
+        return ""
+    words = text.split()
+    if len(words) >= 3:
+        return " ".join(words[:3])
+    pad = ("check", "report", "section")
+    while len(words) < 3:
+        words.append(pad[len(words) % len(pad)])
+    return " ".join(words[:3])
+
+
+def _normalize_checklist_id(raw: Any) -> str | None:
+    if raw is None:
+        return None
+    text = str(raw).strip().lower()
+    text = re.sub(r"^\d+\.\s*", "", text)
+    slug = re.sub(r"[^a-z0-9]+", "_", text).strip("_")
+    for cid in CHECKLIST_IDS:
+        if slug == cid or slug.startswith(cid) or cid in slug:
+            return cid
+    if "research" in text and "question" in text:
+        return "research_question"
+    if "dataset" in text or "assumption" in text:
+        return "dataset_assumptions"
+    if "method" in text and ("client" in text or "language" in text or "jargon" in text):
+        return "methods_client_language"
+    if "result" in text and ("statistic" in text or "prose" in text or "number" in text):
+        return "results_statistics_in_text"
+    if "discussion" in text or "limitation" in text:
+        return "discussion_limitations"
+    return None
+
+
+def _normalize_rating(value: Any, *, allowed: tuple[str, ...], default: str) -> str:
+    rating = str(value or default).strip().lower()
+    return rating if rating in allowed else default
+
+
+def _normalize_review_data(data: dict[str, Any]) -> dict[str, Any]:
+    out = dict(data)
+    for req in out.get("requirements", []):
+        if isinstance(req, dict):
+            req["search_hint"] = _normalize_search_hint(req.get("search_hint"))
+    for issue in out.get("top_issues", []):
+        if isinstance(issue, dict):
+            issue["search_hint"] = _normalize_search_hint(issue.get("search_hint"))
+    checklist: list[dict[str, Any]] = []
+    for item in out.get("report_checklist", []) or []:
+        if not isinstance(item, dict):
+            continue
+        entry = dict(item)
+        cid = entry.get("id") or entry.get("item") or entry.get("name") or entry.get("label")
+        norm_id = _normalize_checklist_id(cid)
+        if not norm_id:
+            continue
+        entry["id"] = norm_id
+        for drop in ("item", "name", "label"):
+            entry.pop(drop, None)
+        entry["rating"] = _normalize_rating(
+            entry.get("rating"),
+            allowed=("strong", "partial", "weak"),
+            default="partial",
+        )
+        checklist.append(entry)
+    out["report_checklist"] = checklist[:5]
+    ai = out.get("client_ai_likelihood")
+    if isinstance(ai, dict):
+        rating = _normalize_rating(ai.get("rating"), allowed=("low", "medium", "high"), default="")
+        if not rating:
+            out["client_ai_likelihood"] = None
+        else:
+            ai = dict(ai)
+            ai["rating"] = rating
+            patterns = ai.get("patterns")
+            ai["patterns"] = [str(p) for p in patterns[:6]] if isinstance(patterns, list) else []
+            out["client_ai_likelihood"] = ai
+    else:
+        out["client_ai_likelihood"] = None
+    return out
+
 
 class RequirementReview(BaseModel):
     id: str
@@ -33,16 +127,10 @@ class RequirementReview(BaseModel):
     proposed_deduction: int = 0
     search_hint: str = ""
 
-    @field_validator("search_hint")
+    @field_validator("search_hint", mode="before")
     @classmethod
-    def three_words(cls, v: str) -> str:
-        v = v.strip()
-        if not v:
-            return ""
-        words = v.split()
-        if len(words) != 3:
-            raise ValueError(f"search_hint must be exactly 3 words, got {len(words)}")
-        return " ".join(words)
+    def three_words(cls, v: Any) -> str:
+        return _normalize_search_hint(v)
 
 
 class TopIssue(BaseModel):
@@ -52,21 +140,36 @@ class TopIssue(BaseModel):
     location: str = ""
     search_hint: str = ""
 
-    @field_validator("search_hint")
+    @field_validator("search_hint", mode="before")
     @classmethod
-    def three_words(cls, v: str) -> str:
-        v = v.strip()
-        if not v:
-            return ""
-        words = v.split()
-        if len(words) != 3:
-            raise ValueError(f"search_hint must be exactly 3 words, got {len(words)}")
-        return " ".join(words)
+    def three_words(cls, v: Any) -> str:
+        return _normalize_search_hint(v)
+
+
+class ReportChecklistItem(BaseModel):
+    id: Literal[
+        "research_question",
+        "dataset_assumptions",
+        "methods_client_language",
+        "results_statistics_in_text",
+        "discussion_limitations",
+    ]
+    rating: Literal["strong", "partial", "weak"]
+    evidence: str = ""
+    location: str = ""
+
+
+class ClientAiLikelihood(BaseModel):
+    rating: Literal["low", "medium", "high"]
+    rationale: str = ""
+    patterns: list[str] = Field(default_factory=list, max_length=6)
 
 
 class ClassbotReview(BaseModel):
     requirements: list[RequirementReview]
     top_issues: list[TopIssue] = Field(min_length=0, max_length=5)
+    report_checklist: list[ReportChecklistItem] = Field(default_factory=list, min_length=0, max_length=5)
+    client_ai_likelihood: ClientAiLikelihood | None = None
     classbot_summary: str = ""
     confidence: Literal["low", "medium", "high"] = "medium"
 
@@ -115,8 +218,23 @@ def _mock_review() -> dict[str, Any]:
     }
 
 
+def _normalize_hygiene_review(data: dict[str, Any]) -> dict[str, Any]:
+    """Cap GitHub noise; script not assessable from extracted text."""
+    for req in data.get("requirements", []):
+        rid = req.get("id")
+        if rid == "project_script":
+            req["status"] = "not_assessable"
+            req["proposed_deduction"] = 0
+            if not req.get("evidence"):
+                req["evidence"] = "Check Canvas attachments; not verifiable from report text alone."
+        elif rid == "github_link" and req.get("status") == "missing":
+            prop = int(req.get("proposed_deduction", 0) or 0)
+            req["proposed_deduction"] = min(prop, 2)
+    return data
+
+
 def _validate_review(data: dict[str, Any]) -> ClassbotReview:
-    return ClassbotReview.model_validate(data)
+    return ClassbotReview.model_validate(_normalize_hygiene_review(_normalize_review_data(data)))
 
 
 def _chat_text(model: str, system: str, user: str) -> str:
@@ -168,7 +286,7 @@ def review_submission(
     pdf_path: Path | None = None,
 ) -> dict[str, Any]:
     if mock_llm_enabled():
-        review = _validate_review(_mock_review())
+        review = _validate_review(_normalize_hygiene_review(_mock_review()))
         return review.model_dump()
 
     system = build_system_prompt()
@@ -186,7 +304,14 @@ def review_submission(
             return review.model_dump()
         except Exception as exc:
             last_err = exc
-            user = user + "\n\nYour previous JSON was invalid. Return ONLY valid JSON with exact schema and 3-word search_hints."
+            user = (
+                user
+                + "\n\nYour previous JSON was invalid. Return ONLY valid JSON matching the schema: "
+                "use `id` (not `item`) in report_checklist entries "
+                "(research_question, dataset_assumptions, methods_client_language, "
+                "results_statistics_in_text, discussion_limitations); "
+                "search_hint must be exactly three words."
+            )
     raise RuntimeError(f"Classbot review failed: {last_err}") from last_err
 
 
@@ -232,17 +357,10 @@ def run_classbot_for_row(
     model: str = DEFAULT_MODEL,
     mode: Literal["text", "pdf"] = "text",
 ) -> dict[str, Any]:
-    text_path = Path(row.get("cached_text_path", ""))
-    report_text = text_path.read_text(encoding="utf-8") if text_path.is_file() else ""
+    raw_text = read_submission_text(row)
+    report_text = anonymize_submission_text(raw_text, row)
     pdf_path = Path(row.get("cached_report_path", "")) if row.get("cached_report_path") else None
-    metadata = {
-        "student_name": row.get("student_name"),
-        "student_display_name": display_name(row.get("student_name", "")),
-        "student_first_name": first_name(row.get("student_name", "")),
-        "assignment": row.get("assignment_name"),
-        "submitted_at": row.get("submitted_at"),
-        "attempt": row.get("attempt_number"),
-    }
+    metadata = anonymize_llm_metadata(row)
     review = review_submission(
         report_text,
         metadata,

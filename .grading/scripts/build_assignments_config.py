@@ -60,15 +60,49 @@ def main() -> None:
                 "label": "Project case study report",
                 "points_max": 100,
                 "rubric": "rubric.json",
+                "classbot": {
+                    "context_label": "Context for Classbot",
+                    "context_hint": (
+                        "Editable — add report text or notes the student gave outside Canvas. "
+                        "Saved with this row; Re-run Classbot reviews this text (anonymized), "
+                        "not the cached PDF extraction alone."
+                    ),
+                    "context_placeholder": "Paste or edit the report text Classbot should review…",
+                    "show_report_checklist": True,
+                    "show_requirements": True,
+                    "show_top_issues": True,
+                    "show_lc_checks": False,
+                },
             },
             "learning_checks": {
                 "label": "Learning checks (completion)",
                 "points_max": 1,
+                "classbot": {
+                    "context_label": "Context for Classbot",
+                    "context_hint": (
+                        "Editable — correct or supplement the student's LC answers if Canvas "
+                        "extraction missed anything. Saved with this row; Re-run Classbot uses this text."
+                    ),
+                    "context_placeholder": "LC1: B\nLC2: …\nCode output: 3",
+                    "show_report_checklist": False,
+                    "show_requirements": False,
+                    "show_top_issues": False,
+                    "show_lc_checks": True,
+                },
             },
             "poster": {
                 "label": "Final poster presentation",
                 "points_max": 100,
                 "status": "planned",
+                "classbot": {
+                    "context_label": "Context for Classbot",
+                    "context_hint": "Editable — add poster notes or submission context for Classbot.",
+                    "context_placeholder": "Paste submission context for Classbot…",
+                    "show_report_checklist": False,
+                    "show_requirements": False,
+                    "show_top_issues": False,
+                    "show_lc_checks": False,
+                },
             },
         },
         "assignments": assignments,

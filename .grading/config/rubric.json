@@ -4,7 +4,7 @@
   "requirements": [
     {
       "id": "project_script",
-      "label": "Project script (project.R or project.py) runs end-to-end on submitted data",
+      "label": "Project script runs end-to-end (not assessable from report text alone — check attachments)",
       "max_deduction": 4,
       "category": "hygiene",
       "assess_from": "canvas_body_or_github_only"
@@ -23,8 +23,8 @@
     },
     {
       "id": "question",
-      "label": "Report includes the question in one sentence",
-      "max_deduction": 5,
+      "label": "Testable, dataset-specific scientific question (not opinion or generic slogan)",
+      "max_deduction": 8,
       "category": "content"
     },
     {
@@ -35,8 +35,20 @@
     },
     {
       "id": "results_prose",
-      "label": "Report states results as numbers in prose, not just figures",
+      "label": "Results state key numbers frequently in prose — not only in tables/figures",
       "max_deduction": 10,
+      "category": "content"
+    },
+    {
+      "id": "figures_tables_in_prose",
+      "label": "Figures and tables are cited by number and explained in text (not just shown)",
+      "max_deduction": 8,
+      "category": "content"
+    },
+    {
+      "id": "analysis_readability",
+      "label": "Analysis is concrete and readable — not vague buzzwords without evidence",
+      "max_deduction": 8,
       "category": "content"
     },
     {
@@ -47,8 +59,8 @@
     },
     {
       "id": "github_link",
-      "label": "GitHub repo URL ready to paste; project folder is pushed",
-      "max_deduction": 5,
+      "label": "GitHub URL pasted in Canvas text (optional if code submitted as attachment only)",
+      "max_deduction": 2,
       "category": "hygiene"
     },
     {

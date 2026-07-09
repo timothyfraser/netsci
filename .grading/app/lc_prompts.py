@@ -33,7 +33,7 @@ Return ONLY valid JSON:
   }},
   "format_ok": true,
   "proposed_grade": "1" or "0",
-  "classbot_summary": "2-3 sentences for instructor (use student_first_name from metadata — never last name alone)",
+  "classbot_summary": "2-3 sentences for instructor (refer to the student as 'the student' or 'they' — no personal names)",
   "confidence": "low" | "medium" | "high"
 }}
 
@@ -43,7 +43,7 @@ Grading policy (completion):
 - For a single wrong LC letter, still grade "1" but explain the mistake briefly in feedback.
 - Use emojis in feedback fields (👍 ✅ ⚠️ ❌ 💡 📎).
 - Be generous on formatting (LC1 vs LC 01 vs lc1: B).
-- In classbot_summary, use the student's first name only (never last name alone or shouting).
+- In classbot_summary, refer to the student as "the student" or "they" — do not use personal names.
 - For code_answer: when reference.code_check.expected_value is present (answer_source local_execution),
   treat it as the authoritative expected answer; compare student_value against it (allow minor formatting).
 

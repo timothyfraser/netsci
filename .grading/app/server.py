@@ -30,7 +30,8 @@ from name_utils import display_name, first_name
 from prompts import compose_canvas_comment, compose_canvas_comment_plain_preview
 from lc_prompts import compose_lc_canvas_comment
 from review_runner import run_classbot_for_row_typed
-from rubric import assignment_type, compute_score, load_assignments, load_assignment_types, load_rubric, points_possible
+from row_tags import row_matches_tag_filters, row_tags
+from rubric import assignment_type, classbot_features, compute_score, load_assignments, load_assignment_types, load_rubric, points_possible, resolve_assignment_type
 
 STATIC_DIR = APP_DIR / "static"
 app = FastAPI(title="Classbot Grading Dashboard")
@@ -56,6 +57,7 @@ class PatchRowBody(BaseModel):
     final_grade: str | None = None
     instructor_comment: str | None = None
     classbot_comment: str | None = None
+    report_text_override: str | None = None
     status: str | None = None
 
 
@@ -67,6 +69,7 @@ class SyncBody(BaseModel):
 class ClassbotBody(BaseModel):
     model: str = DEFAULT_MODEL
     mode: str = "text"
+    report_text_override: str | None = None
 
 
 class BatchClassbotBody(BaseModel):
@@ -112,11 +115,13 @@ class PublishBody(BaseModel):
     final_grade: str | None = None
 
 
-def _enrich_row(row: dict[str, str]) -> dict[str, str]:
-    out = dict(row)
+def _enrich_row(row: dict[str, str]) -> dict[str, Any]:
+    out: dict[str, Any] = dict(row)
     raw = row.get("student_name", "")
     out["student_display_name"] = display_name(raw)
     out["student_first_name"] = first_name(raw)
+    out["assignment_type"] = resolve_assignment_type(row)
+    out["tags"] = row_tags(row)
     return out
 
 
@@ -144,7 +149,9 @@ def api_rows(
     status: str | None = None,
     late: str | None = None,
     has_report: bool | None = None,
-) -> list[dict[str, str]]:
+    exclude_tags: str | None = None,
+    require_tag: str | None = None,
+) -> list[dict[str, Any]]:
     rows = read_rows()
     if assignment_key:
         rows = [r for r in rows if r.get("assignment_key") == assignment_key]
@@ -156,6 +163,14 @@ def api_rows(
         rows = [r for r in rows if r.get("cached_text_path")]
     elif has_report is False:
         rows = [r for r in rows if not r.get("cached_text_path")]
+    excluded = {t.strip() for t in (exclude_tags or "").split(",") if t.strip()}
+    req = (require_tag or "").strip() or None
+    if excluded or req:
+        rows = [
+            r
+            for r in rows
+            if row_matches_tag_filters(r, exclude_tags=excluded or None, require_tag=req)
+        ]
     return [_enrich_row(r) for r in rows]
 
 
@@ -169,13 +184,15 @@ def api_row_detail(submission_key: str) -> dict[str, Any]:
     if llm_path:
         review = load_review(Path(llm_path))
     deductions = parse_deductions_json(row.get("accepted_deductions_json", ""))
-    atype = assignment_type(row.get("assignment_key", ""))
+    akey = row.get("assignment_key", "")
+    atype = resolve_assignment_type(row)
     return {
         "row": _enrich_row(row),
         "review": review,
         "deductions": deductions,
         "assignment_type": atype,
-        "points_max": points_possible(row.get("assignment_key", "")),
+        "points_max": points_possible(akey),
+        "classbot_features": classbot_features(akey),
     }
 
 
@@ -197,6 +214,8 @@ def api_patch_row(submission_key: str, body: PatchRowBody) -> dict[str, str]:
         updates["instructor_comment"] = body.instructor_comment
     if body.classbot_comment is not None:
         updates["classbot_comment"] = body.classbot_comment
+    if body.report_text_override is not None:
+        updates["report_text_override"] = body.report_text_override
     if body.status is not None:
         updates["status"] = body.status
     elif body.accepted_deductions_json is not None or body.instructor_comment is not None:
@@ -226,6 +245,9 @@ def api_classbot(submission_key: str, body: ClassbotBody) -> dict[str, Any]:
     row = get_row(submission_key)
     if not row:
         raise HTTPException(404, "Row not found")
+    if body.report_text_override is not None:
+        patch_row(submission_key, {"report_text_override": body.report_text_override})
+        row = get_row(submission_key) or row
     try:
         result = run_classbot_for_row_typed(row, model=body.model, mode=body.mode)  # type: ignore[arg-type]
     except Exception as exc:
@@ -297,14 +319,20 @@ def api_classbot_batch(body: BatchClassbotBody) -> dict[str, Any]:
 
 
 @app.get("/api/report-text/{submission_key}")
-def api_report_text(submission_key: str) -> dict[str, str]:
+def api_report_text(submission_key: str) -> dict[str, Any]:
     row = get_row(submission_key)
     if not row:
         raise HTTPException(404, "Row not found")
-    path = Path(row.get("cached_text_path", ""))
-    if not path.is_file():
-        return {"text": ""}
-    return {"text": path.read_text(encoding="utf-8", errors="replace")}
+    from submission_text import has_report_override, read_cached_submission_text, read_submission_text
+
+    akey = row.get("assignment_key", "")
+    features = classbot_features(akey)
+    return {
+        "text": read_submission_text(row),
+        "cached_text": read_cached_submission_text(row),
+        "has_override": has_report_override(row),
+        "classbot_features": features,
+    }
 
 
 class ComposePreviewBody(BaseModel):
