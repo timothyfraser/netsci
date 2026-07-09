@@ -40,7 +40,16 @@ Regenerate assignment list from Canvas contract:
 python scripts/build_assignments_config.py
 ```
 
-Learning-check Classbot pulls MC answer keys from `docs/case-studies/*.html` and code answers from locally executed teaching scripts when available.
+Learning-check Classbot uses a **gitignored answer key cache** built from case-study HTML.
+
+**Regenerate LC answer keys** (after editing `docs/case-studies/*.html`):
+
+```powershell
+cd .grading
+python scripts/build_lc_answer_keys.py
+```
+
+Writes `.grading/cache/lc_answer_keys.json` (gitignored). Classbot loads MC/numeric LC questions and correct answers from this file.
 
 **Regenerate code answer keys** (after changing `code/NN_*/example.R` or `example.py`):
 

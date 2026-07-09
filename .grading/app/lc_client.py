@@ -98,6 +98,12 @@ def review_lc_submission(
     model: str = DEFAULT_MODEL,
 ) -> dict[str, Any]:
     reference = load_lc_reference(assignment)
+    checks = reference.get("learning_checks") or []
+    if not checks:
+        raise RuntimeError(
+            f"No LC answer key for {assignment.get('key')}. "
+            "Run: python scripts/build_lc_answer_keys.py"
+        )
     if mock_llm_enabled():
         return LcReview.model_validate(_mock_lc_review()).model_dump()
 

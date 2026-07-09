@@ -240,40 +240,6 @@ def api_sync_all(body: SyncBody | None = None) -> dict[str, Any]:
     return {"count": len(rows), "rows": [_enrich_row(r) for r in rows]}
 
 
-@app.post("/api/classbot/{submission_key}")
-def api_classbot(submission_key: str, body: ClassbotBody) -> dict[str, Any]:
-    row = get_row(submission_key)
-    if not row:
-        raise HTTPException(404, "Row not found")
-    if body.report_text_override is not None:
-        patch_row(submission_key, {"report_text_override": body.report_text_override})
-        row = get_row(submission_key) or row
-    try:
-        result = run_classbot_for_row_typed(row, model=body.model, mode=body.mode)  # type: ignore[arg-type]
-    except Exception as exc:
-        patch_row(submission_key, {"llm_status": "error", "publish_error": str(exc)})
-        raise HTTPException(502, str(exc)) from exc
-    review = result.pop("review", None)
-    updated = patch_row(submission_key, result)
-    return {"row": updated, "review": review}
-
-
-def _run_classbot_one(key: str, *, model: str, mode: str) -> tuple[str, str | None]:
-    row = get_row(key)
-    if not row:
-        return key, "not found"
-    if not _row_has_text(row):
-        return key, "no submission text"
-    try:
-        result = run_classbot_for_row_typed(row, model=model, mode=mode)  # type: ignore[arg-type]
-        result.pop("review", None)
-        patch_row(key, result)
-        return key, None
-    except Exception as exc:
-        patch_row(key, {"llm_status": "error", "publish_error": str(exc)})
-        return key, str(exc)
-
-
 @app.get("/api/classbot/pending")
 def api_classbot_pending(assignment_key: str) -> dict[str, Any]:
     keys = pending_classbot_keys(assignment_key)
@@ -316,6 +282,40 @@ def api_classbot_batch(body: BatchClassbotBody) -> dict[str, Any]:
                     results.append(k)
 
     return {"ok": results, "errors": errors, "total": len(keys), "workers": workers}
+
+
+def _run_classbot_one(key: str, *, model: str, mode: str) -> tuple[str, str | None]:
+    row = get_row(key)
+    if not row:
+        return key, "not found"
+    if not _row_has_text(row):
+        return key, "no submission text"
+    try:
+        result = run_classbot_for_row_typed(row, model=model, mode=mode)  # type: ignore[arg-type]
+        result.pop("review", None)
+        patch_row(key, result)
+        return key, None
+    except Exception as exc:
+        patch_row(key, {"llm_status": "error", "publish_error": str(exc)})
+        return key, str(exc)
+
+
+@app.post("/api/classbot/{submission_key}")
+def api_classbot(submission_key: str, body: ClassbotBody) -> dict[str, Any]:
+    row = get_row(submission_key)
+    if not row:
+        raise HTTPException(404, "Row not found")
+    if body.report_text_override is not None:
+        patch_row(submission_key, {"report_text_override": body.report_text_override})
+        row = get_row(submission_key) or row
+    try:
+        result = run_classbot_for_row_typed(row, model=body.model, mode=body.mode)  # type: ignore[arg-type]
+    except Exception as exc:
+        patch_row(submission_key, {"llm_status": "error", "publish_error": str(exc)})
+        raise HTTPException(502, str(exc)) from exc
+    review = result.pop("review", None)
+    updated = patch_row(submission_key, result)
+    return {"row": updated, "review": review}
 
 
 @app.get("/api/report-text/{submission_key}")
