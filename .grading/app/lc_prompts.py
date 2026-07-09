@@ -56,7 +56,11 @@ Grading policy (completion):
 - Be generous on formatting (LC1 vs LC 01 vs lc1: B).
 - In classbot_summary, refer to the student as "the student" or "they" — do not use personal names.
 - For code_answer: when reference.code_check.expected_value is present (answer_source local_execution),
-  treat it as the authoritative expected answer; compare student_value against it (allow minor formatting).
+  treat it as the authoritative expected answer. Compare student_value against it.
+  **Numeric tolerance (important):** Monte Carlo / permutation labs use random seeds — mark **correct**
+  when the student number is within ~6% relative OR ~0.02 absolute of expected_value (e.g. 0.890 vs 0.905 is correct).
+  Only mark incorrect when clearly wrong, missing, or off by a large margin — not for seed drift.
+  Allow minor formatting (extra words, rounding, commas).
 
 {GLOSSARY_DISCIPLINE}
 """

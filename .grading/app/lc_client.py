@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 from env import GRADING_ROOT, mock_llm_enabled
 from gateway_client import get_client
+from lc_code_grade import normalize_lc_code_answer
 from lc_prompts import build_lc_comment_html, build_lc_system_prompt, build_lc_user_prompt
 from lc_sources import load_lc_reference
 from llm_privacy import anonymize_llm_metadata, anonymize_submission_text
@@ -105,7 +106,8 @@ def review_lc_submission(
             "Run: python scripts/build_lc_answer_keys.py"
         )
     if mock_llm_enabled():
-        return LcReview.model_validate(_mock_lc_review()).model_dump()
+        review = LcReview.model_validate(_mock_lc_review()).model_dump()
+        return normalize_lc_code_answer(review, reference, submission_text)
 
     system = build_lc_system_prompt()
     user = build_lc_user_prompt(submission_text, reference, metadata)
@@ -124,7 +126,8 @@ def review_lc_submission(
             )
             raw = resp.choices[0].message.content or "{}"
             data = _extract_json(raw)
-            return LcReview.model_validate(data).model_dump()
+            review = LcReview.model_validate(data).model_dump()
+            return normalize_lc_code_answer(review, reference, submission_text)
         except Exception as exc:
             last_err = exc
             user += "\n\nReturn ONLY valid JSON matching the schema."
