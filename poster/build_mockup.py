@@ -83,16 +83,16 @@ STATS = [("11", "interactive labs"), ("21", "project datasets"), ("2", "language
 
 # (lead, always-shown, standard-extra, detailed-extra)
 STEPS = [
-    ("Encode the conventions", "Teaching style, dataset rules, and glossary become reusable AI skills.",
-     "", " Written once, applied to every artifact after."),
-    ("Draft with AI", "A lab, a dataset generator, or matched R + Python code.",
-     "", " The instructor specifies the teaching goal, not the markup."),
-    ("Verify automatically", "Browser tests per lab; answers recomputed live; R and Python must agree.",
-     "", " A lab that fails its own learning check never ships."),
-    ("Instructor reviews", "Pedagogy, tone, and accuracy — before anything ships.",
+    ("Encode rules", "Teaching style, glossary, dataset standards.",
+     "", " Written once, reused by every artifact after."),
+    ("Draft with AI", "A lab, a dataset, or lesson code.",
+     "", " The instructor sets the teaching goal, not the markup."),
+    ("Verify automatically", "",
+     " Browser tests; R and Python must agree.", " A lab that fails its own learning check never ships."),
+    ("Instructor reviews", "Design, features, tone, and accuracy — before anything ships.",
      "", " Every artifact is read by a human, not just generated."),
-    ("Ship free and static", "GitHub Pages. CI rebuilds the student repo and study companion.",
-     "", " No server to run, and nothing to renew each term."),
+    ("Ship free with GitHub Pages", "",
+     " CI rebuilds the student repo and study companion.", " No server to run, nothing to renew each term."),
 ]
 
 GETS = [
@@ -111,16 +111,16 @@ CAPTIONS = {
             " Then export the script that reproduces every click."),
 }
 
-PROBLEM = ("Students learn networks by breaking them, not by reading about them. But one "
-           "production-quality lab is weeks of web engineering.",
-           " A course needs dozens — plus datasets, codebooks, and teaching code in two languages.")
+PROBLEM = ("Students thrive with hands-on interactive exercises. But one production-quality "
+           "lab is weeks of web engineering.",
+           " A course needs dozens — plus datasets and code in two languages.")
 
 stats_html = "\n".join(
     f'<div class="stat"><div class="stat-num">{n}</div><div class="stat-lab">{l}</div></div>' for n, l in STATS)
 steps_html = "\n".join(
     f'<li><span class="step-n">{i}</span><div><b>{lead}.</b> {base}'
-    f'<span class="lvl3">{det}</span></div></li>'
-    for i, (lead, base, _, det) in enumerate(STEPS, 1))
+    f'<span class="lvl2">{std}</span><span class="lvl3">{det}</span></div></li>'
+    for i, (lead, base, std, det) in enumerate(STEPS, 1))
 gets_html = "\n".join(
     f'<li><b>{lead}</b> {base}<span class="lvl3">{det}</span></li>' for lead, base, det in GETS)
 stamps_html = "\n".join(f'<img src="{u}" alt="">' for u in STAMPS)
@@ -151,8 +151,13 @@ HTML = f"""<!doctype html>
     --fs:1;            /* figure scale */
     --zoom:0.28;       /* screen preview only */
     --card-bg:#ffffff; --card-line:#e0e0e0; --card-shadow:0 3px 12px rgba(0,0,0,.10);
+    --backing: rgba(255,241,241,0.88);   /* translucent card behind text over busy artwork */
+    --page-color:#ffffff;
+    --band-grad: linear-gradient(90deg,#B02327 0%,#C32529 45%,#E8575A 100%);
     --figw: calc(17.1in * var(--fs));
     --vizw: calc(11.6in * var(--fs));
+    /* the text column never drops below this, however large the figures get */
+    --leftw: max(7.9in, calc(38.4in - var(--figw) - var(--vizw) - 1.1in));
   }}
   * {{ box-sizing:border-box; }}
   html, body {{ margin:0; padding:0; background:#4a4a4a; }}
@@ -195,9 +200,26 @@ HTML = f"""<!doctype html>
     background:#fff url({BG}) no-repeat; background-size:40in 30in;
     -webkit-print-color-adjust:exact; print-color-adjust:exact;
   }}
-  body[data-bg="plain"] .page {{ background-image:none; }}
-  body[data-bg="plain"] .page::before {{ content:""; position:absolute; inset:0 0 auto 0; height:var(--band);
-      background:var(--accent); }}
+  /* flat background: keep the template's branded band, drop the busy halftone */
+  body[data-bg="color"] .page {{ background-image:none; background-color:var(--page-color); }}
+  body[data-bg="color"] .page::before {{ content:""; position:absolute; inset:0 0 auto 0; height:var(--band);
+      background-image:url({BG}); background-size:40in 30in; background-position:top left; }}
+
+  /* a dark page background flips the type and card colours */
+  body[data-dark="on"] {{ --ink:#ffffff; --body:#f4ecec; --muted:#e6d6d6;
+      --card-bg:rgba(255,255,255,0.13); --card-line:rgba(255,255,255,0.30);
+      --card-shadow:0 3px 12px rgba(0,0,0,.28); --backing:rgba(0,0,0,0.30); }}
+  body[data-dark="on"] h1, body[data-dark="on"] h2,
+  body[data-dark="on"] .stat-num {{ color:#ffffff; }}
+  body[data-dark="on"] .stat-lab, body[data-dark="on"] figcaption {{ color:#f4ecec; }}
+
+  /* backing cards so text stays readable over the template artwork */
+  body[data-backing="on"] figcaption {{ background:var(--backing); padding:0.15in 0.22in;
+      border-radius:11px; box-shadow:0 1px 6px rgba(0,0,0,.07); }}
+  body[data-backing="on"] .author {{ background:var(--backing); padding:0.14in 0.26in 0.14in 0.16in;
+      border-radius:16px; box-shadow:0 1px 6px rgba(0,0,0,.07); }}
+  body[data-titleback="on"] h1 {{ background:var(--backing); padding:0.12in 0.26in;
+      border-radius:16px; display:inline-block; }}
 
   /* ------------------------------------------------ header */
   header {{ display:flex; align-items:flex-start; gap:0.8in; }}
@@ -221,7 +243,7 @@ HTML = f"""<!doctype html>
 
   /* ------------------------------------------------ body grid */
   main {{ flex:1; display:grid; gap:var(--gap); min-height:0;
-          grid-template-columns: calc(38.4in - var(--figw) - var(--vizw) - 1.1in) var(--figw) var(--vizw); }}
+          grid-template-columns: var(--leftw) minmax(0, var(--figw)) minmax(0, var(--vizw)); }}
   .col {{ display:flex; flex-direction:column; gap:var(--gap); min-height:0; justify-content:space-between; }}
   .card {{ background:var(--card-bg); border:1px solid var(--card-line); border-radius:16px;
            box-shadow:var(--card-shadow); padding:0.32in 0.40in 0.36in; flex:0 0 auto; }}
@@ -271,7 +293,8 @@ HTML = f"""<!doctype html>
   }}
 </style>
 </head>
-<body data-detail="2" data-cards="white" data-bg="template" data-stats="on" data-qr="on" data-datasets="on" data-headshot="on">
+<body data-detail="1" data-cards="tint" data-bg="template" data-stats="on" data-qr="on"
+      data-datasets="on" data-headshot="on" data-backing="on" data-titleback="off" data-dark="off">
 
 <div id="sidebar">
   <h2>Poster controls</h2>
@@ -279,26 +302,26 @@ HTML = f"""<!doctype html>
 
   <fieldset>
     <legend>Figure background</legend>
-    <label><input type="radio" name="theme" value="white" checked> White</label>
+    <label><input type="radio" name="theme" value="white"> White</label>
     <label><input type="radio" name="theme" value="grey"> Light grey</label>
-    <label><input type="radio" name="theme" value="red"> Cornell red</label>
+    <label><input type="radio" name="theme" value="red" checked> Cornell red</label>
     <label><input type="radio" name="theme" value="orig"> Original (course neon)</label>
   </fieldset>
 
   <fieldset>
     <legend>Sizing</legend>
-    <div class="row"><span>Figure size</span><span class="val" id="fsv">100%</span></div>
-    <input type="range" id="fs" min="80" max="110" value="100">
-    <div class="row"><span>Text size</span><span class="val" id="tsv">100%</span></div>
-    <input type="range" id="ts" min="82" max="120" value="100">
+    <div class="row"><span>Figure size</span><span class="val" id="fsv">110%</span></div>
+    <input type="range" id="fs" min="80" max="110" value="110">
+    <div class="row"><span>Text size</span><span class="val" id="tsv">110%</span></div>
+    <input type="range" id="ts" min="82" max="120" value="110">
     <div class="row"><span>Preview zoom</span><span class="val" id="zv">28%</span></div>
     <input type="range" id="zoom" min="10" max="60" value="28">
   </fieldset>
 
   <fieldset>
     <legend>Descriptive detail</legend>
-    <label><input type="radio" name="detail" value="1"> Minimal — headlines only</label>
-    <label><input type="radio" name="detail" value="2" checked> Standard</label>
+    <label><input type="radio" name="detail" value="1" checked> Minimal — headlines only</label>
+    <label><input type="radio" name="detail" value="2"> Standard</label>
     <label><input type="radio" name="detail" value="3"> Detailed — full sentences</label>
   </fieldset>
 
@@ -307,17 +330,27 @@ HTML = f"""<!doctype html>
     <label>Accent colour<input type="color" id="accent" value="#B31B1B"></label>
     <label>Card style
       <select id="cards">
-        <option value="white" selected>White cards</option>
-        <option value="tint">Warm tinted cards</option>
+        <option value="white">White cards</option>
+        <option value="tint" selected>Warm tinted cards</option>
         <option value="none">No cards (plain)</option>
       </select>
     </label>
     <label>Poster background
       <select id="bg">
         <option value="template" selected>Duffield template artwork</option>
-        <option value="plain">Plain white + red band</option>
+        <option value="#ffffff">White</option>
+        <option value="#f7f7f7">Cornell light gray</option>
+        <option value="#fdf2f2">Warm red tint</option>
+        <option value="#d8d2c9">Beige</option>
+        <option value="#9fad9f">Dark khaki</option>
+        <option value="#073949">Navy blue</option>
+        <option value="#b31b1b">Cornell red</option>
+        <option value="custom">Custom colour &rarr;</option>
       </select>
     </label>
+    <label>Custom background<input type="color" id="bgcustom" value="#f7f7f7"></label>
+    <label><input type="checkbox" id="backing" checked> Backing card behind captions &amp; author</label>
+    <label><input type="checkbox" id="titleback"> Backing card behind the title</label>
   </fieldset>
 
   <fieldset>
@@ -366,7 +399,7 @@ HTML = f"""<!doctype html>
       </div>
       <div class="card" id="datacard">
         <h2>21 DATASETS</h2>
-        <p>Each hides a planted story that survives naive analysis, with a codebook and R + Python loaders.</p>
+        <p>Each hides a planted story, with R + Python loaders.<span class="lvl2"> Codebooks included.</span></p>
         <div class="stamps">{stamps_html}</div>
       </div>
     </div>
@@ -424,7 +457,27 @@ bind('ts', e => {{ root.setProperty('--ts', e.target.value / 100); document.getE
 bind('zoom', e => {{ root.setProperty('--zoom', e.target.value / 100); document.getElementById('zv').textContent = e.target.value + '%'; }});
 bind('accent', e => root.setProperty('--accent', e.target.value));
 document.getElementById('cards').addEventListener('change', e => body.dataset.cards = e.target.value);
-document.getElementById('bg').addEventListener('change', e => body.dataset.bg = e.target.value);
+
+function lum(hex) {{
+  const m = /^#([0-9a-f]{{6}})$/i.exec(hex || '');
+  if (!m) return 1;
+  const n = parseInt(m[1], 16);
+  return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
+}}
+function applyBg(val) {{
+  if (val === 'template') {{ body.dataset.bg = 'template'; body.dataset.dark = 'off'; return; }}
+  const colour = (val === 'custom') ? document.getElementById('bgcustom').value : val;
+  body.dataset.bg = 'color';
+  root.setProperty('--page-color', colour);
+  body.dataset.dark = lum(colour) < 0.45 ? 'on' : 'off';
+}}
+document.getElementById('bg').addEventListener('change', e => applyBg(e.target.value));
+document.getElementById('bgcustom').addEventListener('input', () => {{
+  document.getElementById('bg').value = 'custom';
+  applyBg('custom');
+}});
+['backing','titleback'].forEach(id =>
+  document.getElementById(id).addEventListener('change', e => body.dataset[id] = e.target.checked ? 'on' : 'off'));
 ['stats','qr','datasets','headshot'].forEach(id =>
   document.getElementById(id).addEventListener('change', e => body.dataset[id] = e.target.checked ? 'on' : 'off'));
 
@@ -460,17 +513,22 @@ window.addEventListener('load', () => setTimeout(checkFit, 400));
 // ?theme=white&detail=2&ts=100&fs=100&print=1  — used to render fixed variants headlessly
 (function fromUrl() {{
   const q = new URLSearchParams(location.search);
-  const t = q.get('theme') || 'white';
+  const t = q.get('theme') || 'red';
   setTheme(t);
   const r = document.querySelector('input[name=theme][value="' + t + '"]');
   if (r) r.checked = true;
-  if (q.get('detail')) {{
-    body.dataset.detail = q.get('detail');
-    const r = document.querySelector('input[name=detail][value="' + q.get('detail') + '"]');
-    if (r) r.checked = true;
-  }}
-  if (q.get('ts')) root.setProperty('--ts', +q.get('ts') / 100);
-  if (q.get('fs')) root.setProperty('--fs', +q.get('fs') / 100);
+  const d = q.get('detail') || '1';
+  body.dataset.detail = d;
+  const rd = document.querySelector('input[name=detail][value="' + d + '"]');
+  if (rd) rd.checked = true;
+  root.setProperty('--ts', (+q.get('ts') || 110) / 100);
+  root.setProperty('--fs', (+q.get('fs') || 110) / 100);
+  document.getElementById('ts').value = +q.get('ts') || 110;
+  document.getElementById('fs').value = +q.get('fs') || 110;
+  document.getElementById('tsv').textContent = (+q.get('ts') || 110) + '%';
+  document.getElementById('fsv').textContent = (+q.get('fs') || 110) + '%';
+  if (q.get('bg')) {{ document.getElementById('bg').value = q.get('bg'); applyBg(q.get('bg')); }}
+  if (q.get('cards')) {{ body.dataset.cards = q.get('cards'); document.getElementById('cards').value = q.get('cards'); }}
 }})();
 </script>
 </body>
