@@ -56,7 +56,37 @@ A fit indicator warns if a column overflows the page after a change.
 The sidebar never prints. To export: **Ctrl/Cmd + P** → *Save as PDF*, paper size **40 × 30 in**
 (or Custom), margins **None**, and tick **Background graphics**.
 
-`preview-default.pdf` (white canvas) and `preview-red-canvas.pdf` are pre-rendered. To render any other combination
+**`poster-print-40x30.pdf` is the print deliverable** — the default look at 110% text, 40 × 30 in,
+with the figures embedded at print resolution. `preview-default.pdf` and `preview-red-canvas.pdf`
+are lighter screen previews.
+
+### Print resolution
+
+| Element | Effective resolution at printed size |
+|---|---|
+| All poster text | vector — resolution-independent |
+| Playground figure | 1039 ppi |
+| Visualizer figure | 990 ppi |
+| Case-study lab figure | 693 ppi |
+| QR codes | 960–1190 ppi |
+| Dataset thumbnails | 948 ppi |
+| Headshot | 279 ppi — limited by the 460 px source |
+| Duffield template artwork | 72 ppi — limited by Cornell's 2880 px template |
+
+Rebuild it with:
+
+```bash
+node hires-lab.js stagelight 12      # the lab, kept under Chromium's raster limit
+node hires-viz-pg.js stagelight 14   # visualizer + playground
+python3 build_mockup.py --print      # writes poster-print.html with the hi-res figures
+chromium --headless --no-pdf-header-footer \
+  --print-to-pdf=poster-print-40x30.pdf "file://$PWD/poster-print.html"
+```
+
+**Chromium silently fails to rasterise past ~16384 px in a dimension** — it returns an image of
+the requested size with most of the content missing. That is why the lab is captured at scale 12
+(11472 × 11688) rather than 18: at 18 both dimensions cleared the limit and the canvas came back
+blank. Always check the captured content, not just its dimensions. To render any other combination
 headlessly, pass URL parameters — `?combo=a` … `?combo=d`, or `?theme=…&card=…&bg=…&ts=…&fs=…&detail=…`:
 
 ```bash

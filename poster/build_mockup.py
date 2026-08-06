@@ -4,14 +4,17 @@
 The sidebar is screen-only: it never prints. Ctrl/Cmd+P exports the poster at true
 40x30in. Every figure is embedded four times (one per theme) so the toggles work offline.
 """
-import base64, io, pathlib
+import base64, io, pathlib, sys
 import numpy as np
 from PIL import Image
+
+Image.MAX_IMAGE_PIXELS = None          # the print captures are far past the default guard
+PRINT = "--print" in sys.argv          # print mode: one theme, full resolution, no downscaling
 
 HERE = pathlib.Path(__file__).resolve().parent
 ASSETS, SHOTS = HERE / "assets", HERE / "shots"
 THUMBS = pathlib.Path("/home/user/netsci/data/projects")
-OUT = HERE / "poster-mockup.html"
+OUT = HERE / ("poster-print.html" if PRINT else "poster-mockup.html")
 
 BAND_IN = 2.361          # the Duffield template's red band, measured off the artwork
 THEMES = ["stagelight", "stagered", "white", "grey", "redlight", "red", "reddark", "orig"]
@@ -58,24 +61,39 @@ def lab_cut_row():
 print("embedding assets:")
 CUT = lab_cut_row()
 FIGS = {t: {} for t in THEMES}
-for t in THEMES:
-    lab = Image.open(SHOTS / f"lab-{t}.png")
-    lab = lab.crop((0, 0, lab.width, min(CUT, lab.height)))
-    tmp = SHOTS / f"_lab-{t}-crop.png"
+if PRINT:
+    # one theme, embedded losslessly at capture resolution
+    t = "stagelight"
+    lab = Image.open(SHOTS / f"lab-{t}-hi.png")
+    scale = lab.width / 2868                      # the crop row was found on a DSF-3 capture
+    lab = lab.crop((0, 0, lab.width, min(round(CUT * scale), lab.height)))
+    tmp = SHOTS / "_lab-print.png"
     lab.save(tmp)
-    FIGS[t]["lab"] = load(tmp, max_w=2300, quality=80)
-    FIGS[t]["viz"] = load(SHOTS / f"viz-{t}.png", max_w=1900, quality=80)
-    FIGS[t]["pg"] = load(SHOTS / f"pg-{t}.png", max_w=2300, quality=80)
+    hires = {"lab": load(tmp, fmt="PNG"),
+             "viz": load(SHOTS / f"viz-{t}-hi.png", fmt="PNG"),
+             "pg": load(SHOTS / f"pg-{t}-hi.png", fmt="PNG")}
+    for th in THEMES:
+        FIGS[th] = hires
+else:
+    for t in THEMES:
+        lab = Image.open(SHOTS / f"lab-{t}.png")
+        lab = lab.crop((0, 0, lab.width, min(CUT, lab.height)))
+        tmp = SHOTS / f"_lab-{t}-crop.png"
+        lab.save(tmp)
+        FIGS[t]["lab"] = load(tmp, max_w=2300, quality=80)
+        FIGS[t]["viz"] = load(SHOTS / f"viz-{t}.png", max_w=1900, quality=80)
+        FIGS[t]["pg"] = load(SHOTS / f"pg-{t}.png", max_w=2300, quality=80)
 
-BG = load(ASSETS / "background.png", max_w=2880, quality=90)
-HEAD = load(ASSETS / "instructor.jpg", max_w=560, quality=88)
+BG = load(ASSETS / "background.png", fmt="PNG") if PRINT else load(ASSETS / "background.png", max_w=2880, quality=90)
+HEAD = load(ASSETS / "instructor.jpg", quality=95)
 QR_SITE = load(ASSETS / "qr-site.png", fmt="PNG")
 QR_VIZ = load(ASSETS / "qr-visualizer.png", fmt="PNG")
 QR_HOME = load(ASSETS / "qr-home.png", fmt="PNG")
 STAMP_NAMES = ["power-grid", "amazon-last-mile", "semiconductor-supply", "campus-contact"]
-STAMPS = [load(THUMBS / n / "thumb.png", max_w=340, quality=82) for n in STAMP_NAMES]
+STAMPS = ([load(ASSETS / "thumbs" / f"{n}.png", fmt="PNG") for n in STAMP_NAMES] if PRINT
+          else [load(THUMBS / n / "thumb.png", max_w=340, quality=82) for n in STAMP_NAMES])
 
-lab_ar = round(Image.open(SHOTS / "_lab-white-crop.png").width / Image.open(SHOTS / "_lab-white-crop.png").height, 3)
+lab_ar = round(Image.open(SHOTS / ("_lab-print.png" if PRINT else "_lab-white-crop.png")).width / Image.open(SHOTS / ("_lab-print.png" if PRINT else "_lab-white-crop.png")).height, 3)
 print(f"  lab aspect {lab_ar}")
 
 # ---------------------------------------------------------------- content
