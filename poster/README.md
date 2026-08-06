@@ -14,9 +14,13 @@ how the poster looks:
 
 The poster reads as three independent background layers, and the sidebar controls each one:
 
-1. **Figure background** — the background *inside* the screenshots (graph stage, code panel).
-   Because it is baked into the captured images, each option is a separately captured variant:
-   white · light grey · light red · Cornell red · dark red · original course neon.
+1. **Figure background** — the background *inside* the screenshots. A figure has two zones that
+   should **contrast**, or it reads flat: **A**, the canvas the network is drawn on, and **B**,
+   the panel chrome around it. The two headline options set them against each other —
+   **white canvas · red panels** and **red canvas · white panels** — and the playground's plot
+   follows the same choice so all three figures agree. Single-tone variants (all white, all light
+   grey, all light red, all Cornell red, all dark red, original neon) are also available.
+   All are separately captured, since the colour is baked into the images.
 2. **Card background** — the poster's cards, and the backing cards behind the captions, author
    block, and title. Any colour; the type inside flips to light automatically on a dark card.
 3. **True background** — what sits behind and between the cards: the Duffield template artwork,
@@ -24,13 +28,13 @@ The poster reads as three independent background layers, and the sidebar control
 
 **Colour combos** in the sidebar set all three at once:
 
-| | Figure | Cards | True background |
+| | Figure (canvas · panels) | Cards | True background |
 |---|---|---|---|
-| Current | Cornell red | white | template artwork |
-| A | dark red | light red | light grey |
-| B | white | light red | Cornell red |
-| C | light red | white | dark red |
-| D | light red | dark red | white |
+| Default | white · red | white | template artwork |
+| A | white · red | light red | white |
+| B | white · red | white | light grey |
+| C | red · white | white | template artwork |
+| D | red · white | light red | dark red |
 
 ### Everything else
 
@@ -52,7 +56,7 @@ A fit indicator warns if a column overflows the page after a change.
 The sidebar never prints. To export: **Ctrl/Cmd + P** → *Save as PDF*, paper size **40 × 30 in**
 (or Custom), margins **None**, and tick **Background graphics**.
 
-`preview-default.pdf` is pre-rendered at the default settings. To render any other combination
+`preview-default.pdf` (white canvas) and `preview-red-canvas.pdf` are pre-rendered. To render any other combination
 headlessly, pass URL parameters — `?combo=a` … `?combo=d`, or `?theme=…&card=…&bg=…&ts=…&fs=…&detail=…`:
 
 ```bash
@@ -87,7 +91,7 @@ node capture-multi.js                 # all three figures × all four themes
 node capture-multi.js red             # just one theme
 ```
 
-`theme-shared.js` holds the six themes and the palette remap (the course's neon palette →
+`theme-shared.js` holds the eight themes and the palette remap (the course's neon palette →
 carnelian / gold / grey / white). In-figure text is enlarged there too, so the screenshots stay
 legible at poster scale.
 
@@ -96,6 +100,10 @@ Two details worth knowing if you edit the themes:
 - The Cornell-red theme's reds are **sampled from the template artwork itself** — the header
   band is a gradient running `#B02327` at the left to `#E8575A` at the right, so the figures use
   `#C32529` for panels and `#E8575A`/`#F7C948` for accents and stay in family with the band.
+- The paint pass is **zone-aware**: it asks whether each element sits inside the canvas
+  (`#network-svg, #graph-stage`) or in the chrome around it, and applies that zone's palette,
+  panel colour, and text contrast. That is what makes the mixed themes possible — canvas labels
+  go dark on a light canvas and white on a red one, independent of the chrome.
 - After the CSS theme is injected, a paint pass rewrites anything the stylesheet can't reach:
   green-dominant SVG fills (the course's neon palette), green element backgrounds, and any
   near-black chip or button. The green test is deliberately tuned to catch neon, lime, and mint

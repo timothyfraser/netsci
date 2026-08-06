@@ -14,7 +14,7 @@ THUMBS = pathlib.Path("/home/user/netsci/data/projects")
 OUT = HERE / "poster-mockup.html"
 
 BAND_IN = 2.361          # the Duffield template's red band, measured off the artwork
-THEMES = ["white", "grey", "redlight", "red", "reddark", "orig"]
+THEMES = ["stagelight", "stagered", "white", "grey", "redlight", "red", "reddark", "orig"]
 
 
 def uri(img, fmt="JPEG", quality=80):
@@ -187,6 +187,7 @@ HTML = f"""<!doctype html>
       background:#B31B1B; color:#fff; font-weight:700; font-size:13px; cursor:pointer; }}
   #sidebar button.ghost {{ background:#333; }}
   #sidebar .hint {{ color:#8d8d8d; font-size:11.5px; margin-top:10px; line-height:1.4; }}
+  #sidebar .note {{ color:#8d8d8d; font-size:11px; line-height:1.35; margin:2px 0 8px 18px; }}
   .combos {{ display:flex; flex-direction:column; gap:6px; }}
   #sidebar button.combo {{ width:100%; text-align:left; padding:8px 10px; font-size:12px;
       font-weight:600; background:#2c2c2c; border:1px solid #3d3d3d; border-radius:6px;
@@ -315,22 +316,28 @@ HTML = f"""<!doctype html>
 
   <fieldset>
     <legend>Figure background</legend>
-    <label><input type="radio" name="theme" value="white"> White</label>
-    <label><input type="radio" name="theme" value="grey"> Light grey</label>
-    <label><input type="radio" name="theme" value="redlight"> Light red</label>
-    <label><input type="radio" name="theme" value="red" checked> Cornell red</label>
-    <label><input type="radio" name="theme" value="reddark"> Dark red</label>
+    <label><input type="radio" name="theme" value="stagelight" checked>
+      <b>White canvas · red panels</b></label>
+    <label><input type="radio" name="theme" value="stagered">
+      <b>Red canvas · white panels</b></label>
+    <div class="note">The two above contrast the drawing canvas (A) against the panel chrome (B).
+      The rest are single-tone.</div>
+    <label><input type="radio" name="theme" value="white"> All white</label>
+    <label><input type="radio" name="theme" value="grey"> All light grey</label>
+    <label><input type="radio" name="theme" value="redlight"> All light red</label>
+    <label><input type="radio" name="theme" value="red"> All Cornell red</label>
+    <label><input type="radio" name="theme" value="reddark"> All dark red</label>
     <label><input type="radio" name="theme" value="orig"> Original (course neon)</label>
   </fieldset>
 
   <fieldset>
     <legend>Colour combos</legend>
     <div class="combos">
-      <button class="combo" data-combo="default">Current — red figures, white cards, template art</button>
-      <button class="combo" data-combo="a">A — dark red figures · light red cards · grey page</button>
-      <button class="combo" data-combo="b">B — white figures · light red cards · Cornell red page</button>
-      <button class="combo" data-combo="c">C — light red figures · white cards · dark red page</button>
-      <button class="combo" data-combo="d">D — light red figures · dark red cards · white page</button>
+      <button class="combo" data-combo="default">White canvas · red panels — white cards, template art</button>
+      <button class="combo" data-combo="a">White canvas · red panels — light red cards, white page</button>
+      <button class="combo" data-combo="b">White canvas · red panels — white cards, light grey page</button>
+      <button class="combo" data-combo="c">Red canvas · white panels — white cards, template art</button>
+      <button class="combo" data-combo="d">Red canvas · white panels — light red cards, dark red page</button>
     </div>
   </fieldset>
 
@@ -553,11 +560,11 @@ CARD_SWATCHES.forEach(c => {{
 
 // ---- one-click combinations -------------------------------------------------
 const COMBOS = {{
-  default:  {{ theme: 'red',      card: '#ffffff', bg: 'template' }},
-  a:        {{ theme: 'reddark',  card: '#f9e4e4', bg: '#f7f7f7' }},
-  b:        {{ theme: 'white',    card: '#f9e4e4', bg: '#b31b1b' }},
-  c:        {{ theme: 'redlight', card: '#ffffff', bg: '#7a1216' }},
-  d:        {{ theme: 'redlight', card: '#8c1515', bg: '#ffffff' }},
+  default:  {{ theme: 'stagelight', card: '#ffffff', bg: 'template' }},
+  a:        {{ theme: 'stagelight', card: '#f9e4e4', bg: '#ffffff' }},
+  b:        {{ theme: 'stagelight', card: '#ffffff', bg: '#f7f7f7' }},
+  c:        {{ theme: 'stagered',   card: '#ffffff', bg: 'template' }},
+  d:        {{ theme: 'stagered',   card: '#f9e4e4', bg: '#7a1216' }},
 }};
 document.querySelectorAll('button.combo').forEach(btn =>
   btn.addEventListener('click', () => {{
@@ -605,7 +612,7 @@ window.addEventListener('load', () => setTimeout(checkFit, 400));
 // ?theme=white&detail=2&ts=100&fs=100&print=1  — used to render fixed variants headlessly
 (function fromUrl() {{
   const q = new URLSearchParams(location.search);
-  const t = q.get('theme') || 'red';
+  const t = q.get('theme') || 'stagelight';
   setTheme(t);
   const r = document.querySelector('input[name=theme][value="' + t + '"]');
   if (r) r.checked = true;
