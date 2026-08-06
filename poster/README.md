@@ -10,29 +10,65 @@ Open **`poster-mockup.html`** in a browser. It is one self-contained file (every
 inlined, nothing loads from the network) and it opens with a **control sidebar** for choosing
 how the poster looks:
 
+### The three colour roles
+
+The poster reads as three independent background layers, and the sidebar controls each one:
+
+1. **Figure background** — the background *inside* the screenshots (graph stage, code panel).
+   Because it is baked into the captured images, each option is a separately captured variant:
+   white · light grey · light red · Cornell red · dark red · original course neon.
+2. **Card background** — the poster's cards, and the backing cards behind the captions, author
+   block, and title. Any colour; the type inside flips to light automatically on a dark card.
+3. **True background** — what sits behind and between the cards: the Duffield template artwork,
+   or a flat colour (a flat colour keeps the branded red band and drops only the busy halftone).
+
+**Colour combos** in the sidebar set all three at once:
+
+| | Figure | Cards | True background |
+|---|---|---|---|
+| Current | Cornell red | white | template artwork |
+| A | dark red | light red | light grey |
+| B | white | light red | Cornell red |
+| C | light red | white | dark red |
+| D | light red | dark red | white |
+
+### Everything else
+
 | Control | What it does |
 |---|---|
-| **Figure background** | Cornell red · White · Light grey · original course neon — swaps all three screenshots |
-| **Figure size** | Scales the two figure columns (the left text column absorbs the change) |
+| **Figure size** | Scales the two figure columns; the text column never drops below 7.9 in |
 | **Text size** | Scales every piece of poster type at once |
 | **Descriptive detail** | Minimal (headlines only) · Standard · Detailed (full sentences) |
 | **Accent colour** | Defaults to Cornell carnelian `#B31B1B` |
-| **Card style** | White cards · warm tinted cards · no cards |
-| **Poster background** | Duffield template artwork, or a flat colour — white, Cornell light grey, warm red tint, beige, khaki, navy, Cornell red, or any custom colour. A flat colour keeps the template's branded red band but drops the busy halftone; dark choices flip the type to white automatically. |
-| **Backing cards** | Translucent cards behind the figure captions, author block, and (optionally) the title, so text stays readable over the template artwork |
-| **Sections** | Show/hide the stats band, QR panel, dataset thumbnails, headshot |
+| **Backing cards** | Behind captions, author block, and the title — keeps text readable over the artwork |
+| **Sections** | Show/hide the stats band, QR panel, dataset thumbnails, headshot, author QR |
 | **Preview zoom** | Screen only — the printed size is always 40 × 30 in |
 
-Defaults open at the settings chosen for this poster: Cornell-red figures, figure and text
-size 110%, minimal detail, warm tinted cards, template artwork.
+Defaults open at the chosen settings: Cornell-red figures, white cards, template artwork,
+figure and text size 110%, minimal detail, backing cards on.
 
 A fit indicator warns if a column overflows the page after a change.
 
 The sidebar never prints. To export: **Ctrl/Cmd + P** → *Save as PDF*, paper size **40 × 30 in**
 (or Custom), margins **None**, and tick **Background graphics**.
 
-`preview-cornell-red.pdf` is pre-rendered at the default settings; `preview-white.pdf` is the
-same poster with white figure backgrounds.
+`preview-default.pdf` is pre-rendered at the default settings. To render any other combination
+headlessly, pass URL parameters — `?combo=a` … `?combo=d`, or `?theme=…&card=…&bg=…&ts=…&fs=…&detail=…`:
+
+```bash
+chromium --headless --no-pdf-header-footer \
+  --print-to-pdf=combo-b.pdf "file://$PWD/poster-mockup.html?combo=b"
+```
+
+### QR codes
+
+Three, all verified to decode from the rendered 40×30 PDF (including at a third of print scale):
+
+| Where | Links to |
+|---|---|
+| Beside the author block | `https://timothyfraser.com` |
+| Bottom right, "Course site" | `https://timothyfraser.com/netsci/` |
+| Bottom right, "Network Visualizer" | `https://timothyfraser.com/netsci/visualizer.html` |
 
 ## Rebuilding
 
@@ -51,7 +87,7 @@ node capture-multi.js                 # all three figures × all four themes
 node capture-multi.js red             # just one theme
 ```
 
-`theme-shared.js` holds the four themes and the palette remap (the course's neon palette →
+`theme-shared.js` holds the six themes and the palette remap (the course's neon palette →
 carnelian / gold / grey / white). In-figure text is enlarged there too, so the screenshots stay
 legible at poster scale.
 
@@ -77,8 +113,7 @@ Two details worth knowing if you edit the themes:
 | `assets/` | Duffield background artwork, headshot, QR codes |
 
 Dataset thumbnails come from `../data/projects/*/thumb.png`, so build from inside the repo.
-QR codes were generated with `segno` (carnelian on white) and verified to decode from the
-rendered PDF.
+QR codes were generated with `segno` (carnelian on white).
 
 ## Gotcha worth remembering
 

@@ -14,7 +14,7 @@ THUMBS = pathlib.Path("/home/user/netsci/data/projects")
 OUT = HERE / "poster-mockup.html"
 
 BAND_IN = 2.361          # the Duffield template's red band, measured off the artwork
-THEMES = ["white", "grey", "red", "orig"]
+THEMES = ["white", "grey", "redlight", "red", "reddark", "orig"]
 
 
 def uri(img, fmt="JPEG", quality=80):
@@ -71,6 +71,7 @@ BG = load(ASSETS / "background.png", max_w=2880, quality=90)
 HEAD = load(ASSETS / "instructor.jpg", max_w=560, quality=88)
 QR_SITE = load(ASSETS / "qr-site.png", fmt="PNG")
 QR_VIZ = load(ASSETS / "qr-visualizer.png", fmt="PNG")
+QR_HOME = load(ASSETS / "qr-home.png", fmt="PNG")
 STAMP_NAMES = ["power-grid", "amazon-last-mile", "semiconductor-supply", "campus-contact"]
 STAMPS = [load(THUMBS / n / "thumb.png", max_w=340, quality=82) for n in STAMP_NAMES]
 
@@ -150,8 +151,10 @@ HTML = f"""<!doctype html>
     --ts:1;            /* text scale   */
     --fs:1;            /* figure scale */
     --zoom:0.28;       /* screen preview only */
-    --card-bg:#ffffff; --card-line:#e0e0e0; --card-shadow:0 3px 12px rgba(0,0,0,.10);
-    --backing: rgba(255,241,241,0.88);   /* translucent card behind text over busy artwork */
+    --card-bg:#ffffff; --card-line:rgba(0,0,0,.12); --card-shadow:0 3px 12px rgba(0,0,0,.10);
+    --card-ink:#1c1c1c; --card-body:#333333; --card-h2:#B31B1B;
+    --backing: rgba(255,255,255,0.90);   /* card colour, behind text over busy artwork */
+    --page-ink:#1c1c1c; --title-color:#B31B1B;
     --page-color:#ffffff;
     --band-grad: linear-gradient(90deg,#B02327 0%,#C32529 45%,#E8575A 100%);
     --figw: calc(17.1in * var(--fs));
@@ -184,6 +187,13 @@ HTML = f"""<!doctype html>
       background:#B31B1B; color:#fff; font-weight:700; font-size:13px; cursor:pointer; }}
   #sidebar button.ghost {{ background:#333; }}
   #sidebar .hint {{ color:#8d8d8d; font-size:11.5px; margin-top:10px; line-height:1.4; }}
+  .combos {{ display:flex; flex-direction:column; gap:6px; }}
+  #sidebar button.combo {{ width:100%; text-align:left; padding:8px 10px; font-size:12px;
+      font-weight:600; background:#2c2c2c; border:1px solid #3d3d3d; border-radius:6px;
+      color:#eaeaea; cursor:pointer; margin:0; }}
+  #sidebar button.combo:hover {{ background:#3a3a3a; border-color:#B31B1B; }}
+  .swatches {{ display:flex; gap:6px; margin:6px 0 2px; }}
+  .swatches span {{ width:26px; height:22px; border-radius:4px; border:1px solid #555; cursor:pointer; }}
   #fitmsg {{ font-size:12px; padding:8px 10px; border-radius:6px; margin:6px 0 2px; line-height:1.35; }}
   #fitmsg.ok {{ background:#14331b; color:#8ee6a0; }}
   #fitmsg.warn {{ background:#3a1414; color:#ffb0a8; }}
@@ -205,13 +215,6 @@ HTML = f"""<!doctype html>
   body[data-bg="color"] .page::before {{ content:""; position:absolute; inset:0 0 auto 0; height:var(--band);
       background-image:url({BG}); background-size:40in 30in; background-position:top left; }}
 
-  /* a dark page background flips the type and card colours */
-  body[data-dark="on"] {{ --ink:#ffffff; --body:#f4ecec; --muted:#e6d6d6;
-      --card-bg:rgba(255,255,255,0.13); --card-line:rgba(255,255,255,0.30);
-      --card-shadow:0 3px 12px rgba(0,0,0,.28); --backing:rgba(0,0,0,0.30); }}
-  body[data-dark="on"] h1, body[data-dark="on"] h2,
-  body[data-dark="on"] .stat-num {{ color:#ffffff; }}
-  body[data-dark="on"] .stat-lab, body[data-dark="on"] figcaption {{ color:#f4ecec; }}
 
   /* backing cards so text stays readable over the template artwork */
   body[data-backing="on"] figcaption {{ background:var(--backing); padding:0.15in 0.22in;
@@ -222,24 +225,33 @@ HTML = f"""<!doctype html>
       border-radius:16px; display:inline-block; }}
 
   /* ------------------------------------------------ header */
-  header {{ display:flex; align-items:flex-start; gap:0.8in; }}
+  header {{ display:flex; align-items:flex-start; gap:0.7in; }}
+  header > div:first-child {{ flex:1 1 auto; min-width:0; }}
   h1 {{ margin:0; font-size:calc(144px * var(--ts)); line-height:1.03; font-weight:bold;
-        color:var(--accent); letter-spacing:-1px; max-width:26in; }}
-  .author {{ margin-left:auto; display:flex; align-items:center; gap:0.34in; padding-top:0.06in; }}
-  .author img {{ width:1.65in; height:1.65in; border-radius:50%; object-fit:cover;
+        color:var(--title-color); letter-spacing:-1px; max-width:26in; }}
+  .author {{ margin-left:auto; flex:0 0 auto; display:flex; align-items:center;
+             gap:0.30in; padding-top:0.06in; }}
+  /* keep the block narrow enough that the title still sets on two lines */
+  .author > div {{ max-width:6.6in; }}
+  .author > img:not(.author-qr) {{ width:1.65in; height:1.65in; border-radius:50%; object-fit:cover;
                  border:4px solid #fff; box-shadow:0 3px 14px rgba(0,0,0,.22); }}
-  body[data-headshot="off"] .author img {{ display:none; }}
-  .author .name {{ font-size:calc(52px * var(--ts)); font-weight:bold; line-height:1.12; }}
-  .author .role {{ font-size:calc(37px * var(--ts)); color:var(--body); line-height:1.25; margin-top:0.05in; }}
-  .author .meta {{ font-size:calc(33px * var(--ts)); color:var(--muted); line-height:1.3; margin-top:0.05in; }}
+  /* sized to fill the author card without driving the header taller */
+  .author-qr {{ width:calc(1.95in * var(--ts)); height:calc(1.95in * var(--ts));
+                align-self:center; border-radius:4px; margin-left:0.30in;
+                background:#fff; padding:0.06in; }}
+  body[data-authorqr="off"] .author-qr {{ display:none; }}
+  body[data-headshot="off"] .author > img:not(.author-qr) {{ display:none; }}
+  .author .name {{ font-size:calc(52px * var(--ts)); font-weight:bold; line-height:1.12; color:var(--card-ink); }}
+  .author .role {{ font-size:calc(37px * var(--ts)); color:var(--card-body); line-height:1.25; margin-top:0.05in; }}
+  .author .meta {{ font-size:calc(30px * var(--ts)); color:var(--card-body); line-height:1.3; margin-top:0.05in; }}
 
   /* ------------------------------------------------ stats */
   .stats {{ display:grid; grid-template-columns:repeat(5,1fr); gap:var(--gap); margin:0.40in 0; }}
   body[data-stats="off"] .stats {{ display:none; }}
   .stat {{ background:var(--card-bg); border:1px solid var(--card-line); border-radius:14px;
            box-shadow:var(--card-shadow); padding:0.18in 0.30in; display:flex; align-items:center; gap:0.30in; }}
-  .stat-num {{ font-size:calc(108px * var(--ts)); font-weight:bold; color:var(--accent); line-height:.96; }}
-  .stat-lab {{ font-size:calc(37px * var(--ts)); font-weight:bold; color:var(--muted); line-height:1.22; }}
+  .stat-num {{ font-size:calc(108px * var(--ts)); font-weight:bold; color:var(--card-h2); line-height:.96; }}
+  .stat-lab {{ font-size:calc(37px * var(--ts)); font-weight:bold; color:var(--card-body); line-height:1.22; }}
 
   /* ------------------------------------------------ body grid */
   main {{ flex:1; display:grid; gap:var(--gap); min-height:0;
@@ -248,34 +260,35 @@ HTML = f"""<!doctype html>
   .card {{ background:var(--card-bg); border:1px solid var(--card-line); border-radius:16px;
            box-shadow:var(--card-shadow); padding:0.32in 0.40in 0.36in; flex:0 0 auto; }}
   body[data-cards="none"] .card, body[data-cards="none"] .stat {{ background:transparent; border-color:transparent; box-shadow:none; }}
-  body[data-cards="tint"] .card, body[data-cards="tint"] .stat {{ background:#fbf6f6; }}
-  h2 {{ margin:0 0 0.18in; font-size:calc(57px * var(--ts)); font-weight:bold; color:var(--accent);
+  h2 {{ margin:0 0 0.18in; font-size:calc(57px * var(--ts)); font-weight:bold; color:var(--card-h2);
         letter-spacing:1.2px; line-height:1.05; }}
-  p {{ margin:0; font-size:calc(41px * var(--ts)); line-height:1.31; color:var(--body); }}
+  p {{ margin:0; font-size:calc(41px * var(--ts)); line-height:1.31; color:var(--card-body); }}
+  .card b {{ color:var(--card-ink); }}
 
   ol {{ list-style:none; margin:0; padding:0; }}
-  ol li {{ display:flex; gap:0.24in; font-size:calc(39px * var(--ts)); line-height:1.28; color:var(--body); }}
+  ol li {{ display:flex; gap:0.24in; font-size:calc(39px * var(--ts)); line-height:1.28; color:var(--card-body); }}
   ol li + li {{ margin-top:0.19in; }}
-  .step-n {{ flex:0 0 auto; width:0.72in; height:0.72in; border-radius:50%; background:var(--accent);
-             color:#fff; font-size:calc(44px * var(--ts)); font-weight:bold;
+  .step-n {{ flex:0 0 auto; width:0.72in; height:0.72in; border-radius:50%; background:var(--card-h2);
+             color:var(--card-bg); font-size:calc(44px * var(--ts)); font-weight:bold;
              display:flex; align-items:center; justify-content:center; }}
   ul {{ list-style:none; margin:0; padding:0; }}
-  ul li {{ font-size:calc(39px * var(--ts)); line-height:1.28; color:var(--body);
+  ul li {{ font-size:calc(39px * var(--ts)); line-height:1.28; color:var(--card-body);
            padding-left:0.42in; position:relative; }}
   ul li + li {{ margin-top:0.19in; }}
   ul li::before {{ content:""; position:absolute; left:0; top:0.20in; width:0.19in; height:0.19in;
-                   border-radius:50%; background:var(--accent); }}
+                   border-radius:50%; background:var(--card-h2); }}
 
   figure {{ margin:0; flex:0 0 auto; }}
   figure img {{ width:100%; display:block; border-radius:10px; border:4px solid rgba(0,0,0,.18);
                 box-shadow:0 5px 18px rgba(0,0,0,.22); }}
-  figcaption {{ margin-top:0.15in; font-size:calc(36px * var(--ts)); line-height:1.26; color:var(--body); }}
-  figcaption b {{ color:var(--ink); }}
+  figcaption {{ margin-top:0.15in; font-size:calc(36px * var(--ts)); line-height:1.26; color:var(--card-body); }}
+  figcaption b {{ color:var(--card-ink); }}
+  body[data-backing="off"] figcaption {{ color:var(--page-ink); }}
 
   .qr {{ display:flex; gap:0.5in; margin-top:0.22in; }}
   .qr div {{ flex:1; text-align:center; }}
   .qr img {{ width:calc(2.2in * var(--fs)); height:calc(2.2in * var(--fs)); display:block; margin:0 auto 0.12in; }}
-  .qr span {{ font-size:calc(33px * var(--ts)); font-weight:bold; color:var(--muted); }}
+  .qr span {{ font-size:calc(33px * var(--ts)); font-weight:bold; color:var(--card-body); }}
   body[data-qr="off"] #qrcard {{ display:none; }}
   .stamps {{ display:grid; grid-template-columns:repeat(4,1fr); gap:0.16in; margin-top:0.22in; }}
   .stamps img {{ width:100%; height:1.35in; object-fit:cover; display:block; border-radius:7px; }}
@@ -293,8 +306,8 @@ HTML = f"""<!doctype html>
   }}
 </style>
 </head>
-<body data-detail="1" data-cards="tint" data-bg="template" data-stats="on" data-qr="on"
-      data-datasets="on" data-headshot="on" data-backing="on" data-titleback="off" data-dark="off">
+<body data-detail="1" data-cards="solid" data-bg="template" data-stats="on" data-qr="on"
+      data-datasets="on" data-headshot="on" data-authorqr="on" data-backing="on" data-titleback="on" data-dark="off">
 
 <div id="sidebar">
   <h2>Poster controls</h2>
@@ -304,8 +317,21 @@ HTML = f"""<!doctype html>
     <legend>Figure background</legend>
     <label><input type="radio" name="theme" value="white"> White</label>
     <label><input type="radio" name="theme" value="grey"> Light grey</label>
+    <label><input type="radio" name="theme" value="redlight"> Light red</label>
     <label><input type="radio" name="theme" value="red" checked> Cornell red</label>
+    <label><input type="radio" name="theme" value="reddark"> Dark red</label>
     <label><input type="radio" name="theme" value="orig"> Original (course neon)</label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Colour combos</legend>
+    <div class="combos">
+      <button class="combo" data-combo="default">Current — red figures, white cards, template art</button>
+      <button class="combo" data-combo="a">A — dark red figures · light red cards · grey page</button>
+      <button class="combo" data-combo="b">B — white figures · light red cards · Cornell red page</button>
+      <button class="combo" data-combo="c">C — light red figures · white cards · dark red page</button>
+      <button class="combo" data-combo="d">D — light red figures · dark red cards · white page</button>
+    </div>
   </fieldset>
 
   <fieldset>
@@ -327,15 +353,11 @@ HTML = f"""<!doctype html>
 
   <fieldset>
     <legend>Style</legend>
+    <label>Card background<input type="color" id="cardcol" value="#ffffff"></label>
+    <div class="swatches" id="cardsw"></div>
+    <label><input type="checkbox" id="nocards"> No cards (text straight on the page)</label>
     <label>Accent colour<input type="color" id="accent" value="#B31B1B"></label>
-    <label>Card style
-      <select id="cards">
-        <option value="white">White cards</option>
-        <option value="tint" selected>Warm tinted cards</option>
-        <option value="none">No cards (plain)</option>
-      </select>
-    </label>
-    <label>Poster background
+    <label>True background (behind &amp; between cards)
       <select id="bg">
         <option value="template" selected>Duffield template artwork</option>
         <option value="#ffffff">White</option>
@@ -343,14 +365,16 @@ HTML = f"""<!doctype html>
         <option value="#fdf2f2">Warm red tint</option>
         <option value="#d8d2c9">Beige</option>
         <option value="#9fad9f">Dark khaki</option>
-        <option value="#073949">Navy blue</option>
+        <option value="#f2dbdb">Light red</option>
         <option value="#b31b1b">Cornell red</option>
+        <option value="#7a1216">Dark red</option>
+        <option value="#073949">Navy blue</option>
         <option value="custom">Custom colour &rarr;</option>
       </select>
     </label>
     <label>Custom background<input type="color" id="bgcustom" value="#f7f7f7"></label>
     <label><input type="checkbox" id="backing" checked> Backing card behind captions &amp; author</label>
-    <label><input type="checkbox" id="titleback"> Backing card behind the title</label>
+    <label><input type="checkbox" id="titleback" checked> Backing card behind the title</label>
   </fieldset>
 
   <fieldset>
@@ -359,6 +383,7 @@ HTML = f"""<!doctype html>
     <label><input type="checkbox" id="qr" checked> QR panel</label>
     <label><input type="checkbox" id="datasets" checked> Dataset thumbnails</label>
     <label><input type="checkbox" id="headshot" checked> Headshot</label>
+    <label><input type="checkbox" id="authorqr" checked> QR beside author (timothyfraser.com)</label>
   </fieldset>
 
   <div id="fitmsg" class="ok">Checking fit…</div>
@@ -382,6 +407,7 @@ HTML = f"""<!doctype html>
         <div class="role">Assistant Teaching Professor, Systems Engineering</div>
         <div class="meta">Cornell University · tmf77@cornell.edu<br>SYSEN 5470 · timothyfraser.com/netsci</div>
       </div>
+      <img class="author-qr" src="{QR_HOME}" alt="timothyfraser.com">
     </div>
   </header>
 
@@ -456,29 +482,95 @@ bind('fs', e => {{ root.setProperty('--fs', e.target.value / 100); document.getE
 bind('ts', e => {{ root.setProperty('--ts', e.target.value / 100); document.getElementById('tsv').textContent = e.target.value + '%'; }});
 bind('zoom', e => {{ root.setProperty('--zoom', e.target.value / 100); document.getElementById('zv').textContent = e.target.value + '%'; }});
 bind('accent', e => root.setProperty('--accent', e.target.value));
-document.getElementById('cards').addEventListener('change', e => body.dataset.cards = e.target.value);
+// ---- the three colour roles -------------------------------------------------
+const $ = (id) => document.getElementById(id);
 
 function lum(hex) {{
-  const m = /^#([0-9a-f]{{6}})$/i.exec(hex || '');
+  const m = /^#([0-9a-f]{{6}})$/i.exec((hex || '').trim());
   if (!m) return 1;
   const n = parseInt(m[1], 16);
   return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
 }}
-function applyBg(val) {{
-  if (val === 'template') {{ body.dataset.bg = 'template'; body.dataset.dark = 'off'; return; }}
-  const colour = (val === 'custom') ? document.getElementById('bgcustom').value : val;
-  body.dataset.bg = 'color';
-  root.setProperty('--page-color', colour);
-  body.dataset.dark = lum(colour) < 0.45 ? 'on' : 'off';
+const rgba = (hex, a) => {{
+  const m = /^#([0-9a-f]{{6}})$/i.exec(hex || '');
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+}};
+
+function applyCard(hex) {{
+  const dark = lum(hex) < 0.45;
+  root.setProperty('--card-bg', hex);
+  root.setProperty('--card-ink', dark ? '#ffffff' : '#1c1c1c');
+  root.setProperty('--card-body', dark ? '#f6ecec' : '#333333');
+  root.setProperty('--card-h2', dark ? '#F7C948' : $('accent').value);
+  root.setProperty('--card-line', dark ? 'rgba(255,255,255,.30)' : 'rgba(0,0,0,.12)');
+  root.setProperty('--card-shadow', dark ? '0 3px 12px rgba(0,0,0,.30)' : '0 3px 12px rgba(0,0,0,.10)');
+  root.setProperty('--backing', rgba(hex, 0.92));
+  $('cardcol').value = hex;
+  applyTitle();
 }}
-document.getElementById('bg').addEventListener('change', e => applyBg(e.target.value));
-document.getElementById('bgcustom').addEventListener('input', () => {{
-  document.getElementById('bg').value = 'custom';
-  applyBg('custom');
-}});
+function applyBg(val) {{
+  if (val === 'template') {{
+    body.dataset.bg = 'template';
+    root.setProperty('--page-ink', '#1c1c1c');
+  }} else {{
+    const colour = (val === 'custom') ? $('bgcustom').value : val;
+    body.dataset.bg = 'color';
+    root.setProperty('--page-color', colour);
+    root.setProperty('--page-ink', lum(colour) < 0.45 ? '#ffffff' : '#1c1c1c');
+  }}
+  applyTitle();
+}}
+function applyTitle() {{
+  // the title sits either on its backing card or straight on the page
+  const onCard = body.dataset.titleback === 'on';
+  const base = onCard ? $('cardcol').value
+             : (body.dataset.bg === 'template' ? '#ffffff'
+                : (($('bg').value === 'custom') ? $('bgcustom').value : $('bg').value));
+  root.setProperty('--title-color', lum(base) < 0.45 ? '#F7C948' : $('accent').value);
+}}
+
+$('bg').addEventListener('change', e => applyBg(e.target.value));
+$('bgcustom').addEventListener('input', () => {{ $('bg').value = 'custom'; applyBg('custom'); }});
+$('cardcol').addEventListener('input', e => applyCard(e.target.value));
+$('nocards').addEventListener('change', e => body.dataset.cards = e.target.checked ? 'none' : 'solid');
 ['backing','titleback'].forEach(id =>
-  document.getElementById(id).addEventListener('change', e => body.dataset[id] = e.target.checked ? 'on' : 'off'));
-['stats','qr','datasets','headshot'].forEach(id =>
+  $(id).addEventListener('change', e => {{
+    body.dataset[id] = e.target.checked ? 'on' : 'off';
+    applyTitle();
+  }}));
+
+// card-colour swatches
+const CARD_SWATCHES = ['#ffffff', '#f7f7f7', '#f9e4e4', '#f2dbdb', '#b31b1b', '#8c1515'];
+CARD_SWATCHES.forEach(c => {{
+  const sp = document.createElement('span');
+  sp.style.background = c;
+  sp.title = c;
+  sp.addEventListener('click', () => applyCard(c));
+  $('cardsw').appendChild(sp);
+}});
+
+// ---- one-click combinations -------------------------------------------------
+const COMBOS = {{
+  default:  {{ theme: 'red',      card: '#ffffff', bg: 'template' }},
+  a:        {{ theme: 'reddark',  card: '#f9e4e4', bg: '#f7f7f7' }},
+  b:        {{ theme: 'white',    card: '#f9e4e4', bg: '#b31b1b' }},
+  c:        {{ theme: 'redlight', card: '#ffffff', bg: '#7a1216' }},
+  d:        {{ theme: 'redlight', card: '#8c1515', bg: '#ffffff' }},
+}};
+document.querySelectorAll('button.combo').forEach(btn =>
+  btn.addEventListener('click', () => {{
+    const c = COMBOS[btn.dataset.combo];
+    setTheme(c.theme);
+    const r = document.querySelector('input[name=theme][value="' + c.theme + '"]');
+    if (r) r.checked = true;
+    applyCard(c.card);
+    $('bg').value = c.bg;
+    applyBg(c.bg);
+    setTimeout(checkFit, 80);
+  }}));
+['stats','qr','datasets','headshot','authorqr'].forEach(id =>
   document.getElementById(id).addEventListener('change', e => body.dataset[id] = e.target.checked ? 'on' : 'off'));
 
 document.getElementById('reset').addEventListener('click', () => location.reload());
@@ -527,8 +619,18 @@ window.addEventListener('load', () => setTimeout(checkFit, 400));
   document.getElementById('fs').value = +q.get('fs') || 110;
   document.getElementById('tsv').textContent = (+q.get('ts') || 110) + '%';
   document.getElementById('fsv').textContent = (+q.get('fs') || 110) + '%';
-  if (q.get('bg')) {{ document.getElementById('bg').value = q.get('bg'); applyBg(q.get('bg')); }}
-  if (q.get('cards')) {{ body.dataset.cards = q.get('cards'); document.getElementById('cards').value = q.get('cards'); }}
+  const combo = q.get('combo');
+  if (combo && COMBOS[combo]) {{
+    const c = COMBOS[combo];
+    setTheme(c.theme);
+    const rr = document.querySelector('input[name=theme][value="' + c.theme + '"]');
+    if (rr) rr.checked = true;
+    applyCard(c.card); $('bg').value = c.bg; applyBg(c.bg);
+  }} else {{
+    applyCard(q.get('card') || '#ffffff');
+    const bgv = q.get('bg') || 'template';
+    $('bg').value = bgv; applyBg(bgv);
+  }}
 }})();
 </script>
 </body>

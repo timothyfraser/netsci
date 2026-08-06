@@ -75,6 +75,35 @@ const THEME_CSS = {
     .cm-number, .cm-atom { color:#FFD24A !important; }
     .cm-variable, .cm-property, .cm-operator, .cm-def { color:#FFFFFF !important; }
   `,
+  redlight: LIGHT('#F9E9E9', '#F2DBDB'),
+  reddark: `
+    :root {
+      --black:#7A1216 !important; --black-2:#6A1013 !important;
+      --white:#FFFFFF !important; --grey:#F0D8D8 !important; --grey-dim:#D9B0B0 !important;
+      --green-mint:#FBEDED !important; --green-mint-2:#FFE9A8 !important;
+      --green-bright:#F7C948 !important; --green-mid:#FFD98A !important;
+      --green-dark:#4E0A0A !important; --green-deeper:#5C0C0C !important; --green-laser:#FFFFFF !important;
+      --card-bg: rgba(255,255,255,0.14) !important; --card-bg-2: rgba(255,255,255,0.08) !important;
+      --border: rgba(255,255,255,0.45) !important; --border-strong: rgba(247,201,72,0.90) !important;
+      --border-soft: rgba(255,255,255,0.20) !important;
+      --accent:#F7C948 !important; --accent-soft:#FFFFFF !important; --link:#F7C948 !important;
+      --success:#FFD98A !important; --warning:#F7C948 !important; --danger:#FFE0E0 !important;
+      --node-1:#F7C948 !important; --node-2:#FFFFFF !important; --node-3:#FFD6D6 !important;
+      --node-4:#FF9E9E !important; --node-5:#E8575A !important; --node-6:#E8E8E8 !important;
+      --node-7:#8C1515 !important; --node-8:#FFD24A !important;
+      --edge: rgba(255,255,255,0.60) !important; --edge-dim: rgba(255,255,255,0.32) !important;
+      --edge-strong: rgba(247,201,72,0.95) !important;
+    }
+    body, #main { background:#7A1216 !important; }
+    #network-svg, #graph-stage, .graph-stage-wrap { background:#6E1114 !important; }
+    .lab-card, .pg-card, .viz-card, .card { background:rgba(255,255,255,0.11) !important; }
+    .CodeMirror, .CodeMirror-gutters { background:#5C0C0C !important; color:#FFFFFF !important; }
+    .CodeMirror-linenumber { color:#D9B0B0 !important; }
+    .cm-comment { color:#FFD9D9 !important; } .cm-string { color:#F7C948 !important; }
+    .cm-keyword, .cm-builtin { color:#FFE9A8 !important; font-weight:700; }
+    .cm-number, .cm-atom { color:#FFD24A !important; }
+    .cm-variable, .cm-property, .cm-operator, .cm-def { color:#FFFFFF !important; }
+  `,
   orig: '',
 };
 
@@ -146,21 +175,23 @@ function paletteCss(map) {
 async function dress(page, theme) {
   await page.addStyleTag({ content: BIG_TEXT });
   if (THEME_CSS[theme]) await page.addStyleTag({ content: THEME_CSS[theme] });
-  if (theme !== 'orig') {
-    await page.addStyleTag({ content: paletteCss(theme === 'red' ? MAP_RED : MAP_LIGHT) });
-  }
+  const pa = PAINT_ARGS[theme];
+  if (pa) await page.addStyleTag({ content: paletteCss(pa.light ? MAP_LIGHT : MAP_RED) });
   await page.waitForTimeout(600);
 }
 const PAINT_ARGS = {
-  white: { panel: 'rgba(179,27,27,0.07)', accent: '#B31B1B', edgeRGB: '90,90,90', murkMax: 0.45 },
-  grey:  { panel: 'rgba(179,27,27,0.08)', accent: '#B31B1B', edgeRGB: '90,90,90', murkMax: 0.45 },
-  red:   { panel: 'rgba(255,255,255,0.18)', accent: '#F7C948', edgeRGB: '255,255,255', murkMax: 0.20 },
+  white:    { panel: 'rgba(179,27,27,0.07)', accent: '#B31B1B', edgeRGB: '90,90,90',    murkMax: 0.45, light: true },
+  grey:     { panel: 'rgba(179,27,27,0.08)', accent: '#B31B1B', edgeRGB: '90,90,90',    murkMax: 0.45, light: true },
+  redlight: { panel: 'rgba(179,27,27,0.10)', accent: '#B31B1B', edgeRGB: '120,80,80',   murkMax: 0.45, light: true },
+  red:      { panel: 'rgba(255,255,255,0.18)', accent: '#F7C948', edgeRGB: '255,255,255', murkMax: 0.20, light: false },
+  reddark:  { panel: 'rgba(255,255,255,0.16)', accent: '#F7C948', edgeRGB: '255,255,255', murkMax: 0.20, light: false },
 };
 
 async function paint(page, theme) {
-  if (theme === 'orig') return;
-  await page.evaluate(new Function('return ' + PAINT)(), Object.assign(
-    { map: theme === 'red' ? MAP_RED : MAP_LIGHT, light: theme !== 'red' }, PAINT_ARGS[theme]));
+  const args = PAINT_ARGS[theme];
+  if (!args) return;                       // 'orig' keeps the course's own palette
+  await page.evaluate(new Function('return ' + PAINT)(),
+    Object.assign({ map: args.light ? MAP_LIGHT : MAP_RED }, args));
   await page.waitForTimeout(300);
 }
 module.exports = { BIG_TEXT, THEME_CSS, MAP_LIGHT, MAP_RED, PAINT, PAINT_ARGS, paletteCss, dress, paint };
