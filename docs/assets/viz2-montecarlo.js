@@ -27,8 +27,9 @@
 
   // ── Metric registry ─────────────────────────────────────────
   // Each entry: { label, scope: 'graph'|'node', compute(adj, ids, opts) }.
-  // `adj` is built by NV.utils.buildAdj over the active id set; `ids` is
-  // the array form. opts carries { selectedNode } for node-level metrics.
+  // `adj` is built over the active id set — by NV.utils.buildAdj, or by
+  // buildAdjRaw when the entry sets `rawWeights: true`; `ids` is the array
+  // form. opts carries { selectedNode } for node-level metrics.
   const METRICS = {
     apl_hops: {
       label: 'Avg path length (hops)',
@@ -108,6 +109,9 @@
     node_wdegree: {
       label: 'Selected node — weighted degree (Σw)',
       scope: 'node',
+      // Sums the weights themselves rather than routing over them, so it needs
+      // the un-floored Poisson draw — see buildAdjRaw().
+      rawWeights: true,
       compute(adj, ids, opts) {
         const nid = opts.selectedNode;
         let s = 0;
@@ -261,15 +265,46 @@
     return aBag.size === 0;
   }
 
-  // Poisson-jitter every positive weight; clamp to ≥1 so Dijkstra
-  // (cost = 1/w) stays sane. Mirrors max(1, rpois(w)) from R.
+  // Poisson-jitter every positive weight, keeping the draw EXACTLY as drawn —
+  // a draw of 0 is a legitimate replicate ("no flow on this edge this time"),
+  // not something to round up. Rounding it up to 1 adds
+  // E[max(1, X)] - E[X] = e^-w to every edge, so on count data whose weights sit
+  // near 1 the resampled network carries ~25% more total weight than the one it
+  // is supposed to be resampling, and Σw metrics land outside their own
+  // distribution. The 1/w floor that Dijkstra needs is applied when the
+  // adjacency is built, not here — same split as the R and Python this card
+  // exports, which draw rpois(lambda) unclamped and floor the COST:
+  // weights = 1 / pmax(weight, 1).
+  //
+  // `drawn` marks a weight as a real Poisson outcome so buildAdjRaw() can tell
+  // "this replicate drew 0" apart from "this graph has no weight column".
   function perturbGraph(graph) {
     const links = graph.links.map((l) => {
       const w = l.weight || 0;
       if (w <= 0) return { source: l.source, target: l.target, weight: 0 };
-      return { source: l.source, target: l.target, weight: Math.max(1, NV.utils.poisson(w)) };
+      return { source: l.source, target: l.target, weight: NV.utils.poisson(w), drawn: true };
     });
     return { nodes: graph.nodes, links };
+  }
+
+  // NV.utils.buildAdj rewrites any weight ≤ 0 to 1, which is right for a graph
+  // with no weight column and right for cost = 1/w, but wrong for a Σw metric
+  // reading a Poisson replicate. This is buildAdj with that one rule relaxed:
+  // a drawn 0 stays 0, an absent weight still becomes 1. Metrics opt in with
+  // `rawWeights: true`; everything else keeps using buildAdj unchanged.
+  function buildAdjRaw(graph, activeIdsSet) {
+    const adj = Object.create(null);
+    activeIdsSet.forEach((id) => { adj[id] = []; });
+    const removedE = NV.state.removedEdges;
+    graph.links.forEach((l) => {
+      const s = typeof l.source === 'object' ? l.source.id : l.source;
+      const t = typeof l.target === 'object' ? l.target.id : l.target;
+      if (!activeIdsSet.has(s) || !activeIdsSet.has(t)) return;
+      if (removedE && removedE.has(String(s) + '||' + String(t))) return;
+      const w = l.drawn ? l.weight : ((l.weight && l.weight > 0) ? l.weight : 1);
+      adj[s].push({ to: t, w }); adj[t].push({ to: s, w });
+    });
+    return adj;
   }
 
   function fmt(v) {
@@ -545,8 +580,9 @@
     // diff chart can show "observed Δ" too.
     const baseIdSet  = new Set(baseIds);
     const treatIdSet = new Set(treatIds);
-    const observedTreated  = metric.compute(NV.utils.buildAdj(treatedG,  treatIdSet), treatIds,  opts);
-    const observedBaseline = isDual ? metric.compute(NV.utils.buildAdj(baselineG, baseIdSet), baseIds, opts) : observedTreated;
+    const mkAdj = metric.rawWeights ? buildAdjRaw : NV.utils.buildAdj;
+    const observedTreated  = metric.compute(mkAdj(treatedG,  treatIdSet), treatIds,  opts);
+    const observedBaseline = isDual ? metric.compute(mkAdj(baselineG, baseIdSet), baseIds, opts) : observedTreated;
 
     const baseSamples  = [];   // metric on perturbed baseline (dual only)
     const treatSamples = [];   // metric on perturbed treated
@@ -559,11 +595,11 @@
       const end = Math.min(i + BATCH, R);
       for (; i < end; i++) {
         const pT = perturbGraph(treatedG);
-        const vT = metric.compute(NV.utils.buildAdj(pT, treatIdSet), treatIds, opts);
+        const vT = metric.compute(mkAdj(pT, treatIdSet), treatIds, opts);
         treatSamples.push(vT);
         if (isDual) {
           const pB = perturbGraph(baselineG);
-          const vB = metric.compute(NV.utils.buildAdj(pB, baseIdSet), baseIds, opts);
+          const vB = metric.compute(mkAdj(pB, baseIdSet), baseIds, opts);
           baseSamples.push(vB);
           diffSamples.push(vT - vB);
         }
